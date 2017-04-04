@@ -203,6 +203,11 @@ public class Shop : MonoBehaviour {
 
     public void addSellingFishes(int number)
     {
+        float amount = playerObj.species[selectedFish].speciesAmount;
+
+        if (amount <= 0)
+            return;
+
         currentSellingFishes += number;
         if (currentSellingFishes < 0)
         {
@@ -210,7 +215,7 @@ public class Shop : MonoBehaviour {
         }
 
         //cap selling based on number of fish
-        float amount = playerObj.species[selectedFish].speciesAmount;
+        
         if (amount < currentSellingFishes)
         {
             currentSellingFishes = Mathf.FloorToInt(amount);

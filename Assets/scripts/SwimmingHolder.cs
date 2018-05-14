@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 public class SwimmingHolder : MonoBehaviour {
     public PlayerManager player;
-    private List<SwimmingCreature> creatures;
+    public List<SwimmingCreature> creatures;
     public List<GameObject> prefabs;
     public List<Lure> lures;
     //number of swimming creatures for each speices. make sure to update this

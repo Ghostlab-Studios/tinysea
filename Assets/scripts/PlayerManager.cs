@@ -10,7 +10,7 @@ public class PlayerManager : MonoBehaviour {
      *  Make sure that these are in the same order as the SwimmingHolder's prefabs!
 	 */
 	public List<CharacterManager> species;
-    SwimmingHolder holder;
+    public SwimmingHolder holder;
 
     //Highest level in the species list
     public int lowestLevel = 1;
@@ -70,6 +70,7 @@ public class PlayerManager : MonoBehaviour {
             waitingForTemperature = true;
             busy = true;
             temperature.updateTemperature();
+            
         }
     }
 
@@ -137,7 +138,7 @@ public class PlayerManager : MonoBehaviour {
         }
 
 
-        if (Input.GetButtonDown("Cancel") && Input.GetButton("Submit"))
+        if (/*Input.GetButtonDown("Cancel") && Input.GetButton("Submit")*/ Input.GetKeyDown("q"))
         {
             moneys += 999999;
         }

@@ -8,6 +8,7 @@ public class FishHunt {
     float startTime = 1;
     float currentTime = 1;
     Vector3 predatorStart;
+    Vector3 preyStart;
     private bool started;
 
     public FishHunt(SwimmingCreature predator, SwimmingCreature prey, float time)
@@ -17,6 +18,7 @@ public class FishHunt {
         startTime = time;
         currentTime = time;
         predatorStart = predator.transform.position;
+        preyStart = prey.transform.position;
         started = false;
     }
 
@@ -34,10 +36,20 @@ public class FishHunt {
             prey.dyingTimer = 0;
         }
         float ratio = currentTime / startTime;
-        predator.transform.position = new Vector3(prey.transform.position.x + (predatorStart.x - prey.transform.position.x) * ratio,
+        if (predator.level != 2)
+        {
+            predator.transform.position = new Vector3(prey.transform.position.x + (predatorStart.x - prey.transform.position.x) * ratio,
             prey.transform.position.y + (predatorStart.y - prey.transform.position.y) * ratio, predatorStart.z);
-        predator.velocity = new Vector2(prey.transform.position.x - predatorStart.x * ratio, prey.transform.position.y - predatorStart.y * ratio);
-        predator.acceleration = Vector2.zero;
+            predator.velocity = new Vector2(prey.transform.position.x - predatorStart.x * ratio, prey.transform.position.y - predatorStart.y * ratio);
+            predator.acceleration = Vector2.zero;
+        }
+        else
+        {
+            prey.transform.position = new Vector3(predator.transform.position.x + (preyStart.x - predator.transform.position.x) * ratio,
+            predator.transform.position.y + (preyStart.y - predator.transform.position.y) * ratio, preyStart.z);
+            prey.velocity = new Vector2(predator.transform.position.x - preyStart.x * ratio, predator.transform.position.y - preyStart.y * ratio);
+            prey.acceleration = Vector2.zero;
+        }
     }
 
     public bool isDone()

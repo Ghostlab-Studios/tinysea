@@ -63,6 +63,7 @@ public class CharacterManager : MonoBehaviour {
         {
             return;
         }
+
         Debug.Log("reproducing or dying: " + speciesAmount + " of " + uniqueName);
         //if performance is too low, fish die
         if (getFinalPerformance() < deathThreashold)
@@ -100,6 +101,11 @@ public class CharacterManager : MonoBehaviour {
                     }
                 }
             }
+        }
+        else if (player.getTotalFishCount() >= player.maxFishes - 1)
+        {
+            Debug.Log("Max fishes, not reproducing");
+            return;
         }
         else //otherwise, fish reproduce
         {

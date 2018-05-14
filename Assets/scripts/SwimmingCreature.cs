@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using System.Collections;
 
 public class SwimmingCreature : MonoBehaviour {
 
@@ -16,11 +17,11 @@ public class SwimmingCreature : MonoBehaviour {
     public List<SwimmingCreature> creatureFlock;
 
     //radii for responding to other creatures
-    public float alignRadius = 2;
+    /*public float alignRadius = 2;
     public float attractRadius = 2;
     public float avoidRadius = .5f;
     public float fleeRadius = 10;
-    public float huntRadius = 10;
+    public float huntRadius = 10;*/
 
     public float alignPower = 1;
     public float attractPower = 1;
@@ -78,22 +79,32 @@ public class SwimmingCreature : MonoBehaviour {
     private Vector3 startingScale = Vector3.one;
     public float particleSize = 10;
     private float particleTimer = 0;
+    private bool haveFishes = false;
 
 	// Use this for initialization
 	void Start () {
         anim = GetComponent<Animator>();
         huntingFish = new List<FishHunt>();
         startingScale = transform.localScale;
+        //InvokeRepeating("Flock", 2.0f, 0.3f);
+        StartCoroutine(ManageFrames(1.0f));
 	}
+
+
+
+    IEnumerator ManageFrames(float seconds)
+    {
+        while(true)
+        {
+            //yield return new WaitForSeconds(seconds);
+            yield return new WaitForSeconds(seconds);
+            Flock();
+        }
+    }
 	
 	// Update is called once per frame
 	void Update () {
-        alignSq = Mathf.Pow(alignRadius, 2);
-        attractSq = Mathf.Pow(attractRadius, 2);
-        avoidSq = Mathf.Pow(avoidRadius, 2);
-        fleeSq = Mathf.Pow(fleeRadius, 2);
-        huntSq = Mathf.Pow(huntRadius, 2);
-
+        //Debug.Log(haveFishes);
         if (isDying)
         {
             die();
@@ -114,7 +125,8 @@ public class SwimmingCreature : MonoBehaviour {
         {
             isBusy = false;
             transform.localScale = startingScale;
-            Flock(creatureFlock);
+            //Flock(creatureFlock);
+            //Flock();
         }
 
         //Debug.Log("v" + velocity + " a" + acceleration);
@@ -146,13 +158,13 @@ public class SwimmingCreature : MonoBehaviour {
     }
 
     //updates the flock
-    private void Flock(List<SwimmingCreature> creatures)
+    private void Flock()
     {
-        if (creatures == null)
+        if (creatureFlock == null)
         {
             return;
         }
-        acceleration = Vector2.zero;
+        //acceleration = Vector2.zero;
 
         Vector2 avoidTotal = Vector2.zero;
         Vector2 attractTotal = Vector2.zero;
@@ -165,8 +177,9 @@ public class SwimmingCreature : MonoBehaviour {
         int fleeCount = 0;
         int huntCount = 0;
 
-        foreach (SwimmingCreature c in creatures)
+        for (int i = 0; i < creatureFlock.Count; i++)
         {
+            SwimmingCreature c = creatureFlock[i];
             //don't flock with ourself
             if (c.GetInstanceID() != GetInstanceID())
             {
@@ -174,8 +187,9 @@ public class SwimmingCreature : MonoBehaviour {
                 Vector3 theirPos = c.transform.position;
                 //calculate the squared distance
                 //this is faster than the real distance because we don't need to do square-root calculations
-                float distSq = Mathf.Pow((ourPos.x - theirPos.x), 2) +
-                    Mathf.Pow((ourPos.y - theirPos.y), 2);
+                //float distSq = Mathf.Pow((ourPos.x - theirPos.x), 2) +
+                    //Mathf.Pow((ourPos.y - theirPos.y), 2);
+                float distSq = (ourPos - theirPos).sqrMagnitude;
 
                 float powerRatio = Mathf.Max(1, 1 / distSq);
 
@@ -394,8 +408,9 @@ public class SwimmingCreature : MonoBehaviour {
             switch (spawnCause)
             {
                 case SpawnCause.Reproduction:
+                    haveFishes = true;
                     //flock
-                    Flock(creatureFlock);
+                    //Flock();
                     //tick timer
                     spawningTimer -= Time.deltaTime;
                     //grow
@@ -413,6 +428,7 @@ public class SwimmingCreature : MonoBehaviour {
                     break;
                 case SpawnCause.Bought:
                     //only do stuff if we're being fished
+                    haveFishes = true;
                     transform.position = fishDrop.getPos(spawningTimer / spawnTime);
                     break;
             }
@@ -428,6 +444,7 @@ public class SwimmingCreature : MonoBehaviour {
         spawningTimer = spawnTime;
         spawnCause = SpawnCause.Reproduction;
         isSpawning = true;
+        //haveFishes = true;
     }
 
     public void StartBuying()
@@ -458,7 +475,7 @@ public class SwimmingCreature : MonoBehaviour {
             {
                 case DeathCause.Particle:
                     //flock
-                    Flock(creatureFlock);
+                    //Flock();
                     //tick timer
                     dyingTimer -= Time.deltaTime;
                     //shrink and die
@@ -490,13 +507,13 @@ public class SwimmingCreature : MonoBehaviour {
                     else
                     {
                         //if we're not being fished, just swim around like we don't even know we're doomed
-                        Flock(creatureFlock);
+                        //Flock();
                     }
                     break;
                 case DeathCause.Eaten:
                     //dying timer is all handled by the FishHunt object, which is updated by the predator. 
                     //the prey doesn't need to do anything other than swim around
-                    Flock(creatureFlock);
+                    //Flock();
                     break;
             }
         }

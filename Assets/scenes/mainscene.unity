@@ -952,7 +952,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 81.950005, y: -118.6}
+  m_AnchoredPosition: {x: 81.950005, y: -112.9}
   m_SizeDelta: {x: 132.2, y: 27.2}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &96523363
@@ -1252,6 +1252,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   player: {fileID: 0}
+  creatures: []
   prefabs:
   - {fileID: 135940, guid: b961a5cc8718ab547a159a26ade001cb, type: 2}
   - {fileID: 152334, guid: bc3bd6d000697db4782d2a393e217a18, type: 2}
@@ -2956,7 +2957,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &341498779
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2972,7 +2973,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 112, y: -73.1}
+  m_AnchoredPosition: {x: 112, y: -47.8}
   m_SizeDelta: {x: 72.1, y: 13}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &341498780
@@ -3170,7 +3171,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 112, y: -97.1}
+  m_AnchoredPosition: {x: 112, y: -71.8}
   m_SizeDelta: {x: 72.1, y: 13}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &358411692
@@ -7459,7 +7460,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &780010014
 RectTransform:
   m_ObjectHideFlags: 0
@@ -7475,7 +7476,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 112, y: -85.1}
+  m_AnchoredPosition: {x: 112, y: -59.800003}
   m_SizeDelta: {x: 72.1, y: 13}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &780010015
@@ -8472,6 +8473,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   species: []
+  holder: {fileID: 0}
   lowestLevel: 1
   highestLevel: 3
   temperature: {fileID: 1089677629}
@@ -8813,7 +8815,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 112, y: -49.1}
+  m_AnchoredPosition: {x: 112, y: -46.200005}
   m_SizeDelta: {x: 72.1, y: 13}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &895865370
@@ -11651,6 +11653,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   player: {fileID: 882694906}
+  creatures: []
   prefabs:
   - {fileID: 135940, guid: b961a5cc8718ab547a159a26ade001cb, type: 2}
   - {fileID: 152334, guid: bc3bd6d000697db4782d2a393e217a18, type: 2}
@@ -17074,7 +17077,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 112, y: -61.1}
+  m_AnchoredPosition: {x: 112, y: -59.000008}
   m_SizeDelta: {x: 72.1, y: 13}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1860694313

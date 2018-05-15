@@ -5,6 +5,7 @@
 [Oo]bj/
 [Bb]uild
 [Ll]ibrary/
+[Uu]nityPackageManager/
 sysinfo.txt
  
 # ===================================== #
@@ -19,6 +20,7 @@ sysinfo.txt
 /*.user
 /*.unityproj
 /*.booproj
+.vs/
  
 # ============ #
 # OS generated #

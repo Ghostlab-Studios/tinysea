@@ -107,13 +107,19 @@ public class CharacterManager : MonoBehaviour {
             Debug.Log("Max fishes, not reproducing");
             return;
         }
-        else //otherwise, fish reproduce
+        else 
         {
-            float reproduced = speciesAmount * getFinalPerformance() * 
-                (reproductionMultiplier) * days;
+            float fishToMax = (player.maxFishes - 1) - player.getTotalFishCount();
+
+            float reproduced = speciesAmount * getFinalPerformance() * (reproductionMultiplier) * days;
+            if (reproduced > fishToMax)
+            {
+                reproduced = fishToMax;
+            }
             speciesAmount = speciesAmount + reproduced;
             Debug.Log("reproduced: " + reproduced);
-            for(int i = 0; i < reproduced - .9f; i++) {
+            for (int i = 0; i < reproduced -.9f; i++)
+            {
                 birthList.Enqueue(BirthCause.Reproduction);
             }
         }

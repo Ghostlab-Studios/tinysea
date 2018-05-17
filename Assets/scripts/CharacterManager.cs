@@ -102,14 +102,14 @@ public class CharacterManager : MonoBehaviour {
                 }
             }
         }
-        else if (player.getTotalFishCount() >= player.maxFishes - 1)
+        else if (player.getTotalFishCount() >= player.maxFishes)
         {
             Debug.Log("Max fishes, not reproducing");
             return;
         }
         else 
         {
-            float fishToMax = (player.maxFishes - 1) - player.getTotalFishCount();
+            float fishToMax = (player.maxFishes) - player.getTotalFishCount();
 
             float reproduced = speciesAmount * getFinalPerformance() * (reproductionMultiplier) * days;
             if (reproduced > fishToMax)
@@ -117,7 +117,7 @@ public class CharacterManager : MonoBehaviour {
                 reproduced = fishToMax;
             }
             speciesAmount = speciesAmount + reproduced;
-            Debug.Log("reproduced: " + reproduced);
+            Debug.Log("reproduced : " + reproduced);
             for (int i = 0; i < reproduced -.9f; i++)
             {
                 birthList.Enqueue(BirthCause.Reproduction);

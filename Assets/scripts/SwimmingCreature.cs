@@ -16,6 +16,7 @@ public class SwimmingCreature : MonoBehaviour {
 
     public List<SwimmingCreature> creatureFlock;
 
+    // these are unnecessary
     //radii for responding to other creatures
     /*public float alignRadius = 2;
     public float attractRadius = 2;
@@ -90,13 +91,11 @@ public class SwimmingCreature : MonoBehaviour {
         StartCoroutine(ManageFrames(1.0f));
 	}
 
-
-
+    // Coroutine for flocking. Calling Flock in Update is too CPU intensive
     IEnumerator ManageFrames(float seconds)
     {
         while(true)
         {
-            //yield return new WaitForSeconds(seconds);
             yield return new WaitForSeconds(seconds);
             Flock();
         }
@@ -260,12 +259,6 @@ public class SwimmingCreature : MonoBehaviour {
             alignTotal * alignPower + 
             fleeTotal * fleePower+ 
             huntTotal * huntPower;
-        /*Debug.Log("e" + EdgeSteer() + 
-            "at" + avoidTotal + 
-            "at" + attractTotal +
-            "al" + alignTotal +
-            "f" + fleeTotal +
-            "h" + huntTotal);*/
 
         if (acceleration.magnitude > maxForce)
         {

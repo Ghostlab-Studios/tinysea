@@ -163,7 +163,7 @@ public class Shop : MonoBehaviour {
     private string getStars(int starNum)
     {
         string s = "";
-        for(int i = 0; i < starNum; i++)
+        for(int i = 0; i < starNum + 1; i++)
         {
             s += starChar;
         }
@@ -192,7 +192,7 @@ public class Shop : MonoBehaviour {
 
         //cap based on total fish count
         float totalFish = playerObj.getTotalFishCount();
-        while (totalFish + currentFishes >= playerObj.maxFishes)
+        while (totalFish + currentFishes > playerObj.maxFishes)
         {
             currentFishes--;
         }
@@ -201,6 +201,7 @@ public class Shop : MonoBehaviour {
         totalPrice.text = (playerObj.species[selectedFish].cost * currentFishes).ToString();
 	}
 
+    // I don't think this function is used anywhere???
     public void addSellingFishes(int number)
     {
         float amount = playerObj.species[selectedFish].speciesAmount;
@@ -249,7 +250,7 @@ public class Shop : MonoBehaviour {
 
     public void sliderSlide()
     {
-        currentSellingFishes = Mathf.RoundToInt(playerObj.species[selectedFish].speciesAmount * slider.value);
+        currentSellingFishes = Mathf.FloorToInt(playerObj.species[selectedFish].speciesAmount * slider.value);
 
         sellingfishes.text = currentSellingFishes.ToString();
         sellingPrice.text = (playerObj.species[selectedFish].cost * currentSellingFishes * playerObj.sellRate).ToString();

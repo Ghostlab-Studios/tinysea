@@ -108,7 +108,7 @@ public class SwimmingHolder : MonoBehaviour {
                 filteredC.Add(c);
             }
         }
-        return (filteredC[Random.Range(0, filteredC.Count)]);
+        return (filteredC[Random.Range(0, filteredC.Count - 1)]);
     }
 
     SwimmingCreature findRandomCreatureOfTier(int tier)
@@ -121,7 +121,7 @@ public class SwimmingHolder : MonoBehaviour {
                 filteredC.Add(c);
             }
         }
-        return (filteredC[Random.Range(0, filteredC.Count)]);
+        return (filteredC[Random.Range(0, filteredC.Count - 1)]);
     }
 
     SwimmingCreature findCreatureOfID(int cID)
@@ -163,8 +163,8 @@ public class SwimmingHolder : MonoBehaviour {
         {
             SwimmingCreature c = creatures[found];
             //creatures.Remove(c);
-            if(cause == null)
-                cause = CharacterManager.DeathCause.Starve;
+            /*if(cause == null)
+                cause = CharacterManager.DeathCause.Starve;*/
             switch(cause) {
                 case CharacterManager.DeathCause.Sold:
                     c.startFishing(lures[Random.Range(0, lures.Count)]);

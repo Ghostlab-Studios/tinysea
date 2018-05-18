@@ -43,6 +43,7 @@ public class FishHunt {
             predator.velocity = new Vector2(prey.transform.position.x - predatorStart.x * ratio, prey.transform.position.y - predatorStart.y * ratio);
             predator.acceleration = Vector2.zero;
         }
+        // jank fix, come up with something better later
         else
         {
             prey.transform.position = new Vector3(predator.transform.position.x + (preyStart.x - predator.transform.position.x) * ratio,

@@ -69,11 +69,11 @@ public class Lure : MonoBehaviour {
                 //pull up the fish
                 float amount1 = 1 - t.getDeathRatio() * 2;
                 transform.position = Vector3.Lerp(target, origin, amount1);
-                Vector3 lookDir = origin - target;
+                //Vector3 lookDir = origin - target;
                 //transform.rotation = Quaternion.LookRotation(new Vector3(lookDir.x, lookDir.y, 0).normalized);
                 line.SetPosition(1, Vector3.Lerp(
                     new Vector3(target.x, origin.y, origin.z),
-                    new Vector3(origin.x * 2, origin.y, origin.z), amount1) + lineOffset);
+                    new Vector3(origin.x * 2, origin.y, origin.z), amount1) + lineOffset); 
             }
             else
             {

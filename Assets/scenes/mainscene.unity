@@ -3204,7 +3204,7 @@ MonoBehaviour:
     m_AlignByGeometry: 0
     m_RichText: 1
     m_HorizontalOverflow: 0
-    m_VerticalOverflow: 0
+    m_VerticalOverflow: 1
     m_LineSpacing: 0.9
   m_Text: "Thermal Tolerance\n\u2605\u2605\u2605\u2605\u2605"
 --- !u!222 &358411693
@@ -17131,7 +17131,7 @@ MonoBehaviour:
     m_AlignByGeometry: 0
     m_RichText: 1
     m_HorizontalOverflow: 0
-    m_VerticalOverflow: 0
+    m_VerticalOverflow: 1
     m_LineSpacing: 0.9
   m_Text: "Spawn Rate\n\u2605\u2605\u2605\u2605\u2605"
 --- !u!222 &1860694314

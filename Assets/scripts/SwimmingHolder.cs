@@ -108,7 +108,18 @@ public class SwimmingHolder : MonoBehaviour {
                 filteredC.Add(c);
             }
         }
-        return (filteredC[Random.Range(0, filteredC.Count - 1)]);
+        int randIndex = Random.Range(0, filteredC.Count);
+        try
+        {
+            return (filteredC[randIndex]);
+        }
+        catch (System.ArgumentOutOfRangeException a)
+        {
+            Debug.Log(randIndex);
+            Debug.Log(a);
+            return (filteredC[randIndex]);
+        }
+        //return (filteredC[randIndex]);
     }
 
     SwimmingCreature findRandomCreatureOfTier(int tier)
@@ -121,7 +132,17 @@ public class SwimmingHolder : MonoBehaviour {
                 filteredC.Add(c);
             }
         }
-        return (filteredC[Random.Range(0, filteredC.Count - 1)]);
+        int randIndex = Random.Range(0, filteredC.Count);
+        try
+        {
+            return (filteredC[randIndex]);
+        }
+        catch (System.ArgumentOutOfRangeException a)
+        {
+            Debug.Log(randIndex);
+            Debug.Log(a);
+            return filteredC[randIndex];
+        }
     }
 
     SwimmingCreature findCreatureOfID(int cID)

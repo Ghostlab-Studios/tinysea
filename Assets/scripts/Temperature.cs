@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 public class Temperature : MonoBehaviour {
 
-    private LineRenderer historyLine;
+    //private LineRenderer historyLine;
 
     private List<LineRenderer> predictionLines;
     private List<LineRenderer> historicalLineRenders;
@@ -56,7 +56,7 @@ public class Temperature : MonoBehaviour {
 	void Start () {
         homePos = transform.position;
         //create our historical lines
-        historyLine = GetComponent<LineRenderer>();
+        //historyLine = GetComponent<LineRenderer>();
         historicalTemperatures = new Queue<float>();
         for (int i = 0; i < historicalSegments; i++)
         {
@@ -196,7 +196,10 @@ public class Temperature : MonoBehaviour {
             }
             pickTimer += Time.deltaTime;
             transform.position = Vector3.Lerp(homePos, homePos + new Vector3(-segmentSpacing, 0, 0), pickTimer / pickSeconds);
-            currentDot.lineRender.SetColors(Color.white, Color.white);
+            //currentDot.lineRender.SetColors(Color.white, Color.white);
+            currentDot.lineRender.startColor = Color.white;
+            currentDot.lineRender.endColor = Color.white;
+
         }
     }
 
@@ -288,10 +291,13 @@ public class Temperature : MonoBehaviour {
         for (int i = 0; i < historicalSegments - 1; i++)
         {
             LineRenderer linRend = historicalLineRenders[i];
-            linRend.SetVertexCount(2);
+            //linRend.SetVertexCount(2);
+            linRend.positionCount = 2;
             linRend.SetPosition(0, new Vector3(i * segmentSpacing, tempArr[i], 0));
             linRend.SetPosition(1, new Vector3((i + 1)* segmentSpacing, tempArr[i + 1], 0));
-            linRend.SetColors(getColorTemperature(tempArr[i]), getColorTemperature(tempArr[i + 1]));
+            //linRend.SetColors(getColorTemperature(tempArr[i]), getColorTemperature(tempArr[i + 1]));
+            linRend.startColor = getColorTemperature(tempArr[i]);
+            linRend.endColor = getColorTemperature(tempArr[i + 1]);
         }
 
             for (int i = 0; i < predictionLines.Count; i++)
@@ -305,10 +311,13 @@ public class Temperature : MonoBehaviour {
                 {
                     LineRenderer lin = predictionLines[i];
                     lin.enabled = true;
-                    lin.SetVertexCount(2);
+                    //lin.SetVertexCount(2);
+                    lin.positionCount = 2;
                     lin.SetPosition(0, new Vector3(segmentSpacing * (historicalSegments - 1), temperature, -1 - i));
                     lin.SetPosition(1, new Vector3(segmentSpacing * (historicalSegments), possibleTemperatures[i], -1 - i));
-                    lin.SetColors(getColorTemperature(temperature), getColorTemperature(possibleTemperatures[i]));
+                    //lin.SetColors(getColorTemperature(temperature), getColorTemperature(possibleTemperatures[i]));
+                    lin.startColor = getColorTemperature(temperature);
+                    lin.endColor = getColorTemperature(possibleTemperatures[i]);
                 }
             }
 

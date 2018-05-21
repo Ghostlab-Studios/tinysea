@@ -17,7 +17,7 @@ public class SwimmingCreature : MonoBehaviour {
     public List<SwimmingCreature> creatureFlock;
 
     // these are unnecessary
-    //radii for responding to other creatures
+    //radii for responding to other creatures   
     /*public float alignRadius = 2;
     public float attractRadius = 2;
     public float avoidRadius = .5f;
@@ -80,7 +80,7 @@ public class SwimmingCreature : MonoBehaviour {
     private Vector3 startingScale = Vector3.one;
     public float particleSize = 10;
     private float particleTimer = 0;
-    private bool haveFishes = false;
+    //private bool haveFishes = false;
 
 	// Use this for initialization
 	void Start () {
@@ -401,7 +401,7 @@ public class SwimmingCreature : MonoBehaviour {
             switch (spawnCause)
             {
                 case SpawnCause.Reproduction:
-                    haveFishes = true;
+                    //haveFishes = true;
                     //flock
                     //Flock();
                     //tick timer
@@ -410,18 +410,32 @@ public class SwimmingCreature : MonoBehaviour {
                     transform.localScale = startingScale * (1 - spawningTimer) / spawnTime;
                     //emit partiles according to parameters
                     particleTimer += Time.deltaTime;
-                    while (particleTimer > 1 / spawnParticles.emissionRate)
+                    while (particleTimer > 1 / spawnParticles.emission.rateOverTimeMultiplier)
                     {
-                        particleTimer -= 1 / spawnParticles.emissionRate;
-                        spawnParticles.Emit(transform.position,
+                        particleTimer -= 1 / spawnParticles.emission.rateOverTimeMultiplier;
+                        /*spawnParticles.Emit(transform.position,
                             particleSize * spawnParticles.startSpeed * 2 *
                             new Vector3(Random.value - .5f, Random.value - .5f, 0),
-                            particleSize * spawnParticles.startSize, spawnParticles.startLifetime, Color.white);
+                            particleSize * spawnParticles.startSize, spawnParticles.startLifetime, Color.white);*/
+                        ParticleSystem.MainModule main = spawnParticles.main;
+                        main.startSpeedMultiplier = 4.0f;
+                        main.startSizeMultiplier = 1.7f;
+                        main.startLifetimeMultiplier = 2.0f;
+                        main.startColor = Color.white;
+
+                        ParticleSystem.EmitParams emitParams = new ParticleSystem.EmitParams();
+                        emitParams.position = transform.position;
+                        emitParams.velocity = particleSize * main.startSpeedMultiplier * 2 * new Vector3(Random.value - .5f, Random.value - .5f, 0);
+                        emitParams.startSize = particleSize * main.startSizeMultiplier;
+                        emitParams.startLifetime = main.startLifetimeMultiplier;
+                        emitParams.startColor = Color.white;
+
+                        spawnParticles.Emit(emitParams, 10);
                     }
                     break;
                 case SpawnCause.Bought:
                     //only do stuff if we're being fished
-                    haveFishes = true;
+                    //haveFishes = true;
                     transform.position = fishDrop.getPos(spawningTimer / spawnTime);
                     break;
             }
@@ -475,12 +489,26 @@ public class SwimmingCreature : MonoBehaviour {
                     transform.localScale = startingScale * dyingTimer / deathTime;
                     //emit partiles according to parameters
                     particleTimer += Time.deltaTime;
-                    while(particleTimer > 1/deathParticles.emissionRate) {
-                        particleTimer -= 1/deathParticles.emissionRate;
-                        deathParticles.Emit(transform.position,
+                    while(particleTimer > 1/deathParticles.emission.rateOverTimeMultiplier) {
+                        particleTimer -= 1/deathParticles.emission.rateOverTimeMultiplier;
+                        /*deathParticles.Emit(transform.position,
                             particleSize * deathParticles.startSpeed * 2 * 
                             new Vector3(Random.value - .5f, Random.value - .5f, 0),
-                            particleSize * deathParticles.startSize, deathParticles.startLifetime, Color.white);
+                            particleSize * deathParticles.startSize, deathParticles.startLifetime, Color.white);*/
+                        ParticleSystem.MainModule main = deathParticles.main;
+                        main.startSpeedMultiplier = 3.0f;
+                        main.startSizeMultiplier = 5f;
+                        main.startLifetimeMultiplier = 2.0f;
+                        main.startColor = Color.white;
+
+                        ParticleSystem.EmitParams emitParams = new ParticleSystem.EmitParams();
+                        emitParams.position = transform.position;
+                        emitParams.velocity = particleSize * main.startSpeedMultiplier * 2 * new Vector3(Random.value - .5f, Random.value - .5f, 0);
+                        emitParams.startSize = particleSize * main.startSizeMultiplier;
+                        emitParams.startLifetime = main.startLifetimeMultiplier;
+                        emitParams.startColor = Color.white;
+
+                        deathParticles.Emit(emitParams, 10);  
                     }
                     break;
                 case DeathCause.Lure:
@@ -494,7 +522,7 @@ public class SwimmingCreature : MonoBehaviour {
                         if (getDeathRatio() < .5f)
                         {
                             transform.position = lure.transform.position;
-                            transform.rotation = Quaternion.EulerAngles(0, 0, 180);
+                            transform.rotation = Quaternion.Euler(0, 0, 180);
                         }
                     }
                     else

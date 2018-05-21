@@ -28,7 +28,7 @@ public class PlayerManager : MonoBehaviour {
     public float sellRate = .5f;
     public float maxFishes = 200;
     public float stepWaitTime = 1;
-    float stepTimer = 0;
+    //float stepTimer = 0;
     bool waitingForTemperature = false;
     bool waitingForSteps = false;
     enum FishSteps { predation, reproduce, capMax, finished};
@@ -85,7 +85,7 @@ public class PlayerManager : MonoBehaviour {
             waitingForTemperature = false;
             currentStep = FishSteps.predation;
             predationPhase = 2;
-            stepTimer = 0;
+            //stepTimer = 0;
             waitingForSteps = true;
 
             moneys += dailyIncome;
@@ -123,7 +123,7 @@ public class PlayerManager : MonoBehaviour {
                             c.ReproduceOrDie(dayStep);
                         }
                         currentStep = FishSteps.capMax;
-                        stepTimer = stepWaitTime;
+                        //stepTimer = stepWaitTime;
                         break;
                     case FishSteps.capMax:
                         capFishMax();

@@ -49,7 +49,8 @@ public class SwimmingHolder : MonoBehaviour {
                     {
                         if (man.deathList.Count == 0)
                             RemoveCreature(i, CharacterManager.DeathCause.Starve);
-                        else 
+                        else
+                            //Debug.Log(man.deathList.Peek());
                             RemoveCreature(i, man.deathList.Dequeue());
                         speciesNumbers[i]--;
                     }
@@ -116,8 +117,11 @@ public class SwimmingHolder : MonoBehaviour {
         catch (System.ArgumentOutOfRangeException a)
         {
             Debug.Log(randIndex);
+            bool hasFish = (filteredC.Count == 0);
+            Debug.Log(hasFish);
             Debug.Log(a);
-            return (filteredC[randIndex]);
+            return filteredC[randIndex];
+            
         }
         //return (filteredC[randIndex]);
     }
@@ -140,6 +144,8 @@ public class SwimmingHolder : MonoBehaviour {
         catch (System.ArgumentOutOfRangeException a)
         {
             Debug.Log(randIndex);
+            bool hasFish = (filteredC.Count == 0);
+            Debug.Log(hasFish);
             Debug.Log(a);
             return filteredC[randIndex];
         }
@@ -197,15 +203,28 @@ public class SwimmingHolder : MonoBehaviour {
                     c.startDying(player.tooCoolPart);
                     break;
                 case CharacterManager.DeathCause.Eaten:
-                    SwimmingCreature predator = findRandomCreatureOfTier(c.level + 1);
-                    float fasterHunting = Mathf.Max(1, predator.huntingFish.Count);
-                    FishHunt hunt = new FishHunt(predator, c, predatorTime / fasterHunting);
-                    predator.huntingFish.Add(hunt);
-                    c.getEaten(hunt);
-                    predator.startEating();
-                    break;
+                    try
+                    {
+                        // literally why
+                        SwimmingCreature predator = findRandomCreatureOfTier(c.level + 1);
+                        float fasterHunting = Mathf.Max(1, predator.huntingFish.Count);
+                        FishHunt hunt = new FishHunt(predator, c, predatorTime / fasterHunting);
+                        predator.huntingFish.Add(hunt);
+                        c.getEaten(hunt);
+                        predator.startEating();
+                        break;
+                    } catch (System.ArgumentOutOfRangeException a)
+                    {
+                        Debug.Log(a);
+                        c.startDying(player.starvedPart);
+                        break;
+                    }
                 case CharacterManager.DeathCause.Starve:
                     c.startDying(player.starvedPart);
+                    break;
+                default:
+                    //c.startDying(player.starvedPart);
+                    c.startFishing(lures[Random.Range(0, lures.Count)]);
                     break;
             }
         }

@@ -68,8 +68,8 @@ public class SwimmingCreature : MonoBehaviour {
     public FishDrop fishDrop;
     [HideInInspector]
     public ParticleSystem spawnParticles;
-    enum DeathCause {Particle, Lure, Eaten};
-    private DeathCause deathCause;
+    public enum DeathCause {Particle, Lure, Eaten};
+    public DeathCause deathCause;
     enum SpawnCause {Reproduction, Bought};
     private SpawnCause spawnCause;
     public float deathTime = 1;
@@ -88,11 +88,11 @@ public class SwimmingCreature : MonoBehaviour {
         huntingFish = new List<FishHunt>();
         startingScale = transform.localScale;
         //InvokeRepeating("Flock", 2.0f, 0.3f);
-        StartCoroutine(ManageFrames(1.0f));
+        StartCoroutine(FlockCoroutine(1.0f));
 	}
 
     // Coroutine for flocking. Calling Flock in Update is too CPU intensive
-    IEnumerator ManageFrames(float seconds)
+    IEnumerator FlockCoroutine(float seconds)
     {
         while(true)
         {

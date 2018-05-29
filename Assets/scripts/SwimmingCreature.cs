@@ -47,6 +47,7 @@ public class SwimmingCreature : MonoBehaviour {
     public Vector2 acceleration = new Vector2(0, 0);
 
     public bool rotates = true;
+    private bool fishing = false;
 
     //animator
     private Animator anim;
@@ -80,7 +81,18 @@ public class SwimmingCreature : MonoBehaviour {
     private Vector3 startingScale = Vector3.one;
     public float particleSize = 10;
     private float particleTimer = 0;
-    //private bool haveFishes = false;
+
+    private float timeSinceCalled;
+    private float delay = 1.0f;
+
+    private bool flocked = false;
+
+    private WaitForSeconds wait = new WaitForSeconds(1.0f);
+    private WaitForSeconds waitNull = null;
+    //private WaitForSeconds waitFlock = new WaitForSeconds()
+
+    private float spread = 5f;
+    private float flockUpdatesPerSecond = 5f;
 
 	// Use this for initialization
 	void Start () {
@@ -88,22 +100,30 @@ public class SwimmingCreature : MonoBehaviour {
         huntingFish = new List<FishHunt>();
         startingScale = transform.localScale;
         //InvokeRepeating("Flock", 2.0f, 0.3f);
-        StartCoroutine(FlockCoroutine(1.0f));
+        StartCoroutine(FlockCoroutine());
 	}
 
     // Coroutine for flocking. Calling Flock in Update is too CPU intensive
-    IEnumerator FlockCoroutine(float seconds)
+    IEnumerator FlockCoroutine()
     {
         while(true)
         {
-            yield return new WaitForSeconds(seconds);
+            yield return new WaitForSeconds(SpreadUpdates());
             Flock();
+            yield return new WaitForSeconds(SpreadUpdates());
         }
+    }
+
+    private float SpreadUpdates()
+    {
+        float offset = (Random.value - Random.value) / spread;
+        return (1 / flockUpdatesPerSecond) + offset;
     }
 	
 	// Update is called once per frame
 	void Update () {
         //Debug.Log(haveFishes);
+        timeSinceCalled += Time.deltaTime;
         if (isDying)
         {
             die();
@@ -125,7 +145,11 @@ public class SwimmingCreature : MonoBehaviour {
             isBusy = false;
             transform.localScale = startingScale;
             //Flock(creatureFlock);
-            //Flock();
+            /*if (timeSinceCalled > delay && !fishing)
+            {
+                Flock();
+                timeSinceCalled = 0;
+            }*/
         }
 
         //Debug.Log("v" + velocity + " a" + acceleration);
@@ -163,6 +187,11 @@ public class SwimmingCreature : MonoBehaviour {
         {
             return;
         }
+
+        /*if (flocked)
+        {
+            return;
+        }*/
         //acceleration = Vector2.zero;
 
         Vector2 avoidTotal = Vector2.zero;
@@ -179,11 +208,12 @@ public class SwimmingCreature : MonoBehaviour {
         for (int i = 0; i < creatureFlock.Count; i++)
         {
             SwimmingCreature c = creatureFlock[i];
+            //c.flocked = true;
             //don't flock with ourself
             if (c.GetInstanceID() != GetInstanceID())
             {
-                Vector3 ourPos = transform.position;
-                Vector3 theirPos = c.transform.position;
+                Vector3 ourPos = transform.localPosition;
+                Vector3 theirPos = c.transform.localPosition;
                 //calculate the squared distance
                 //this is faster than the real distance because we don't need to do square-root calculations
                 //float distSq = Mathf.Pow((ourPos.x - theirPos.x), 2) +
@@ -238,7 +268,10 @@ public class SwimmingCreature : MonoBehaviour {
                         huntCount++;
                     }
                 }
+                //c.flocked = true;
             }
+            //flocked = true;
+            //c.flocked = true;
         }
 
         if (avoidCount != 0)
@@ -264,14 +297,15 @@ public class SwimmingCreature : MonoBehaviour {
         {
             acceleration = acceleration.normalized * maxForce;
         }
+        //flocked = true;
     }
 
     private Vector2 Avoid(SwimmingCreature creature, float distSq)
     {
         if (distSq < avoidSq)
         {
-            Vector3 ourPos = transform.position;
-            Vector3 theirPos = creature.transform.position;
+            Vector3 ourPos = transform.localPosition;
+            Vector3 theirPos = creature.transform.localPosition;
             //go away from the other creature
             Vector2 avoidVector = new Vector2(ourPos.x - theirPos.x, ourPos.y - theirPos.y);
             avoidVector.Normalize();
@@ -286,8 +320,8 @@ public class SwimmingCreature : MonoBehaviour {
     {
         if (distSq < attractSq)
         {
-            Vector3 ourPos = transform.position;
-            Vector3 theirPos = creature.transform.position;
+            Vector3 ourPos = transform.localPosition;
+            Vector3 theirPos = creature.transform.localPosition;
             //go towards the other creature
             Vector2 attractVector = new Vector2(theirPos.x - ourPos.x, theirPos.y - ourPos.y);
             attractVector.Normalize();
@@ -318,8 +352,8 @@ public class SwimmingCreature : MonoBehaviour {
     {
         if (distSq < fleeSq)
         {
-            Vector3 ourPos = transform.position;
-            Vector3 theirPos = creature.transform.position;
+            Vector3 ourPos = transform.localPosition;
+            Vector3 theirPos = creature.transform.localPosition;
             //go away from the other creature
             Vector2 avoidVector = new Vector2(ourPos.x - theirPos.x, ourPos.y - theirPos.y);
             avoidVector.Normalize();
@@ -334,8 +368,8 @@ public class SwimmingCreature : MonoBehaviour {
     {
         if (distSq < huntSq)
         {
-            Vector3 ourPos = transform.position;
-            Vector3 theirPos = creature.transform.position;
+            Vector3 ourPos = transform.localPosition;
+            Vector3 theirPos = creature.transform.localPosition;
             //go towards the other creature
             Vector2 attractVector = new Vector2(theirPos.x - ourPos.x, theirPos.y - ourPos.y);
             attractVector.Normalize();
@@ -465,7 +499,7 @@ public class SwimmingCreature : MonoBehaviour {
             Random.Range(bounds.yMin, bounds.yMax), 
             transform.position.z), 
             FishDrop.sceneHeight * (2 + .2f * Random.value) );
-        transform.position = fishDrop.getPos(0);
+        transform.position = fishDrop.getPos(0);;
         spawnCause = SpawnCause.Bought;
         isSpawning = true;
     }
@@ -529,7 +563,10 @@ public class SwimmingCreature : MonoBehaviour {
                     {
                         //if we're not being fished, just swim around like we don't even know we're doomed
                         //Flock();
+                        //flocked = false;
+                        //fishing = true;
                     }
+                    fishing = false;
                     break;
                 case DeathCause.Eaten:
                     //dying timer is all handled by the FishHunt object, which is updated by the predator. 

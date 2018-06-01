@@ -109,19 +109,28 @@ public class SwimmingHolder : MonoBehaviour {
                 filteredC.Add(c);
             }
         }
-        int randIndex = Random.Range(0, filteredC.Count);
-        try
+        if (filteredC.Count == 0)
         {
-            return (filteredC[randIndex]);
+            Debug.Log("Fucking work");
+            return new SwimmingCreature();
         }
-        catch (System.ArgumentOutOfRangeException a)
+        else
         {
-            Debug.Log(randIndex);
-            bool hasFish = (filteredC.Count == 0);
-            Debug.Log(hasFish);
-            Debug.Log(a);
-            return filteredC[randIndex];
-            
+            int randIndex = Random.Range(0, filteredC.Count);
+            try
+            {
+                return (filteredC[randIndex]);
+            }
+            catch (System.ArgumentOutOfRangeException a)
+            {
+                Debug.Log(randIndex);
+                bool hasFish = (filteredC.Count == 0);
+                Debug.Log(hasFish);
+                Debug.Log(a);
+                //return filteredC[randIndex];
+                return null;
+
+            }
         }
         //return (filteredC[randIndex]);
     }

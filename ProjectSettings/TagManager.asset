@@ -13,7 +13,7 @@ TagManager:
   - UI
   - 
   - 
-  - 
+  - Tutorial
   - 
   - 
   - 
@@ -49,4 +49,7 @@ TagManager:
     locked: 0
   - name: eyes
     uniqueID: 1638324275
+    locked: 0
+  - name: tutorial
+    uniqueID: 3664129119
     locked: 0

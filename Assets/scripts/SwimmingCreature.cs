@@ -82,8 +82,8 @@ public class SwimmingCreature : MonoBehaviour {
     public float particleSize = 10;
     private float particleTimer = 0;
 
-    private float timeSinceCalled;
-    private float delay = 1.0f;
+    //private float timeSinceCalled;
+    //private float delay = 1.0f;
 
     private bool flocked = false;
 
@@ -123,7 +123,7 @@ public class SwimmingCreature : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
         //Debug.Log(haveFishes);
-        timeSinceCalled += Time.deltaTime;
+        //timeSinceCalled += Time.deltaTime;
         if (isDying)
         {
             die();

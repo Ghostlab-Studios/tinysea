@@ -145,6 +145,12 @@ public class PlayerManager : MonoBehaviour {
 
         //set ecosystem pyramid.
         float totalFishes = getTotalFishCount();
+        if (totalFishes <= 0)
+        {
+            tier1EcoBar.localScale = new Vector3(0, 1, 1);
+            tier2EcoBar.localScale = new Vector3(0, 1, 1);
+            tier3EcoBar.localScale = new Vector3(0, 1, 1);
+        }
         if (totalFishes > 0)
         {
             float t1Proportion = getTotalAmountAtLevel(1) / totalFishes;

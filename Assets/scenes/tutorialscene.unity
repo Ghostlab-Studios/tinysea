@@ -351,6 +351,8 @@ MonoBehaviour:
   order: 5
   explanation: Take a look at this pyramid.
   pyramidHighlight: {fileID: 887368554}
+  nextTutorial: {fileID: 1604844914}
+  prevTutorial: {fileID: 734852232}
 --- !u!114 &12546333
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -364,6 +366,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   order: 7
   explanation: This pyramid represents the ratio of prey to predators.
+  nextTutorial: {fileID: 1604844914}
+  prevTutorial: {fileID: 734852232}
 --- !u!114 &12546334
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -377,6 +381,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   order: 6
   explanation: You see, there are tiers to our ecosystem - a food chain of sorts.
+  nextTutorial: {fileID: 1604844914}
+  prevTutorial: {fileID: 734852232}
 --- !u!114 &12546335
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -391,6 +397,8 @@ MonoBehaviour:
   order: 8
   explanation: In order to maintain a healthy, self-sustaining ecosystem, this pyramid
     needs to be in equilibrium with... Well, itself!
+  nextTutorial: {fileID: 1604844914}
+  prevTutorial: {fileID: 734852232}
 --- !u!114 &12546336
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -407,6 +415,8 @@ MonoBehaviour:
   tier1EcoBar: {fileID: 1104233093}
   tier2EcoBar: {fileID: 881088004}
   tier3EcoBar: {fileID: 2106667188}
+  nextTutorial: {fileID: 1604844914}
+  prevTutorial: {fileID: 734852232}
 --- !u!114 &12546337
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -422,6 +432,8 @@ MonoBehaviour:
   explanation: When it's all filled up, that's good - That means there are enough
     Tier I creatures for the Tier II creatures to prey on, and enough Tier II creatures
     for the Tier III creatures.
+  nextTutorial: {fileID: 1604844914}
+  prevTutorial: {fileID: 734852232}
 --- !u!114 &12546338
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -436,6 +448,8 @@ MonoBehaviour:
   order: 11
   explanation: 'But, our ecosystem has been thrown into disarray by the water temperature!
     Take a look at what the pyramid looks like now: It''s all empty! '
+  nextTutorial: {fileID: 1604844914}
+  prevTutorial: {fileID: 734852232}
 --- !u!114 &12546339
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -449,6 +463,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   order: 13
   explanation: TinySea has been completely wiped out, and I want to rebuild it!
+  nextTutorial: {fileID: 1604844914}
+  prevTutorial: {fileID: 734852232}
 --- !u!114 &12546340
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -463,6 +479,8 @@ MonoBehaviour:
   order: 12
   explanation: You see, certain fish thrive in specific temperatures, and when water
     temperature changes too quickly, our ecosystem is in great danger.
+  nextTutorial: {fileID: 1604844914}
+  prevTutorial: {fileID: 734852232}
 --- !u!114 &12546341
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -477,6 +495,7 @@ MonoBehaviour:
   order: 14
   explanation: Would you help me rebuild and maintain TinySea?
   pyramidHighlight: {fileID: 887368554}
+  nextTutorial: {fileID: 1604844914}
 --- !u!1 &24212965
 GameObject:
   m_ObjectHideFlags: 0
@@ -6942,7 +6961,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -63.2, y: 145.1}
+  m_AnchoredPosition: {x: -68, y: 145.1}
   m_SizeDelta: {x: 181.46, y: 157.74}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &714844914
@@ -7100,6 +7119,127 @@ CanvasRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 724988627}
+--- !u!1 &734852232
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 734852233}
+  - component: {fileID: 734852236}
+  - component: {fileID: 734852235}
+  - component: {fileID: 734852234}
+  m_Layer: 5
+  m_Name: prevTutorialButton
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 4294967295
+  m_IsActive: 0
+--- !u!224 &734852233
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 734852232}
+  m_LocalRotation: {x: -0, y: -0, z: 1, w: -0.00000016292068}
+  m_LocalPosition: {x: 0, y: 0, z: 22.381039}
+  m_LocalScale: {x: 1.398815, y: 1.398815, z: 1.398815}
+  m_Children: []
+  m_Father: {fileID: 1737318157}
+  m_RootOrder: 3
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.040452667, y: 0.43935725}
+  m_AnchorMax: {x: 0.07027366, y: 0.5}
+  m_AnchoredPosition: {x: -86.06886, y: 116.09999}
+  m_SizeDelta: {x: 11.597118, y: 2.1393604}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &734852234
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 734852232}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 1392445389, guid: f5f67c52d1564df4a8936ccd202a3bd8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Navigation:
+    m_Mode: 3
+    m_SelectOnUp: {fileID: 0}
+    m_SelectOnDown: {fileID: 0}
+    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnRight: {fileID: 0}
+  m_Transition: 1
+  m_Colors:
+    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
+    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
+    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_ColorMultiplier: 1
+    m_FadeDuration: 0.1
+  m_SpriteState:
+    m_HighlightedSprite: {fileID: 0}
+    m_PressedSprite: {fileID: 0}
+    m_DisabledSprite: {fileID: 0}
+  m_AnimationTriggers:
+    m_NormalTrigger: Normal
+    m_HighlightedTrigger: Highlighted
+    m_PressedTrigger: Pressed
+    m_DisabledTrigger: Disabled
+  m_Interactable: 1
+  m_TargetGraphic: {fileID: 734852235}
+  m_OnClick:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 11500000, guid: 68d16a64bde804422b141bdf925c594a, type: 3}
+        m_MethodName: 
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+--- !u!114 &734852235
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 734852232}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -765806418, guid: f5f67c52d1564df4a8936ccd202a3bd8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+    m_TypeName: UnityEngine.UI.MaskableGraphic+CullStateChangedEvent, UnityEngine.UI,
+      Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
+  m_Sprite: {fileID: 21300000, guid: 01525bb0a9611453db4f2e2efb862949, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+--- !u!222 &734852236
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 734852232}
 --- !u!1 &743710483
 GameObject:
   m_ObjectHideFlags: 0
@@ -13742,7 +13882,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -58.4, y: 131.3}
+  m_AnchoredPosition: {x: -66.3, y: 131.3}
   m_SizeDelta: {x: 136.75, y: 138.11}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1337076900
@@ -15379,6 +15519,116 @@ MonoBehaviour:
     type: 2}
   m_PrefabInternal: {fileID: 1601627033}
   m_Script: {fileID: 11500000, guid: 9c7bdbeef116994469f92c84d48e0cd4, type: 3}
+--- !u!1 &1604844914
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 1604844915}
+  - component: {fileID: 1604844918}
+  - component: {fileID: 1604844917}
+  - component: {fileID: 1604844916}
+  m_Layer: 5
+  m_Name: nextTutorialButton
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 4294967295
+  m_IsActive: 1
+--- !u!224 &1604844915
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1604844914}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 22.381039}
+  m_LocalScale: {x: 1.398815, y: 1.398815, z: 1.398815}
+  m_Children: []
+  m_Father: {fileID: 1737318157}
+  m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.6145755, y: 0.45178577}
+  m_AnchorMax: {x: 0.6451227, y: 0.5047857}
+  m_AnchoredPosition: {x: -9.1, y: 111.9}
+  m_SizeDelta: {x: 11.955057, y: 2.9072514}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1604844916
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1604844914}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 1392445389, guid: f5f67c52d1564df4a8936ccd202a3bd8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Navigation:
+    m_Mode: 3
+    m_SelectOnUp: {fileID: 0}
+    m_SelectOnDown: {fileID: 0}
+    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnRight: {fileID: 0}
+  m_Transition: 1
+  m_Colors:
+    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
+    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
+    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_ColorMultiplier: 1
+    m_FadeDuration: 0.1
+  m_SpriteState:
+    m_HighlightedSprite: {fileID: 0}
+    m_PressedSprite: {fileID: 0}
+    m_DisabledSprite: {fileID: 0}
+  m_AnimationTriggers:
+    m_NormalTrigger: Normal
+    m_HighlightedTrigger: Highlighted
+    m_PressedTrigger: Pressed
+    m_DisabledTrigger: Disabled
+  m_Interactable: 1
+  m_TargetGraphic: {fileID: 1604844917}
+  m_OnClick:
+    m_PersistentCalls:
+      m_Calls: []
+    m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+--- !u!114 &1604844917
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1604844914}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -765806418, guid: f5f67c52d1564df4a8936ccd202a3bd8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+    m_TypeName: UnityEngine.UI.MaskableGraphic+CullStateChangedEvent, UnityEngine.UI,
+      Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
+  m_Sprite: {fileID: 21300000, guid: 01525bb0a9611453db4f2e2efb862949, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+--- !u!222 &1604844918
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1604844914}
 --- !u!1 &1605732530
 GameObject:
   m_ObjectHideFlags: 0
@@ -16109,6 +16359,8 @@ RectTransform:
   m_Children:
   - {fileID: 714844913}
   - {fileID: 1337076899}
+  - {fileID: 1604844915}
+  - {fileID: 734852233}
   m_Father: {fileID: 1961350969}
   m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -18176,6 +18428,8 @@ MonoBehaviour:
   explanation: 'We need to build up our first tier to prepare to bring in some predators.
     Take a look at the water temperature. We need to be strategic and buy fish that
     would thrive in this water temperature. '
+  nextTutorial: {fileID: 1604844914}
+  prevTutorial: {fileID: 734852232}
 --- !u!114 &1940112446
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18190,6 +18444,8 @@ MonoBehaviour:
   order: 16
   explanation: 'As you can see, the shop is broken down into 3 tiers, just like our
     energy pyramid! '
+  nextTutorial: {fileID: 1604844914}
+  prevTutorial: {fileID: 734852232}
 --- !u!114 &1940112447
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18222,6 +18478,8 @@ MonoBehaviour:
   order: 21
   explanation: If your ecosystem is getting cluttered or you need to get rid of some
     fish to reach equilibrium, you can sell your creatures.
+  nextTutorial: {fileID: 1604844914}
+  prevTutorial: {fileID: 734852232}
 --- !u!114 &1940112449
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18235,6 +18493,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   order: 20
   explanation: Great! Looks like you're getting the hang of it!
+  nextTutorial: {fileID: 1604844914}
+  prevTutorial: {fileID: 734852232}
 --- !u!114 &1940112450
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18249,6 +18509,8 @@ MonoBehaviour:
   order: 22
   explanation: "Simply go to the shop and switch the mode from \u201Cbuy\u201D to
     \u201Csell\u201D and select how many fish you would like to sell."
+  nextTutorial: {fileID: 1604844914}
+  prevTutorial: {fileID: 734852232}
 --- !u!114 &1940112451
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18263,6 +18525,8 @@ MonoBehaviour:
   order: 23
   explanation: "And that\u2019s it! Those are all the ways you can help maintain this
     ecosystem. "
+  nextTutorial: {fileID: 1604844914}
+  prevTutorial: {fileID: 734852232}
 --- !u!1 &1943393653
 GameObject:
   m_ObjectHideFlags: 0
@@ -19158,6 +19422,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   order: 0
   explanation: Hey!
+  nextTutorial: {fileID: 1604844914}
+  prevTutorial: {fileID: 734852232}
 --- !u!114 &2064681713
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -19172,6 +19438,8 @@ MonoBehaviour:
   order: 4
   explanation: "See, you\u2019ve entered the TinySea ecosystem, and we\u2019re in
     need of some serious help."
+  nextTutorial: {fileID: 1604844914}
+  prevTutorial: {fileID: 734852232}
 --- !u!114 &2064681714
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -19185,6 +19453,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   order: 3
   explanation: Would you lend a fish a hand?
+  nextTutorial: {fileID: 1604844914}
+  prevTutorial: {fileID: 734852232}
 --- !u!114 &2064681715
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -19198,6 +19468,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   order: 2
   explanation: Yeah, you!
+  nextTutorial: {fileID: 1604844914}
+  prevTutorial: {fileID: 734852232}
 --- !u!114 &2064681716
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -19211,6 +19483,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   order: 1
   explanation: You!
+  nextTutorial: {fileID: 1604844914}
+  prevTutorial: {fileID: 734852232}
 --- !u!114 &2065951854
 MonoBehaviour:
   m_ObjectHideFlags: 0

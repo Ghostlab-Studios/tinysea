@@ -67,6 +67,11 @@ public class TutorialManager : MonoBehaviour {
         SetNextTutorial(currentTutorial.order + 1);
     }
 
+    public void ReversedTutorial()
+    {
+        SetNextTutorial(currentTutorial.order - 1);
+    }
+
     public void CompletedAllTutorials()
     {
         //expText.text = "Completed all tutorials";

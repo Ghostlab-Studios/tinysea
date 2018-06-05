@@ -109,13 +109,7 @@ public class SwimmingHolder : MonoBehaviour {
                 filteredC.Add(c);
             }
         }
-        if (filteredC.Count == 0)
-        {
-            Debug.Log("Fucking work");
-            return new SwimmingCreature();
-        }
-        else
-        {
+
             int randIndex = Random.Range(0, filteredC.Count);
             try
             {
@@ -131,7 +125,6 @@ public class SwimmingHolder : MonoBehaviour {
                 return null;
 
             }
-        }
         //return (filteredC[randIndex]);
     }
 

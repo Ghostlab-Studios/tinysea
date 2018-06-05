@@ -30,9 +30,9 @@ public class ThermalCurve : MonoBehaviour {
                     Mathf.Exp(arrhenUpper / upperBound - arrhenUpper / optimalTemp)) /
                 (1 + Mathf.Exp(arrhenLower / temp - arrhenLower / lowerBound) +
                     Mathf.Exp(arrhenUpper / upperBound - arrhenUpper / temp));
-        if(performance > 1) {
+        /*if(performance > 1) {
             performance = 1;
-        }
+        }*/
 
         return performance;
     }

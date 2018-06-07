@@ -368,6 +368,8 @@ MonoBehaviour:
   explanation: This pyramid represents the ratio of prey to predators.
   nextTutorial: {fileID: 1604844914}
   prevTutorial: {fileID: 734852232}
+  nextClicked: 0
+  prevClicked: 0
 --- !u!114 &12546334
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -383,6 +385,8 @@ MonoBehaviour:
   explanation: You see, there are tiers to our ecosystem - a food chain of sorts.
   nextTutorial: {fileID: 1604844914}
   prevTutorial: {fileID: 734852232}
+  nextClicked: 0
+  prevClicked: 0
 --- !u!114 &12546335
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -399,6 +403,8 @@ MonoBehaviour:
     needs to be in equilibrium with... Well, itself!
   nextTutorial: {fileID: 1604844914}
   prevTutorial: {fileID: 734852232}
+  nextClicked: 0
+  prevClicked: 0
 --- !u!114 &12546336
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -434,6 +440,8 @@ MonoBehaviour:
     for the Tier III creatures.
   nextTutorial: {fileID: 1604844914}
   prevTutorial: {fileID: 734852232}
+  nextClicked: 0
+  prevClicked: 0
 --- !u!114 &12546338
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -450,6 +458,8 @@ MonoBehaviour:
     Take a look at what the pyramid looks like now: It''s all empty! '
   nextTutorial: {fileID: 1604844914}
   prevTutorial: {fileID: 734852232}
+  nextClicked: 0
+  prevClicked: 0
 --- !u!114 &12546339
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -465,6 +475,8 @@ MonoBehaviour:
   explanation: TinySea has been completely wiped out, and I want to rebuild it!
   nextTutorial: {fileID: 1604844914}
   prevTutorial: {fileID: 734852232}
+  nextClicked: 0
+  prevClicked: 0
 --- !u!114 &12546340
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -481,6 +493,8 @@ MonoBehaviour:
     temperature changes too quickly, our ecosystem is in great danger.
   nextTutorial: {fileID: 1604844914}
   prevTutorial: {fileID: 734852232}
+  nextClicked: 0
+  prevClicked: 0
 --- !u!114 &12546341
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6961,7 +6975,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -68, y: 145.1}
+  m_AnchoredPosition: {x: -65.4, y: 145.1}
   m_SizeDelta: {x: 181.46, y: 157.74}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &714844914
@@ -18430,6 +18444,8 @@ MonoBehaviour:
     would thrive in this water temperature. '
   nextTutorial: {fileID: 1604844914}
   prevTutorial: {fileID: 734852232}
+  nextClicked: 0
+  prevClicked: 0
 --- !u!114 &1940112446
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18446,6 +18462,8 @@ MonoBehaviour:
     energy pyramid! '
   nextTutorial: {fileID: 1604844914}
   prevTutorial: {fileID: 734852232}
+  nextClicked: 0
+  prevClicked: 0
 --- !u!114 &1940112447
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18480,6 +18498,8 @@ MonoBehaviour:
     fish to reach equilibrium, you can sell your creatures.
   nextTutorial: {fileID: 1604844914}
   prevTutorial: {fileID: 734852232}
+  nextClicked: 0
+  prevClicked: 0
 --- !u!114 &1940112449
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18495,6 +18515,8 @@ MonoBehaviour:
   explanation: Great! Looks like you're getting the hang of it!
   nextTutorial: {fileID: 1604844914}
   prevTutorial: {fileID: 734852232}
+  nextClicked: 0
+  prevClicked: 0
 --- !u!114 &1940112450
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18511,6 +18533,8 @@ MonoBehaviour:
     \u201Csell\u201D and select how many fish you would like to sell."
   nextTutorial: {fileID: 1604844914}
   prevTutorial: {fileID: 734852232}
+  nextClicked: 0
+  prevClicked: 0
 --- !u!114 &1940112451
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18527,6 +18551,8 @@ MonoBehaviour:
     ecosystem. "
   nextTutorial: {fileID: 1604844914}
   prevTutorial: {fileID: 734852232}
+  nextClicked: 0
+  prevClicked: 0
 --- !u!1 &1943393653
 GameObject:
   m_ObjectHideFlags: 0
@@ -19424,6 +19450,8 @@ MonoBehaviour:
   explanation: Hey!
   nextTutorial: {fileID: 1604844914}
   prevTutorial: {fileID: 734852232}
+  nextClicked: 0
+  prevClicked: 0
 --- !u!114 &2064681713
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -19440,6 +19468,8 @@ MonoBehaviour:
     need of some serious help."
   nextTutorial: {fileID: 1604844914}
   prevTutorial: {fileID: 734852232}
+  nextClicked: 0
+  prevClicked: 0
 --- !u!114 &2064681714
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -19455,6 +19485,8 @@ MonoBehaviour:
   explanation: Would you lend a fish a hand?
   nextTutorial: {fileID: 1604844914}
   prevTutorial: {fileID: 734852232}
+  nextClicked: 0
+  prevClicked: 0
 --- !u!114 &2064681715
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -19470,6 +19502,8 @@ MonoBehaviour:
   explanation: Yeah, you!
   nextTutorial: {fileID: 1604844914}
   prevTutorial: {fileID: 734852232}
+  nextClicked: 0
+  prevClicked: 0
 --- !u!114 &2064681716
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -19485,6 +19519,8 @@ MonoBehaviour:
   explanation: You!
   nextTutorial: {fileID: 1604844914}
   prevTutorial: {fileID: 734852232}
+  nextClicked: 0
+  prevClicked: 0
 --- !u!114 &2065951854
 MonoBehaviour:
   m_ObjectHideFlags: 0

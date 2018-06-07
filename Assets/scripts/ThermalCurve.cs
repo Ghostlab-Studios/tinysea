@@ -25,9 +25,9 @@ public class ThermalCurve : MonoBehaviour {
     {
         //float oT = optimalTemp + 275.15f;
 
-        float performance = Mathf.Exp(arrhenBreadth / optimalTemp - arrhenBreadth / temp) *
+        float performance = (Mathf.Exp(arrhenBreadth / optimalTemp - arrhenBreadth / temp) *
                 (1 + Mathf.Exp(arrhenLower / optimalTemp - arrhenLower / lowerBound) +
-                    Mathf.Exp(arrhenUpper / upperBound - arrhenUpper / optimalTemp)) /
+                    Mathf.Exp(arrhenUpper / upperBound - arrhenUpper / optimalTemp))) /
                 (1 + Mathf.Exp(arrhenLower / temp - arrhenLower / lowerBound) +
                     Mathf.Exp(arrhenUpper / upperBound - arrhenUpper / temp));
         /*if(performance > 1) {

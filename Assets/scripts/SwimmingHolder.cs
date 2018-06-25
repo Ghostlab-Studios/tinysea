@@ -76,14 +76,24 @@ public class SwimmingHolder : MonoBehaviour {
         c.id = cId;
         //move it out of the way so that it doesn't flicker before spawning.
         c.transform.position = c.transform.position + new Vector3(99999, 9999, 0);
+        Vector3 fallbackPos = new Vector3(-10, -5, 0);
         switch (cause)
         {
             case CharacterManager.BirthCause.Bought:
                 c.StartBuying();
                 break;
             case CharacterManager.BirthCause.Reproduction:
-                c.StartReproducing(player.reproducePart, findRandomCreatureOfID(cId).transform.position);
-                break;
+                if (CreatureWithIDExists(cId))
+                {
+                    c.StartReproducing(player.reproducePart, findRandomCreatureOfID(cId).transform.position);
+                    break;
+                }
+                else
+                {
+                    Debug.Log("Fallback pos called");
+                    c.StartReproducing(player.reproducePart, fallbackPos);
+                    break;
+                }
         }
         creatures.Add(c);
     }
@@ -208,13 +218,22 @@ public class SwimmingHolder : MonoBehaviour {
                     try
                     {
                         // literally why
-                        SwimmingCreature predator = findRandomCreatureOfTier(c.level + 1);
-                        float fasterHunting = Mathf.Max(1, predator.huntingFish.Count);
-                        FishHunt hunt = new FishHunt(predator, c, predatorTime / fasterHunting);
-                        predator.huntingFish.Add(hunt);
-                        c.getEaten(hunt);
-                        predator.startEating();
-                        break;
+                        if (CreatureOfTierExists(c.level + 1))
+                        {
+                            SwimmingCreature predator = findRandomCreatureOfTier(c.level + 1);
+                            float fasterHunting = Mathf.Max(1, predator.huntingFish.Count);
+                            FishHunt hunt = new FishHunt(predator, c, predatorTime / fasterHunting);
+                            predator.huntingFish.Add(hunt);
+                            c.getEaten(hunt);
+                            predator.startEating();
+                            break;
+                        }
+                        else
+                        {
+                            Debug.Log("Predator did not exist");
+                            c.startDying(player.starvedPart);
+                            break;
+                        }
                     } catch (System.ArgumentOutOfRangeException a)
                     {
                         Debug.Log(a);
@@ -230,5 +249,43 @@ public class SwimmingHolder : MonoBehaviour {
                     break;
             }
         }
+    }
+
+    // Preventative check for undesired behavior
+    bool CreatureOfTierExists(int tier)
+    {
+        //Debug.Log("This was called");
+        bool exists = false;
+        
+        while(!exists)
+        {
+            for (int i = 0; i < creatures.Count; i++)
+            {
+                if (creatures[i].level == tier)
+                {
+                    exists = true;
+                }
+            }
+        }
+        return exists;
+    }
+
+    // Preventative check for undesired behavior
+    bool CreatureWithIDExists(int id)
+    {
+        //Debug.Log("This was called");
+        bool exists = false;
+
+        while (!exists)
+        {
+            for (int i = 0; i < creatures.Count; i++)
+            {
+                if (creatures[i].id == id)
+                {
+                    exists = true;
+                }
+            }
+        }
+        return exists;
     }
 }

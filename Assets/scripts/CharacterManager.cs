@@ -23,6 +23,7 @@ public class CharacterManager : MonoBehaviour {
     public float deathThreashold = .3f; //if performance gets too low, you start dying
     public float deathRate = .5f; //if I'm dying, population drops by this ratio every day
     public float minimumDeaths = 1; //if I'm dying, I will always lose at least this many fish!
+    public float reproThreshold = .25f; // Only reproduce if above this threshold
 
     public int eatingStars = 5;
     public int reproductionStars = 5;
@@ -105,6 +106,11 @@ public class CharacterManager : MonoBehaviour {
         else if (player.getTotalFishCount() >= player.maxFishes)
         {
             Debug.Log("Max fishes, not reproducing");
+            return;
+        }
+        else if (getFinalPerformance() < reproThreshold)
+        {
+            Debug.Log("Not higher than the reproduction threshold");
             return;
         }
         else 

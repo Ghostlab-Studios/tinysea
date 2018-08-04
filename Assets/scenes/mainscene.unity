@@ -514,8 +514,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   rightButton: {fileID: 1216342602}
   leftButton: {fileID: 381033257}
+  middleButton: {fileID: 0}
   Panel1: {fileID: 1398316926}
   Panel2: {fileID: 94904707}
+  Panel3: {fileID: 0}
+  tier1Button: {fileID: 0}
+  tier2Button: {fileID: 0}
+  tier3Button: {fileID: 0}
+  tier: 0
 --- !u!1 &50968395
 GameObject:
   m_ObjectHideFlags: 0
@@ -2957,6 +2963,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   window: {fileID: 335514766}
   controler: {fileID: 596963988}
+  exitButton: {fileID: 0}
   open: 0
   slideAmount: 164
   slideTime: 0.2
@@ -7358,8 +7365,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   rightButton: {fileID: 1665368903}
   leftButton: {fileID: 1808112413}
+  middleButton: {fileID: 0}
   Panel1: {fileID: 24212965}
   Panel2: {fileID: 773726573}
+  Panel3: {fileID: 0}
+  tier1Button: {fileID: 0}
+  tier2Button: {fileID: 0}
+  tier3Button: {fileID: 0}
+  tier: 0
 --- !u!1 &773726573
 GameObject:
   m_ObjectHideFlags: 0
@@ -8610,6 +8623,7 @@ MonoBehaviour:
   lowestLevel: 1
   highestLevel: 3
   temperature: {fileID: 1089677629}
+  tempTrend: {fileID: 0}
   days: 0
   moneys: 500
   dayStep: 1
@@ -9150,6 +9164,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   window: {fileID: 901813095}
   controler: {fileID: 1275367899}
+  exitButton: {fileID: 0}
   open: 0
   slideAmount: 162
   slideTime: 0.2
@@ -11042,6 +11057,8 @@ MonoBehaviour:
   animationFlipMinSpeed: 0.3
   animating: 0
   temperature: 20
+  trend: {fileID: 0}
+  currentDay: 1
 --- !u!4 &1089677630
 Transform:
   m_ObjectHideFlags: 0
@@ -13773,8 +13790,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   rightButton: {fileID: 543482184}
   leftButton: {fileID: 1082563212}
+  middleButton: {fileID: 0}
   Panel1: {fileID: 1202532676}
   Panel2: {fileID: 438661291}
+  Panel3: {fileID: 0}
+  tier1Button: {fileID: 0}
+  tier2Button: {fileID: 0}
+  tier3Button: {fileID: 0}
+  tier: 0
 --- !u!1 &1411307587
 GameObject:
   m_ObjectHideFlags: 0
@@ -17805,6 +17828,12 @@ MonoBehaviour:
   tire1Selected: {fileID: 766917932}
   tire2Selected: {fileID: 32714083}
   tire3Selected: {fileID: 1411271867}
+  tier1ASelected: {fileID: 0}
+  tier1TSelected: {fileID: 0}
+  tier2ASelected: {fileID: 0}
+  tier2TSelected: {fileID: 0}
+  tier3ASelected: {fileID: 0}
+  tier3TSelected: {fileID: 0}
 --- !u!114 &1943393659
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17818,6 +17847,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   window: {fileID: 1605732530}
   controler: {fileID: 116639632}
+  exitButton: {fileID: 0}
   open: 0
   slideAmount: 552
   slideTime: 0.6

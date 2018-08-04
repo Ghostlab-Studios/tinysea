@@ -49,29 +49,50 @@ public class Shop : MonoBehaviour {
 	public GameObject tire2Button;
 	public GameObject tire3Button;
 
-	//tires' selection
-	public GameObject tire1Selected;
+    //tires' selection
+    public GameObject tire1Selected;
 	public GameObject tire2Selected;
 	public GameObject tire3Selected;
+    public GameObject tier1ASelected;
+    public GameObject tier1TSelected;
+    public GameObject tier2ASelected;
+    public GameObject tier2TSelected;
+    public GameObject tier3ASelected;
+    public GameObject tier3TSelected;
 
     private int selectedFish = 0;
     private int currentFishes = 0;
     private int currentSellingFishes = 0;
 
-	// Use this for initialization
-	void Start () {
-		tire1Button.GetComponent<Button>().
-			onClick.AddListener (() => EnableWindow (tire1Selected, tire2Selected, tire3Selected, 1));
-		tire2Button.GetComponent<Button>().
-			onClick.AddListener (() => EnableWindow (tire2Selected, tire1Selected, tire3Selected, 2));
-		tire3Button.GetComponent<Button>().
-			onClick.AddListener (() => EnableWindow (tire3Selected, tire1Selected, tire2Selected, 3));
-		selectionWindow.SetActive (false);
+    // Use this for initialization
+    void Start()
+    {
+        tire1Button.GetComponent<Button>().
+            onClick.AddListener(() => EnableWindow(tire1Selected, tire2Selected, tire3Selected, 1));
+        tire2Button.GetComponent<Button>().
+            onClick.AddListener(() => EnableWindow(tire2Selected, tire1Selected, tire3Selected, 2));
+        tire3Button.GetComponent<Button>().
+            onClick.AddListener(() => EnableWindow(tire3Selected, tire1Selected, tire2Selected, 3));
+        selectionWindow.SetActive(false);
+
+        /*tier1AButton.GetComponent<Button>().
+            onClick.AddListener(() => EnableWindow(tier1ASelected, tier2ASelected, tier3ASelected, 1));
+        tier2AButton.GetComponent<Button>().
+            onClick.AddListener(() => EnableWindow(tier2ASelected, tier1ASelected, tier3ASelected, 2));
+        tier3AButton.GetComponent<Button>().
+            onClick.AddListener(() => EnableWindow(tier3ASelected, tier1ASelected, tier2ASelected, 3));
+
+        tier1TButton.GetComponent<Button>().
+            onClick.AddListener(() => EnableWindow(tier1TSelected, tier2TSelected, tier3TSelected, 1));
+        tier2TButton.GetComponent<Button>().
+            onClick.AddListener(() => EnableWindow(tier2TSelected, tier1TSelected, tier3TSelected, 2));
+        tier3TButton.GetComponent<Button>().
+            onClick.AddListener(() => EnableWindow(tier3TSelected, tier1TSelected, tier1TSelected, 1));*/
 
         buttonPress(0);
 
         writePricebox();
-	}	
+    }
 
 	void Awake(){
         //add cost boxes to all the buttons
@@ -145,7 +166,7 @@ public class Shop : MonoBehaviour {
         }
         //update text
         totalfishes.text = currentFishes.ToString();
-        totalPrice.text = "$" + (theFishWeWant.cost * currentFishes).ToString();
+        totalPrice.text = "- $" + (theFishWeWant.cost * currentFishes).ToString();
         currentName.text = theFishWeWant.uniqueName;
         sellingName.text = currentName.text;
 

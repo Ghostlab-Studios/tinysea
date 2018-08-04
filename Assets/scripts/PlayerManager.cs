@@ -16,6 +16,7 @@ public class PlayerManager : MonoBehaviour {
     public int lowestLevel = 1;
     public int highestLevel = 3;
     public Temperature temperature;
+    public TemperatureTrend tempTrend;
 	/*
 	 *  Player's data
 	 */
@@ -70,7 +71,7 @@ public class PlayerManager : MonoBehaviour {
             waitingForTemperature = true;
             busy = true;
             temperature.updateTemperature();
-            
+            temperature.currentDay++;
         }
     }
 

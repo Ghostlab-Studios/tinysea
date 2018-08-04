@@ -42,12 +42,26 @@ public class ThermalCurve : MonoBehaviour {
 	    
 	}
 
+    public float Curves(float temp)
+    {
+        float performance = (Mathf.Exp(arrhenBreadth / optimalTemp - arrhenBreadth / temp) *
+                (1 + Mathf.Exp(arrhenLower / optimalTemp - arrhenLower / lowerBound) +
+                    Mathf.Exp(arrhenUpper / upperBound - arrhenUpper / optimalTemp))) /
+                (1 + Mathf.Exp(arrhenLower / temp - arrhenLower / lowerBound) +
+                    Mathf.Exp(arrhenUpper / upperBound - arrhenUpper / temp));
+
+        if(performance > 1) {
+           performance = 1;
+        }
+        return performance;
+    }
+
     void OnDrawGizmos()
     {
         for (int i = 0; i < 40; i++)
         {
             Gizmos.DrawLine(transform.position + new Vector3(i, getCurve(i + 273) * 40),
-                transform.position + new Vector3(i + 1, getCurve(i + 273 + 1) * 40));
+                transform.position + new Vector3(i + 1, (getCurve(i + 273 + 1) * 40) / 2));
         }
     }
 }

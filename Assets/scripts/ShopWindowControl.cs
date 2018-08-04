@@ -11,6 +11,7 @@ public class ShopWindowControl : MonoBehaviour {
 
 	//initialize Button
 	public GameObject controler;
+    public GameObject exitButton;
 	RectTransform rt;
 
 	
@@ -27,6 +28,8 @@ public class ShopWindowControl : MonoBehaviour {
 		rt = (RectTransform)window.transform;
 		controler.GetComponent<Button>().
 			onClick.AddListener (() => Controler());
+        exitButton.GetComponent<Button>().
+            onClick.AddListener(() => Controler());
         //float startX = rt.anchoredPosition.x;
 	}
 

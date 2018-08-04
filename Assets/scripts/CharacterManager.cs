@@ -113,6 +113,11 @@ public class CharacterManager : MonoBehaviour {
             Debug.Log("Not higher than the reproduction threshold");
             return;
         }
+        else if (speciesAmount < 2)
+        {
+            Debug.Log("Need two fish to reproduce");
+            return;
+        }
         else 
         {
             float fishToMax = (player.maxFishes) - player.getTotalFishCount();

@@ -105,7 +105,7 @@ public class Shop : MonoBehaviour {
                 RectTransform rT = nText.GetComponent<RectTransform>();
                 RectTransform prefabRT = costPrefab.GetComponent<RectTransform>();
                 rT.SetParent(child.transform);
-                rT.localScale = Vector3.one;
+                rT.localScale = prefabRT.localScale;
                 rT.localPosition = prefabRT.localPosition;
                 rT.offsetMax = prefabRT.offsetMax;
                 rT.offsetMin = prefabRT.offsetMin;

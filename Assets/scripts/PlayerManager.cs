@@ -60,6 +60,7 @@ public class PlayerManager : MonoBehaviour {
         foreach (CharacterManager c in species)
         {
             c.player = this;
+            //Debug.Log(c.uniqueName);
         }
         holder = FindObjectOfType<SwimmingHolder>();
 	}

@@ -11,7 +11,7 @@ public class Shop : MonoBehaviour {
 
 	//initialize the prefab
 	public GameObject selectionWindow;
-	List<Text> priceTexts;
+	public List<Text> priceTexts;
     public List<GameObject> Pages;
     public GameObject costPrefab;
 
@@ -38,6 +38,8 @@ public class Shop : MonoBehaviour {
     public Text thermalBreadthText;
     public Text descriptionText;
 
+    int currentTier = 1;
+
     //curve
     public CurveRenderer curveRender;
 
@@ -60,19 +62,26 @@ public class Shop : MonoBehaviour {
     public GameObject tier3ASelected;
     public GameObject tier3TSelected;
 
-    private int selectedFish = 0;
+    public int selectedFish = 0;
     private int currentFishes = 0;
     private int currentSellingFishes = 0;
 
     // Use this for initialization
     void Start()
     {
-        tire1Button.GetComponent<Button>().
+        /*tire1Button.GetComponent<Button>().
             onClick.AddListener(() => EnableWindow(tire1Selected, tire2Selected, tire3Selected, 1));
         tire2Button.GetComponent<Button>().
             onClick.AddListener(() => EnableWindow(tire2Selected, tire1Selected, tire3Selected, 2));
         tire3Button.GetComponent<Button>().
             onClick.AddListener(() => EnableWindow(tire3Selected, tire1Selected, tire2Selected, 3));
+        selectionWindow.SetActive(false);*/
+        tire1Button.GetComponent<Button>().
+            onClick.AddListener(() => EnableWindow(tire1Selected, tire2Selected, tier2ASelected, tier2TSelected, tire3Selected, tier3ASelected, tier3TSelected));
+        tire2Button.GetComponent<Button>().
+            onClick.AddListener(() => EnableWindow(tire2Selected, tire1Selected, tier1ASelected, tier1TSelected, tire3Selected, tier3ASelected, tier3TSelected));
+        tire3Button.GetComponent<Button>().
+            onClick.AddListener(() => EnableWindow(tire3Selected, tire1Selected, tier1ASelected, tier1TSelected, tire2Selected, tier2ASelected, tier2TSelected));
         selectionWindow.SetActive(false);
 
         /*tier1AButton.GetComponent<Button>().
@@ -123,22 +132,35 @@ public class Shop : MonoBehaviour {
         }
 
         //update the text boxes
-        for (int i = 0; i < costs.Count; i++ )
+        
+        for (int i = 0; i < costs.Count; i++)
         {
             priceTexts[i].text = "$" + costs[i];
         }
-
-
 	}
 
-	public void EnableWindow(GameObject SlectedTire, GameObject NonSelectedTire1, GameObject NonSelectedTire2, int tab){
+    /*public void EnableWindow(GameObject SlectedTire, GameObject NonSelectedTire1, GameObject NonSelectedTire2, int tab){
 		SlectedTire.SetActive (true);
 		NonSelectedTire1.SetActive(false);
 		NonSelectedTire2.SetActive(false);
         //currentTab = tab;
 		selectionWindow.SetActive (false);
 
-	}
+
+	}*/
+
+    public void EnableWindow(GameObject selectedTier, GameObject tab1, GameObject tab2, GameObject tab3, GameObject tab4, GameObject tab5, GameObject tab6)
+    {
+        selectedTier.SetActive(true);
+        tab1.SetActive(false);
+        tab2.SetActive(false);
+        tab3.SetActive(false);
+        tab4.SetActive(false);
+        tab5.SetActive(false);
+        tab6.SetActive(false);
+
+        selectionWindow.SetActive(false);
+    }
 
     public void buttonPress(int fish)
     {
@@ -158,6 +180,7 @@ public class Shop : MonoBehaviour {
         slider.value = 0;
 
         CharacterManager theFishWeWant = playerObj.species[selectedFish];
+        //Debug.Log(theFishWeWant.uniqueName);
 
         //cap purchasing based on money
         while (theFishWeWant.cost * currentFishes > playerObj.moneys)
@@ -179,6 +202,7 @@ public class Shop : MonoBehaviour {
 
         //update thermal curve
         curveRender.curve = playerObj.species[selectedFish].thermalcurve;
+
     }
 
     private string getStars(int starNum)

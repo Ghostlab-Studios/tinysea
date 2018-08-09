@@ -82,7 +82,7 @@ public class Temperature : MonoBehaviour
         historicalTemperatures = new Queue<float>();
         for (int i = 0; i < historicalSegments; i++)
         {
-            historicalTemperatures.Enqueue(20);
+            historicalTemperatures.Enqueue(5);
         }
         historicalLineRenders = new List<LineRenderer>();
         for (int i = 0; i < historicalSegments - 1; i++)
@@ -141,7 +141,7 @@ public class Temperature : MonoBehaviour
         tempText.text = temperature.ToString();
         tempRound = temperature;
         tempVisual = temperature;
-        currentBar = bar20;
+        currentBar = bar5;
     }
 
     // Update is called once per frame
@@ -241,7 +241,6 @@ public class Temperature : MonoBehaviour
         UpdateTempVisual();
         UpdateTempBar();
         currentDot.temperature = tempVisual;
-        Debug.Log(dots.Count);
         //temperature = trend.GetTemperature(currentDay);
         historicalTemperatures.Dequeue();
         historicalTemperatures.Enqueue(temperature);

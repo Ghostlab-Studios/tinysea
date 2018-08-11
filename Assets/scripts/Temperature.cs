@@ -427,7 +427,7 @@ public class Temperature : MonoBehaviour
                 else
                 {
                     i--;
-                    toohigh = true;
+                    toohigh = true;  
                 }
             }
             else

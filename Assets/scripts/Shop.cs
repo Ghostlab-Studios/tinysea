@@ -76,6 +76,7 @@ public class Shop : MonoBehaviour {
         tire3Button.GetComponent<Button>().
             onClick.AddListener(() => EnableWindow(tire3Selected, tire1Selected, tire2Selected, 3));
         selectionWindow.SetActive(false);*/
+
         tire1Button.GetComponent<Button>().
             onClick.AddListener(() => EnableWindow(tire1Selected, tire2Selected, tier2ASelected, tier2TSelected, tire3Selected, tier3ASelected, tier3TSelected));
         tire2Button.GetComponent<Button>().

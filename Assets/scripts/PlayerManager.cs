@@ -16,7 +16,6 @@ public class PlayerManager : MonoBehaviour {
     public int lowestLevel = 1;
     public int highestLevel = 3;
     public Temperature temperature;
-    public TemperatureTrend tempTrend;
 	/*
 	 *  Player's data
 	 */

@@ -62,9 +62,21 @@ public class Shop : MonoBehaviour {
     public GameObject tier3ASelected;
     public GameObject tier3TSelected;
 
+    public Button buyIncrease;
+    public Button buyDecrease;
+    public Button sellIncrease;
+    public Button sellDecrease;
+
     public int selectedFish = 0;
     private int currentFishes = 0;
     private int currentSellingFishes = 0;
+
+    private WaitForSeconds buffer = new WaitForSeconds(0.2f);
+    public bool buyIncreasing;
+    public bool buyDecreasing;
+    public bool sellIncreasing;
+    public bool sellDecreasing;
+    private bool allowPress = true;
 
     // Use this for initialization
     void Start()
@@ -124,7 +136,55 @@ public class Shop : MonoBehaviour {
         }
 	}
 
-	public void writePricebox (){
+    public void ToggleBuyIncrease()
+    {
+        if (buyIncreasing)
+        {
+            buyIncreasing = false;
+        }
+        else
+        {
+            buyIncreasing = true;
+        }
+    }
+
+    public void ToggleBuyDecrease()
+    {
+        if (buyDecreasing)
+        {
+            buyDecreasing = false;
+        }
+        else
+        {
+            buyDecreasing = true;
+        }
+    }
+
+    public void ToggleSellIncrease()
+    {
+        if (sellIncreasing)
+        {
+            sellIncreasing = false;
+        }
+        else
+        {
+            sellIncreasing = true;
+        }
+    }
+
+    public void ToggleSellDecrease()
+    {
+        if (sellDecreasing)
+        {
+            sellDecreasing = false;
+        }
+        else
+        {
+            sellDecreasing = true;
+        }
+    }
+
+    public void writePricebox (){
         //collect all the fish costs
         List<float> costs = new List<float>();
         foreach (CharacterManager c in playerObj.species)
@@ -139,6 +199,76 @@ public class Shop : MonoBehaviour {
             priceTexts[i].text = "$" + costs[i];
         }
 	}
+
+    private void Update()
+    {
+        if (buyIncreasing)
+        {
+            if (allowPress)
+            {
+                StartCoroutine(BuySellAction(0));
+            }
+            else
+            {
+                return;
+            }
+        }
+        if (buyDecreasing)
+        {
+            if (allowPress)
+            {
+                StartCoroutine(BuySellAction(1));
+            }
+            else return;
+        }
+        if (sellIncreasing)
+        {
+            if (allowPress)
+            {
+                StartCoroutine(BuySellAction(2));
+            }
+            else return;
+        }
+        if (sellDecreasing)
+        {
+            if (allowPress)
+            {
+                StartCoroutine(BuySellAction(3));
+            }
+            else return;
+        }
+    }
+
+    private IEnumerator BuySellAction(int index)
+    {
+        switch (index)
+        {
+            case 0:
+                allowPress = false;
+                yield return buffer;
+                addfishes(1);
+                allowPress = true;
+                break;
+            case 1:
+                allowPress = false;
+                addfishes(-1);
+                yield return buffer;
+                allowPress = true;
+                break;
+            case 2:
+                allowPress = false;
+                addSellingFishes(1);
+                yield return buffer;
+                allowPress = true;
+                break;
+            default:
+                allowPress = false;
+                addSellingFishes(-1);
+                yield return buffer;
+                allowPress = true;
+                break;
+        }
+    }
 
     /*public void EnableWindow(GameObject SlectedTire, GameObject NonSelectedTire1, GameObject NonSelectedTire2, int tab){
 		SlectedTire.SetActive (true);
@@ -247,7 +377,6 @@ public class Shop : MonoBehaviour {
         totalPrice.text = (playerObj.species[selectedFish].cost * currentFishes).ToString();
 	}
 
-    // I don't think this function is used anywhere???
     public void addSellingFishes(int number)
     {
         float amount = playerObj.species[selectedFish].speciesAmount;

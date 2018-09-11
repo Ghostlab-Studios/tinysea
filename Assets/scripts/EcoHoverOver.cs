@@ -14,7 +14,7 @@ public class EcoHoverOver : MonoBehaviour {
         float temp = 0;
         foreach (CharacterManager c in managers)
         {
-            temp += c.speciesAmount;
+            temp += Mathf.Floor(c.speciesAmount);
         }
         creatures = temp;
         creatureText.text = creatures.ToString();

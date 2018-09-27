@@ -821,7 +821,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tutorialText:
-    name: Tuto
+    name: Nathan
     textPosition: 2
     sentences:
     - Here, we have 3 different creatures, all of the same variety!
@@ -2743,7 +2743,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tutorialText:
-    name: Tuto
+    name: Nathan
     textPosition: 1
     sentences:
     - Hey there!
@@ -3803,7 +3803,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tutorialText:
-    name: Tuto
+    name: Nathan
     textPosition: 1
     sentences:
     - Thank you for sitting through training!
@@ -4974,7 +4974,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tutorialText:
-    name: Tuto
+    name: Nathan
     textPosition: 2
     sentences:
     - "Excellent! I think it\u2019s time for us to discuss specialists vs. generalists."
@@ -6756,7 +6756,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tutorialText:
-    name: Tuto
+    name: Nathan
     textPosition: 2
     sentences:
     - These creatures are known as generalists.
@@ -8982,7 +8982,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tutorialText:
-    name: Tuto
+    name: Nathan
     textPosition: 2
     sentences:
     - "And now, it\u2019s time to talk about the most crucial aspect of building your
@@ -9574,7 +9574,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tutorialText:
-    name: Tuto
+    name: Nathan
     textPosition: 1
     sentences:
     - The pyramid was thrown out of equilibrium because there were not enough tier
@@ -10209,7 +10209,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tutorialText:
-    name: Tuto
+    name: Nathan
     textPosition: 2
     sentences:
     - One of the most essential components to consider while building your ecosystem
@@ -10474,7 +10474,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tutorialText:
-    name: Tuto
+    name: Nathan
     textPosition: 1
     sentences:
     - Great!

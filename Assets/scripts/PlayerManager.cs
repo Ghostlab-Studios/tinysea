@@ -45,6 +45,11 @@ public class PlayerManager : MonoBehaviour {
     public RectTransform tier2EcoBar;
     public RectTransform tier3EcoBar;
 
+    public RectTransform tier1Glow;
+    public RectTransform tier2Glow;
+    public RectTransform tier3Glow;
+    public RectTransform fullGlow;
+
     public ParticleSystem tooCoolPart;
     public ParticleSystem tooHotPart;
     public ParticleSystem eatenPart;
@@ -164,6 +169,41 @@ public class PlayerManager : MonoBehaviour {
             tier1EcoBar.localScale = new Vector3(tiersProp.x, 1, 1);
             tier2EcoBar.localScale = new Vector3(tiersProp.y, 1, 1);
             tier3EcoBar.localScale = new Vector3(tiersProp.z, 1, 1);
+
+            if (tiersProp.x == 1 && tiersProp.y == 1 && tiersProp.z == 1)
+            {
+                tier1Glow.gameObject.SetActive(false);
+                tier2Glow.gameObject.SetActive(false);
+                tier3Glow.gameObject.SetActive(false);
+                fullGlow.gameObject.SetActive(true);
+            }
+
+            if (tiersProp.x == 1)
+            {
+                tier1Glow.gameObject.SetActive(true);
+            }
+            else
+            {
+                tier1Glow.gameObject.SetActive(false);
+            }
+
+            if (tiersProp.y == 1)
+            {
+                tier2Glow.gameObject.SetActive(true);
+            }
+            else
+            {
+                tier2Glow.gameObject.SetActive(false);
+            }
+
+            if (tiersProp.z == 1)
+            {
+                tier3Glow.gameObject.SetActive(true);
+            }
+            else
+            {
+                tier3Glow.gameObject.SetActive(false);
+            }
         }
 
         moneyText.text = Mathf.Floor(moneys).ToString();

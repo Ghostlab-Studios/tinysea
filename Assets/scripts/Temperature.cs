@@ -73,6 +73,8 @@ public class Temperature : MonoBehaviour
 
     private Image currentBar;
 
+    public Image tempFill;
+
     // Use this for initialization
     void Start()
     {
@@ -274,54 +276,7 @@ public class Temperature : MonoBehaviour
 
     private void UpdateTempBar()
     {
-        switch ((int)tempVisual)
-        {
-            case 40:
-                currentBar.gameObject.SetActive(false);
-                currentBar = bar40;
-                currentBar.gameObject.SetActive(true);
-                break;
-            case 35:
-                currentBar.gameObject.SetActive(false);
-                currentBar = bar35;
-                currentBar.gameObject.SetActive(true);
-                break;
-            case 30:
-                currentBar.gameObject.SetActive(false);
-                currentBar = bar30;
-                currentBar.gameObject.SetActive(true);
-                break;
-            case 25:
-                currentBar.gameObject.SetActive(false);
-                currentBar = bar25;
-                currentBar.gameObject.SetActive(true);
-                break;
-            case 20:
-                currentBar.gameObject.SetActive(false);
-                currentBar = bar20;
-                currentBar.gameObject.SetActive(true);
-                break;
-            case 15:
-                currentBar.gameObject.SetActive(false);
-                currentBar = bar15;
-                currentBar.gameObject.SetActive(true);
-                break;
-            case 10:
-                currentBar.gameObject.SetActive(false);
-                currentBar = bar10;
-                currentBar.gameObject.SetActive(true);
-                break;
-            case 5:
-                currentBar.gameObject.SetActive(false);
-                currentBar = bar5;
-                currentBar.gameObject.SetActive(true);
-                break;
-            default:
-                currentBar.gameObject.SetActive(false);
-                currentBar = bar0;
-                currentBar.gameObject.SetActive(true);
-                break;
-        }
+        tempFill.fillAmount = (1 * tempRound / 40) + 0.025f;
     }
 
     float GenerateTemperature(float day)

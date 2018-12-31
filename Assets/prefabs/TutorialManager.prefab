@@ -69,4 +69,5 @@ MonoBehaviour:
   textAnimator: {fileID: 0}
   tutoAnimator: {fileID: 0}
   contButton: {fileID: 0}
+  backButton: {fileID: 0}
   isTutorialScene: 1

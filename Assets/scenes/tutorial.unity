@@ -829,6 +829,7 @@ MonoBehaviour:
     - 'You can see which variations of this creature will be happiest in cold, neutral,
       and hot... '
     - 'temperatures by adjusting the thermometer, just like we did in the last exercise! '
+    lastDialogue: {fileID: 1795070496}
     nextDialogue: {fileID: 875708994}
     visualAid: {fileID: 191733697}
 --- !u!4 &39338220
@@ -2750,6 +2751,7 @@ MonoBehaviour:
     - You must be the new aquaculture farmer!
     - Welcome to the Tiny Sea team.
     - "I\u2019ll show you the ropes.\r\n"
+    lastDialogue: {fileID: 0}
     nextDialogue: {fileID: 1776601939}
     visualAid: {fileID: 0}
 --- !u!4 &471023259
@@ -3810,6 +3812,7 @@ MonoBehaviour:
     - If you ever need a refresher on anything, remember to go to the tutorial section
       of the main menu!
     - "Now it\u2019s time for you to start building your ecosystem!"
+    lastDialogue: {fileID: 1656136148}
     nextDialogue: {fileID: 0}
     visualAid: {fileID: 0}
 --- !u!1 &633945071
@@ -4980,6 +4983,7 @@ MonoBehaviour:
     - "Excellent! I think it\u2019s time for us to discuss specialists vs. generalists."
     - 'You see, some organisms can survive in a much wider range of water temperatures
       than others. '
+    lastDialogue: {fileID: 39338219}
     nextDialogue: {fileID: 1105310363}
     visualAid: {fileID: 0}
 --- !u!4 &875708995
@@ -5092,15 +5096,16 @@ Prefab:
       propertyPath: m_Pivot.y
       value: 0.5
       objectReference: {fileID: 0}
+    - target: {fileID: 114326638563339784, guid: ad6186c94a5a0f04ba616a1b4b08698c,
+        type: 2}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 2113831818}
     - target: {fileID: 114883400021445262, guid: ad6186c94a5a0f04ba616a1b4b08698c,
         type: 2}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 2113831818}
-    - target: {fileID: 1252895945881040, guid: ad6186c94a5a0f04ba616a1b4b08698c, type: 2}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: ad6186c94a5a0f04ba616a1b4b08698c, type: 2}
   m_IsPrefabParent: 0
@@ -5425,6 +5430,11 @@ Prefab:
       propertyPath: m_RootOrder
       value: 2
       objectReference: {fileID: 0}
+    - target: {fileID: 114311074957663014, guid: 73649cc65bc2ddd429f013e7e2f67531,
+        type: 2}
+      propertyPath: trigger
+      value: 
+      objectReference: {fileID: 471023258}
     - target: {fileID: 114857355147904068, guid: 73649cc65bc2ddd429f013e7e2f67531,
         type: 2}
       propertyPath: nameSpace
@@ -5449,12 +5459,17 @@ Prefab:
         type: 2}
       propertyPath: contButton
       value: 
-      objectReference: {fileID: 2045203157}
-    - target: {fileID: 114311074957663014, guid: 73649cc65bc2ddd429f013e7e2f67531,
+      objectReference: {fileID: 1512966815}
+    - target: {fileID: 114857355147904068, guid: 73649cc65bc2ddd429f013e7e2f67531,
         type: 2}
-      propertyPath: trigger
+      propertyPath: backButton
       value: 
-      objectReference: {fileID: 471023258}
+      objectReference: {fileID: 2045203157}
+    - target: {fileID: 114857355147904068, guid: 73649cc65bc2ddd429f013e7e2f67531,
+        type: 2}
+      propertyPath: isTutorialScene
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 73649cc65bc2ddd429f013e7e2f67531, type: 2}
   m_IsPrefabParent: 0
@@ -6775,6 +6790,7 @@ MonoBehaviour:
       to each creature? Hit Simulate.
     - Since the temperature falls outside the range of the specialist's curve, they
       did not survive. But all of the generalists did!
+    lastDialogue: {fileID: 875708994}
     nextDialogue: {fileID: 1507516118}
     visualAid: {fileID: 1862367890}
 --- !u!4 &1105310364
@@ -8996,6 +9012,7 @@ MonoBehaviour:
       the pyramid is in equilibrium with itself!"
     - But what happens when we add another tier III creature?
     - The energy pyramid will lose its equilibrium!
+    lastDialogue: {fileID: 1105310363}
     nextDialogue: {fileID: 1656136148}
     visualAid: {fileID: 1888153881}
 --- !u!4 &1507516119
@@ -9011,6 +9028,12 @@ Transform:
   m_Father: {fileID: 775860449}
   m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1512966815 stripped
+MonoBehaviour:
+  m_PrefabParentObject: {fileID: 114326638563339784, guid: ad6186c94a5a0f04ba616a1b4b08698c,
+    type: 2}
+  m_PrefabInternal: {fileID: 892154151}
+  m_Script: {fileID: 1392445389, guid: f70555f144d8491a825f0804e09c671c, type: 3}
 --- !u!1 &1517158317
 GameObject:
   m_ObjectHideFlags: 0
@@ -9585,6 +9608,7 @@ MonoBehaviour:
       ecosystem.
     - This is why we must always consider the energy pyramid when building our tiny
       sea!
+    lastDialogue: {fileID: 1507516118}
     nextDialogue: {fileID: 608321808}
     visualAid: {fileID: 1769989487}
 --- !u!1 &1683831826
@@ -10221,6 +10245,7 @@ MonoBehaviour:
 '
     - Try adjusting the temperature to see how this specific sea creature reacts to
       hot, cold, and neutral water temperatures
+    lastDialogue: {fileID: 471023258}
     nextDialogue: {fileID: 1795070496}
     visualAid: {fileID: 1431761280}
 --- !u!4 &1776601940
@@ -10480,6 +10505,7 @@ MonoBehaviour:
     - Great!
     - "Now that you\u2019ve got that down, we can talk about adaptation."
     - 'As you may know, organisms can adapt to different thermal environments. '
+    lastDialogue: {fileID: 1776601939}
     nextDialogue: {fileID: 39338219}
     visualAid: {fileID: 0}
 --- !u!4 &1795070497

@@ -9,6 +9,7 @@ public class TutorialText {
 	public int textPosition;
 	[TextArea(3, 10)]
 	public string[] sentences;
+    public TutorialTextTrigger lastDialogue = null;
 	public TutorialTextTrigger nextDialogue = null;
 	public GameObject visualAid = null;
 }

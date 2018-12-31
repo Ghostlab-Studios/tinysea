@@ -824,8 +824,8 @@ MonoBehaviour:
     name: Nathan
     textPosition: 2
     sentences:
-    - Here, we have 3 different creatures, all of the same variety!
-    - ' They may look similar, but they all thrive in different temperatures.'
+    - Here, we have 3 different creatures. All of the same variety, but they all thrive
+      in different temperatures.
     - 'You can see which variations of this creature will be happiest in cold, neutral,
       and hot... '
     - 'temperatures by adjusting the thermometer, just like we did in the last exercise! '

@@ -11,25 +11,46 @@ public class GenVSpecVisual : MonoBehaviour {
 	public string[] targetStrings;
 
 
-	private int count = 0;
+	private int anim_count = 0, text_count = 1;
 	private string targetString;
+    private string backString;
 
 	// Use this for initialization
 	void Start () {
-		targetString = targetStrings [count];
-
+		targetString = targetStrings [text_count];
+        backString = "empty";
 	}
 
 	//This is an expensive way to calculate this
-	void Update () {
-
-		if (textBox.text.Contains(targetString) && count < targetStrings.Length-1) {
-				count++;
-				targetString = targetStrings [count];
-				anim.SetInteger ("animState", count);
+	void Update ()
+    {
+        if (textBox.text.Contains(targetString) && text_count < targetStrings.Length)
+        {
+            backString = targetStrings[text_count - 1];
+            anim_count++;
+            text_count++;
+			targetString = targetStrings [text_count];
+            anim.SetInteger ("backState", 0);
+			anim.SetInteger ("animState", anim_count);
 		}
+        else if (textBox.text.Contains(backString))
+        {
+            if (anim_count > 0)
+            {
+                anim_count--;
+                anim.SetInteger ("animState", 0);
+                anim.SetInteger ("backState", (anim_count + 1));
 
-	}
+                text_count--;
+                targetString = targetStrings[text_count];
+                if (text_count > 1)
+                    backString = targetStrings[text_count - 2];
+                else
+                    backString = "empty";
+            }
+        }
+
+    }
 
 
 	public void SimulateTank1() {

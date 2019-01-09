@@ -662,7 +662,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -124.1, y: 238}
+  m_AnchoredPosition: {x: -124.1, y: 272}
   m_SizeDelta: {x: 232.4, y: -59.5}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &25774345
@@ -4978,7 +4978,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tutorialText:
     name: Nathan
-    textPosition: 2
+    textPosition: 1
     sentences:
     - "Excellent! I think it\u2019s time for us to discuss specialists vs. generalists."
     - 'You see, some organisms can survive in a much wider range of water temperatures
@@ -6700,7 +6700,7 @@ MonoBehaviour:
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 1
-  m_FillAmount: 0.7777778
+  m_FillAmount: 0
   m_FillClockwise: 1
   m_FillOrigin: 0
 --- !u!222 &1097894294
@@ -8666,7 +8666,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -124.099976, y: 238}
+  m_AnchoredPosition: {x: -124.099976, y: 272}
   m_SizeDelta: {x: 232.4, y: -59.5}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1418212531
@@ -10708,11 +10708,11 @@ MonoBehaviour:
   textBox: {fileID: 1253253321}
   anim: {fileID: 1862367891}
   targetStrings:
-  - These creatures are slower to grow and multiply than
+  - These creatures are known as
+  - These creatures are slower to grow
   - Here are their
   - In this example
   - The next example
-  - 
 --- !u!224 &1862367893
 RectTransform:
   m_ObjectHideFlags: 0

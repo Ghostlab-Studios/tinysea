@@ -10713,6 +10713,7 @@ MonoBehaviour:
   - Here are their
   - In this example
   - The next example
+  - 
 --- !u!224 &1862367893
 RectTransform:
   m_ObjectHideFlags: 0
@@ -10884,9 +10885,11 @@ MonoBehaviour:
   textBox: {fileID: 1253253321}
   anim: {fileID: 1888153883}
   targetStrings:
-  - 'An ecosystem is made up of organisms '
+  - "And now, it\u2019s time to talk about the most crucial \n"
+  - An ecosystem is made up of organisms
   - 'Here, '
   - But what happens when we add another tier III creature
+  - 
 --- !u!1 &1907026674
 GameObject:
   m_ObjectHideFlags: 0

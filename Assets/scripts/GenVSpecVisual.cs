@@ -24,7 +24,7 @@ public class GenVSpecVisual : MonoBehaviour {
 	//This is an expensive way to calculate this
 	void Update ()
     {
-        if (textBox.text.Contains(targetString) && text_count < targetStrings.Length)
+        if (textBox.text.Contains(targetString) && text_count < targetStrings.Length - 1)
         {
             backString = targetStrings[text_count - 1];
             anim_count++;

@@ -53,13 +53,14 @@ public class GenVSpecVisual : MonoBehaviour {
     }
 
 
-	public void SimulateTank1() {
+	public void SimulateTank1(GameObject button) {
 		anim.SetBool ("tank1Simulate", true);
-
+        button.GetComponent<Button>().interactable = false;
 	}
 
-	public void SimulateTank2() {
+	public void SimulateTank2(GameObject button) {
 		anim.SetBool ("tank2Simulate", true);
+        button.GetComponent<Button>().interactable = false;
 	}
 		
 

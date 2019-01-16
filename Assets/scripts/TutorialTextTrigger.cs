@@ -8,7 +8,6 @@ public class TutorialTextTrigger : MonoBehaviour {
 	public TutorialText tutorialText;
 
 	public void TriggerTutorial () {
-		
 		FindObjectOfType<TutorialTextManager> ().StartTutorial (tutorialText);
 	}
 }

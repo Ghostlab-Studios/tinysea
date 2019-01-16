@@ -8,8 +8,14 @@ public class TutorialStart : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		trigger.TriggerTutorial ();
-	}
+        starting();
+    }
+
+    //if players wanna restart the tutorial
+    public void starting()
+    {
+        trigger.TriggerTutorial();
+    }
 
 
 }

@@ -52,14 +52,16 @@ public class TutorialTextManager : MonoBehaviour {
 
 		DisplayNextSentence ();
 		tutoAnimator.SetInteger ("stateVal", 0);
-		if (visualAid != null){
-			hasVisualAid = true;
-		} 
+        if (visualAid != null)
+        {
+            hasVisualAid = true;
+        }
 
-		if (hasVisualAid) {
-			visualAid.SetActive (true);
-		}
-	}
+        if (hasVisualAid)
+        {
+            visualAid.SetActive(true);
+        }
+    }
 
     public void DisplayLastSentence(){
 
@@ -106,6 +108,16 @@ public class TutorialTextManager : MonoBehaviour {
 		contButton.interactable = true;
         backButton.interactable = true;
 	}
+
+    public void restart()
+    {
+        count_sent = 0;
+        if (hasVisualAid)
+            visualAid.SetActive(false);
+        hasVisualAid = false;
+
+        FindObjectOfType<TutorialStart>().starting();
+    }
 
     void LastTutorial(){
 

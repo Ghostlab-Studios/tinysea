@@ -830,12 +830,12 @@ MonoBehaviour:
   - {fileID: 1431761280}
   - {fileID: 191733697}
   - {fileID: 1862367890}
-  textChecks:
-  - Try adjusting the temperature to
+  texts:
+  - Try adjusting the temperature
   - temperatures by adjusting the thermometer
-  - 'Hit ''Simulate'' to see '
-  - What do you think will happen to each creature? Hit Simulate.
-  - done!!!
+  - Hit 'Simulate' to see what happens
+  - The next example has a much warmer temperature. What do you think will happen
+    to each creature? Hit Simulate.
 --- !u!1 &61633036
 GameObject:
   m_ObjectHideFlags: 0

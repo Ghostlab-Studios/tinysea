@@ -5,10 +5,10 @@ GameObject:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  serializedVersion: 4
+  serializedVersion: 5
   m_Component:
-  - 4: {fileID: 437426}
-  - 114: {fileID: 11467588}
+  - component: {fileID: 437426}
+  - component: {fileID: 11467588}
   m_Layer: 0
   m_Name: yelloo_tropic
   m_TagString: Untagged
@@ -23,11 +23,12 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 191916}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -24.959507, y: -45.1734619, z: -82.6173859}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: -24.959507, y: -45.173462, z: -82.617386}
+  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &11467588
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -48,9 +49,9 @@ MonoBehaviour:
   uniqueName: yelloo tropical
   eatingAmount: 3
   foodChainLevel: 1
-  reproductionMultiplier: .699999988
-  deathThreashold: .349999994
-  deathRate: .400000006
+  reproductionMultiplier: 0.7
+  deathThreashold: 0.35
+  deathRate: 0.4
   minimumDeaths: 1
   eatingStars: 0
   reproductionStars: 5

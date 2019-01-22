@@ -20,10 +20,13 @@ public class CurveRenderer : MonoBehaviour {
     {
         Vector3 pos = transform.position;
         LineRenderer line = GetComponent<LineRenderer>();
-        line.SetVertexCount(41);
+        //line.SetVertexCount(41);
+        line.positionCount = 41;
         for (int i = 0; i <= 40; i++)
         {
-            line.SetPosition(i, new Vector3(i, curve.getCurve(i + 273) * 40));
+            line.SetPosition(i, new Vector3(i, curve.getCurve(i + 273) * 15));
+            //line.SetPosition(i, new Vector3(i, curve.Curves(i + 273) * 40));
+            
         }
     }
 }

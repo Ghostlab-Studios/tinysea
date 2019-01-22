@@ -11,7 +11,7 @@ public class Shop : MonoBehaviour {
 
 	//initialize the prefab
 	public GameObject selectionWindow;
-	List<Text> priceTexts;
+	public List<Text> priceTexts;
     public List<GameObject> Pages;
     public GameObject costPrefab;
 
@@ -38,6 +38,8 @@ public class Shop : MonoBehaviour {
     public Text thermalBreadthText;
     public Text descriptionText;
 
+    int currentTier = 1;
+
     //curve
     public CurveRenderer curveRender;
 
@@ -49,29 +51,70 @@ public class Shop : MonoBehaviour {
 	public GameObject tire2Button;
 	public GameObject tire3Button;
 
-	//tires' selection
-	public GameObject tire1Selected;
+    //tires' selection
+    public GameObject tire1Selected;
 	public GameObject tire2Selected;
 	public GameObject tire3Selected;
+    public GameObject tier1ASelected;
+    public GameObject tier1TSelected;
+    public GameObject tier2ASelected;
+    public GameObject tier2TSelected;
+    public GameObject tier3ASelected;
+    public GameObject tier3TSelected;
 
-    private int selectedFish = 0;
+    public Button buyIncrease;
+    public Button buyDecrease;
+    public Button sellIncrease;
+    public Button sellDecrease;
+
+    public int selectedFish = 0;
     private int currentFishes = 0;
     private int currentSellingFishes = 0;
 
-	// Use this for initialization
-	void Start () {
-		tire1Button.GetComponent<Button>().
-			onClick.AddListener (() => EnableWindow (tire1Selected, tire2Selected, tire3Selected, 1));
-		tire2Button.GetComponent<Button>().
-			onClick.AddListener (() => EnableWindow (tire2Selected, tire1Selected, tire3Selected, 2));
-		tire3Button.GetComponent<Button>().
-			onClick.AddListener (() => EnableWindow (tire3Selected, tire1Selected, tire2Selected, 3));
-		selectionWindow.SetActive (false);
+    private WaitForSeconds buffer = new WaitForSeconds(0.2f);
+    public bool buyIncreasing;
+    public bool buyDecreasing;
+    public bool sellIncreasing;
+    public bool sellDecreasing;
+    private bool allowPress = true;
+
+    // Use this for initialization
+    void Start()
+    {
+        /*tire1Button.GetComponent<Button>().
+            onClick.AddListener(() => EnableWindow(tire1Selected, tire2Selected, tire3Selected, 1));
+        tire2Button.GetComponent<Button>().
+            onClick.AddListener(() => EnableWindow(tire2Selected, tire1Selected, tire3Selected, 2));
+        tire3Button.GetComponent<Button>().
+            onClick.AddListener(() => EnableWindow(tire3Selected, tire1Selected, tire2Selected, 3));
+        selectionWindow.SetActive(false);*/
+
+        tire1Button.GetComponent<Button>().
+            onClick.AddListener(() => EnableWindow(tire1Selected, tire2Selected, tier2ASelected, tier2TSelected, tire3Selected, tier3ASelected, tier3TSelected));
+        tire2Button.GetComponent<Button>().
+            onClick.AddListener(() => EnableWindow(tire2Selected, tire1Selected, tier1ASelected, tier1TSelected, tire3Selected, tier3ASelected, tier3TSelected));
+        tire3Button.GetComponent<Button>().
+            onClick.AddListener(() => EnableWindow(tire3Selected, tire1Selected, tier1ASelected, tier1TSelected, tire2Selected, tier2ASelected, tier2TSelected));
+        selectionWindow.SetActive(false);
+
+        /*tier1AButton.GetComponent<Button>().
+            onClick.AddListener(() => EnableWindow(tier1ASelected, tier2ASelected, tier3ASelected, 1));
+        tier2AButton.GetComponent<Button>().
+            onClick.AddListener(() => EnableWindow(tier2ASelected, tier1ASelected, tier3ASelected, 2));
+        tier3AButton.GetComponent<Button>().
+            onClick.AddListener(() => EnableWindow(tier3ASelected, tier1ASelected, tier2ASelected, 3));
+
+        tier1TButton.GetComponent<Button>().
+            onClick.AddListener(() => EnableWindow(tier1TSelected, tier2TSelected, tier3TSelected, 1));
+        tier2TButton.GetComponent<Button>().
+            onClick.AddListener(() => EnableWindow(tier2TSelected, tier1TSelected, tier3TSelected, 2));
+        tier3TButton.GetComponent<Button>().
+            onClick.AddListener(() => EnableWindow(tier3TSelected, tier1TSelected, tier1TSelected, 1));*/
 
         buttonPress(0);
 
         writePricebox();
-	}	
+    }
 
 	void Awake(){
         //add cost boxes to all the buttons
@@ -84,7 +127,7 @@ public class Shop : MonoBehaviour {
                 RectTransform rT = nText.GetComponent<RectTransform>();
                 RectTransform prefabRT = costPrefab.GetComponent<RectTransform>();
                 rT.SetParent(child.transform);
-                rT.localScale = Vector3.one;
+                rT.localScale = prefabRT.localScale;
                 rT.localPosition = prefabRT.localPosition;
                 rT.offsetMax = prefabRT.offsetMax;
                 rT.offsetMin = prefabRT.offsetMin;
@@ -93,7 +136,55 @@ public class Shop : MonoBehaviour {
         }
 	}
 
-	public void writePricebox (){
+    public void ToggleBuyIncrease()
+    {
+        if (buyIncreasing)
+        {
+            buyIncreasing = false;
+        }
+        else
+        {
+            buyIncreasing = true;
+        }
+    }
+
+    public void ToggleBuyDecrease()
+    {
+        if (buyDecreasing)
+        {
+            buyDecreasing = false;
+        }
+        else
+        {
+            buyDecreasing = true;
+        }
+    }
+
+    public void ToggleSellIncrease()
+    {
+        if (sellIncreasing)
+        {
+            sellIncreasing = false;
+        }
+        else
+        {
+            sellIncreasing = true;
+        }
+    }
+
+    public void ToggleSellDecrease()
+    {
+        if (sellDecreasing)
+        {
+            sellDecreasing = false;
+        }
+        else
+        {
+            sellDecreasing = true;
+        }
+    }
+
+    public void writePricebox (){
         //collect all the fish costs
         List<float> costs = new List<float>();
         foreach (CharacterManager c in playerObj.species)
@@ -102,22 +193,105 @@ public class Shop : MonoBehaviour {
         }
 
         //update the text boxes
-        for (int i = 0; i < costs.Count; i++ )
+        
+        for (int i = 0; i < costs.Count; i++)
         {
             priceTexts[i].text = "$" + costs[i];
         }
-
-
 	}
 
-	public void EnableWindow(GameObject SlectedTire, GameObject NonSelectedTire1, GameObject NonSelectedTire2, int tab){
+    private void Update()
+    {
+        if (buyIncreasing)
+        {
+            if (allowPress)
+            {
+                StartCoroutine(BuySellAction(0));
+            }
+            else
+            {
+                return;
+            }
+        }
+        if (buyDecreasing)
+        {
+            if (allowPress)
+            {
+                StartCoroutine(BuySellAction(1));
+            }
+            else return;
+        }
+        if (sellIncreasing)
+        {
+            if (allowPress)
+            {
+                StartCoroutine(BuySellAction(2));
+            }
+            else return;
+        }
+        if (sellDecreasing)
+        {
+            if (allowPress)
+            {
+                StartCoroutine(BuySellAction(3));
+            }
+            else return;
+        }
+    }
+
+    private IEnumerator BuySellAction(int index)
+    {
+        switch (index)
+        {
+            case 0:
+                allowPress = false;
+                yield return buffer;
+                addfishes(1);
+                allowPress = true;
+                break;
+            case 1:
+                allowPress = false;
+                addfishes(-1);
+                yield return buffer;
+                allowPress = true;
+                break;
+            case 2:
+                allowPress = false;
+                addSellingFishes(1);
+                yield return buffer;
+                allowPress = true;
+                break;
+            default:
+                allowPress = false;
+                addSellingFishes(-1);
+                yield return buffer;
+                allowPress = true;
+                break;
+        }
+    }
+
+    /*public void EnableWindow(GameObject SlectedTire, GameObject NonSelectedTire1, GameObject NonSelectedTire2, int tab){
 		SlectedTire.SetActive (true);
 		NonSelectedTire1.SetActive(false);
 		NonSelectedTire2.SetActive(false);
         //currentTab = tab;
 		selectionWindow.SetActive (false);
 
-	}
+
+	}*/
+
+    public void EnableWindow(GameObject selectedTier, GameObject tab1, GameObject tab2, GameObject tab3, GameObject tab4, GameObject tab5, GameObject tab6)
+    {
+        selectedTier.SetActive(true);
+        tab1.SetActive(false);
+        tab2.SetActive(false);
+        tab3.SetActive(false);
+        tab4.SetActive(false);
+        tab5.SetActive(false);
+        tab6.SetActive(false);
+
+        selectionWindow.SetActive(false);
+    }
 
     public void buttonPress(int fish)
     {
@@ -137,6 +311,7 @@ public class Shop : MonoBehaviour {
         slider.value = 0;
 
         CharacterManager theFishWeWant = playerObj.species[selectedFish];
+        //Debug.Log(theFishWeWant.uniqueName);
 
         //cap purchasing based on money
         while (theFishWeWant.cost * currentFishes > playerObj.moneys)
@@ -145,7 +320,7 @@ public class Shop : MonoBehaviour {
         }
         //update text
         totalfishes.text = currentFishes.ToString();
-        totalPrice.text = "$" + (theFishWeWant.cost * currentFishes).ToString();
+        totalPrice.text = "- $" + (theFishWeWant.cost * currentFishes).ToString();
         currentName.text = theFishWeWant.uniqueName;
         sellingName.text = currentName.text;
 
@@ -158,12 +333,13 @@ public class Shop : MonoBehaviour {
 
         //update thermal curve
         curveRender.curve = playerObj.species[selectedFish].thermalcurve;
+
     }
 
     private string getStars(int starNum)
     {
         string s = "";
-        for(int i = 0; i < starNum; i++)
+        for(int i = 0; i < starNum + 1; i++)
         {
             s += starChar;
         }
@@ -192,7 +368,7 @@ public class Shop : MonoBehaviour {
 
         //cap based on total fish count
         float totalFish = playerObj.getTotalFishCount();
-        while (totalFish + currentFishes >= playerObj.maxFishes)
+        while (totalFish + currentFishes > playerObj.maxFishes)
         {
             currentFishes--;
         }
@@ -249,7 +425,7 @@ public class Shop : MonoBehaviour {
 
     public void sliderSlide()
     {
-        currentSellingFishes = Mathf.RoundToInt(playerObj.species[selectedFish].speciesAmount * slider.value);
+        currentSellingFishes = Mathf.FloorToInt(playerObj.species[selectedFish].speciesAmount * slider.value);
 
         sellingfishes.text = currentSellingFishes.ToString();
         sellingPrice.text = (playerObj.species[selectedFish].cost * currentSellingFishes * playerObj.sellRate).ToString();

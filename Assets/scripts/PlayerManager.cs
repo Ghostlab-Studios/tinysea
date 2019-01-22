@@ -10,7 +10,7 @@ public class PlayerManager : MonoBehaviour {
      *  Make sure that these are in the same order as the SwimmingHolder's prefabs!
 	 */
 	public List<CharacterManager> species;
-    SwimmingHolder holder;
+    public SwimmingHolder holder;
 
     //Highest level in the species list
     public int lowestLevel = 1;
@@ -28,7 +28,7 @@ public class PlayerManager : MonoBehaviour {
     public float sellRate = .5f;
     public float maxFishes = 200;
     public float stepWaitTime = 1;
-    float stepTimer = 0;
+    //float stepTimer = 0;
     bool waitingForTemperature = false;
     bool waitingForSteps = false;
     enum FishSteps { predation, reproduce, capMax, finished};
@@ -45,6 +45,11 @@ public class PlayerManager : MonoBehaviour {
     public RectTransform tier2EcoBar;
     public RectTransform tier3EcoBar;
 
+    public RectTransform tier1Glow;
+    public RectTransform tier2Glow;
+    public RectTransform tier3Glow;
+    public RectTransform fullGlow;
+
     public ParticleSystem tooCoolPart;
     public ParticleSystem tooHotPart;
     public ParticleSystem eatenPart;
@@ -59,6 +64,7 @@ public class PlayerManager : MonoBehaviour {
         foreach (CharacterManager c in species)
         {
             c.player = this;
+            //Debug.Log(c.uniqueName);
         }
         holder = FindObjectOfType<SwimmingHolder>();
 	}
@@ -70,6 +76,7 @@ public class PlayerManager : MonoBehaviour {
             waitingForTemperature = true;
             busy = true;
             temperature.updateTemperature();
+            temperature.currentDay++;
         }
     }
 
@@ -84,7 +91,7 @@ public class PlayerManager : MonoBehaviour {
             waitingForTemperature = false;
             currentStep = FishSteps.predation;
             predationPhase = 2;
-            stepTimer = 0;
+            //stepTimer = 0;
             waitingForSteps = true;
 
             moneys += dailyIncome;
@@ -122,7 +129,7 @@ public class PlayerManager : MonoBehaviour {
                             c.ReproduceOrDie(dayStep);
                         }
                         currentStep = FishSteps.capMax;
-                        stepTimer = stepWaitTime;
+                        //stepTimer = stepWaitTime;
                         break;
                     case FishSteps.capMax:
                         capFishMax();
@@ -137,13 +144,19 @@ public class PlayerManager : MonoBehaviour {
         }
 
 
-        if (Input.GetButtonDown("Cancel") && Input.GetButton("Submit"))
+        if (/*Input.GetButtonDown("Cancel") && Input.GetButton("Submit")*/ Input.GetKeyDown("q"))
         {
             moneys += 999999;
         }
 
         //set ecosystem pyramid.
         float totalFishes = getTotalFishCount();
+        if (totalFishes <= 0)
+        {
+            tier1EcoBar.localScale = new Vector3(0, 1, 1);
+            tier2EcoBar.localScale = new Vector3(0, 1, 1);
+            tier3EcoBar.localScale = new Vector3(0, 1, 1);
+        }
         if (totalFishes > 0)
         {
             float t1Proportion = getTotalAmountAtLevel(1) / totalFishes;
@@ -156,6 +169,41 @@ public class PlayerManager : MonoBehaviour {
             tier1EcoBar.localScale = new Vector3(tiersProp.x, 1, 1);
             tier2EcoBar.localScale = new Vector3(tiersProp.y, 1, 1);
             tier3EcoBar.localScale = new Vector3(tiersProp.z, 1, 1);
+
+            if (tiersProp.x == 1 && tiersProp.y == 1 && tiersProp.z == 1)
+            {
+                tier1Glow.gameObject.SetActive(false);
+                tier2Glow.gameObject.SetActive(false);
+                tier3Glow.gameObject.SetActive(false);
+                fullGlow.gameObject.SetActive(true);
+            }
+
+            if (tiersProp.x == 1)
+            {
+                tier1Glow.gameObject.SetActive(true);
+            }
+            else
+            {
+                tier1Glow.gameObject.SetActive(false);
+            }
+
+            if (tiersProp.y == 1)
+            {
+                tier2Glow.gameObject.SetActive(true);
+            }
+            else
+            {
+                tier2Glow.gameObject.SetActive(false);
+            }
+
+            if (tiersProp.z == 1)
+            {
+                tier3Glow.gameObject.SetActive(true);
+            }
+            else
+            {
+                tier3Glow.gameObject.SetActive(false);
+            }
         }
 
         moneyText.text = Mathf.Floor(moneys).ToString();

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 public class SwimmingHolder : MonoBehaviour {
     public PlayerManager player;
-    private List<SwimmingCreature> creatures;
+    public List<SwimmingCreature> creatures;
     public List<GameObject> prefabs;
     public List<Lure> lures;
     //number of swimming creatures for each speices. make sure to update this
@@ -49,7 +49,8 @@ public class SwimmingHolder : MonoBehaviour {
                     {
                         if (man.deathList.Count == 0)
                             RemoveCreature(i, CharacterManager.DeathCause.Starve);
-                        else 
+                        else
+                            //Debug.Log(man.deathList.Peek());
                             RemoveCreature(i, man.deathList.Dequeue());
                         speciesNumbers[i]--;
                     }
@@ -75,14 +76,24 @@ public class SwimmingHolder : MonoBehaviour {
         c.id = cId;
         //move it out of the way so that it doesn't flicker before spawning.
         c.transform.position = c.transform.position + new Vector3(99999, 9999, 0);
+        Vector3 fallbackPos = new Vector3(-10, -5, 0);
         switch (cause)
         {
             case CharacterManager.BirthCause.Bought:
                 c.StartBuying();
                 break;
             case CharacterManager.BirthCause.Reproduction:
-                c.StartReproducing(player.reproducePart, findRandomCreatureOfID(cId).transform.position);
-                break;
+                if (CreatureWithIDExists(cId))
+                {
+                    c.StartReproducing(player.reproducePart, findRandomCreatureOfID(cId).transform.position);
+                    break;
+                }
+                else
+                {
+                    Debug.Log("Fallback pos called");
+                    c.StartReproducing(player.reproducePart, fallbackPos);
+                    break;
+                }
         }
         creatures.Add(c);
     }
@@ -108,7 +119,23 @@ public class SwimmingHolder : MonoBehaviour {
                 filteredC.Add(c);
             }
         }
-        return (filteredC[Random.Range(0, filteredC.Count)]);
+
+            int randIndex = Random.Range(0, filteredC.Count);
+            try
+            {
+                return (filteredC[randIndex]);
+            }
+            catch (System.ArgumentOutOfRangeException a)
+            {
+                Debug.Log(randIndex);
+                bool hasFish = (filteredC.Count == 0);
+                Debug.Log(hasFish);
+                Debug.Log(a);
+                //return filteredC[randIndex];
+                return null;
+
+            }
+        //return (filteredC[randIndex]);
     }
 
     SwimmingCreature findRandomCreatureOfTier(int tier)
@@ -121,7 +148,19 @@ public class SwimmingHolder : MonoBehaviour {
                 filteredC.Add(c);
             }
         }
-        return (filteredC[Random.Range(0, filteredC.Count)]);
+        int randIndex = Random.Range(0, filteredC.Count);
+        try
+        {
+            return (filteredC[randIndex]);
+        }
+        catch (System.ArgumentOutOfRangeException a)
+        {
+            Debug.Log(randIndex);
+            bool hasFish = (filteredC.Count == 0);
+            Debug.Log(hasFish);
+            Debug.Log(a);
+            return filteredC[randIndex];
+        }
     }
 
     SwimmingCreature findCreatureOfID(int cID)
@@ -163,8 +202,8 @@ public class SwimmingHolder : MonoBehaviour {
         {
             SwimmingCreature c = creatures[found];
             //creatures.Remove(c);
-            if(cause == null)
-                cause = CharacterManager.DeathCause.Starve;
+            /*if(cause == null)
+                cause = CharacterManager.DeathCause.Starve;*/
             switch(cause) {
                 case CharacterManager.DeathCause.Sold:
                     c.startFishing(lures[Random.Range(0, lures.Count)]);
@@ -176,17 +215,77 @@ public class SwimmingHolder : MonoBehaviour {
                     c.startDying(player.tooCoolPart);
                     break;
                 case CharacterManager.DeathCause.Eaten:
-                    SwimmingCreature predator = findRandomCreatureOfTier(c.level + 1);
-                    float fasterHunting = Mathf.Max(1, predator.huntingFish.Count);
-                    FishHunt hunt = new FishHunt(predator, c, predatorTime / fasterHunting);
-                    predator.huntingFish.Add(hunt);
-                    c.getEaten(hunt);
-                    predator.startEating();
-                    break;
+                    try
+                    {
+                        // literally why
+                        if (CreatureOfTierExists(c.level + 1))
+                        {
+                            SwimmingCreature predator = findRandomCreatureOfTier(c.level + 1);
+                            float fasterHunting = Mathf.Max(1, predator.huntingFish.Count);
+                            FishHunt hunt = new FishHunt(predator, c, predatorTime / fasterHunting);
+                            predator.huntingFish.Add(hunt);
+                            c.getEaten(hunt);
+                            predator.startEating();
+                            break;
+                        }
+                        else
+                        {
+                            Debug.Log("Predator did not exist");
+                            c.startDying(player.starvedPart);
+                            break;
+                        }
+                    } catch (System.ArgumentOutOfRangeException a)
+                    {
+                        Debug.Log(a);
+                        c.startDying(player.starvedPart);
+                        break;
+                    }
                 case CharacterManager.DeathCause.Starve:
                     c.startDying(player.starvedPart);
                     break;
+                default:
+                    //c.startDying(player.starvedPart);
+                    c.startFishing(lures[Random.Range(0, lures.Count)]);
+                    break;
             }
         }
+    }
+
+    // Preventative check for undesired behavior
+    bool CreatureOfTierExists(int tier)
+    {
+        //Debug.Log("This was called");
+        bool exists = false;
+        
+        while(!exists)
+        {
+            for (int i = 0; i < creatures.Count; i++)
+            {
+                if (creatures[i].level == tier)
+                {
+                    exists = true;
+                }
+            }
+        }
+        return exists;
+    }
+
+    // Preventative check for undesired behavior
+    bool CreatureWithIDExists(int id)
+    {
+        //Debug.Log("This was called");
+        bool exists = false;
+
+        while (!exists)
+        {
+            for (int i = 0; i < creatures.Count; i++)
+            {
+                if (creatures[i].id == id)
+                {
+                    exists = true;
+                }
+            }
+        }
+        return exists;
     }
 }

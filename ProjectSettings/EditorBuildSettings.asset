@@ -6,8 +6,23 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 0
-    path: Assets/scenes/swimmingfish.unity
+    path: 
+    guid: 00000000000000000000000000000000
   - enabled: 0
-    path: Assets/scenes/gamescene.unity
+    path: 
+    guid: 00000000000000000000000000000000
   - enabled: 1
+    path: Assets/scenes/main_menu.unity
+    guid: 94edf8048878e80478c45750f6972756
+  - enabled: 1
+    path: Assets/scenes/new_ui_scene.unity
+    guid: b847dc33fa0be284a9d844a331bb5144
+  - enabled: 1
+    path: Assets/scenes/tutorial.unity
+    guid: c82e097289dd25d4db9d30478f113dd3
+  - enabled: 0
     path: Assets/scenes/mainscene.unity
+    guid: 408be1866f21b244ab9829a5c9f76ab8
+  - enabled: 0
+    path: Assets/scenes/tutorialscene.unity
+    guid: 1398fa96b64756945aecafc133fa5031

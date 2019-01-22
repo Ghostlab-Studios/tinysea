@@ -11,13 +11,14 @@ public class ShopWindowControl : MonoBehaviour {
 
 	//initialize Button
 	public GameObject controler;
+    public GameObject exitButton;
 	RectTransform rt;
 
 	
 	//define if it is open;
 	public bool open = false;
 
-    private float homeX;
+    private float homeX = 0;
     public float slideAmount = 555;
     public float slideTime = .6f;
     public float slideTimer = 0;
@@ -27,7 +28,9 @@ public class ShopWindowControl : MonoBehaviour {
 		rt = (RectTransform)window.transform;
 		controler.GetComponent<Button>().
 			onClick.AddListener (() => Controler());
-        float startX = rt.anchoredPosition.x;
+        exitButton.GetComponent<Button>().
+            onClick.AddListener(() => Controler());
+        //float startX = rt.anchoredPosition.x;
 	}
 
     void Update()

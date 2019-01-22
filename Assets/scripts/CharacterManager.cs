@@ -23,6 +23,7 @@ public class CharacterManager : MonoBehaviour {
     public float deathThreashold = .3f; //if performance gets too low, you start dying
     public float deathRate = .5f; //if I'm dying, population drops by this ratio every day
     public float minimumDeaths = 1; //if I'm dying, I will always lose at least this many fish!
+    public float reproThreshold = .25f; // Only reproduce if above this threshold
 
     public int eatingStars = 5;
     public int reproductionStars = 5;
@@ -63,6 +64,7 @@ public class CharacterManager : MonoBehaviour {
         {
             return;
         }
+
         Debug.Log("reproducing or dying: " + speciesAmount + " of " + uniqueName);
         //if performance is too low, fish die
         if (getFinalPerformance() < deathThreashold)
@@ -101,13 +103,34 @@ public class CharacterManager : MonoBehaviour {
                 }
             }
         }
-        else //otherwise, fish reproduce
+        else if (player.getTotalFishCount() >= player.maxFishes)
         {
-            float reproduced = speciesAmount * getFinalPerformance() * 
-                (reproductionMultiplier) * days;
+            Debug.Log("Max fishes, not reproducing");
+            return;
+        }
+        else if (getFinalPerformance() < reproThreshold)
+        {
+            Debug.Log("Not higher than the reproduction threshold");
+            return;
+        }
+        else if (speciesAmount < 2)
+        {
+            Debug.Log("Need two fish to reproduce");
+            return;
+        }
+        else 
+        {
+            float fishToMax = (player.maxFishes) - player.getTotalFishCount();
+
+            float reproduced = speciesAmount * getFinalPerformance() * (reproductionMultiplier) * days;
+            if (reproduced > fishToMax)
+            {
+                reproduced = fishToMax;
+            }
             speciesAmount = speciesAmount + reproduced;
-            Debug.Log("reproduced: " + reproduced);
-            for(int i = 0; i < reproduced - .9f; i++) {
+            Debug.Log("reproduced : " + reproduced);
+            for (int i = 0; i < reproduced -.9f; i++)
+            {
                 birthList.Enqueue(BirthCause.Reproduction);
             }
         }

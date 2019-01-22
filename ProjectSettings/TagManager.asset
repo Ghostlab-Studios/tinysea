@@ -3,7 +3,10 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags: []
+  tags:
+  - Arctic
+  - Common
+  - Tropical
   layers:
   - Default
   - TransparentFX
@@ -13,8 +16,8 @@ TagManager:
   - UI
   - 
   - 
-  - 
-  - 
+  - Tutorial
+  - misc
   - 
   - 
   - 
@@ -49,4 +52,7 @@ TagManager:
     locked: 0
   - name: eyes
     uniqueID: 1638324275
+    locked: 0
+  - name: tutorial
+    uniqueID: 3664129119
     locked: 0

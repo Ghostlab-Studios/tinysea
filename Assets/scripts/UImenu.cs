@@ -8,6 +8,16 @@ public class UImenu : MonoBehaviour
     [SerializeField]
     Animator menuAnim,musicAnim, homeAnim, resetAnim;
 
+    private void Awake()
+    {
+        if(menuAnim == null && homeAnim == null && resetAnim == null)
+        {
+            menuAnim = new Animator();
+            homeAnim = new Animator();
+            resetAnim = new Animator();
+        }
+    }
+
     public void menu_on()
     {
         menuAnim.speed = 1.5f;
@@ -29,7 +39,7 @@ public class UImenu : MonoBehaviour
         }
     }
 
-    public void music_on()
+    public void music_on(bool tutorial)
     {
         musicAnim.speed = 2;
 
@@ -41,10 +51,13 @@ public class UImenu : MonoBehaviour
         {
             musicAnim.SetInteger("musicState", 1);
 
-            if (homeAnim.GetInteger("homeState") == 1)
-                homeAnim.SetInteger("homeState", 2);
-            if (resetAnim.GetInteger("resetState") == 1)
-                resetAnim.SetInteger("resetState", 2);
+            if(tutorial)
+            {
+                if (homeAnim.GetInteger("homeState") == 1)
+                    homeAnim.SetInteger("homeState", 2);
+                if (resetAnim.GetInteger("resetState") == 1)
+                    resetAnim.SetInteger("resetState", 2);
+            }
         }
     }
 

@@ -20,7 +20,7 @@ public class ShopWindowControl : MonoBehaviour {
 	public bool open = false;
 
     private float homeX = 0;
-    public float slideAmount = 480;
+    public float slideAmount = 482;
     public float slideTime = .6f;
     public float slideTimer = 0;
 

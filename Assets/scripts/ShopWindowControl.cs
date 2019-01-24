@@ -10,7 +10,8 @@ public class ShopWindowControl : MonoBehaviour {
 
 
 	//initialize Button
-	public GameObject controler;
+	public GameObject controller;
+    public GameObject shopIcon;
     public GameObject exitButton;
 	RectTransform rt;
 
@@ -19,14 +20,14 @@ public class ShopWindowControl : MonoBehaviour {
 	public bool open = false;
 
     private float homeX = 0;
-    public float slideAmount = 555;
+    public float slideAmount = 482;
     public float slideTime = .6f;
     public float slideTimer = 0;
 
 	void Start() 
     {
 		rt = (RectTransform)window.transform;
-		controler.GetComponent<Button>().
+		controller.GetComponent<Button>().
 			onClick.AddListener (() => Controler());
         exitButton.GetComponent<Button>().
             onClick.AddListener(() => Controler());
@@ -49,7 +50,8 @@ public class ShopWindowControl : MonoBehaviour {
 		/*controler.GetComponent<Button>().
 			onClick.AddListener (() => Controler());*/
 		if (open == true) {
-			controler.transform.rotation = Quaternion.Euler(0,0,180);
+            shopIcon.SetActive(false);
+			controller.transform.rotation = Quaternion.Euler(0,0,180);
 			rt.anchoredPosition = new Vector2
 				(Mathf.Lerp (homeX - slideAmount, homeX, 1 - (slideTimer / slideTime)),
                  rt.anchoredPosition.y);
@@ -58,7 +60,8 @@ public class ShopWindowControl : MonoBehaviour {
 		}
 
 		if (open == false) {
-			controler.transform.rotation = Quaternion.Euler(0,0,0);
+            shopIcon.SetActive(true);
+			controller.transform.rotation = Quaternion.Euler(0,0,0);
             rt.anchoredPosition = new Vector2
                 (Mathf.Lerp(homeX, homeX - slideAmount, 1 - (slideTimer / slideTime)),
                  rt.anchoredPosition.y);

@@ -2,8 +2,6 @@
 using System.Collections;
 using UnityEngine.UI;
 
-
-
 public class Pages : MonoBehaviour {
 
 	//Buttons

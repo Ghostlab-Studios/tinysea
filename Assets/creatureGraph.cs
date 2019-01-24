@@ -2,23 +2,25 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 public class creatureGraph : MonoBehaviour
 {
     public GameObject tier1, tier2, tier3;
     public List<CharacterManager> manager_T1, manager_T2, manager_T3;
     public Color[] pieColors;
+    public GameObject[] tierCreatures, seas;
     float[] values, value, check_v;
-    Image[] pieImages;
+    Image[] pies;
     int current_tier;
 
     // Use this for initialization
-    void Start()
+    private void Awake()
     {
+        pies = this.GetComponentsInChildren<Image>();
         current_tier = 1;
         value = new float[] {0,0,0};
         check_v = new float[] {0,0,0};
-        pieImages = this.GetComponentsInChildren<Image>();
     }
 
     private void Update()
@@ -42,12 +44,16 @@ public class creatureGraph : MonoBehaviour
         {
             current_tier = int.Parse(tier.name);
             tier.SetActive(true);
-           // tier_updates(current_tier);
+
+            tierCreatures[0].GetComponent<EcoHoverOver>().update_tier(current_tier);
+            tierCreatures[1].GetComponent<EcoHoverOver>().update_tier(current_tier);
+            tierCreatures[2].GetComponent<EcoHoverOver>().update_tier(current_tier);
         }
     }
 
     void tier_updates(int tier)
     {
+        int i = 0;
         check_v[0] = value[0];
         check_v[1] = value[1];
         check_v[2] = value[2];
@@ -80,18 +86,31 @@ public class creatureGraph : MonoBehaviour
         float total = 0f;
         float zRot = 0f;
 
-        for(int i = 0; i<values.Length; i++)
+        for (int i = 0; i<values.Length; i++)
         {
             total += values[i];
         }
 
         for(int i = 0; i<values.Length; i++)
         {
-            Image newPie = pieImages[i];
-            newPie.GetComponent<Image>().color = pieColors[i];
-            newPie.GetComponent<Image>().fillAmount = values[i] / total;
-            newPie.transform.rotation = Quaternion.Euler(new Vector3(0f, 0f, zRot));
-            zRot -= newPie.GetComponent<Image>().fillAmount * 360f;
+            Image newPie = pies[i];
+
+            if (values[i] == 0)
+            {
+                newPie.GetComponent<Image>().color = Color.clear;
+                seas[i].GetComponent<Image>().enabled = false;
+            }
+            else
+            {
+                newPie.GetComponent<Image>().color = pieColors[i];
+                newPie.GetComponent<Image>().fillAmount = values[i] / total;
+                newPie.transform.rotation = Quaternion.Euler(new Vector3(0f, 0f, zRot));
+                zRot -= newPie.GetComponent<Image>().fillAmount * 360f;
+
+                float center_fill = (newPie.GetComponent<Image>().fillAmount*360f)/2;
+                seas[i].GetComponent<Image>().enabled = true;
+                seas[i].transform.rotation = Quaternion.Euler(new Vector3(0f, 0f, (zRot + center_fill)));
+            }
         }
     }
 }

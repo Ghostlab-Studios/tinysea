@@ -20,7 +20,7 @@ public class UImenu : MonoBehaviour
 
     public void menu_on()
     {
-        menuAnim.speed = 1.5f;
+        menuAnim.speed = 2f;
 
         if (menuAnim.GetInteger("menuState") == 1)
         {
@@ -41,7 +41,7 @@ public class UImenu : MonoBehaviour
 
     public void music_on(bool tutorial)
     {
-        musicAnim.speed = 2;
+        musicAnim.speed = 3;
 
         if (musicAnim.GetInteger("musicState") == 1)
         {
@@ -63,7 +63,7 @@ public class UImenu : MonoBehaviour
 
     public void reset_on()
     {
-        resetAnim.speed = 2;
+        resetAnim.speed = 3;
 
         if (resetAnim.GetInteger("resetState") == 1)
         {
@@ -82,7 +82,7 @@ public class UImenu : MonoBehaviour
 
     public void home_on()
     {
-        homeAnim.speed = 2;
+        homeAnim.speed = 3;
 
         if (homeAnim.GetInteger("homeState") == 1)
         {

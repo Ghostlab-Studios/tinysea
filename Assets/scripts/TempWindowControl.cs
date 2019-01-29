@@ -12,13 +12,14 @@ public class TempWindowControl : MonoBehaviour
 
     //initialize Button
     public GameObject controler;
+    public GameObject tempIcon;
     RectTransform rt;
 
 
     //define if it is open;
     public bool open = false;
 
-    private float homeX = 0;
+    private float homeX = 30;
     public float slideAmount = 555;
     public float slideTime = .6f;
     public float slideTimer = 0;
@@ -49,6 +50,7 @@ public class TempWindowControl : MonoBehaviour
 			onClick.AddListener (() => Controler());*/
         if (open == true)
         {
+            //tempIcon.GetComponent<Image>().enabled = false;
             controler.transform.rotation = Quaternion.Euler(0, 0, 180);
             rt.anchoredPosition = new Vector2
                 (Mathf.Lerp(homeX - slideAmount, homeX, 1 - (slideTimer / slideTime)),
@@ -59,6 +61,7 @@ public class TempWindowControl : MonoBehaviour
 
         if (open == false)
         {
+            //tempIcon.GetComponent<Image>().enabled = true;
             controler.transform.rotation = Quaternion.Euler(0, 0, 0);
             rt.anchoredPosition = new Vector2
                 (Mathf.Lerp(homeX, homeX - slideAmount, 1 - (slideTimer / slideTime)),

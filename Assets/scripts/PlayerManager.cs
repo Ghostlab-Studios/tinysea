@@ -209,9 +209,10 @@ public class PlayerManager : MonoBehaviour {
         moneyText.text = Mathf.Floor(moneys).ToString();
     }
 
-    public void BuyCreatures(int index, float amount)
+    public void BuyCreatures(int index, float amount, bool money_access = true)
     {
-        moneys = moneys - species[index].cost * amount;
+        if(money_access)
+            moneys = moneys - species[index].cost * amount;
         for (int i = 0; i < amount; i++)
         {
             species[index].birthList.Enqueue(CharacterManager.BirthCause.Bought);

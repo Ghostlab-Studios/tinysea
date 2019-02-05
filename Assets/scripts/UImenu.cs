@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class UImenu : MonoBehaviour
 {
     [SerializeField]
-    Animator menuAnim,musicAnim, homeAnim, resetAnim;
+    Animator menuAnim,musicAnim, homeAnim, resetAnim, saveAnim;
 
     private void Awake()
     {
@@ -77,6 +77,22 @@ public class UImenu : MonoBehaviour
                 homeAnim.SetInteger("homeState", 2);
             if (musicAnim.GetInteger("musicState") == 1)
                 musicAnim.SetInteger("musicState", 2);
+        }
+    }
+
+    public void save_on(GameObject save_tab)
+    {
+        saveAnim.speed = 3;
+
+        if(saveAnim.GetInteger("saveState") == 2)
+        {
+            saveAnim.SetInteger("saveState", 1);
+            save_tab.SetActive(false);
+        }
+        else
+        {
+            saveAnim.SetInteger("saveState", 2);
+            save_tab.SetActive(true);
         }
     }
 

@@ -1,0 +1,30 @@
+2019/02/05 14:50:06
+5 temp
+110 money
+0 cyplo
+0 hexapod
+1 yelloo
+0 cyplo tropical
+0 hexapod tropical
+1 yelloo tropical
+0 cyplo arctic
+0 hexapod arctic
+1 yelloo arctic
+0 shelpik
+0 grabbler
+0 gelgi
+0 shelpik tropical
+0 grabbler tropical
+0 gelgi tropical
+0 shelpik arctic
+0 grabbler arctic
+0 gelgi arctic
+0 sploof
+0 rooda
+0 silu
+0 sploof tropical
+0 rooda tropical
+0 silu tropical
+0 sploof arctic
+0 rooda arctic
+0 silu arctic

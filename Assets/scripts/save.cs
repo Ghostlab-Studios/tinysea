@@ -91,7 +91,7 @@ public class save : MonoBehaviour
     {
         File.Delete(path);
         save_button[int.Parse(current) - 1].GetComponentInChildren<Text>().text = "Slot " + current;
-        time_text[int.Parse(current) - 1].GetComponent<Text>().text = "Empty Slot";
+        time_text[int.Parse(current) - 1].GetComponent<Text>().text = ".............Empty Slot...........";
     }
 
     private void update_save_text()
@@ -103,5 +103,6 @@ public class save : MonoBehaviour
     {
         StreamReader readFile = new StreamReader(savePath);
         time_text[int.Parse(current) - 1].GetComponent<Text>().text = readFile.ReadLine();
+        readFile.Close();
     }
 }

@@ -31,28 +31,33 @@ public class EcoHoverOver : MonoBehaviour {
         switch (tierNo)
         {
             case 1:
+                creatureImages = GetComponentsInChildren<Image>();
+                current_manager = tier1_managers;
+
                 for (int i = 0; i < 3; i++)
                 {
                     creatureImages[i + 1].sprite = tier1_sprites[i];
                 }
-                current_manager = tier1_managers;
-
                 break;
+
             case 2:
+                creatureImages = GetComponentsInChildren<Image>();
+                current_manager = tier2_managers;
+
                 for (int i = 0; i < 3; i++)
                 {
                     creatureImages[i + 1].sprite = tier2_sprites[i];
                 }
-                current_manager = tier2_managers;
-
                 break;
+
             case 3:
+                creatureImages = GetComponentsInChildren<Image>();
+                current_manager = tier3_managers;
+
                 for (int i = 0; i < 3; i++)
                 {
                     creatureImages[i + 1].sprite = tier3_sprites[i];
                 }
-                current_manager = tier3_managers;
-
                 break;
             default:
                 Debug.Log("updating tier something went wrong");

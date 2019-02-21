@@ -27,6 +27,7 @@ public class TempWindowControl : MonoBehaviour
     void Start()
     {
         rt = (RectTransform)window.transform;
+        homeX = rt.anchoredPosition.x;
         controler.GetComponent<Button>().
             onClick.AddListener(() => Controler());
         //float startX = rt.anchoredPosition.x;
@@ -48,7 +49,7 @@ public class TempWindowControl : MonoBehaviour
     {
         /*controler.GetComponent<Button>().
 			onClick.AddListener (() => Controler());*/
-        if (open == true)
+        if (open == false)
         {
             //tempIcon.GetComponent<Image>().enabled = false;
             controler.transform.rotation = Quaternion.Euler(0, 0, 180);
@@ -59,7 +60,7 @@ public class TempWindowControl : MonoBehaviour
 
         }
 
-        if (open == false)
+        if (open == true)
         {
             //tempIcon.GetComponent<Image>().enabled = true;
             controler.transform.rotation = Quaternion.Euler(0, 0, 0);

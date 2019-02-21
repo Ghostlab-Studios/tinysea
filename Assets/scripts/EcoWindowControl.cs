@@ -27,6 +27,7 @@ public class EcoWindowControl : MonoBehaviour
     void Start()
     {
         rt = (RectTransform)window.transform;
+        homeX = rt.anchoredPosition.x;
         controler.GetComponent<Button>().
             onClick.AddListener(() => Controler());
         //float startX = rt.anchoredPosition.x;

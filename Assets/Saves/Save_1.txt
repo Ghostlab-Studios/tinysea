@@ -1,15 +1,15 @@
-2019/02/05 14:50:06
+2019/02/20 19:33:10
 5 temp
-110 money
-0 cyplo
-0 hexapod
-1 yelloo
+100 money
+2 cyplo
+1 hexapod
+0 yelloo
 0 cyplo tropical
 0 hexapod tropical
-1 yelloo tropical
+0 yelloo tropical
 0 cyplo arctic
-0 hexapod arctic
-1 yelloo arctic
+1 hexapod arctic
+0 yelloo arctic
 0 shelpik
 0 grabbler
 0 gelgi

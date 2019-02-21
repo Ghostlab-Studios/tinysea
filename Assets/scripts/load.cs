@@ -85,4 +85,9 @@ public class load : MonoBehaviour {
             }
         }
     }
+
+    public void load_main_menu()
+    {
+
+    }
 }

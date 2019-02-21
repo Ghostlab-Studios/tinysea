@@ -26,12 +26,14 @@ public class UImenu : MonoBehaviour
         {
             menuAnim.SetInteger("menuState", 2);
 
-            if (homeAnim.GetInteger("homeState") == 1)
+            if (homeAnim != null)
                 homeAnim.SetInteger("homeState", 2);
-            if (resetAnim.GetInteger("resetState") == 1)
+            if (resetAnim != null)
                 resetAnim.SetInteger("resetState", 2);
-            if (musicAnim.GetInteger("musicState") == 1)
+            if (musicAnim != null)
                 musicAnim.SetInteger("musicState", 2);
+            if (saveAnim != null)
+                saveAnim.SetInteger("saveState", 1);
         }
         else
         {
@@ -53,9 +55,9 @@ public class UImenu : MonoBehaviour
 
             if(tutorial)
             {
-                if (homeAnim.GetInteger("homeState") == 1)
+                if (homeAnim != null)
                     homeAnim.SetInteger("homeState", 2);
-                if (resetAnim.GetInteger("resetState") == 1)
+                if (resetAnim != null)
                     resetAnim.SetInteger("resetState", 2);
             }
         }
@@ -73,9 +75,9 @@ public class UImenu : MonoBehaviour
         {
             resetAnim.SetInteger("resetState", 1);
 
-            if (homeAnim.GetInteger("homeState") == 1)
+            if (homeAnim != null)
                 homeAnim.SetInteger("homeState", 2);
-            if (musicAnim.GetInteger("musicState") == 1)
+            if (musicAnim != null)
                 musicAnim.SetInteger("musicState", 2);
         }
     }
@@ -84,7 +86,7 @@ public class UImenu : MonoBehaviour
     {
         saveAnim.speed = 3;
 
-        if(saveAnim.GetInteger("saveState") == 2)
+        if(save_tab.activeSelf)
         {
             saveAnim.SetInteger("saveState", 1);
             save_tab.SetActive(false);
@@ -93,6 +95,11 @@ public class UImenu : MonoBehaviour
         {
             saveAnim.SetInteger("saveState", 2);
             save_tab.SetActive(true);
+
+            if (homeAnim != null)
+                homeAnim.SetInteger("homeState", 2);
+            if (musicAnim != null)
+                musicAnim.SetInteger("musicState", 2);
         }
     }
 
@@ -108,9 +115,9 @@ public class UImenu : MonoBehaviour
         {
             homeAnim.SetInteger("homeState", 1);
 
-            if (resetAnim.GetInteger("resetState") == 1)
+            if (resetAnim != null)
                 resetAnim.SetInteger("resetState", 2);
-            if (musicAnim.GetInteger("musicState") == 1)
+            if (musicAnim != null)
                 musicAnim.SetInteger("musicState", 2);
         }
     }

@@ -22,7 +22,7 @@ public class load : MonoBehaviour {
             load_game.GetComponentInChildren<Text>().text = load_data[0].text;
             for (int i = 1; i < 4; i++)
             {
-                save_path = Application.dataPath + "/Saves/Save_" + i + ".txt";
+                save_path = Application.persistentDataPath + "/Saves/Save_" + i + ".txt";
                 if (File.Exists(save_path))
                 {
                     load_data[i] = new Dropdown.OptionData();
@@ -59,7 +59,7 @@ public class load : MonoBehaviour {
         if (load == 0)
             return;
 
-        string save_file = Application.dataPath + "/Saves/Save_" + load + ".txt";
+        string save_file = Application.persistentDataPath + "/Saves/Save_" + load + ".txt";
 
         string[] file_loaded = File.ReadAllLines(save_file);
 

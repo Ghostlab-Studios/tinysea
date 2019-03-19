@@ -18,7 +18,15 @@ public class save : MonoBehaviour
         foreach(GameObject save in save_button)
         {
             current = save.name.Remove(0, 5);
-            savePath = Application.dataPath + "/Saves/" + save.name + ".txt";
+            string dir = Application.persistentDataPath + "/Saves/";
+
+            if(!Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+
+            savePath = dir + save.name + ".txt";
+
             if(File.Exists(savePath))
             {
                 update_save_text();
@@ -30,14 +38,14 @@ public class save : MonoBehaviour
     public void click_save(GameObject button)
     {
         current = button.name.Remove(0, 5);
-        savePath = Application.dataPath + "/Saves/" + button.name + ".txt";
+        savePath = Application.persistentDataPath + "/Saves/" + button.name + ".txt";
         save_game();
     }
 
     public void click_delete(GameObject button)
     {
         current = button.name.Remove(0,7);
-        savePath = Application.dataPath + "/Saves/Save_" + current + ".txt";
+        savePath = Application.persistentDataPath + "/Saves/Save_" + current + ".txt";
         delete_save(savePath);
     }
 

@@ -15,24 +15,29 @@ public class save : MonoBehaviour
 
     public void Awake()
     {
-        foreach(GameObject save in save_button)
+
+#if UNITY_WEBGL
+        //can't save this way in webgl mode so turn it off
+#else
+        foreach (GameObject save in save_button)
         {
             current = save.name.Remove(0, 5);
             string dir = Application.persistentDataPath + "/Saves/";
 
-            if(!Directory.Exists(dir))
+            if (!Directory.Exists(dir))
             {
                 Directory.CreateDirectory(dir);
             }
 
             savePath = dir + save.name + ".txt";
 
-            if(File.Exists(savePath))
+            if (File.Exists(savePath))
             {
                 update_save_text();
                 update_time();
             }
         }
+#endif
     }
 
     public void click_save(GameObject button)

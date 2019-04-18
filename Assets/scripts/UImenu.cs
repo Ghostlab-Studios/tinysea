@@ -10,12 +10,23 @@ public class UImenu : MonoBehaviour
 
     private void Awake()
     {
-        if(menuAnim == null && homeAnim == null && resetAnim == null)
-        {
+//can't save this way in webgl mode so turn it off
+#if UNITY_WEBGL
+        saveAnim.gameObject.setactive(false);
+#else
+        saveAnim.gameObject.SetActive(true);
+#endif
+
+        if (menuAnim == null && homeAnim == null && resetAnim == null)
             menuAnim = new Animator();
+        if (homeAnim == null)
             homeAnim = new Animator();
+        if (resetAnim == null)
             resetAnim = new Animator();
-        }
+        if (musicAnim == null)
+            musicAnim = new Animator();
+        if (saveAnim)
+            saveAnim = new Animator();
     }
 
     public void menu_on()

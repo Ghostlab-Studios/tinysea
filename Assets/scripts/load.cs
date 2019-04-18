@@ -12,6 +12,10 @@ public class load : MonoBehaviour {
     string save_path;
     private void Awake()
     {
+//can't load this way in webgl mode so turn it off
+#if UNITY_WEBGL
+        load_game.gameObject.SetActive(false);
+#else
         if (load_game != null)
         {
             load_game.ClearOptions();
@@ -31,6 +35,7 @@ public class load : MonoBehaviour {
                 }
             }
         }
+#endif
     }
 
     private void Start()

@@ -36324,7 +36324,7 @@ Prefab:
     - target: {fileID: 224116590000348622, guid: a854f19db5cfd874398d4cd19997c1e0,
         type: 2}
       propertyPath: m_RootOrder
-      value: 28
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 224116590000348622, guid: a854f19db5cfd874398d4cd19997c1e0,
         type: 2}
@@ -36334,7 +36334,7 @@ Prefab:
     - target: {fileID: 224116590000348622, guid: a854f19db5cfd874398d4cd19997c1e0,
         type: 2}
       propertyPath: m_AnchoredPosition.y
-      value: -26.1
+      value: -26.099976
       objectReference: {fileID: 0}
     - target: {fileID: 224116590000348622, guid: a854f19db5cfd874398d4cd19997c1e0,
         type: 2}
@@ -54545,6 +54545,7 @@ GameObject:
   - component: {fileID: 1474507536}
   - component: {fileID: 1474507535}
   - component: {fileID: 1474507538}
+  - component: {fileID: 1474507539}
   m_Layer: 5
   m_Name: next turn
   m_TagString: Untagged
@@ -54746,6 +54747,18 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &1474507539
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1474507533}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 22c1c3a52b86dd841882bef610c4cd8d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  shop_: {fileID: 1943393658}
 --- !u!1 &1475725252
 GameObject:
   m_ObjectHideFlags: 0

@@ -4,8 +4,9 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.IO;
 
-public class load : MonoBehaviour {
-
+public class load : MonoBehaviour
+{
+    public GameObject collect_toggle;
     public Dropdown load_game;
     public PlayerManager playerObj;
     Dropdown.OptionData[] load_data;
@@ -15,6 +16,7 @@ public class load : MonoBehaviour {
 //can't load this way in webgl mode so turn it off
 #if UNITY_WEBGL
         load_game.gameObject.SetActive(false);
+        collect_toggle.SetActive(false);
 #else
         if (load_game != null)
         {
@@ -91,8 +93,11 @@ public class load : MonoBehaviour {
         }
     }
 
-    public void load_main_menu()
+    public void SetCollect(bool collect)
     {
-
+        if (collect)
+            PlayerPrefs.SetInt("CollectData", 1);
+        else
+            PlayerPrefs.SetInt("CollectData", 0);
     }
 }

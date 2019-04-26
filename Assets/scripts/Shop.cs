@@ -78,9 +78,15 @@ public class Shop : MonoBehaviour {
     public bool sellDecreasing;
     private bool allowPress = true;
 
+    //to check how many times the respective buttons are clicked
+    public int buy_press { get; set; }
+    public int sell_press { get; set; }
+
     // Use this for initialization
     void Start()
     {
+        buy_press = 0;
+        sell_press = 0;
         /*tire1Button.GetComponent<Button>().
             onClick.AddListener(() => EnableWindow(tire1Selected, tire2Selected, tire3Selected, 1));
         tire2Button.GetComponent<Button>().
@@ -411,6 +417,11 @@ public class Shop : MonoBehaviour {
         currentFishes = 0;
         totalfishes.text = "0";
         totalPrice.text = "0";
+
+//this is for data collection which only possible on non webgl version
+#if !UNITY_WEBGL
+        buy_press += 1;
+#endif
     }
 
     public void sellFishes()
@@ -421,6 +432,11 @@ public class Shop : MonoBehaviour {
         currentSellingFishes = 0;
         sellingfishes.text = "0";
         sellingPrice.text = "0";
+
+        //this is for data collection which only possible on non webgl version
+#if !UNITY_WEBGL
+        sell_press += 1;
+#endif
     }
 
     public void sliderSlide()

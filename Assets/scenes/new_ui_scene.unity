@@ -23935,6 +23935,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3b546ab829cf1e94598ff104a8ab2734, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  collect_toggle: {fileID: 0}
   load_game: {fileID: 0}
   playerObj: {fileID: 882694906}
 --- !u!1 &708415397
@@ -54623,6 +54624,17 @@ MonoBehaviour:
         m_CallState: 2
       - m_Target: {fileID: 1474507538}
         m_MethodName: Play
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 1474507539}
+        m_MethodName: collect_data
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

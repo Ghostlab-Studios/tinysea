@@ -56,9 +56,6 @@ public class PlayerManager : MonoBehaviour {
     public ParticleSystem starvedPart;
     public ParticleSystem reproducePart;
 
-    //to check how many times the respective buttons are clicked
-    int buy_press = 0, sell_press = 0;
-
     /*
 	 * Initialize with three species at each level
 	 */
@@ -80,9 +77,6 @@ public class PlayerManager : MonoBehaviour {
             busy = true;
             temperature.updateTemperature();
             temperature.currentDay++;
-
-            buy_press = 0;
-            sell_press = 0;
         }
     }
 
@@ -224,8 +218,6 @@ public class PlayerManager : MonoBehaviour {
             species[index].birthList.Enqueue(CharacterManager.BirthCause.Bought);
         }
         species[index].speciesAmount += amount;
-
-        buy_press += 1;
     }
 
     public void SellCreatures(int index, float amount)
@@ -236,8 +228,6 @@ public class PlayerManager : MonoBehaviour {
         }
         species[index].speciesAmount -= amount;
         moneys = moneys + species[index].cost * sellRate * amount;
-
-        sell_press += 1;
     }
 
     private void capFishMax()

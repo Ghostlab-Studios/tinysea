@@ -100,4 +100,14 @@ public class load : MonoBehaviour
         else
             PlayerPrefs.SetInt("CollectData", 0);
     }
+
+    public void hover_on(GameObject hov)
+    {
+        hov.GetComponent<Image>().color = Color.black;
+    }
+
+    public void hover_off(GameObject hov)
+    {
+        hov.GetComponent<Image>().color = Color.white;
+    }
 }

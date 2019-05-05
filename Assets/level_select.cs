@@ -5,20 +5,24 @@ using UnityEngine.UI;
 
 public class level_select : MonoBehaviour
 {
+    public Sprite[] env_sprites;
+
     private Vector3 normal_scale;
     private GameObject env_image;
-    public Queue<Sprite> env;
+    private int current; //current image index in the sprite array
+    //private Queue<Sprite> env;
 
     public void Start()
     {
+        current = 0;
+        PlayerPrefs.SetInt("env", current); //set default level
+
         env_image = new GameObject();
         foreach (Transform child in transform)
             if (child.gameObject.name == "level")
             {
                 env_image = child.gameObject;
-                Sprite back = env.Dequeue();
-                env.Enqueue(back);
-                env_image.GetComponent<Image>().sprite = back;
+                env_image.GetComponent<Image>().sprite = env_sprites[0];
                 break;
             }
 
@@ -58,20 +62,34 @@ public class level_select : MonoBehaviour
 
     public void press_arrow(bool up)
     {
-        if (up)
-        {
-
-        }
-        else
-        {
-
-        }
+        shuffle_env(up);
     }
 
-    private void shuffle_env()
+    private void shuffle_env(bool move)
     {
-        env.
-        env_image.GetComponent<Image>().sprite = 
+        Sprite next_sprite;
+
+        if (move)
+            if(current < (env_sprites.Length - 1) )
+            {
+                next_sprite = env_sprites[++current];
+            }
+            else
+            {
+                next_sprite = env_sprites[0];
+            }
+        else
+            if(current > 0)
+            {
+                next_sprite = env_sprites[--current];
+            }
+            else
+            {
+                next_sprite = env_sprites[3];
+            }
+
+        env_image.GetComponent<Image>().sprite = next_sprite;
+        PlayerPrefs.SetInt("env", current);
     }
 
     public void hover(bool on)

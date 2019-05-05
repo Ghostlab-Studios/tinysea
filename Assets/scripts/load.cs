@@ -6,7 +6,8 @@ using System.IO;
 
 public class load : MonoBehaviour
 {
-    public GameObject collect_toggle;
+    public GameObject collect_toggle, background;
+    public Sprite[] env_sprite;
     public Dropdown load_game;
     public PlayerManager playerObj;
     Dropdown.OptionData[] load_data;
@@ -61,7 +62,11 @@ public class load : MonoBehaviour
 
     void load_thisGame()
     {
-        int load = PlayerPrefs.GetInt("save");
+        int load = PlayerPrefs.GetInt("save", 0);
+        int env = PlayerPrefs.GetInt("env", 0);
+
+        if(background.GetComponent<SpriteRenderer>().sprite != null)
+            background.GetComponent<SpriteRenderer>().sprite = env_sprite[env]; //set background environment
 
         if (load == 0)
             return;

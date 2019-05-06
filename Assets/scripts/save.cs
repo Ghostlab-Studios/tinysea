@@ -17,6 +17,7 @@ public class save : MonoBehaviour
     {
 
 #if UNITY_WEBGL
+        Debug.Log("webgl save");
         //can't save this way in webgl mode so turn it off
 #else
         foreach (GameObject save in save_button)

@@ -12,9 +12,11 @@ public class UImenu : MonoBehaviour
     {
 //can't save this way in webgl mode so turn it off
 #if UNITY_WEBGL
-        saveAnim.gameObject.setactive(false);
+        if(saveAnim != null)
+            saveAnim.gameObject.SetActive(false);
 #else
-        saveAnim.gameObject.SetActive(true);
+        if(saveAnim != null)
+            saveAnim.gameObject.SetActive(true);
 #endif
 
         if (menuAnim == null && homeAnim == null && resetAnim == null)

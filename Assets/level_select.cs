@@ -6,8 +6,9 @@ using UnityEngine.UI;
 public class level_select : MonoBehaviour
 {
     public Sprite[] env_sprites;
+    public GameObject select;
 
-    private Vector3 normal_scale;
+    private Vector3 normal_scale, normal_scale2;
     private GameObject env_image;
     private int current; //current image index in the sprite array
     //private Queue<Sprite> env;
@@ -27,6 +28,7 @@ public class level_select : MonoBehaviour
             }
 
         normal_scale = gameObject.transform.localScale;
+        normal_scale2 = select.transform.localScale;
     }
 
     public void act_select()
@@ -46,6 +48,8 @@ public class level_select : MonoBehaviour
 
     public void deact_select()
     {
+        PlayerPrefs.SetInt("env", current); //select current environment then close menu
+
         Image select = gameObject.GetComponent<Image>();
         Button butt = gameObject.GetComponent<Button>();
 
@@ -76,7 +80,8 @@ public class level_select : MonoBehaviour
             }
             else
             {
-                next_sprite = env_sprites[0];
+                current = 0;
+                next_sprite = env_sprites[current];
             }
         else
             if(current > 0)
@@ -85,25 +90,41 @@ public class level_select : MonoBehaviour
             }
             else
             {
-                next_sprite = env_sprites[3];
+                current = env_sprites.Length - 1;
+                next_sprite = env_sprites[current];
             }
 
         env_image.GetComponent<Image>().sprite = next_sprite;
-        PlayerPrefs.SetInt("env", current);
     }
 
     public void hover(bool on)
     {
 
-        if(on && gameObject.GetComponent<Image>().IsActive())
+        if(on)
         {
-            gameObject.transform.localScale = normal_scale * 1.2f;
-            gameObject.GetComponent<Image>().color = Color.gray;
+            if (gameObject.GetComponent<Image>().IsActive())
+            {
+                gameObject.transform.localScale = normal_scale * 1.2f;
+                gameObject.GetComponent<Image>().color = Color.gray;
+            }
+            else if(select.GetComponent<Image>().IsActive())
+            {
+                select.transform.localScale = normal_scale2 * 1.2f;
+                select.GetComponent<Image>().color = Color.gray;
+            }
         }
         else
         {
-            gameObject.transform.localScale = normal_scale;
-            gameObject.GetComponent<Image>().color = Color.white;
+            if (gameObject.GetComponent<Image>().IsActive())
+            {
+                gameObject.transform.localScale = normal_scale;
+                gameObject.GetComponent<Image>().color = Color.white;
+            }
+            else if (select.GetComponent<Image>().IsActive())
+            {
+                select.transform.localScale = normal_scale2;
+                select.GetComponent<Image>().color = Color.white;
+            }
         }
     }
 }

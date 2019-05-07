@@ -63,13 +63,14 @@ public class load : MonoBehaviour
     void load_thisGame()
     {
         int load = PlayerPrefs.GetInt("save", 0);
-        int env = PlayerPrefs.GetInt("env", 0);
-
-        if(background.GetComponent<SpriteRenderer>().sprite != null)
-            background.GetComponent<SpriteRenderer>().sprite = env_sprite[env]; //set background environment
-
         if (load == 0)
+        {
+            int env = PlayerPrefs.GetInt("env", 0);
+
+            if (background.GetComponent<SpriteRenderer>().sprite != null)
+                background.GetComponent<SpriteRenderer>().sprite = env_sprite[env]; //set background environment
             return;
+        }
 
         string save_file = Application.persistentDataPath + "/Saves/Save_" + load + ".txt";
 
@@ -88,6 +89,13 @@ public class load : MonoBehaviour
                 int index = file_loaded[i].IndexOf(" ");
                 int money = int.Parse(file_loaded[i].Substring(0, index));
                 playerObj.moneys = money;
+            }
+            else if (i == 3)
+            {
+                int index = file_loaded[i].IndexOf(" ");
+                int env = int.Parse(file_loaded[i].Substring(0, index));
+                if (background.GetComponent<SpriteRenderer>().sprite != null)
+                    background.GetComponent<SpriteRenderer>().sprite = env_sprite[env]; //set background environment
             }
             else
             {

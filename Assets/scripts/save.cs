@@ -89,6 +89,7 @@ public class save : MonoBehaviour
             save_file.AppendLine(System.DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"));
             save_file.AppendLine(playerObj.temperature.temperature.ToString() + " " + "temp");
             save_file.AppendLine(playerObj.moneys.ToString() + " " + "money");
+            save_file.AppendLine(PlayerPrefs.GetInt("env", 0).ToString());
             foreach (CharacterManager c in playerObj.species)
             {
                 save_file.AppendLine(c.speciesAmount.ToString() + " " + c.uniqueName);

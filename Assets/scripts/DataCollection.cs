@@ -20,6 +20,7 @@ public class DataCollection : MonoBehaviour
     private void Start()
     {
 #if UNITY_WEBGL
+        Debug.Log("webgl dc");
         return; //no need to do anything here if this is a webgl version
 #endif
         collect = new PlaySessionData();

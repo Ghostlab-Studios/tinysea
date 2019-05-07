@@ -16,8 +16,11 @@ public class load : MonoBehaviour
     {
 //can't load this way in webgl mode so turn it off
 #if UNITY_WEBGL
-        load_game.gameObject.SetActive(false);
-        collect_toggle.SetActive(false);
+        if(load_game != null)
+            load_game.gameObject.SetActive(false);
+
+        if(collect_toggle != null)
+            collect_toggle.SetActive(false);
 #else
         if (load_game != null)
         {

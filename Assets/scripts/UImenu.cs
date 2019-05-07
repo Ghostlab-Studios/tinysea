@@ -27,7 +27,7 @@ public class UImenu : MonoBehaviour
             resetAnim = new Animator();
         if (musicAnim == null)
             musicAnim = new Animator();
-        if (saveAnim)
+        if (saveAnim == null)
             saveAnim = new Animator();
     }
 

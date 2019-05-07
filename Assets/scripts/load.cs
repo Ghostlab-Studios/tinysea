@@ -104,7 +104,7 @@ public class load : MonoBehaviour
             {
                 int index = file_loaded[i].IndexOf(" ");
                 int fish = int.Parse(file_loaded[i].Substring(0, index));
-                playerObj.BuyCreatures((i - 3), fish, false);
+                playerObj.BuyCreatures((i - 4), fish, false);
             }
         }
     }

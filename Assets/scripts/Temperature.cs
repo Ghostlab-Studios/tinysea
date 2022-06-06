@@ -152,8 +152,8 @@ public class Temperature : MonoBehaviour
         //GenerateTemperature(currentDay);
         drawLines();
         tempText.text = temperature.ToString();
-        forecastOneText.text = ((int)forecastOneDay).ToString();
-        forecastTwoText.text = ((int)forecastTwoDays).ToString();
+        forecastOneText.text = Mathf.Clamp(Mathf.RoundToInt(forecastOneDay), 0, 40).ToString();
+        forecastTwoText.text = Mathf.Clamp(Mathf.RoundToInt(forecastTwoDays), 0, 40).ToString();
         tempRound = temperature;
         tempVisual = temperature;
         currentBar = bar5;
@@ -287,8 +287,8 @@ public class Temperature : MonoBehaviour
     private void UpdateTemperatureText()
     {
         tempText.text = tempRound.ToString();
-        forecastOneText.text = ((int)forecastOneDay).ToString();
-        forecastTwoText.text = ((int)forecastTwoDays).ToString();
+        forecastOneText.text = Mathf.Clamp(Mathf.RoundToInt(forecastOneDay), 0, 40).ToString();
+        forecastTwoText.text = Mathf.Clamp(Mathf.RoundToInt(forecastTwoDays), 0, 40).ToString();
     }
 
     private void UpdateTempVisual()

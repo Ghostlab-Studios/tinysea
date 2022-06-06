@@ -52,10 +52,13 @@ public class Temperature : MonoBehaviour
 
     private Vector3 homePos;
 
-    public float temperature = 20;
+    public float temperature;
     public TemperatureTrend trend;
 
-    public float currentDay = 1;
+    public float currentDay = 1;    // Try changing to 0 at some point
+    public float step = 5;          // Number of days between each turn
+    public float period;            // Number of turns per year
+    public float tMean = 15;        // Yearly average temperature
 
     public Text tempText;
     private float tempRound;
@@ -135,7 +138,9 @@ public class Temperature : MonoBehaviour
 
         //disable our selector dot
         selectorDot.GetComponent<SpriteRenderer>().enabled = false;
-
+        
+        period = 365f / step;
+        temperature = tMean;
         //GenerateTemperature(currentDay);
         generatePossibilities();
         //GenerateTemperature(currentDay);
@@ -176,6 +181,11 @@ public class Temperature : MonoBehaviour
         animating = true;
         animationTimer = 0;
         pickTimer = 0;
+    }
+
+    public void updateDay()
+    {
+        currentDay += step;
     }
 
     void Animate()
@@ -237,7 +247,7 @@ public class Temperature : MonoBehaviour
     void PickTemperature()
     {
         //GenerateTemperature(currentDay);
-        temperature = trend.GetTemperature(currentDay);
+        temperature = trend.GetTemperature(currentDay, period, tMean);
         UpdateTempRound();
         UpdateTemperatureText();
         UpdateTempVisual();
@@ -344,7 +354,7 @@ public class Temperature : MonoBehaviour
             int index = Random.Range(0, possibleLikelihoods.Count);
             possibleLikelihoods[index] = possibleLikelihoods[index] + 1;
         }
-        return trend.GetTemperature(day);
+        return trend.GetTemperature(day, period, tMean);
     }
 
     //creates possible temperatures

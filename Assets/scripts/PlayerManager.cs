@@ -76,7 +76,7 @@ public class PlayerManager : MonoBehaviour {
             waitingForTemperature = true;
             busy = true;
             temperature.updateTemperature();
-            temperature.currentDay++;
+            temperature.updateDay();
         }
     }
 

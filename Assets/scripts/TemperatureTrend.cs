@@ -38,6 +38,9 @@ public class TemperatureTrend : MonoBehaviour
     // the temperature corresponding to the current day
     private float finalTemperature;
 
+    public float clim = 1;          // Increases every year
+    public float yrRange = 10;      // Max diff. in temperature between summer and winter seasons
+    public float rand = 10;         // Maximum deviation for heat waves or cold snaps
 
     // amplitude and frequency for season signal 
     private float a = 5f;
@@ -51,11 +54,14 @@ public class TemperatureTrend : MonoBehaviour
     // this process may be unnecessary, and is usually used when deriving larger data sets with the same standard deviation
     private bool gaussFlipper; //This is a bad name for this variable but honestly, what would you call it?
 
-
     // gets random temperature given the current day
-    public float GetTemperature(float day)
+    public float GetTemperature(float day, float period, float tMean)
     {
-
+        float tBase = tMean + (Mathf.Sin(2 * Mathf.PI * day / 365) * yrRange);
+        float tClimate = clim * day / 365;
+        float tRand = Random.Range(-1f, 1f) * rand;
+        return tBase + tClimate + tRand;
+        /*
         SetTrend(day);
         SetSeason(day);
         SetSigma(day);
@@ -65,7 +71,7 @@ public class TemperatureTrend : MonoBehaviour
         finalTemperature = Mathf.Clamp(GetGaussian(mean, sd), 0f, 40f);
 
         return finalTemperature;
-
+        */
     }
 
     // sets warming trend for the given day

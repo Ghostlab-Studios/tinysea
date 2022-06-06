@@ -53,6 +53,8 @@ public class Temperature : MonoBehaviour
     private Vector3 homePos;
 
     public float temperature;
+    public float forecastOneDay;
+    public float forecastTwoDays;
     public TemperatureTrend trend;
 
     public float currentDay = 1;    // Try changing to 0 at some point
@@ -61,6 +63,8 @@ public class Temperature : MonoBehaviour
     public float tMean = 15;        // Yearly average temperature
 
     public Text tempText;
+    public Text forecastOneText;
+    public Text forecastTwoText;
     private float tempRound;
     public float tempVisual;
 
@@ -141,11 +145,15 @@ public class Temperature : MonoBehaviour
         
         period = 365f / step;
         temperature = tMean;
+        forecastOneDay = trend.GetTemperature(currentDay + step, period, tMean);
+        forecastTwoDays = trend.GetTemperature(currentDay + (step * 2), period, tMean);
         //GenerateTemperature(currentDay);
         generatePossibilities();
         //GenerateTemperature(currentDay);
         drawLines();
         tempText.text = temperature.ToString();
+        forecastOneText.text = ((int)forecastOneDay).ToString();
+        forecastTwoText.text = ((int)forecastTwoDays).ToString();
         tempRound = temperature;
         tempVisual = temperature;
         currentBar = bar5;
@@ -247,7 +255,9 @@ public class Temperature : MonoBehaviour
     void PickTemperature()
     {
         //GenerateTemperature(currentDay);
-        temperature = trend.GetTemperature(currentDay, period, tMean);
+        temperature = forecastOneDay;
+        forecastOneDay = forecastTwoDays;
+        forecastTwoDays = trend.GetTemperature(currentDay, period, tMean);
         UpdateTempRound();
         UpdateTemperatureText();
         UpdateTempVisual();
@@ -277,6 +287,8 @@ public class Temperature : MonoBehaviour
     private void UpdateTemperatureText()
     {
         tempText.text = tempRound.ToString();
+        forecastOneText.text = ((int)forecastOneDay).ToString();
+        forecastTwoText.text = ((int)forecastTwoDays).ToString();
     }
 
     private void UpdateTempVisual()

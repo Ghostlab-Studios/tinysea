@@ -4561,7 +4561,7 @@ MonoBehaviour:
       m_Calls: []
     m_TypeName: UnityEngine.UI.MaskableGraphic+CullStateChangedEvent, UnityEngine.UI,
       Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-  m_Sprite: {fileID: 21300000, guid: fd68572493f6d9047896d059897e96da, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 6c964fb92296a454992c69f3b7c55d93, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -6303,6 +6303,14 @@ Prefab:
     - target: {fileID: 11485606, guid: ae0e463ecfbf45743bebefcdd88f0317, type: 2}
       propertyPath: deathThreashold
       value: 0.05
+      objectReference: {fileID: 0}
+    - target: {fileID: 11485606, guid: ae0e463ecfbf45743bebefcdd88f0317, type: 2}
+      propertyPath: uniqueName
+      value: cyplo arctic
+      objectReference: {fileID: 0}
+    - target: {fileID: 175102, guid: ae0e463ecfbf45743bebefcdd88f0317, type: 2}
+      propertyPath: m_Name
+      value: cyplo_arctic
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: ae0e463ecfbf45743bebefcdd88f0317, type: 2}
@@ -9185,7 +9193,7 @@ RectTransform:
   m_GameObject: {fileID: 266346898}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.8, y: 0.8, z: 1}
   m_Children: []
   m_Father: {fileID: 1974344986}
   m_RootOrder: 0
@@ -9214,7 +9222,7 @@ MonoBehaviour:
       m_Calls: []
     m_TypeName: UnityEngine.UI.MaskableGraphic+CullStateChangedEvent, UnityEngine.UI,
       Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-  m_Sprite: {fileID: 21300000, guid: 7af983ef6dc2bc84c9ff768388f83c29, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 2b01875ae4d2f414c9fa133244362395, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -22723,7 +22731,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 125708, guid: 02857cde48ea74441be874c263cc9120, type: 2}
       propertyPath: m_Name
-      value: gelgi
+      value: cyplo
       objectReference: {fileID: 0}
     - target: {fileID: 11473918, guid: 02857cde48ea74441be874c263cc9120, type: 2}
       propertyPath: thermalcurve
@@ -22740,6 +22748,10 @@ Prefab:
     - target: {fileID: 11473918, guid: 02857cde48ea74441be874c263cc9120, type: 2}
       propertyPath: deathThreashold
       value: 0.05
+      objectReference: {fileID: 0}
+    - target: {fileID: 11473918, guid: 02857cde48ea74441be874c263cc9120, type: 2}
+      propertyPath: uniqueName
+      value: cyplo
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 02857cde48ea74441be874c263cc9120, type: 2}
@@ -23442,7 +23454,7 @@ RectTransform:
   m_GameObject: {fileID: 680632890}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.8, y: 0.8, z: 1}
   m_Children: []
   m_Father: {fileID: 2022902602}
   m_RootOrder: 0
@@ -23471,7 +23483,7 @@ MonoBehaviour:
       m_Calls: []
     m_TypeName: UnityEngine.UI.MaskableGraphic+CullStateChangedEvent, UnityEngine.UI,
       Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-  m_Sprite: {fileID: 21300000, guid: 6c964fb92296a454992c69f3b7c55d93, type: 3}
+  m_Sprite: {fileID: 21300000, guid: fd68572493f6d9047896d059897e96da, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -24263,6 +24275,14 @@ Prefab:
     - target: {fileID: 11467484, guid: a854f2df4fa6700449d215ee9bd2c640, type: 2}
       propertyPath: deathThreashold
       value: 0.05
+      objectReference: {fileID: 0}
+    - target: {fileID: 182522, guid: a854f2df4fa6700449d215ee9bd2c640, type: 2}
+      propertyPath: m_Name
+      value: gelgi_arctic
+      objectReference: {fileID: 0}
+    - target: {fileID: 11467484, guid: a854f2df4fa6700449d215ee9bd2c640, type: 2}
+      propertyPath: uniqueName
+      value: gelgi arctic
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: a854f2df4fa6700449d215ee9bd2c640, type: 2}
@@ -31658,6 +31678,14 @@ Prefab:
     - target: {fileID: 11473588, guid: 16840f16cc3c3914abfebb50670aaef1, type: 2}
       propertyPath: deathThreashold
       value: 0.05
+      objectReference: {fileID: 0}
+    - target: {fileID: 100760, guid: 16840f16cc3c3914abfebb50670aaef1, type: 2}
+      propertyPath: m_Name
+      value: gelgi
+      objectReference: {fileID: 0}
+    - target: {fileID: 11473588, guid: 16840f16cc3c3914abfebb50670aaef1, type: 2}
+      propertyPath: uniqueName
+      value: gelgi
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 16840f16cc3c3914abfebb50670aaef1, type: 2}
@@ -43252,24 +43280,24 @@ MonoBehaviour:
   player: {fileID: 882694906}
   creatures: []
   prefabs:
-  - {fileID: 152334, guid: bc3bd6d000697db4782d2a393e217a18, type: 2}
+  - {fileID: 101074, guid: 1331987a2466fa24685d796a8adc56ae, type: 2}
   - {fileID: 155996, guid: 43fa5cbedaae74d42a38e5d9c3098260, type: 2}
   - {fileID: 198846, guid: e4f7180425c77854f8e333747d14b744, type: 2}
-  - {fileID: 188096, guid: c38a5f92c78384d4b864f2257b6865c9, type: 2}
+  - {fileID: 173170, guid: 0c36ef1a9b26cc04a85242d55c50a53c, type: 2}
   - {fileID: 197386, guid: 34aac113b87d9f04c83c35f38f11ab2b, type: 2}
   - {fileID: 136378, guid: 104d62c57c2c80b42bc216ec4f7b2b6b, type: 2}
-  - {fileID: 135940, guid: b961a5cc8718ab547a159a26ade001cb, type: 2}
+  - {fileID: 199906, guid: ebb85becb861d4044b57c343b8a71a01, type: 2}
   - {fileID: 158634, guid: a95df56ef3cdfd94b813b21ee5464d94, type: 2}
   - {fileID: 165030, guid: ca4659137e3a1d34aae4595ac349119c, type: 2}
   - {fileID: 105442, guid: e271a889dad8c67468ab1704b62e2c51, type: 2}
   - {fileID: 153772, guid: 40a807b90823c274cb7ff9e6743a466a, type: 2}
-  - {fileID: 101074, guid: 1331987a2466fa24685d796a8adc56ae, type: 2}
+  - {fileID: 152334, guid: bc3bd6d000697db4782d2a393e217a18, type: 2}
   - {fileID: 117994, guid: ed7cbb8a97cf19c4f8f9bae67d094c2d, type: 2}
   - {fileID: 170690, guid: f2d3c10198e4e634496215e0da2ff752, type: 2}
-  - {fileID: 173170, guid: 0c36ef1a9b26cc04a85242d55c50a53c, type: 2}
+  - {fileID: 188096, guid: c38a5f92c78384d4b864f2257b6865c9, type: 2}
   - {fileID: 133598, guid: 6abf467b11310c643b7a70fa63e6c4b8, type: 2}
   - {fileID: 189318, guid: 10339cc3ea626c644bbf6552e0058afd, type: 2}
-  - {fileID: 199906, guid: ebb85becb861d4044b57c343b8a71a01, type: 2}
+  - {fileID: 135940, guid: b961a5cc8718ab547a159a26ade001cb, type: 2}
   - {fileID: 158646, guid: aee7dad3e84d3d348b91abc7f3b93e75, type: 2}
   - {fileID: 187788, guid: 2bf8f8c185529dc4e8ed34fed7f70ab4, type: 2}
   - {fileID: 106626, guid: db24f947b2a4d2146bc4687df8dfac35, type: 2}
@@ -47103,7 +47131,7 @@ MonoBehaviour:
       m_Calls: []
     m_TypeName: UnityEngine.UI.MaskableGraphic+CullStateChangedEvent, UnityEngine.UI,
       Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-  m_Sprite: {fileID: 21300000, guid: 2b01875ae4d2f414c9fa133244362395, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 7af983ef6dc2bc84c9ff768388f83c29, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -52175,6 +52203,14 @@ Prefab:
     - target: {fileID: 11403940, guid: 8eaecafbbcfe7554d8773c9b35dd0e51, type: 2}
       propertyPath: deathThreashold
       value: 0.05
+      objectReference: {fileID: 0}
+    - target: {fileID: 11403940, guid: 8eaecafbbcfe7554d8773c9b35dd0e51, type: 2}
+      propertyPath: uniqueName
+      value: cyplo tropical
+      objectReference: {fileID: 0}
+    - target: {fileID: 122550, guid: 8eaecafbbcfe7554d8773c9b35dd0e51, type: 2}
+      propertyPath: m_Name
+      value: cyplo_tropic
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 8eaecafbbcfe7554d8773c9b35dd0e51, type: 2}
@@ -65207,6 +65243,14 @@ Prefab:
       propertyPath: deathThreashold
       value: 0.05
       objectReference: {fileID: 0}
+    - target: {fileID: 145568, guid: 399f0e974cd2606478d58af607646dec, type: 2}
+      propertyPath: m_Name
+      value: gelgi_tropic
+      objectReference: {fileID: 0}
+    - target: {fileID: 11431190, guid: 399f0e974cd2606478d58af607646dec, type: 2}
+      propertyPath: uniqueName
+      value: gelgi tropical
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 399f0e974cd2606478d58af607646dec, type: 2}
   m_IsPrefabParent: 0
@@ -67133,7 +67177,7 @@ MonoBehaviour:
       m_Calls: []
     m_TypeName: UnityEngine.UI.MaskableGraphic+CullStateChangedEvent, UnityEngine.UI,
       Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-  m_Sprite: {fileID: 21300000, guid: a5292acb82f81d146b87d45e74625a89, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 82c88d2d9c57b05498a15ab0c8cdee38, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -72689,7 +72733,7 @@ RectTransform:
   m_GameObject: {fileID: 1982050118}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.8, y: 0.8, z: 1}
   m_Children: []
   m_Father: {fileID: 1174847246}
   m_RootOrder: 0
@@ -72718,7 +72762,7 @@ MonoBehaviour:
       m_Calls: []
     m_TypeName: UnityEngine.UI.MaskableGraphic+CullStateChangedEvent, UnityEngine.UI,
       Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-  m_Sprite: {fileID: 21300000, guid: 82c88d2d9c57b05498a15ab0c8cdee38, type: 3}
+  m_Sprite: {fileID: 21300000, guid: a5292acb82f81d146b87d45e74625a89, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1

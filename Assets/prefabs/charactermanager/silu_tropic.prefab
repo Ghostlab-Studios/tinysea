@@ -5,10 +5,10 @@ GameObject:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  serializedVersion: 4
+  serializedVersion: 5
   m_Component:
-  - 4: {fileID: 441908}
-  - 114: {fileID: 11490118}
+  - component: {fileID: 441908}
+  - component: {fileID: 11490118}
   m_Layer: 0
   m_Name: silu_tropic
   m_TagString: Untagged
@@ -23,11 +23,12 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 100664}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -24.959507, y: -45.1734619, z: -82.6173859}
+  m_LocalPosition: {x: -24.959507, y: -45.173462, z: -82.617386}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &11490118
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -48,16 +49,17 @@ MonoBehaviour:
   uniqueName: silu tropical
   eatingAmount: 4
   foodChainLevel: 3
-  reproductionMultiplier: .349999994
-  deathThreashold: .300000012
-  deathRate: .349999994
+  reproductionMultiplier: 0.35
+  deathThreashold: 0.3
+  deathRate: 0.35
   minimumDeaths: 1
+  reproThreshold: 0.25
   eatingStars: 2
   reproductionStars: 2
   deathThreasholdStars: 5
   deathRateStars: 5
   thermalBreadthStars: 1
-  description: The huge whiskers of the tropical silu-silu allow them to detect any
+  description: The huge whiskers of the Tropical Silu-Silu allow them to detect any
     changes in the water around them.
 --- !u!1001 &100100000
 Prefab:

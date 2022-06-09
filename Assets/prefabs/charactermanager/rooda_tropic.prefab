@@ -5,10 +5,10 @@ GameObject:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  serializedVersion: 4
+  serializedVersion: 5
   m_Component:
-  - 4: {fileID: 432652}
-  - 114: {fileID: 11460378}
+  - component: {fileID: 432652}
+  - component: {fileID: 11460378}
   m_Layer: 0
   m_Name: rooda_tropic
   m_TagString: Untagged
@@ -23,11 +23,12 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 198460}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -24.959507, y: -45.1734619, z: -82.6173859}
+  m_LocalPosition: {x: -24.959507, y: -45.173462, z: -82.617386}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &11460378
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -48,17 +49,18 @@ MonoBehaviour:
   uniqueName: rooda tropical
   eatingAmount: 2
   foodChainLevel: 3
-  reproductionMultiplier: .300000012
-  deathThreashold: .300000012
-  deathRate: .400000006
+  reproductionMultiplier: 0.3
+  deathThreashold: 0.3
+  deathRate: 0.4
   minimumDeaths: 1
+  reproThreshold: 0.25
   eatingStars: 4
   reproductionStars: 1
   deathThreasholdStars: 3
   deathRateStars: 4
   thermalBreadthStars: 5
-  description: 'The colorful tropical rooda can contort  their bodies into strange
-    shapes to hypnotize their prey before eating them. '
+  description: The colorful Tropical Rooda can contort their bodies into strange shapes
+    to hypnotize their prey before eating them.
 --- !u!1001 &100100000
 Prefab:
   m_ObjectHideFlags: 1

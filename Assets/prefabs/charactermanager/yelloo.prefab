@@ -53,12 +53,13 @@ MonoBehaviour:
   deathThreashold: 0.35
   deathRate: 0.4
   minimumDeaths: 1
+  reproThreshold: 0.25
   eatingStars: 0
   reproductionStars: 5
   deathThreasholdStars: 2
   deathRateStars: 4
   thermalBreadthStars: 1
-  description: Common yelloo form massive schools in the wild during the spring making
+  description: Common Yelloo form massive schools in the wild during the spring making
     the sea appear bright yellow.
 --- !u!1001 &100100000
 Prefab:

@@ -53,13 +53,14 @@ MonoBehaviour:
   deathThreashold: 0.3
   deathRate: 0.6
   minimumDeaths: 1
+  reproThreshold: 0.25
   eatingStars: 0
   reproductionStars: 4
   deathThreasholdStars: 3
   deathRateStars: 2
   thermalBreadthStars: 5
-  description: "Cold-loving arctic hexapods somewhat resemble snowflakes leading to
-    their nickname \u201Csea crystals\u201D."
+  description: 'Cold-loving (Arctic) Hexagellies resemble snowflakes leading to their
+    common name "sea crystals." '
 --- !u!1001 &100100000
 Prefab:
   m_ObjectHideFlags: 1

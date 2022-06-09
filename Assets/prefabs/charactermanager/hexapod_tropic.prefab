@@ -53,13 +53,15 @@ MonoBehaviour:
   deathThreashold: 0.3
   deathRate: 0.6
   minimumDeaths: 1
+  reproThreshold: 0.25
   eatingStars: 0
   reproductionStars: 4
   deathThreasholdStars: 3
   deathRateStars: 2
   thermalBreadthStars: 5
-  description: "Tropical hexapods like to bask in warm, sunlight-filled waters. The
-    sun\u2019s energy helps them chase down their prey."
+  description: 'Tropical Hexagellies like to bask in warm, sunlight-filled waters.
+    They don''t tolerate cold conditions, but when they are warm, they can grow and
+    reproduce very rapidly. '
 --- !u!1001 &100100000
 Prefab:
   m_ObjectHideFlags: 1

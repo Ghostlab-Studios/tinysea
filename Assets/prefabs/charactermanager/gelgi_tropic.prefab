@@ -5,10 +5,10 @@ GameObject:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  serializedVersion: 4
+  serializedVersion: 5
   m_Component:
-  - 4: {fileID: 400408}
-  - 114: {fileID: 11403940}
+  - component: {fileID: 400408}
+  - component: {fileID: 11403940}
   m_Layer: 0
   m_Name: gelgi_tropic
   m_TagString: Untagged
@@ -23,11 +23,12 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 122550}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -24.959507, y: -45.1734619, z: -82.6173859}
+  m_LocalPosition: {x: -24.959507, y: -45.173462, z: -82.617386}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &11403940
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -45,20 +46,21 @@ MonoBehaviour:
   cost: 650
   thermalcurve: {fileID: 0}
   player: {fileID: 0}
-  uniqueName: gelgi tropical
+  uniqueName: cyplo tropical
   eatingAmount: 3
   foodChainLevel: 2
-  reproductionMultiplier: .400000006
-  deathThreashold: .200000003
-  deathRate: .300000012
+  reproductionMultiplier: 0.4
+  deathThreashold: 0.2
+  deathRate: 0.3
   minimumDeaths: 1
+  reproThreshold: 0.25
   eatingStars: 3
   reproductionStars: 2
   deathThreasholdStars: 4
   deathRateStars: 5
   thermalBreadthStars: 1
-  description: 'Tropical gelgi have a second layer of tentacles coming out from their
-    upper body. They resemble rays of sunlight.  '
+  description: 'Tropical Cyplos have highly effective spines to help protect themselves
+    from predators. '
 --- !u!1001 &100100000
 Prefab:
   m_ObjectHideFlags: 1

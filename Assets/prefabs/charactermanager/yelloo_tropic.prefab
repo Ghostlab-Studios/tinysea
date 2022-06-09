@@ -53,13 +53,14 @@ MonoBehaviour:
   deathThreashold: 0.35
   deathRate: 0.4
   minimumDeaths: 1
+  reproThreshold: 0.25
   eatingStars: 0
   reproductionStars: 5
   deathThreasholdStars: 2
   deathRateStars: 4
   thermalBreadthStars: 1
-  description: 'The brightly-colored tropical yelloo put on elaborate displays to
-    communicate with each other and attract mates. '
+  description: The brightly-colored Tropical Yelloo put on elaborate displays to confuse
+    their predators.
 --- !u!1001 &100100000
 Prefab:
   m_ObjectHideFlags: 1

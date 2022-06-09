@@ -5,10 +5,10 @@ GameObject:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  serializedVersion: 4
+  serializedVersion: 5
   m_Component:
-  - 4: {fileID: 484186}
-  - 114: {fileID: 11410708}
+  - component: {fileID: 484186}
+  - component: {fileID: 11410708}
   m_Layer: 0
   m_Name: shelpik
   m_TagString: Untagged
@@ -23,11 +23,12 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 131276}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -24.959507, y: -45.1734619, z: -82.6173859}
+  m_LocalPosition: {x: -24.959507, y: -45.173462, z: -82.617386}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &11410708
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -48,16 +49,17 @@ MonoBehaviour:
   uniqueName: shelpik
   eatingAmount: 2
   foodChainLevel: 2
-  reproductionMultiplier: .400000006
-  deathThreashold: .200000003
-  deathRate: .300000012
+  reproductionMultiplier: 0.4
+  deathThreashold: 0.2
+  deathRate: 0.3
   minimumDeaths: 1
+  reproThreshold: 0.25
   eatingStars: 4
   reproductionStars: 2
   deathThreasholdStars: 4
   deathRateStars: 4
   thermalBreadthStars: 5
-  description: Shells of the common sheplik become redder as they grow older. Their
+  description: Shells of the Common Sheplik become redder as they grow older. Their
     color makes them a popular pet in captivity.
 --- !u!1001 &100100000
 Prefab:

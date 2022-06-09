@@ -53,13 +53,15 @@ MonoBehaviour:
   deathThreashold: 0.3
   deathRate: 0.6
   minimumDeaths: 1
+  reproThreshold: 0.25
   eatingStars: 0
   reproductionStars: 4
   deathThreasholdStars: 3
   deathRateStars: 2
   thermalBreadthStars: 5
-  description: Common hexapods are the largest type of hexapod. Some researchers believe
-    that they align themselves with magnetic fields.
+  description: 'Common Hexagellies live in temperature waters around the world and
+    can tolerate a wide range of temperatures. But, they are slow growing and take
+    a long time to mature. '
 --- !u!1001 &100100000
 Prefab:
   m_ObjectHideFlags: 1

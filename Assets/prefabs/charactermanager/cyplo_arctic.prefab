@@ -46,20 +46,21 @@ MonoBehaviour:
   cost: 100
   thermalcurve: {fileID: 0}
   player: {fileID: 0}
-  uniqueName: cyplo arctic
+  uniqueName: gelgi arctic
   eatingAmount: 3
   foodChainLevel: 1
   reproductionMultiplier: 0.5
   deathThreashold: 0.3
   deathRate: 0.5
   minimumDeaths: 1
+  reproThreshold: 0.25
   eatingStars: 0
   reproductionStars: 3
   deathThreasholdStars: 3
   deathRateStars: 3
   thermalBreadthStars: 3
-  description: Arctic cylpos thrive in cold water where they can often be found playing
-    with small bits of ice by blowing bubbles.
+  description: 'Unlike other subspecies of Gelgi, the Arctic Gelgi subspecies has
+    rigid spines to protect themselves from predators. '
 --- !u!1001 &100100000
 Prefab:
   m_ObjectHideFlags: 1

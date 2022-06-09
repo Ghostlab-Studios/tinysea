@@ -5,10 +5,10 @@ GameObject:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  serializedVersion: 4
+  serializedVersion: 5
   m_Component:
-  - 4: {fileID: 434788}
-  - 114: {fileID: 11499502}
+  - component: {fileID: 434788}
+  - component: {fileID: 11499502}
   m_Layer: 0
   m_Name: grabbler
   m_TagString: Untagged
@@ -23,11 +23,12 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 160296}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -24.959507, y: -45.1734619, z: -82.6173859}
+  m_LocalPosition: {x: -24.959507, y: -45.173462, z: -82.617386}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &11499502
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -48,17 +49,18 @@ MonoBehaviour:
   uniqueName: grabbler
   eatingAmount: 3
   foodChainLevel: 2
-  reproductionMultiplier: .600000024
-  deathThreashold: .300000012
-  deathRate: .600000024
+  reproductionMultiplier: 0.6
+  deathThreashold: 0.3
+  deathRate: 0.6
   minimumDeaths: 1
+  reproThreshold: 0.25
   eatingStars: 3
   reproductionStars: 4
   deathThreasholdStars: 3
   deathRateStars: 2
   thermalBreadthStars: 3
-  description: When common grabblers hatch they first seek out the shell of a sheplik
-    to protect their delicate tails.
+  description: 'After Common Grabblers hatch, they seek out the shell of a Sheplik
+    to protect their delicate tails. '
 --- !u!1001 &100100000
 Prefab:
   m_ObjectHideFlags: 1

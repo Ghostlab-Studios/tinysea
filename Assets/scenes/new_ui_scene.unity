@@ -5671,8 +5671,8 @@ MonoBehaviour:
             m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
             m_IntArgument: 0
             m_FloatArgument: 0
-            m_StringArgument: Tropical cyplos enjoy warm temperatures-- probably because
-              of their affinity for sunbathing.
+            m_StringArgument: 'Tropical Gelgi have a second row of spines, making
+              them resemble rays of sunlight.   '
             m_BoolArgument: 0
           m_CallState: 2
         - m_Target: {fileID: 174513402}
@@ -8792,8 +8792,8 @@ MonoBehaviour:
             m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
             m_IntArgument: 0
             m_FloatArgument: 0
-            m_StringArgument: The arctic cylpo thrives in very cold temperatures,
-              where it can often be found playing with ice fractals.
+            m_StringArgument: 'Unlike other subspecies of Gelgi, the Arctic Gelgi
+              subspecies has rigid spines to protect themselves from predators. '
             m_BoolArgument: 0
           m_CallState: 2
         - m_Target: {fileID: 262942984}
@@ -13856,8 +13856,8 @@ MonoBehaviour:
             m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
             m_IntArgument: 0
             m_FloatArgument: 0
-            m_StringArgument: The brightly-colored tropical yelloo put on elaborate
-              displays to communicate with each other and attract mates.
+            m_StringArgument: 'The brightly-colored Tropical Yelloo put on elaborate
+              displays to confuse their predators. '
             m_BoolArgument: 0
           m_CallState: 2
         - m_Target: {fileID: 408666497}
@@ -15200,8 +15200,8 @@ MonoBehaviour:
             m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
             m_IntArgument: 0
             m_FloatArgument: 0
-            m_StringArgument: Common yelloo form massive schools in the wild during
-              the spring making the sea appear bright yellow.
+            m_StringArgument: 'Common Yelloo form massive schools in the wild during
+              the spring making the sea appear bright yellow. '
             m_BoolArgument: 0
           m_CallState: 2
         - m_Target: {fileID: 430890175}
@@ -27179,7 +27179,7 @@ MonoBehaviour:
             m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
             m_IntArgument: 0
             m_FloatArgument: 0
-            m_StringArgument: 'The huge whiskers of the tropical silu-silu allow them
+            m_StringArgument: 'The huge whiskers of the Tropical Silu-Silu allow them
               to detect any changes in the water around them. '
             m_BoolArgument: 0
           m_CallState: 2
@@ -28871,8 +28871,8 @@ MonoBehaviour:
             m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
             m_IntArgument: 0
             m_FloatArgument: 0
-            m_StringArgument: 'The robust common rooda are apex predators that hunt
-              using their sharp heads to impale their prey. '
+            m_StringArgument: 'The Common Rooda are apex predators that hunt using
+              their sharp heads to impale their prey. '
             m_BoolArgument: 0
           m_CallState: 2
         - m_Target: {fileID: 848529948}
@@ -29640,8 +29640,8 @@ MonoBehaviour:
             m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
             m_IntArgument: 0
             m_FloatArgument: 0
-            m_StringArgument: 'Arctic silu-silu have very small eyes that are less
-              developed that most other fish. They use their whiskers to feel around. '
+            m_StringArgument: 'Arctic Silu-Silu have very small eyes that are less
+              developed than most other fish. They use their whiskers to feel around. '
             m_BoolArgument: 0
           m_CallState: 2
         - m_Target: {fileID: 858195574}
@@ -29963,9 +29963,9 @@ MonoBehaviour:
     m_Font: {fileID: 12800000, guid: 8352071b3a7fdd246895e079e19941a1, type: 3}
     m_FontSize: 8
     m_FontStyle: 0
-    m_BestFit: 0
-    m_MinSize: 8
-    m_MaxSize: 40
+    m_BestFit: 1
+    m_MinSize: 6
+    m_MaxSize: 8
     m_Alignment: 0
     m_AlignByGeometry: 0
     m_RichText: 1
@@ -31290,8 +31290,8 @@ MonoBehaviour:
             m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
             m_IntArgument: 0
             m_FloatArgument: 0
-            m_StringArgument: 'Common sploof are thought to be highly intelligent.
-              Lab studies how shown that  they are able to solve simple puzzles. '
+            m_StringArgument: 'Common Sploof are thought to be highly intelligent.
+              Lab studies have shown that they are able to solve simple puzzles. '
             m_BoolArgument: 0
           m_CallState: 2
         - m_Target: {fileID: 887692477}
@@ -32578,8 +32578,9 @@ MonoBehaviour:
             m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
             m_IntArgument: 0
             m_FloatArgument: 0
-            m_StringArgument: "Tropical hexapods like to bask in warm, sunlight-filled
-              waters. The sun\u2019s energy helps them chase down their prey."
+            m_StringArgument: 'Tropical Hexagellies like to bask in warm, sunlight-filled
+              waters. They don''t tolerate cold conditions, but when they are warm,
+              they can grow and reproduce very rapidly. '
             m_BoolArgument: 0
           m_CallState: 2
         - m_Target: {fileID: 902725409}
@@ -32970,8 +32971,8 @@ MonoBehaviour:
             m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
             m_IntArgument: 0
             m_FloatArgument: 0
-            m_StringArgument: 'Silu-Silu of the common variety have voracious appetites,
-              eating anything that happens to be in front of them. '
+            m_StringArgument: 'The Common Silu-Silu have voracious appetites, eating
+              anything that happens to be in front of them. '
             m_BoolArgument: 0
           m_CallState: 2
         - m_Target: {fileID: 906867561}
@@ -33489,8 +33490,8 @@ MonoBehaviour:
             m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
             m_IntArgument: 0
             m_FloatArgument: 0
-            m_StringArgument: Arctic grabblers are the best swimmers of their kind
-              thanks to their large legs and  special air chambers in their shells.
+            m_StringArgument: 'Arctic Grabblers are fast walkers and can use air chambers
+              in their shells to float.  '
             m_BoolArgument: 0
           m_CallState: 2
         - m_Target: {fileID: 914339890}
@@ -34505,8 +34506,9 @@ MonoBehaviour:
             m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
             m_IntArgument: 0
             m_FloatArgument: 0
-            m_StringArgument: Common hexapods are the largest type of hexapod. Some
-              researchers believe that they align themselves with magnetic fields.
+            m_StringArgument: 'Common Hexagellies live in temperature waters around
+              the world and can tolerate a wide range of temperatures. But, they are
+              slow growing and take a long time to mature. '
             m_BoolArgument: 0
           m_CallState: 2
         - m_Target: {fileID: 932104365}
@@ -34701,7 +34703,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c8d1c2fcafdac174ba03cb9d747ff6ec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  offset: {x: 102, y: 85, z: 0}
+  offset: {x: 0, y: 10, z: 0}
 --- !u!1 &936179329
 GameObject:
   m_ObjectHideFlags: 0
@@ -41741,8 +41743,8 @@ MonoBehaviour:
             m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
             m_IntArgument: 0
             m_FloatArgument: 0
-            m_StringArgument: 'When common grabblers hatch they first seek out the
-              shell of a sheplik to protect their delicate tails. '
+            m_StringArgument: 'After Common Grabblers hatch, they seek out the shell
+              of a Sheplik to protect their delicate tails. '
             m_BoolArgument: 0
           m_CallState: 2
         - m_Target: {fileID: 1154480641}
@@ -42381,8 +42383,8 @@ MonoBehaviour:
             m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
             m_IntArgument: 0
             m_FloatArgument: 0
-            m_StringArgument: 'Common gelgi generally feed on smaller sea creatures
-              and algae, giving them a green coloration. '
+            m_StringArgument: 'The Common Cyplo is known for its bright orange color
+              and single eye. Their winks are considered good luck. '
             m_BoolArgument: 0
           m_CallState: 2
         - m_Target: {fileID: 1174847251}
@@ -46409,7 +46411,7 @@ MonoBehaviour:
             m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
             m_IntArgument: 0
             m_FloatArgument: 0
-            m_StringArgument: 'The colorful tropical rooda can contort  their bodies
+            m_StringArgument: 'The colorful Tropical Rooda can contort their bodies
               into strange shapes to hypnotize their prey before eating them.  '
             m_BoolArgument: 0
           m_CallState: 2
@@ -52817,7 +52819,7 @@ MonoBehaviour:
             m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
             m_IntArgument: 0
             m_FloatArgument: 0
-            m_StringArgument: 'Arctic sploof are known to sometimes jump out of the
+            m_StringArgument: 'Arctic Sploof are known to sometimes jump out of the
               water to roll around in snow on land. The reason is unknown. '
             m_BoolArgument: 0
           m_CallState: 2
@@ -57337,8 +57339,8 @@ MonoBehaviour:
             m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
             m_IntArgument: 0
             m_FloatArgument: 0
-            m_StringArgument: Shells of the common sheplik become redder as they grow
-              older. Their color makes them a popular pet in captivity.
+            m_StringArgument: 'Shells of the Common Sheplik become redder as they
+              grow older. Their color makes them a popular pet in captivity. '
             m_BoolArgument: 0
           m_CallState: 2
         - m_Target: {fileID: 1550846868}
@@ -62805,8 +62807,8 @@ MonoBehaviour:
             m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
             m_IntArgument: 0
             m_FloatArgument: 0
-            m_StringArgument: "Cold-loving arctic hexapods somewhat resemble snowflakes
-              leading to their nickname \u201Csea crystals\u201D."
+            m_StringArgument: 'Cold-loving (Arctic) Hexagellies resemble snowflakes
+              leading to their common name "sea crystals." '
             m_BoolArgument: 0
           m_CallState: 2
         - m_Target: {fileID: 1741769747}
@@ -65529,8 +65531,8 @@ MonoBehaviour:
             m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
             m_IntArgument: 0
             m_FloatArgument: 0
-            m_StringArgument: 'Arctic rooda are built for speed with their streamlined
-              bodies. They are the fastest swimmers in the ocean.  '
+            m_StringArgument: 'Arctic Rooda are built for speed with their streamlined
+              bodies. They are the fastest swimmers in the ocean.   '
             m_BoolArgument: 0
           m_CallState: 2
         - m_Target: {fileID: 1819898886}
@@ -65847,7 +65849,7 @@ MonoBehaviour:
             m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
             m_IntArgument: 0
             m_FloatArgument: 0
-            m_StringArgument: 'Tropical sploof are very playful, they  love blowing
+            m_StringArgument: 'Tropical Sploof are very playful, they love blowing
               small objects such as  sand and shells around with their jets. '
             m_BoolArgument: 0
           m_CallState: 2
@@ -70556,8 +70558,8 @@ MonoBehaviour:
             m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
             m_IntArgument: 0
             m_FloatArgument: 0
-            m_StringArgument: Arctic sheplik are very slow moving and resilient to
-              cold. It is said that they can hibernate for months in the cold.
+            m_StringArgument: 'Arctic Sheplik are very slow moving and resilient to
+              cold. It is said that they can hibernate for months in the cold. '
             m_BoolArgument: 0
           m_CallState: 2
         - m_Target: {fileID: 1936966880}
@@ -71238,8 +71240,8 @@ MonoBehaviour:
             m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
             m_IntArgument: 0
             m_FloatArgument: 0
-            m_StringArgument: The tropical sheplik is also known as the royal sheplik
-              because their shiny shells resemble a golden crown.
+            m_StringArgument: 'The Tropical Sheplik is also known as the royal sheplik
+              because their shiny shells resemble a golden crown.  '
             m_BoolArgument: 0
           m_CallState: 2
         - m_Target: {fileID: 1952230933}
@@ -72186,8 +72188,8 @@ MonoBehaviour:
             m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
             m_IntArgument: 0
             m_FloatArgument: 0
-            m_StringArgument: Tropical gelgi have a second layer of tentacles coming
-              out from their upper body. They resemble rays of sunlight
+            m_StringArgument: 'Tropical Cyplos have highly effective spines to help
+              protect themselves from predators. '
             m_BoolArgument: 0
           m_CallState: 2
         - m_Target: {fileID: 1974344991}
@@ -73053,8 +73055,9 @@ MonoBehaviour:
             m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
             m_IntArgument: 0
             m_FloatArgument: 0
-            m_StringArgument: Arctic yelloo are very pale to help them blend into
-              their environment. They like to feed on partially frozen bits of kelp.
+            m_StringArgument: 'Arctic Yelloo are very pale to help them blend into
+              their environment. Like Hexagellies, they are photosynthetic and get
+              their energy from the sun. '
             m_BoolArgument: 0
           m_CallState: 2
         - m_Target: {fileID: 1983779286}
@@ -74599,9 +74602,8 @@ MonoBehaviour:
             m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
             m_IntArgument: 0
             m_FloatArgument: 0
-            m_StringArgument: Unlike other gelgi types, the tentacles of the arctic
-              gelgi are hard and spiny like icicles, allowing them to easily encapture
-              prey.
+            m_StringArgument: 'Arctic Cyplos thrive in cold water where they can often
+              be found playing with small bits of ice. '
             m_BoolArgument: 0
           m_CallState: 2
         - m_Target: {fileID: 2022902607}
@@ -76896,8 +76898,8 @@ MonoBehaviour:
             m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
             m_IntArgument: 0
             m_FloatArgument: 0
-            m_StringArgument: This orange, one-eyed creature prefers moderate temperatures,
-              though it can survive in most conditions.
+            m_StringArgument: 'Common Gelgi photosynthesize using chlorophyll, giving
+              them their characteristic green color. '
             m_BoolArgument: 1
           m_CallState: 2
         - m_Target: {fileID: 2071915609}
@@ -79816,8 +79818,8 @@ MonoBehaviour:
             m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
             m_IntArgument: 0
             m_FloatArgument: 0
-            m_StringArgument: The elongated claws of the tropical grabbler allow them
-              to reach into many tight places other grabblers cannot.
+            m_StringArgument: 'The elongated claws of the Tropical Grabbler allow
+              them to reach into many tight places other grabblers cannot. '
             m_BoolArgument: 0
           m_CallState: 2
         - m_Target: {fileID: 2147311938}

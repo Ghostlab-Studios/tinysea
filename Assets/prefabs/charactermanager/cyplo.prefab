@@ -46,20 +46,21 @@ MonoBehaviour:
   cost: 100
   thermalcurve: {fileID: 11442756, guid: 5af7d6d39fa94fc4d9dfd0523c752c09, type: 2}
   player: {fileID: 0}
-  uniqueName: cyplo
+  uniqueName: gelgi
   eatingAmount: 3
   foodChainLevel: 1
   reproductionMultiplier: 0.5
   deathThreashold: 0.3
   deathRate: 0.5
   minimumDeaths: 1
+  reproThreshold: 0.25
   eatingStars: 0
   reproductionStars: 3
   deathThreasholdStars: 3
   deathRateStars: 3
   thermalBreadthStars: 3
-  description: The common cyplo is known for its bright orange color and single eye.
-    Their winks are considered good luck.
+  description: 'Common Gelgi photosynthesize using chlorophyll, giving them their
+    characteristic green color. '
 --- !u!1001 &100100000
 Prefab:
   m_ObjectHideFlags: 1

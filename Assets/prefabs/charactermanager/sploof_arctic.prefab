@@ -5,10 +5,10 @@ GameObject:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  serializedVersion: 4
+  serializedVersion: 5
   m_Component:
-  - 4: {fileID: 414652}
-  - 114: {fileID: 11434696}
+  - component: {fileID: 414652}
+  - component: {fileID: 11434696}
   m_Layer: 0
   m_Name: sploof_arctic
   m_TagString: Untagged
@@ -23,11 +23,12 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 146028}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -24.959507, y: -45.1734619, z: -82.6173859}
+  m_LocalPosition: {x: -24.959507, y: -45.173462, z: -82.617386}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &11434696
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -48,16 +49,17 @@ MonoBehaviour:
   uniqueName: sploof arctic
   eatingAmount: 3
   foodChainLevel: 3
-  reproductionMultiplier: .600000024
-  deathThreashold: .349999994
-  deathRate: .5
+  reproductionMultiplier: 0.6
+  deathThreashold: 0.35
+  deathRate: 0.5
   minimumDeaths: 1
+  reproThreshold: 0.25
   eatingStars: 3
   reproductionStars: 4
   deathThreasholdStars: 2
   deathRateStars: 3
   thermalBreadthStars: 3
-  description: Arctic sploof are known to sometimes jump out of the water to roll
+  description: Arctic Sploof are known to sometimes jump out of the water to roll
     around in snow on land. The reason is unknown.
 --- !u!1001 &100100000
 Prefab:

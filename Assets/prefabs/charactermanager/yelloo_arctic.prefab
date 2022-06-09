@@ -53,13 +53,14 @@ MonoBehaviour:
   deathThreashold: 0.35
   deathRate: 0.4
   minimumDeaths: 1
+  reproThreshold: 0.25
   eatingStars: 0
   reproductionStars: 5
   deathThreasholdStars: 2
   deathRateStars: 4
   thermalBreadthStars: 1
-  description: Arctic yelloo are very pale to help them blend into their environment.
-    They like to feed on partially frozen bits of kelp.
+  description: Arctic Yelloo are very pale to help them blend into their environment.
+    Like Hexagellies, they are photosynthetic and get their energy from the sun.
 --- !u!1001 &100100000
 Prefab:
   m_ObjectHideFlags: 1

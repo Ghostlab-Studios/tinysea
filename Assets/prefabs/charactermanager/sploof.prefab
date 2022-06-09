@@ -5,10 +5,10 @@ GameObject:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  serializedVersion: 4
+  serializedVersion: 5
   m_Component:
-  - 4: {fileID: 475032}
-  - 114: {fileID: 11465106}
+  - component: {fileID: 475032}
+  - component: {fileID: 11465106}
   m_Layer: 0
   m_Name: sploof
   m_TagString: Untagged
@@ -23,11 +23,12 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 126464}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -24.959507, y: -45.1734619, z: -82.6173859}
+  m_LocalPosition: {x: -24.959507, y: -45.173462, z: -82.617386}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &11465106
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -48,17 +49,18 @@ MonoBehaviour:
   uniqueName: sploof
   eatingAmount: 3
   foodChainLevel: 3
-  reproductionMultiplier: .600000024
-  deathThreashold: .349999994
-  deathRate: .5
+  reproductionMultiplier: 0.6
+  deathThreashold: 0.35
+  deathRate: 0.5
   minimumDeaths: 1
+  reproThreshold: 0.25
   eatingStars: 3
   reproductionStars: 4
   deathThreasholdStars: 2
   deathRateStars: 3
   thermalBreadthStars: 3
-  description: Common sploof are thought to be highly intelligent. Lab studies how
-    shown that  they are able to solve simple puzzles.
+  description: Common Sploof are thought to be highly intelligent. Lab studies have
+    shown that they are able to solve simple puzzles.
 --- !u!1001 &100100000
 Prefab:
   m_ObjectHideFlags: 1

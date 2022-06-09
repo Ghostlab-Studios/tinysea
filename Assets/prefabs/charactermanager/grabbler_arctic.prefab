@@ -5,10 +5,10 @@ GameObject:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  serializedVersion: 4
+  serializedVersion: 5
   m_Component:
-  - 4: {fileID: 480778}
-  - 114: {fileID: 11456368}
+  - component: {fileID: 480778}
+  - component: {fileID: 11456368}
   m_Layer: 0
   m_Name: grabbler_arctic
   m_TagString: Untagged
@@ -23,11 +23,12 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 153482}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -24.959507, y: -45.1734619, z: -82.6173859}
+  m_LocalPosition: {x: -24.959507, y: -45.173462, z: -82.617386}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &11456368
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -48,17 +49,18 @@ MonoBehaviour:
   uniqueName: grabbler arctic
   eatingAmount: 3
   foodChainLevel: 2
-  reproductionMultiplier: .600000024
-  deathThreashold: .300000012
-  deathRate: .600000024
+  reproductionMultiplier: 0.6
+  deathThreashold: 0.3
+  deathRate: 0.6
   minimumDeaths: 1
+  reproThreshold: 0.25
   eatingStars: 3
   reproductionStars: 4
   deathThreasholdStars: 3
   deathRateStars: 2
   thermalBreadthStars: 3
-  description: Arctic grabblers are the best swimmers of their kind thanks to their
-    large legs and  special air chambers in their shells.
+  description: 'Arctic Grabblers are fast walkers and can use air chambers in their
+    shells to float.  '
 --- !u!1001 &100100000
 Prefab:
   m_ObjectHideFlags: 1

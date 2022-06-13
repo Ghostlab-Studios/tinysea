@@ -39906,7 +39906,7 @@ MonoBehaviour:
   animationFlipMaxSpeed: 0.02
   animationFlipMinSpeed: 0.3
   animating: 0
-  temperature: 5
+  temperature: 15
   forecastOneDay: 0
   forecastTwoDays: 0
   trend: {fileID: 859321035}

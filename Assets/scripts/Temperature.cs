@@ -91,7 +91,7 @@ public class Temperature : MonoBehaviour
         historicalTemperatures = new Queue<float>();
         for (int i = 0; i < historicalSegments; i++)
         {
-            historicalTemperatures.Enqueue(5);
+            historicalTemperatures.Enqueue(temperature);
         }
         historicalLineRenders = new List<LineRenderer>();
         for (int i = 0; i < historicalSegments - 1; i++)

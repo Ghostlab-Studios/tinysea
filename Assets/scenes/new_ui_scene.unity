@@ -36836,6 +36836,16 @@ Prefab:
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_MethodName
       value: Play
       objectReference: {fileID: 0}
+    - target: {fileID: 114774238504426356, guid: a854f19db5cfd874398d4cd19997c1e0,
+        type: 2}
+      propertyPath: m_MaxValue
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 114774238504426356, guid: a854f19db5cfd874398d4cd19997c1e0,
+        type: 2}
+      propertyPath: m_Value
+      value: 0.2
+      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 114882104737856306, guid: a854f19db5cfd874398d4cd19997c1e0, type: 2}
     - {fileID: 114399420655646380, guid: a854f19db5cfd874398d4cd19997c1e0, type: 2}
@@ -39909,6 +39919,9 @@ MonoBehaviour:
   temperature: 15
   forecastOneDay: 0
   forecastTwoDays: 0
+  forecastRand: 5
+  forecastPredictionOne: 0
+  forecastPredictionTwo: 0
   trend: {fileID: 859321035}
   currentDay: 0
   step: 5
@@ -79346,7 +79359,7 @@ AudioSource:
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 8300000, guid: 4b1842e9c0a46444bb78c277b85b7b48, type: 3}
   m_PlayOnAwake: 1
-  m_Volume: 1
+  m_Volume: 0.2
   m_Pitch: 1
   Loop: 1
   Mute: 0

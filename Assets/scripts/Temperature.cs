@@ -55,6 +55,9 @@ public class Temperature : MonoBehaviour
     public float temperature;
     public float forecastOneDay;
     public float forecastTwoDays;
+    public float forecastRand = 5;
+    public float forecastPredictionOne;
+    public float forecastPredictionTwo;
     public TemperatureTrend trend;
 
     public float currentDay = 1;    // Try changing to 0 at some point
@@ -147,6 +150,8 @@ public class Temperature : MonoBehaviour
         temperature = tMean;
         forecastOneDay = trend.GetTemperature(currentDay + step, period, tMean);
         forecastTwoDays = trend.GetTemperature(currentDay + (step * 2), period, tMean);
+        forecastPredictionOne = forecastOneDay + (Random.Range(-1f, 1f) * forecastRand);
+        forecastPredictionTwo = forecastTwoDays + (Random.Range(-1f, 1f) * forecastRand);
         //GenerateTemperature(currentDay);
         generatePossibilities();
         //GenerateTemperature(currentDay);
@@ -257,7 +262,9 @@ public class Temperature : MonoBehaviour
         //GenerateTemperature(currentDay);
         temperature = forecastOneDay;
         forecastOneDay = forecastTwoDays;
-        forecastTwoDays = trend.GetTemperature(currentDay, period, tMean);
+        forecastTwoDays = trend.GetTemperature(currentDay + (step * 2), period, tMean);
+        forecastPredictionOne = forecastPredictionTwo;
+        forecastPredictionTwo = forecastTwoDays + (Random.Range(-1f, 1f) * forecastRand);
         UpdateTempRound();
         UpdateTemperatureText();
         UpdateTempVisual();
@@ -287,8 +294,8 @@ public class Temperature : MonoBehaviour
     private void UpdateTemperatureText()
     {
         tempText.text = tempRound.ToString();
-        forecastOneText.text = Mathf.Clamp(Mathf.RoundToInt(forecastOneDay), 0, 40).ToString();
-        forecastTwoText.text = Mathf.Clamp(Mathf.RoundToInt(forecastTwoDays), 0, 40).ToString();
+        forecastOneText.text = Mathf.Clamp(Mathf.RoundToInt(forecastPredictionOne), 0, 40).ToString();
+        forecastTwoText.text = Mathf.Clamp(Mathf.RoundToInt(forecastPredictionTwo), 0, 40).ToString();
     }
 
     private void UpdateTempVisual()

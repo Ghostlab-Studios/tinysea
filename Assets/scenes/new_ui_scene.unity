@@ -3212,6 +3212,7 @@ GameObject:
   - component: {fileID: 116639635}
   - component: {fileID: 116639634}
   - component: {fileID: 116639637}
+  - component: {fileID: 116639638}
   m_Layer: 5
   m_Name: Button
   m_TagString: Untagged
@@ -3277,8 +3278,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 116639637}
-        m_MethodName: Play
+      - m_Target: {fileID: 116639638}
+        m_MethodName: PlayAudio
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -3403,6 +3404,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &116639638
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 116639632}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 116639637}
+  soundType: 0
 --- !u!1 &124884637
 GameObject:
   m_ObjectHideFlags: 0
@@ -4223,6 +4237,48 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   panelOn: {fileID: 1061778403}
   panelOff: {fileID: 1834815945}
+--- !u!1001 &144065860
+Prefab:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 4302177175042564, guid: 9cbf7b9eb068cc6409c4666eaaa282b3, type: 2}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4302177175042564, guid: 9cbf7b9eb068cc6409c4666eaaa282b3, type: 2}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4302177175042564, guid: 9cbf7b9eb068cc6409c4666eaaa282b3, type: 2}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4302177175042564, guid: 9cbf7b9eb068cc6409c4666eaaa282b3, type: 2}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4302177175042564, guid: 9cbf7b9eb068cc6409c4666eaaa282b3, type: 2}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4302177175042564, guid: 9cbf7b9eb068cc6409c4666eaaa282b3, type: 2}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4302177175042564, guid: 9cbf7b9eb068cc6409c4666eaaa282b3, type: 2}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4302177175042564, guid: 9cbf7b9eb068cc6409c4666eaaa282b3, type: 2}
+      propertyPath: m_RootOrder
+      value: 21
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_ParentPrefab: {fileID: 100100000, guid: 9cbf7b9eb068cc6409c4666eaaa282b3, type: 2}
+  m_IsPrefabParent: 0
 --- !u!1 &146977085
 GameObject:
   m_ObjectHideFlags: 0
@@ -4773,6 +4829,7 @@ GameObject:
   - component: {fileID: 162750868}
   - component: {fileID: 162750867}
   - component: {fileID: 162750870}
+  - component: {fileID: 162750871}
   m_Layer: 5
   m_Name: BuyButton
   m_TagString: Untagged
@@ -4848,8 +4905,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 162750870}
-        m_MethodName: Play
+      - m_Target: {fileID: 162750871}
+        m_MethodName: PlayAudio
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -4974,6 +5031,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &162750871
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 162750865}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 162750870}
+  soundType: 0
 --- !u!1 &165908408
 GameObject:
   m_ObjectHideFlags: 0
@@ -5481,6 +5551,7 @@ GameObject:
   - component: {fileID: 174513398}
   - component: {fileID: 174513401}
   - component: {fileID: 174513402}
+  - component: {fileID: 174513403}
   m_Layer: 5
   m_Name: Button
   m_TagString: Untagged
@@ -5675,8 +5746,8 @@ MonoBehaviour:
               them resemble rays of sunlight.   '
             m_BoolArgument: 0
           m_CallState: 2
-        - m_Target: {fileID: 174513402}
-          m_MethodName: Play
+        - m_Target: {fileID: 174513403}
+          m_MethodName: PlayAudio
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -5787,6 +5858,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &174513403
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 174513396}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 174513402}
+  soundType: 0
 --- !u!1 &176509493
 GameObject:
   m_ObjectHideFlags: 0
@@ -5862,8 +5946,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1312569244}
-        m_MethodName: Play
+      - m_Target: {fileID: 1312569245}
+        m_MethodName: PlayAudio
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -8676,6 +8760,7 @@ GameObject:
   - component: {fileID: 262942980}
   - component: {fileID: 262942983}
   - component: {fileID: 262942984}
+  - component: {fileID: 262942985}
   m_Layer: 5
   m_Name: Button
   m_TagString: Untagged
@@ -8870,8 +8955,8 @@ MonoBehaviour:
               subspecies has rigid spines to protect themselves from predators. '
             m_BoolArgument: 0
           m_CallState: 2
-        - m_Target: {fileID: 262942984}
-          m_MethodName: Play
+        - m_Target: {fileID: 262942985}
+          m_MethodName: PlayAudio
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -8981,6 +9066,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &262942985
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 262942978}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 262942984}
+  soundType: 0
 --- !u!114 &263877523 stripped
 MonoBehaviour:
   m_PrefabParentObject: {fileID: 11434696, guid: eaa4f7fe4b373404fa9ca044eb6026ed,
@@ -11479,6 +11577,7 @@ GameObject:
   - component: {fileID: 347507467}
   - component: {fileID: 347507466}
   - component: {fileID: 347507469}
+  - component: {fileID: 347507470}
   m_Layer: 5
   m_Name: TempButton
   m_TagString: Untagged
@@ -11543,8 +11642,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 347507469}
-        m_MethodName: Play
+      - m_Target: {fileID: 347507470}
+        m_MethodName: PlayAudio
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -11669,6 +11768,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &347507470
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 347507464}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 347507469}
+  soundType: 0
 --- !u!1 &355748805
 GameObject:
   m_ObjectHideFlags: 0
@@ -13740,6 +13852,7 @@ GameObject:
   - component: {fileID: 408666493}
   - component: {fileID: 408666496}
   - component: {fileID: 408666497}
+  - component: {fileID: 408666498}
   m_Layer: 5
   m_Name: Button 2
   m_TagString: Untagged
@@ -13934,8 +14047,8 @@ MonoBehaviour:
               displays to confuse their predators. '
             m_BoolArgument: 0
           m_CallState: 2
-        - m_Target: {fileID: 408666497}
-          m_MethodName: Play
+        - m_Target: {fileID: 408666498}
+          m_MethodName: PlayAudio
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -14045,6 +14158,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &408666498
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 408666491}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 408666497}
+  soundType: 0
 --- !u!1 &409289947
 GameObject:
   m_ObjectHideFlags: 0
@@ -15084,6 +15210,7 @@ GameObject:
   - component: {fileID: 430890171}
   - component: {fileID: 430890174}
   - component: {fileID: 430890175}
+  - component: {fileID: 430890176}
   m_Layer: 5
   m_Name: Button 2
   m_TagString: Untagged
@@ -15278,8 +15405,8 @@ MonoBehaviour:
               the spring making the sea appear bright yellow. '
             m_BoolArgument: 0
           m_CallState: 2
-        - m_Target: {fileID: 430890175}
-          m_MethodName: Play
+        - m_Target: {fileID: 430890176}
+          m_MethodName: PlayAudio
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -15389,6 +15516,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &430890176
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 430890169}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 430890175}
+  soundType: 0
 --- !u!1 &432792887
 GameObject:
   m_ObjectHideFlags: 0
@@ -18248,6 +18388,7 @@ GameObject:
   - component: {fileID: 509197733}
   - component: {fileID: 509197732}
   - component: {fileID: 509197731}
+  - component: {fileID: 509197735}
   m_Layer: 5
   m_Name: MButton
   m_TagString: Untagged
@@ -18294,8 +18435,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1312569244}
-        m_MethodName: Play
+      - m_Target: {fileID: 1312569245}
+        m_MethodName: PlayAudio
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -18359,6 +18500,19 @@ RectTransform:
   m_AnchoredPosition: {x: 152.4, y: 61.49138}
   m_SizeDelta: {x: 30, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &509197735
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 509197730}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 1312569244}
+  soundType: 0
 --- !u!1 &510270517
 GameObject:
   m_ObjectHideFlags: 0
@@ -19534,6 +19688,24 @@ Prefab:
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: bc7db102ae641c84480fdd9b68f637c2, type: 2}
   m_IsPrefabParent: 0
+--- !u!1 &553585014 stripped
+GameObject:
+  m_PrefabParentObject: {fileID: 1097971232311664, guid: a854f19db5cfd874398d4cd19997c1e0,
+    type: 2}
+  m_PrefabInternal: {fileID: 997374625}
+--- !u!114 &553585015
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 553585014}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 957944729}
+  soundType: 0
 --- !u!1 &556059695
 GameObject:
   m_ObjectHideFlags: 0
@@ -19619,6 +19791,7 @@ GameObject:
   - component: {fileID: 557867251}
   - component: {fileID: 557867250}
   - component: {fileID: 557867249}
+  - component: {fileID: 557867253}
   m_Layer: 5
   m_Name: LButton
   m_TagString: Untagged
@@ -19665,8 +19838,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1312569244}
-        m_MethodName: Play
+      - m_Target: {fileID: 1312569245}
+        m_MethodName: PlayAudio
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -19730,6 +19903,19 @@ RectTransform:
   m_AnchoredPosition: {x: -191.1, y: 62.2}
   m_SizeDelta: {x: 30, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &557867253
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 557867248}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 1312569244}
+  soundType: 0
 --- !u!1 &558269063
 GameObject:
   m_ObjectHideFlags: 0
@@ -23104,6 +23290,7 @@ GameObject:
   - component: {fileID: 670457588}
   - component: {fileID: 670457587}
   - component: {fileID: 670457586}
+  - component: {fileID: 670457590}
   m_Layer: 5
   m_Name: MButton
   m_TagString: Untagged
@@ -23150,8 +23337,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1312569244}
-        m_MethodName: Play
+      - m_Target: {fileID: 1312569245}
+        m_MethodName: PlayAudio
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -23215,6 +23402,19 @@ RectTransform:
   m_AnchoredPosition: {x: -151.6, y: 62.1}
   m_SizeDelta: {x: 30, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &670457590
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 670457585}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 1312569244}
+  soundType: 0
 --- !u!1 &671665159
 GameObject:
   m_ObjectHideFlags: 0
@@ -23226,6 +23426,7 @@ GameObject:
   - component: {fileID: 671665162}
   - component: {fileID: 671665161}
   - component: {fileID: 671665160}
+  - component: {fileID: 671665164}
   m_Layer: 5
   m_Name: RButton
   m_TagString: Untagged
@@ -23272,8 +23473,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1312569244}
-        m_MethodName: Play
+      - m_Target: {fileID: 1312569245}
+        m_MethodName: PlayAudio
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -23337,6 +23538,19 @@ RectTransform:
   m_AnchoredPosition: {x: 190.33275, y: 60.8}
   m_SizeDelta: {x: 30, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &671665164
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 671665159}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 1312569244}
+  soundType: 0
 --- !u!1 &672936600
 GameObject:
   m_ObjectHideFlags: 0
@@ -24178,6 +24392,7 @@ GameObject:
   - component: {fileID: 714131760}
   - component: {fileID: 714131759}
   - component: {fileID: 714131758}
+  - component: {fileID: 714131762}
   m_Layer: 5
   m_Name: LButton
   m_TagString: Untagged
@@ -24224,8 +24439,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1312569244}
-        m_MethodName: Play
+      - m_Target: {fileID: 1312569245}
+        m_MethodName: PlayAudio
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -24289,6 +24504,19 @@ RectTransform:
   m_AnchoredPosition: {x: 112.5, y: 61.6}
   m_SizeDelta: {x: 30, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &714131762
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 714131757}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 1312569244}
+  soundType: 0
 --- !u!114 &720327242 stripped
 MonoBehaviour:
   m_PrefabParentObject: {fileID: 11415740, guid: c683b4953e8e3d644b01b4c7e0a5e8cb,
@@ -26792,6 +27020,7 @@ GameObject:
   - component: {fileID: 789820378}
   - component: {fileID: 789820377}
   - component: {fileID: 789820376}
+  - component: {fileID: 789820380}
   m_Layer: 5
   m_Name: RButton
   m_TagString: Untagged
@@ -26838,8 +27067,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1312569244}
-        m_MethodName: Play
+      - m_Target: {fileID: 1312569245}
+        m_MethodName: PlayAudio
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -26903,6 +27132,19 @@ RectTransform:
   m_AnchoredPosition: {x: 38.9, y: 60.4}
   m_SizeDelta: {x: 30, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &789820380
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 789820375}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 1312569244}
+  soundType: 0
 --- !u!1 &793468367
 GameObject:
   m_ObjectHideFlags: 0
@@ -27063,6 +27305,7 @@ GameObject:
   - component: {fileID: 797857246}
   - component: {fileID: 797857249}
   - component: {fileID: 797857250}
+  - component: {fileID: 797857251}
   m_Layer: 5
   m_Name: Button 2
   m_TagString: Untagged
@@ -27257,8 +27500,8 @@ MonoBehaviour:
               to detect any changes in the water around them. '
             m_BoolArgument: 0
           m_CallState: 2
-        - m_Target: {fileID: 797857250}
-          m_MethodName: Play
+        - m_Target: {fileID: 797857251}
+          m_MethodName: PlayAudio
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -27368,6 +27611,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &797857251
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 797857244}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 797857250}
+  soundType: 0
 --- !u!4 &801130404 stripped
 Transform:
   m_PrefabParentObject: {fileID: 475032, guid: 0f5d5b490c930de4b880101ae68eac7c, type: 2}
@@ -27385,6 +27641,7 @@ GameObject:
   - component: {fileID: 801343740}
   - component: {fileID: 801343743}
   - component: {fileID: 801343744}
+  - component: {fileID: 801343745}
   m_Layer: 5
   m_Name: sellincrease
   m_TagString: Untagged
@@ -27512,8 +27769,8 @@ MonoBehaviour:
             m_StringArgument: 
             m_BoolArgument: 0
           m_CallState: 2
-        - m_Target: {fileID: 801343744}
-          m_MethodName: Play
+        - m_Target: {fileID: 801343745}
+          m_MethodName: PlayAudio
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -27623,6 +27880,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &801343745
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 801343738}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 801343744}
+  soundType: 0
 --- !u!114 &803853477 stripped
 MonoBehaviour:
   m_PrefabParentObject: {fileID: 11415732, guid: a457ca65ccc0d4d4886fb2c0d094f5f2,
@@ -28755,6 +29025,7 @@ GameObject:
   - component: {fileID: 848529944}
   - component: {fileID: 848529947}
   - component: {fileID: 848529948}
+  - component: {fileID: 848529949}
   m_Layer: 5
   m_Name: Button 1
   m_TagString: Untagged
@@ -28949,8 +29220,8 @@ MonoBehaviour:
               their sharp heads to impale their prey. '
             m_BoolArgument: 0
           m_CallState: 2
-        - m_Target: {fileID: 848529948}
-          m_MethodName: Play
+        - m_Target: {fileID: 848529949}
+          m_MethodName: PlayAudio
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -29060,6 +29331,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &848529949
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 848529942}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 848529948}
+  soundType: 0
 --- !u!1 &849794293
 GameObject:
   m_ObjectHideFlags: 0
@@ -29524,6 +29808,7 @@ GameObject:
   - component: {fileID: 858195570}
   - component: {fileID: 858195573}
   - component: {fileID: 858195574}
+  - component: {fileID: 858195575}
   m_Layer: 5
   m_Name: Button 2
   m_TagString: Untagged
@@ -29718,8 +30003,8 @@ MonoBehaviour:
               developed than most other fish. They use their whiskers to feel around. '
             m_BoolArgument: 0
           m_CallState: 2
-        - m_Target: {fileID: 858195574}
-          m_MethodName: Play
+        - m_Target: {fileID: 858195575}
+          m_MethodName: PlayAudio
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -29829,6 +30114,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &858195575
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 858195568}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 858195574}
+  soundType: 0
 --- !u!1 &858347925
 GameObject:
   m_ObjectHideFlags: 0
@@ -31174,6 +31472,7 @@ GameObject:
   - component: {fileID: 887692473}
   - component: {fileID: 887692476}
   - component: {fileID: 887692477}
+  - component: {fileID: 887692478}
   m_Layer: 5
   m_Name: Button
   m_TagString: Untagged
@@ -31368,8 +31667,8 @@ MonoBehaviour:
               Lab studies have shown that they are able to solve simple puzzles. '
             m_BoolArgument: 0
           m_CallState: 2
-        - m_Target: {fileID: 887692477}
-          m_MethodName: Play
+        - m_Target: {fileID: 887692478}
+          m_MethodName: PlayAudio
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -31479,6 +31778,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &887692478
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 887692471}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 887692477}
+  soundType: 0
 --- !u!1 &888306716
 GameObject:
   m_ObjectHideFlags: 0
@@ -31825,8 +32137,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1312569244}
-        m_MethodName: Play
+      - m_Target: {fileID: 1312569245}
+        m_MethodName: PlayAudio
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -32463,6 +32775,7 @@ GameObject:
   - component: {fileID: 902725405}
   - component: {fileID: 902725408}
   - component: {fileID: 902725409}
+  - component: {fileID: 902725410}
   m_Layer: 5
   m_Name: Button 1
   m_TagString: Untagged
@@ -32658,8 +32971,8 @@ MonoBehaviour:
               they can grow and reproduce very rapidly. '
             m_BoolArgument: 0
           m_CallState: 2
-        - m_Target: {fileID: 902725409}
-          m_MethodName: Play
+        - m_Target: {fileID: 902725410}
+          m_MethodName: PlayAudio
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -32769,6 +33082,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &902725410
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 902725403}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 902725409}
+  soundType: 0
 --- !u!1 &904067988
 GameObject:
   m_ObjectHideFlags: 0
@@ -32856,6 +33182,7 @@ GameObject:
   - component: {fileID: 906867557}
   - component: {fileID: 906867560}
   - component: {fileID: 906867561}
+  - component: {fileID: 906867562}
   m_Layer: 5
   m_Name: Button 2
   m_TagString: Untagged
@@ -33050,8 +33377,8 @@ MonoBehaviour:
               anything that happens to be in front of them. '
             m_BoolArgument: 0
           m_CallState: 2
-        - m_Target: {fileID: 906867561}
-          m_MethodName: Play
+        - m_Target: {fileID: 906867562}
+          m_MethodName: PlayAudio
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -33161,6 +33488,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &906867562
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 906867555}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 906867561}
+  soundType: 0
 --- !u!1 &908125792
 GameObject:
   m_ObjectHideFlags: 0
@@ -33375,6 +33715,7 @@ GameObject:
   - component: {fileID: 914339886}
   - component: {fileID: 914339889}
   - component: {fileID: 914339890}
+  - component: {fileID: 914339891}
   m_Layer: 5
   m_Name: Button 1
   m_TagString: Untagged
@@ -33569,8 +33910,8 @@ MonoBehaviour:
               in their shells to float.  '
             m_BoolArgument: 0
           m_CallState: 2
-        - m_Target: {fileID: 914339890}
-          m_MethodName: Play
+        - m_Target: {fileID: 914339891}
+          m_MethodName: PlayAudio
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -33680,6 +34021,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &914339891
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 914339884}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 914339890}
+  soundType: 0
 --- !u!1 &914947342
 GameObject:
   m_ObjectHideFlags: 0
@@ -34267,6 +34621,7 @@ GameObject:
   - component: {fileID: 931847031}
   - component: {fileID: 931847030}
   - component: {fileID: 931847029}
+  - component: {fileID: 931847033}
   m_Layer: 5
   m_Name: LButton
   m_TagString: Untagged
@@ -34313,8 +34668,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1312569244}
-        m_MethodName: Play
+      - m_Target: {fileID: 1312569245}
+        m_MethodName: PlayAudio
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -34378,6 +34733,19 @@ RectTransform:
   m_AnchoredPosition: {x: 0.8999939, y: 4.6156883}
   m_SizeDelta: {x: -11.29753, y: -13.674773}
   m_Pivot: {x: 0.55884737, y: 0.17347789}
+--- !u!114 &931847033
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 931847028}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 1312569244}
+  soundType: 0
 --- !u!1 &932104359
 GameObject:
   m_ObjectHideFlags: 0
@@ -34391,6 +34759,7 @@ GameObject:
   - component: {fileID: 932104361}
   - component: {fileID: 932104364}
   - component: {fileID: 932104365}
+  - component: {fileID: 932104366}
   m_Layer: 5
   m_Name: Button 1
   m_TagString: Untagged
@@ -34586,8 +34955,8 @@ MonoBehaviour:
               slow growing and take a long time to mature. '
             m_BoolArgument: 0
           m_CallState: 2
-        - m_Target: {fileID: 932104365}
-          m_MethodName: Play
+        - m_Target: {fileID: 932104366}
+          m_MethodName: PlayAudio
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -34697,6 +35066,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &932104366
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 932104359}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 932104365}
+  soundType: 0
 --- !u!1 &934747694
 GameObject:
   m_ObjectHideFlags: 0
@@ -34790,6 +35172,7 @@ GameObject:
   - component: {fileID: 936179332}
   - component: {fileID: 936179331}
   - component: {fileID: 936179330}
+  - component: {fileID: 936179334}
   m_Layer: 5
   m_Name: LButton
   m_TagString: Untagged
@@ -34836,8 +35219,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1312569244}
-        m_MethodName: Play
+      - m_Target: {fileID: 1312569245}
+        m_MethodName: PlayAudio
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -34901,6 +35284,19 @@ RectTransform:
   m_AnchoredPosition: {x: -38.9, y: 61.1}
   m_SizeDelta: {x: 30, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &936179334
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 936179329}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 1312569244}
+  soundType: 0
 --- !u!1 &938241918
 GameObject:
   m_ObjectHideFlags: 0
@@ -36659,7 +37055,7 @@ Prefab:
     - target: {fileID: 114538556459118514, guid: a854f19db5cfd874398d4cd19997c1e0,
         type: 2}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_MethodName
-      value: Play
+      value: PlayAudio
       objectReference: {fileID: 0}
     - target: {fileID: 114538556459118514, guid: a854f19db5cfd874398d4cd19997c1e0,
         type: 2}
@@ -36680,7 +37076,7 @@ Prefab:
         type: 2}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_Target
       value: 
-      objectReference: {fileID: 957944729}
+      objectReference: {fileID: 553585015}
     - target: {fileID: 114538556459118514, guid: a854f19db5cfd874398d4cd19997c1e0,
         type: 2}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_Arguments.m_BoolArgument
@@ -36750,11 +37146,11 @@ Prefab:
         type: 2}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_Target
       value: 
-      objectReference: {fileID: 957944729}
+      objectReference: {fileID: 553585015}
     - target: {fileID: 114825589407876852, guid: a854f19db5cfd874398d4cd19997c1e0,
         type: 2}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_MethodName
-      value: Play
+      value: PlayAudio
       objectReference: {fileID: 0}
     - target: {fileID: 114825589407876852, guid: a854f19db5cfd874398d4cd19997c1e0,
         type: 2}
@@ -36774,7 +37170,7 @@ Prefab:
     - target: {fileID: 114851303637693728, guid: a854f19db5cfd874398d4cd19997c1e0,
         type: 2}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_MethodName
-      value: Play
+      value: PlayAudio
       objectReference: {fileID: 0}
     - target: {fileID: 114851303637693728, guid: a854f19db5cfd874398d4cd19997c1e0,
         type: 2}
@@ -36795,7 +37191,7 @@ Prefab:
         type: 2}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_Target
       value: 
-      objectReference: {fileID: 957944729}
+      objectReference: {fileID: 553585015}
     - target: {fileID: 114392255037079914, guid: a854f19db5cfd874398d4cd19997c1e0,
         type: 2}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[2].m_MethodName
@@ -36830,11 +37226,11 @@ Prefab:
         type: 2}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_Target
       value: 
-      objectReference: {fileID: 957944729}
+      objectReference: {fileID: 553585015}
     - target: {fileID: 114392255037079914, guid: a854f19db5cfd874398d4cd19997c1e0,
         type: 2}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_MethodName
-      value: Play
+      value: PlayAudio
       objectReference: {fileID: 0}
     - target: {fileID: 114774238504426356, guid: a854f19db5cfd874398d4cd19997c1e0,
         type: 2}
@@ -36845,6 +37241,20 @@ Prefab:
         type: 2}
       propertyPath: m_Value
       value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 114026597173178648, guid: a854f19db5cfd874398d4cd19997c1e0,
+        type: 2}
+      propertyPath: m_Delegates.Array.data[0].callback.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 553585015}
+    - target: {fileID: 114026597173178648, guid: a854f19db5cfd874398d4cd19997c1e0,
+        type: 2}
+      propertyPath: m_Delegates.Array.data[0].callback.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: PlayAudio
+      objectReference: {fileID: 0}
+    - target: {fileID: 1461561239623070, guid: a854f19db5cfd874398d4cd19997c1e0, type: 2}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 114882104737856306, guid: a854f19db5cfd874398d4cd19997c1e0, type: 2}
@@ -38177,6 +38587,7 @@ GameObject:
   - component: {fileID: 1047423461}
   - component: {fileID: 1047423460}
   - component: {fileID: 1047423459}
+  - component: {fileID: 1047423463}
   m_Layer: 5
   m_Name: RButton
   m_TagString: Untagged
@@ -38223,8 +38634,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1312569244}
-        m_MethodName: Play
+      - m_Target: {fileID: 1312569245}
+        m_MethodName: PlayAudio
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -38288,6 +38699,19 @@ RectTransform:
   m_AnchoredPosition: {x: 0.4000244, y: 1.2000122}
   m_SizeDelta: {x: 4, y: 5}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1047423463
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1047423458}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 1312569244}
+  soundType: 0
 --- !u!1 &1047446402
 GameObject:
   m_ObjectHideFlags: 0
@@ -39191,6 +39615,7 @@ GameObject:
   - component: {fileID: 1070945903}
   - component: {fileID: 1070945902}
   - component: {fileID: 1070945901}
+  - component: {fileID: 1070945905}
   m_Layer: 5
   m_Name: RButton
   m_TagString: Untagged
@@ -39237,8 +39662,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1312569244}
-        m_MethodName: Play
+      - m_Target: {fileID: 1312569245}
+        m_MethodName: PlayAudio
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -39302,6 +39727,19 @@ RectTransform:
   m_AnchoredPosition: {x: 38.5, y: 60.7}
   m_SizeDelta: {x: 30, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1070945905
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1070945900}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 1312569244}
+  soundType: 0
 --- !u!1 &1072145011
 GameObject:
   m_ObjectHideFlags: 0
@@ -40215,6 +40653,7 @@ GameObject:
   - component: {fileID: 1099228470}
   - component: {fileID: 1099228473}
   - component: {fileID: 1099228474}
+  - component: {fileID: 1099228475}
   m_Layer: 5
   m_Name: buydecrease
   m_TagString: Untagged
@@ -40342,8 +40781,8 @@ MonoBehaviour:
             m_StringArgument: 
             m_BoolArgument: 0
           m_CallState: 2
-        - m_Target: {fileID: 1099228474}
-          m_MethodName: Play
+        - m_Target: {fileID: 1099228475}
+          m_MethodName: PlayAudio
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -40453,6 +40892,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &1099228475
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1099228468}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 1099228474}
+  soundType: 0
 --- !u!1 &1099670001
 GameObject:
   m_ObjectHideFlags: 0
@@ -40532,6 +40984,7 @@ GameObject:
   - component: {fileID: 1101846054}
   - component: {fileID: 1101846053}
   - component: {fileID: 1101846052}
+  - component: {fileID: 1101846056}
   m_Layer: 5
   m_Name: LButton
   m_TagString: Untagged
@@ -40578,8 +41031,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1312569244}
-        m_MethodName: Play
+      - m_Target: {fileID: 1312569245}
+        m_MethodName: PlayAudio
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -40643,6 +41096,19 @@ RectTransform:
   m_AnchoredPosition: {x: -190.32243, y: 61.6}
   m_SizeDelta: {x: 30, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1101846056
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1101846051}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 1312569244}
+  soundType: 0
 --- !u!1 &1104233092
 GameObject:
   m_ObjectHideFlags: 0
@@ -41050,6 +41516,7 @@ GameObject:
   - component: {fileID: 1126681609}
   - component: {fileID: 1126681608}
   - component: {fileID: 1126681607}
+  - component: {fileID: 1126681611}
   m_Layer: 5
   m_Name: MButton
   m_TagString: Untagged
@@ -41096,8 +41563,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1312569244}
-        m_MethodName: Play
+      - m_Target: {fileID: 1312569245}
+        m_MethodName: PlayAudio
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -41161,6 +41628,19 @@ RectTransform:
   m_AnchoredPosition: {x: 152.1, y: 61.8}
   m_SizeDelta: {x: 30, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1126681611
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1126681606}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 1312569244}
+  soundType: 0
 --- !u!1 &1132583631
 GameObject:
   m_ObjectHideFlags: 0
@@ -41494,6 +41974,7 @@ GameObject:
   - component: {fileID: 1146309020}
   - component: {fileID: 1146309023}
   - component: {fileID: 1146309024}
+  - component: {fileID: 1146309025}
   m_Layer: 5
   m_Name: selldecrease
   m_TagString: Untagged
@@ -41621,8 +42102,8 @@ MonoBehaviour:
             m_StringArgument: 
             m_BoolArgument: 0
           m_CallState: 2
-        - m_Target: {fileID: 1146309024}
-          m_MethodName: Play
+        - m_Target: {fileID: 1146309025}
+          m_MethodName: PlayAudio
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -41732,6 +42213,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &1146309025
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1146309018}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 1146309024}
+  soundType: 0
 --- !u!1 &1150167882
 GameObject:
   m_ObjectHideFlags: 0
@@ -41819,6 +42313,7 @@ GameObject:
   - component: {fileID: 1154480637}
   - component: {fileID: 1154480640}
   - component: {fileID: 1154480641}
+  - component: {fileID: 1154480642}
   m_Layer: 5
   m_Name: Button 1
   m_TagString: Untagged
@@ -42013,8 +42508,8 @@ MonoBehaviour:
               of a Sheplik to protect their delicate tails. '
             m_BoolArgument: 0
           m_CallState: 2
-        - m_Target: {fileID: 1154480641}
-          m_MethodName: Play
+        - m_Target: {fileID: 1154480642}
+          m_MethodName: PlayAudio
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -42124,6 +42619,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &1154480642
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1154480635}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 1154480641}
+  soundType: 0
 --- !u!1 &1155480626
 GameObject:
   m_ObjectHideFlags: 0
@@ -42459,6 +42967,7 @@ GameObject:
   - component: {fileID: 1174847247}
   - component: {fileID: 1174847250}
   - component: {fileID: 1174847251}
+  - component: {fileID: 1174847252}
   m_Layer: 5
   m_Name: Button 2
   m_TagString: Untagged
@@ -42653,8 +43162,8 @@ MonoBehaviour:
               and single eye. Their winks are considered good luck. '
             m_BoolArgument: 0
           m_CallState: 2
-        - m_Target: {fileID: 1174847251}
-          m_MethodName: Play
+        - m_Target: {fileID: 1174847252}
+          m_MethodName: PlayAudio
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -42764,6 +43273,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &1174847252
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1174847245}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 1174847251}
+  soundType: 0
 --- !u!1 &1175922299
 GameObject:
   m_ObjectHideFlags: 0
@@ -43265,6 +43787,7 @@ GameObject:
   - component: {fileID: 1183946384}
   - component: {fileID: 1183946383}
   - component: {fileID: 1183946382}
+  - component: {fileID: 1183946386}
   m_Layer: 5
   m_Name: MButton
   m_TagString: Untagged
@@ -43311,8 +43834,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1312569244}
-        m_MethodName: Play
+      - m_Target: {fileID: 1312569245}
+        m_MethodName: PlayAudio
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -43376,6 +43899,19 @@ RectTransform:
   m_AnchoredPosition: {x: 0.2, y: 61.6}
   m_SizeDelta: {x: 30, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1183946386
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1183946381}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 1312569244}
+  soundType: 0
 --- !u!1 &1189014608
 GameObject:
   m_ObjectHideFlags: 0
@@ -46487,6 +47023,7 @@ GameObject:
   - component: {fileID: 1267247154}
   - component: {fileID: 1267247157}
   - component: {fileID: 1267247158}
+  - component: {fileID: 1267247159}
   m_Layer: 5
   m_Name: Button 1
   m_TagString: Untagged
@@ -46681,8 +47218,8 @@ MonoBehaviour:
               into strange shapes to hypnotize their prey before eating them.  '
             m_BoolArgument: 0
           m_CallState: 2
-        - m_Target: {fileID: 1267247158}
-          m_MethodName: Play
+        - m_Target: {fileID: 1267247159}
+          m_MethodName: PlayAudio
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -46792,6 +47329,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &1267247159
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1267247152}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 1267247158}
+  soundType: 0
 --- !u!1 &1271933086
 GameObject:
   m_ObjectHideFlags: 0
@@ -46888,6 +47438,7 @@ GameObject:
   - component: {fileID: 1275367903}
   - component: {fileID: 1275367902}
   - component: {fileID: 1275367905}
+  - component: {fileID: 1275367901}
   m_Layer: 5
   m_Name: Button
   m_TagString: Untagged
@@ -46913,6 +47464,19 @@ RectTransform:
   m_AnchoredPosition: {x: 37.19529, y: 0}
   m_SizeDelta: {x: 25, y: 25}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1275367901
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1275367899}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 1275367905}
+  soundType: 0
 --- !u!114 &1275367902
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -46952,8 +47516,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1275367905}
-        m_MethodName: Play
+      - m_Target: {fileID: 1275367901}
+        m_MethodName: PlayAudio
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -48056,6 +48620,7 @@ GameObject:
   - component: {fileID: 1299802359}
   - component: {fileID: 1299802358}
   - component: {fileID: 1299802357}
+  - component: {fileID: 1299802361}
   m_Layer: 5
   m_Name: MButton
   m_TagString: Untagged
@@ -48102,8 +48667,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1312569244}
-        m_MethodName: Play
+      - m_Target: {fileID: 1312569245}
+        m_MethodName: PlayAudio
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -48167,6 +48732,19 @@ RectTransform:
   m_AnchoredPosition: {x: 0.4, y: 60.5}
   m_SizeDelta: {x: 30, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1299802361
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1299802356}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 1312569244}
+  soundType: 0
 --- !u!1 &1300638099
 GameObject:
   m_ObjectHideFlags: 0
@@ -48388,6 +48966,7 @@ GameObject:
   - component: {fileID: 1311703028}
   - component: {fileID: 1311703027}
   - component: {fileID: 1311703026}
+  - component: {fileID: 1311703030}
   m_Layer: 5
   m_Name: RButton
   m_TagString: Untagged
@@ -48434,8 +49013,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1312569244}
-        m_MethodName: Play
+      - m_Target: {fileID: 1312569245}
+        m_MethodName: PlayAudio
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -48499,6 +49078,19 @@ RectTransform:
   m_AnchoredPosition: {x: -113.6, y: 60.4}
   m_SizeDelta: {x: 30, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1311703030
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1311703025}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 1312569244}
+  soundType: 0
 --- !u!1001 &1311802563
 Prefab:
   m_ObjectHideFlags: 0
@@ -48664,6 +49256,7 @@ GameObject:
   - component: {fileID: 1312569240}
   - component: {fileID: 1312569243}
   - component: {fileID: 1312569244}
+  - component: {fileID: 1312569245}
   m_Layer: 5
   m_Name: buyincrease
   m_TagString: Untagged
@@ -48791,8 +49384,8 @@ MonoBehaviour:
             m_StringArgument: 
             m_BoolArgument: 0
           m_CallState: 2
-        - m_Target: {fileID: 1312569244}
-          m_MethodName: Play
+        - m_Target: {fileID: 1312569245}
+          m_MethodName: PlayAudio
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -48902,6 +49495,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &1312569245
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1312569238}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 1312569244}
+  soundType: 0
 --- !u!1 &1314916928
 GameObject:
   m_ObjectHideFlags: 0
@@ -48913,6 +49519,7 @@ GameObject:
   - component: {fileID: 1314916931}
   - component: {fileID: 1314916930}
   - component: {fileID: 1314916929}
+  - component: {fileID: 1314916933}
   m_Layer: 5
   m_Name: LButton
   m_TagString: Untagged
@@ -48959,8 +49566,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1312569244}
-        m_MethodName: Play
+      - m_Target: {fileID: 1312569245}
+        m_MethodName: PlayAudio
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -49024,6 +49631,19 @@ RectTransform:
   m_AnchoredPosition: {x: -38.6, y: 61.1}
   m_SizeDelta: {x: 30, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1314916933
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1314916928}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 1312569244}
+  soundType: 0
 --- !u!1 &1318053100
 GameObject:
   m_ObjectHideFlags: 0
@@ -52371,8 +52991,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1312569244}
-        m_MethodName: Play
+      - m_Target: {fileID: 1312569245}
+        m_MethodName: PlayAudio
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -52895,6 +53515,7 @@ GameObject:
   - component: {fileID: 1424212741}
   - component: {fileID: 1424212744}
   - component: {fileID: 1424212745}
+  - component: {fileID: 1424212746}
   m_Layer: 5
   m_Name: Button
   m_TagString: Untagged
@@ -53089,8 +53710,8 @@ MonoBehaviour:
               water to roll around in snow on land. The reason is unknown. '
             m_BoolArgument: 0
           m_CallState: 2
-        - m_Target: {fileID: 1424212745}
-          m_MethodName: Play
+        - m_Target: {fileID: 1424212746}
+          m_MethodName: PlayAudio
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -53200,6 +53821,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &1424212746
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1424212739}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 1424212745}
+  soundType: 0
 --- !u!1 &1428216506
 GameObject:
   m_ObjectHideFlags: 0
@@ -55115,6 +55749,7 @@ GameObject:
   - component: {fileID: 1474507535}
   - component: {fileID: 1474507538}
   - component: {fileID: 1474507539}
+  - component: {fileID: 1474507540}
   m_Layer: 5
   m_Name: next turn
   m_TagString: Untagged
@@ -55190,8 +55825,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 1474507538}
-        m_MethodName: Play
+      - m_Target: {fileID: 1474507539}
+        m_MethodName: collect_data
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -55201,8 +55836,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 1474507539}
-        m_MethodName: collect_data
+      - m_Target: {fileID: 1474507540}
+        m_MethodName: PlayAudio
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -55339,6 +55974,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   shop_: {fileID: 1943393658}
+--- !u!114 &1474507540
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1474507533}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 1474507538}
+  soundType: 0
 --- !u!1 &1475725252
 GameObject:
   m_ObjectHideFlags: 0
@@ -56293,6 +56941,7 @@ GameObject:
   - component: {fileID: 1498337228}
   - component: {fileID: 1498337227}
   - component: {fileID: 1498337226}
+  - component: {fileID: 1498337230}
   m_Layer: 5
   m_Name: RButton
   m_TagString: Untagged
@@ -56339,8 +56988,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1312569244}
-        m_MethodName: Play
+      - m_Target: {fileID: 1312569245}
+        m_MethodName: PlayAudio
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -56404,6 +57053,19 @@ RectTransform:
   m_AnchoredPosition: {x: 190.4, y: 61.5}
   m_SizeDelta: {x: 30, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1498337230
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1498337225}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 1312569244}
+  soundType: 0
 --- !u!4 &1498972428 stripped
 Transform:
   m_PrefabParentObject: {fileID: 414652, guid: eaa4f7fe4b373404fa9ca044eb6026ed, type: 2}
@@ -56530,6 +57192,7 @@ GameObject:
   - component: {fileID: 1502042417}
   - component: {fileID: 1502042416}
   - component: {fileID: 1502042415}
+  - component: {fileID: 1502042419}
   m_Layer: 5
   m_Name: RButton
   m_TagString: Untagged
@@ -56576,8 +57239,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1312569244}
-        m_MethodName: Play
+      - m_Target: {fileID: 1312569245}
+        m_MethodName: PlayAudio
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -56641,6 +57304,19 @@ RectTransform:
   m_AnchoredPosition: {x: -113.3, y: 61.8}
   m_SizeDelta: {x: 30, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1502042419
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1502042414}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 1312569244}
+  soundType: 0
 --- !u!1 &1502330927
 GameObject:
   m_ObjectHideFlags: 0
@@ -57266,8 +57942,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1312569244}
-        m_MethodName: Play
+      - m_Target: {fileID: 1312569245}
+        m_MethodName: PlayAudio
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -57415,6 +58091,7 @@ GameObject:
   - component: {fileID: 1550846864}
   - component: {fileID: 1550846867}
   - component: {fileID: 1550846868}
+  - component: {fileID: 1550846869}
   m_Layer: 5
   m_Name: Button
   m_TagString: Untagged
@@ -57609,8 +58286,8 @@ MonoBehaviour:
               grow older. Their color makes them a popular pet in captivity. '
             m_BoolArgument: 0
           m_CallState: 2
-        - m_Target: {fileID: 1550846868}
-          m_MethodName: Play
+        - m_Target: {fileID: 1550846869}
+          m_MethodName: PlayAudio
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -57720,6 +58397,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &1550846869
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1550846862}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 1550846868}
+  soundType: 0
 --- !u!1 &1552215611
 GameObject:
   m_ObjectHideFlags: 0
@@ -60699,6 +61389,7 @@ GameObject:
   - component: {fileID: 1636791141}
   - component: {fileID: 1636791140}
   - component: {fileID: 1636791139}
+  - component: {fileID: 1636791143}
   m_Layer: 5
   m_Name: MButton
   m_TagString: Untagged
@@ -60745,8 +61436,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1312569244}
-        m_MethodName: Play
+      - m_Target: {fileID: 1312569245}
+        m_MethodName: PlayAudio
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -60810,6 +61501,19 @@ RectTransform:
   m_AnchoredPosition: {x: -1.9925079, y: 0.2999878}
   m_SizeDelta: {x: 1.4450077, y: 6.1889954}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1636791143
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1636791138}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 1312569244}
+  soundType: 0
 --- !u!1 &1638788746
 GameObject:
   m_ObjectHideFlags: 0
@@ -62883,6 +63587,7 @@ GameObject:
   - component: {fileID: 1741769743}
   - component: {fileID: 1741769746}
   - component: {fileID: 1741769747}
+  - component: {fileID: 1741769748}
   m_Layer: 5
   m_Name: Button 1
   m_TagString: Untagged
@@ -63077,8 +63782,8 @@ MonoBehaviour:
               leading to their common name "sea crystals." '
             m_BoolArgument: 0
           m_CallState: 2
-        - m_Target: {fileID: 1741769747}
-          m_MethodName: Play
+        - m_Target: {fileID: 1741769748}
+          m_MethodName: PlayAudio
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -63188,6 +63893,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &1741769748
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1741769741}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 1741769747}
+  soundType: 0
 --- !u!1 &1742519982
 GameObject:
   m_ObjectHideFlags: 0
@@ -65607,6 +66325,7 @@ GameObject:
   - component: {fileID: 1819898882}
   - component: {fileID: 1819898885}
   - component: {fileID: 1819898886}
+  - component: {fileID: 1819898887}
   m_Layer: 5
   m_Name: Button 1
   m_TagString: Untagged
@@ -65801,8 +66520,8 @@ MonoBehaviour:
               bodies. They are the fastest swimmers in the ocean.   '
             m_BoolArgument: 0
           m_CallState: 2
-        - m_Target: {fileID: 1819898886}
-          m_MethodName: Play
+        - m_Target: {fileID: 1819898887}
+          m_MethodName: PlayAudio
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -65912,6 +66631,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &1819898887
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1819898880}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 1819898886}
+  soundType: 0
 --- !u!1 &1820592267
 GameObject:
   m_ObjectHideFlags: 0
@@ -65925,6 +66657,7 @@ GameObject:
   - component: {fileID: 1820592269}
   - component: {fileID: 1820592272}
   - component: {fileID: 1820592273}
+  - component: {fileID: 1820592274}
   m_Layer: 5
   m_Name: Button
   m_TagString: Untagged
@@ -66119,8 +66852,8 @@ MonoBehaviour:
               small objects such as  sand and shells around with their jets. '
             m_BoolArgument: 0
           m_CallState: 2
-        - m_Target: {fileID: 1820592273}
-          m_MethodName: Play
+        - m_Target: {fileID: 1820592274}
+          m_MethodName: PlayAudio
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -66230,6 +66963,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &1820592274
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1820592267}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 1820592273}
+  soundType: 0
 --- !u!1 &1821501424
 GameObject:
   m_ObjectHideFlags: 0
@@ -66487,8 +67233,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1312569244}
-        m_MethodName: Play
+      - m_Target: {fileID: 1312569245}
+        m_MethodName: PlayAudio
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -70286,6 +71032,7 @@ GameObject:
   - component: {fileID: 1929272306}
   - component: {fileID: 1929272305}
   - component: {fileID: 1929272304}
+  - component: {fileID: 1929272308}
   m_Layer: 5
   m_Name: MButton
   m_TagString: Untagged
@@ -70332,8 +71079,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1312569244}
-        m_MethodName: Play
+      - m_Target: {fileID: 1312569245}
+        m_MethodName: PlayAudio
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -70397,6 +71144,19 @@ RectTransform:
   m_AnchoredPosition: {x: -152.3, y: 61.1}
   m_SizeDelta: {x: 30, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1929272308
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1929272303}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 1312569244}
+  soundType: 0
 --- !u!1 &1929506663
 GameObject:
   m_ObjectHideFlags: 0
@@ -70634,6 +71394,7 @@ GameObject:
   - component: {fileID: 1936966876}
   - component: {fileID: 1936966879}
   - component: {fileID: 1936966880}
+  - component: {fileID: 1936966881}
   m_Layer: 5
   m_Name: Button
   m_TagString: Untagged
@@ -70828,8 +71589,8 @@ MonoBehaviour:
               cold. It is said that they can hibernate for months in the cold. '
             m_BoolArgument: 0
           m_CallState: 2
-        - m_Target: {fileID: 1936966880}
-          m_MethodName: Play
+        - m_Target: {fileID: 1936966881}
+          m_MethodName: PlayAudio
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -70939,6 +71700,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &1936966881
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1936966874}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 1936966880}
+  soundType: 0
 --- !u!1 &1943393653
 GameObject:
   m_ObjectHideFlags: 0
@@ -71316,6 +72090,7 @@ GameObject:
   - component: {fileID: 1952230929}
   - component: {fileID: 1952230932}
   - component: {fileID: 1952230933}
+  - component: {fileID: 1952230934}
   m_Layer: 5
   m_Name: Button
   m_TagString: Untagged
@@ -71510,8 +72285,8 @@ MonoBehaviour:
               because their shiny shells resemble a golden crown.  '
             m_BoolArgument: 0
           m_CallState: 2
-        - m_Target: {fileID: 1952230933}
-          m_MethodName: Play
+        - m_Target: {fileID: 1952230934}
+          m_MethodName: PlayAudio
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -71621,6 +72396,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &1952230934
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1952230927}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 1952230933}
+  soundType: 0
 --- !u!1 &1953487060
 GameObject:
   m_ObjectHideFlags: 0
@@ -72264,6 +73052,7 @@ GameObject:
   - component: {fileID: 1974344987}
   - component: {fileID: 1974344990}
   - component: {fileID: 1974344991}
+  - component: {fileID: 1974344992}
   m_Layer: 5
   m_Name: Button 2
   m_TagString: Untagged
@@ -72458,8 +73247,8 @@ MonoBehaviour:
               protect themselves from predators. '
             m_BoolArgument: 0
           m_CallState: 2
-        - m_Target: {fileID: 1974344991}
-          m_MethodName: Play
+        - m_Target: {fileID: 1974344992}
+          m_MethodName: PlayAudio
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -72569,6 +73358,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &1974344992
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1974344985}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 1974344991}
+  soundType: 0
 --- !u!1 &1976968326
 GameObject:
   m_ObjectHideFlags: 0
@@ -73131,6 +73933,7 @@ GameObject:
   - component: {fileID: 1983779282}
   - component: {fileID: 1983779285}
   - component: {fileID: 1983779286}
+  - component: {fileID: 1983779287}
   m_Layer: 5
   m_Name: Button 2
   m_TagString: Untagged
@@ -73326,8 +74129,8 @@ MonoBehaviour:
               their energy from the sun. '
             m_BoolArgument: 0
           m_CallState: 2
-        - m_Target: {fileID: 1983779286}
-          m_MethodName: Play
+        - m_Target: {fileID: 1983779287}
+          m_MethodName: PlayAudio
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -73437,6 +74240,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &1983779287
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1983779280}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 1983779286}
+  soundType: 0
 --- !u!1 &1985320908
 GameObject:
   m_ObjectHideFlags: 0
@@ -73983,6 +74799,7 @@ GameObject:
   - component: {fileID: 2005441945}
   - component: {fileID: 2005441944}
   - component: {fileID: 2005441947}
+  - component: {fileID: 2005441948}
   m_Layer: 5
   m_Name: ShopExit
   m_TagString: Untagged
@@ -74048,8 +74865,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 2005441947}
-        m_MethodName: Play
+      - m_Target: {fileID: 2005441948}
+        m_MethodName: PlayAudio
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -74174,6 +74991,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &2005441948
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 2005441942}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 2005441947}
+  soundType: 0
 --- !u!1 &2005447223
 GameObject:
   m_ObjectHideFlags: 0
@@ -74678,6 +75508,7 @@ GameObject:
   - component: {fileID: 2022902603}
   - component: {fileID: 2022902606}
   - component: {fileID: 2022902607}
+  - component: {fileID: 2022902608}
   m_Layer: 5
   m_Name: Button 2
   m_TagString: Untagged
@@ -74872,8 +75703,8 @@ MonoBehaviour:
               be found playing with small bits of ice. '
             m_BoolArgument: 0
           m_CallState: 2
-        - m_Target: {fileID: 2022902607}
-          m_MethodName: Play
+        - m_Target: {fileID: 2022902608}
+          m_MethodName: PlayAudio
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -74983,6 +75814,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &2022902608
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 2022902601}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 2022902607}
+  soundType: 0
 --- !u!1 &2025533715
 GameObject:
   m_ObjectHideFlags: 0
@@ -77048,6 +77892,7 @@ GameObject:
   - component: {fileID: 2071915605}
   - component: {fileID: 2071915608}
   - component: {fileID: 2071915609}
+  - component: {fileID: 2071915610}
   m_Layer: 5
   m_Name: Button
   m_TagString: Untagged
@@ -77242,8 +78087,8 @@ MonoBehaviour:
               them their characteristic green color. '
             m_BoolArgument: 1
           m_CallState: 2
-        - m_Target: {fileID: 2071915609}
-          m_MethodName: Play
+        - m_Target: {fileID: 2071915610}
+          m_MethodName: PlayAudio
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -77398,6 +78243,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &2071915610
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 2071915603}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 2071915609}
+  soundType: 0
 --- !u!114 &2071929344
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -77899,6 +78757,7 @@ GameObject:
   - component: {fileID: 2091910388}
   - component: {fileID: 2091910387}
   - component: {fileID: 2091910390}
+  - component: {fileID: 2091910391}
   m_Layer: 5
   m_Name: SellButton
   m_TagString: Untagged
@@ -77974,8 +78833,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 2091910390}
-        m_MethodName: Play
+      - m_Target: {fileID: 2091910391}
+        m_MethodName: PlayAudio
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -78100,6 +78959,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &2091910391
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 2091910385}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 2091910390}
+  soundType: 0
 --- !u!1 &2095198373
 GameObject:
   m_ObjectHideFlags: 0
@@ -78656,8 +79528,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1312569244}
-        m_MethodName: Play
+      - m_Target: {fileID: 1312569245}
+        m_MethodName: PlayAudio
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -78968,6 +79840,7 @@ GameObject:
   - component: {fileID: 2118399826}
   - component: {fileID: 2118399825}
   - component: {fileID: 2118399824}
+  - component: {fileID: 2118399828}
   m_Layer: 5
   m_Name: LButton
   m_TagString: Untagged
@@ -79014,8 +79887,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1312569244}
-        m_MethodName: Play
+      - m_Target: {fileID: 1312569245}
+        m_MethodName: PlayAudio
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -79079,6 +79952,19 @@ RectTransform:
   m_AnchoredPosition: {x: 112.7, y: 61.1}
   m_SizeDelta: {x: 30, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &2118399828
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 2118399823}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 1312569244}
+  soundType: 0
 --- !u!1 &2123899980
 GameObject:
   m_ObjectHideFlags: 0
@@ -79271,6 +80157,7 @@ GameObject:
   - component: {fileID: 2127570765}
   - component: {fileID: 2127570764}
   - component: {fileID: 2127570769}
+  - component: {fileID: 2127570770}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -79428,6 +80315,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &2127570770
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 2127570763}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 2127570769}
+  soundType: 1
 --- !u!1 &2127617987
 GameObject:
   m_ObjectHideFlags: 0
@@ -79968,6 +80868,7 @@ GameObject:
   - component: {fileID: 2147311934}
   - component: {fileID: 2147311937}
   - component: {fileID: 2147311938}
+  - component: {fileID: 2147311939}
   m_Layer: 5
   m_Name: Button 1
   m_TagString: Untagged
@@ -80162,8 +81063,8 @@ MonoBehaviour:
               them to reach into many tight places other grabblers cannot. '
             m_BoolArgument: 0
           m_CallState: 2
-        - m_Target: {fileID: 2147311938}
-          m_MethodName: Play
+        - m_Target: {fileID: 2147311939}
+          m_MethodName: PlayAudio
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -80273,3 +81174,16 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &2147311939
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 2147311932}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 2147311938}
+  soundType: 0

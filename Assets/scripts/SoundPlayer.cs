@@ -2,13 +2,19 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// SoundPlayer class to store and play sounds to be adjusted with SoundManager volume settings.
+/// </summary>
 public class SoundPlayer : MonoBehaviour {
 
-    public AudioSource source;
+    public AudioSource source;                  // Audio source to play sound
+    public SoundManager.SoundType soundType;    // Type of sound
+
+    private float maxVolume;
 
     private void Start()
     {
-        //source = GetComponent<AudioSource>();
+        maxVolume = source.volume;
     }
 
     public void PlayAudio()
@@ -16,8 +22,9 @@ public class SoundPlayer : MonoBehaviour {
         source.Play();
     }
 
-    public void adjust_vol(float vol)
+    private void Update()
     {
-        source.volume = vol;
+        // Adjusts volume depending on type of sound being played
+        source.volume = (soundType == SoundManager.SoundType.SFX) ? maxVolume * SoundManager.Instance.sfxVolume : maxVolume * SoundManager.Instance.musicVolume;
     }
 }

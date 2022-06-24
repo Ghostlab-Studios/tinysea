@@ -4276,6 +4276,16 @@ Prefab:
       propertyPath: m_RootOrder
       value: 21
       objectReference: {fileID: 0}
+    - target: {fileID: 114138728632925224, guid: 9cbf7b9eb068cc6409c4666eaaa282b3,
+        type: 2}
+      propertyPath: musicVolume
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 114138728632925224, guid: 9cbf7b9eb068cc6409c4666eaaa282b3,
+        type: 2}
+      propertyPath: sfxVolume
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 9cbf7b9eb068cc6409c4666eaaa282b3, type: 2}
   m_IsPrefabParent: 0
@@ -6610,6 +6620,40 @@ CanvasRenderer:
     type: 2}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 195707515}
+--- !u!1 &195949018
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 195949019}
+  m_Layer: 5
+  m_Name: TextPanel
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!224 &195949019
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 195949018}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 721998111}
+  m_Father: {fileID: 1961350969}
+  m_RootOrder: 3
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &196102370
 GameObject:
   m_ObjectHideFlags: 0
@@ -7277,6 +7321,106 @@ CanvasRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 206840695}
+--- !u!1001 &209609077
+Prefab:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 721998111}
+    m_Modifications:
+    - target: {fileID: 224761658694751018, guid: 16fefbb6206abef448dcb25e1f515501,
+        type: 2}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 224761658694751018, guid: 16fefbb6206abef448dcb25e1f515501,
+        type: 2}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 224761658694751018, guid: 16fefbb6206abef448dcb25e1f515501,
+        type: 2}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 224761658694751018, guid: 16fefbb6206abef448dcb25e1f515501,
+        type: 2}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 224761658694751018, guid: 16fefbb6206abef448dcb25e1f515501,
+        type: 2}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 224761658694751018, guid: 16fefbb6206abef448dcb25e1f515501,
+        type: 2}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 224761658694751018, guid: 16fefbb6206abef448dcb25e1f515501,
+        type: 2}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 224761658694751018, guid: 16fefbb6206abef448dcb25e1f515501,
+        type: 2}
+      propertyPath: m_RootOrder
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 224761658694751018, guid: 16fefbb6206abef448dcb25e1f515501,
+        type: 2}
+      propertyPath: m_AnchoredPosition.x
+      value: 286
+      objectReference: {fileID: 0}
+    - target: {fileID: 224761658694751018, guid: 16fefbb6206abef448dcb25e1f515501,
+        type: 2}
+      propertyPath: m_AnchoredPosition.y
+      value: 52
+      objectReference: {fileID: 0}
+    - target: {fileID: 224761658694751018, guid: 16fefbb6206abef448dcb25e1f515501,
+        type: 2}
+      propertyPath: m_SizeDelta.x
+      value: 113.79999
+      objectReference: {fileID: 0}
+    - target: {fileID: 224761658694751018, guid: 16fefbb6206abef448dcb25e1f515501,
+        type: 2}
+      propertyPath: m_SizeDelta.y
+      value: 245.29999
+      objectReference: {fileID: 0}
+    - target: {fileID: 224761658694751018, guid: 16fefbb6206abef448dcb25e1f515501,
+        type: 2}
+      propertyPath: m_AnchorMin.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 224761658694751018, guid: 16fefbb6206abef448dcb25e1f515501,
+        type: 2}
+      propertyPath: m_AnchorMin.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 224761658694751018, guid: 16fefbb6206abef448dcb25e1f515501,
+        type: 2}
+      propertyPath: m_AnchorMax.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 224761658694751018, guid: 16fefbb6206abef448dcb25e1f515501,
+        type: 2}
+      propertyPath: m_AnchorMax.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 224761658694751018, guid: 16fefbb6206abef448dcb25e1f515501,
+        type: 2}
+      propertyPath: m_Pivot.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 224761658694751018, guid: 16fefbb6206abef448dcb25e1f515501,
+        type: 2}
+      propertyPath: m_Pivot.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_ParentPrefab: {fileID: 100100000, guid: 16fefbb6206abef448dcb25e1f515501, type: 2}
+  m_IsPrefabParent: 0
 --- !u!1 &217642596
 GameObject:
   m_ObjectHideFlags: 0
@@ -24563,6 +24707,111 @@ MonoBehaviour:
     type: 2}
   m_PrefabInternal: {fileID: 1822872382}
   m_Script: {fileID: 11500000, guid: e1f3ff8d3a0597b4c9e1da883ae4198f, type: 3}
+--- !u!1001 &721998110
+Prefab:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 195949019}
+    m_Modifications:
+    - target: {fileID: 224974383343256846, guid: ad6186c94a5a0f04ba616a1b4b08698c,
+        type: 2}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 224974383343256846, guid: ad6186c94a5a0f04ba616a1b4b08698c,
+        type: 2}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 224974383343256846, guid: ad6186c94a5a0f04ba616a1b4b08698c,
+        type: 2}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 224974383343256846, guid: ad6186c94a5a0f04ba616a1b4b08698c,
+        type: 2}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 224974383343256846, guid: ad6186c94a5a0f04ba616a1b4b08698c,
+        type: 2}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 224974383343256846, guid: ad6186c94a5a0f04ba616a1b4b08698c,
+        type: 2}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 224974383343256846, guid: ad6186c94a5a0f04ba616a1b4b08698c,
+        type: 2}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 224974383343256846, guid: ad6186c94a5a0f04ba616a1b4b08698c,
+        type: 2}
+      propertyPath: m_RootOrder
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 224974383343256846, guid: ad6186c94a5a0f04ba616a1b4b08698c,
+        type: 2}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 224974383343256846, guid: ad6186c94a5a0f04ba616a1b4b08698c,
+        type: 2}
+      propertyPath: m_AnchoredPosition.y
+      value: -110.9
+      objectReference: {fileID: 0}
+    - target: {fileID: 224974383343256846, guid: ad6186c94a5a0f04ba616a1b4b08698c,
+        type: 2}
+      propertyPath: m_SizeDelta.x
+      value: 522.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 224974383343256846, guid: ad6186c94a5a0f04ba616a1b4b08698c,
+        type: 2}
+      propertyPath: m_SizeDelta.y
+      value: 143.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 224974383343256846, guid: ad6186c94a5a0f04ba616a1b4b08698c,
+        type: 2}
+      propertyPath: m_AnchorMin.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 224974383343256846, guid: ad6186c94a5a0f04ba616a1b4b08698c,
+        type: 2}
+      propertyPath: m_AnchorMin.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 224974383343256846, guid: ad6186c94a5a0f04ba616a1b4b08698c,
+        type: 2}
+      propertyPath: m_AnchorMax.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 224974383343256846, guid: ad6186c94a5a0f04ba616a1b4b08698c,
+        type: 2}
+      propertyPath: m_AnchorMax.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 224974383343256846, guid: ad6186c94a5a0f04ba616a1b4b08698c,
+        type: 2}
+      propertyPath: m_Pivot.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 224974383343256846, guid: ad6186c94a5a0f04ba616a1b4b08698c,
+        type: 2}
+      propertyPath: m_Pivot.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_ParentPrefab: {fileID: 100100000, guid: ad6186c94a5a0f04ba616a1b4b08698c, type: 2}
+  m_IsPrefabParent: 0
+--- !u!224 &721998111 stripped
+RectTransform:
+  m_PrefabParentObject: {fileID: 224974383343256846, guid: ad6186c94a5a0f04ba616a1b4b08698c,
+    type: 2}
+  m_PrefabInternal: {fileID: 721998110}
 --- !u!1001 &722503148
 Prefab:
   m_ObjectHideFlags: 0
@@ -42544,8 +42793,8 @@ MonoBehaviour:
             m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
             m_IntArgument: 0
             m_FloatArgument: 0
-            m_StringArgument: 'After Common Grabblers hatch, they seek out the shell
-              of a Sheplik to protect their delicate tails. '
+            m_StringArgument: 'After they hatch, Common Grabblers seek out the shell
+              shells to protect their delicate tails. '
             m_BoolArgument: 0
           m_CallState: 2
         - m_Target: {fileID: 1154480642}
@@ -72891,6 +73140,7 @@ RectTransform:
   - {fileID: 1474507534}
   - {fileID: 901813096}
   - {fileID: 335514768}
+  - {fileID: 195949019}
   m_Father: {fileID: 0}
   m_RootOrder: 12
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

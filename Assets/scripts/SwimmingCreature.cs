@@ -92,7 +92,7 @@ public class SwimmingCreature : MonoBehaviour {
     //private WaitForSeconds waitFlock = new WaitForSeconds()
 
     private float spread = 5f;
-    private float flockUpdatesPerSecond = 5f;
+    private float flockUpdatesPerSecond = 1f;
 
 	// Use this for initialization
 	void Start () {

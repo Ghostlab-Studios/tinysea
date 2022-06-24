@@ -31,7 +31,7 @@ public class SoundManager : MonoBehaviour {
         else if (Instance != this) { Destroy(this); }
     }
 
-    private void Start () {
+    private void Start() {
         DontDestroyOnLoad(this);
 	}
 }

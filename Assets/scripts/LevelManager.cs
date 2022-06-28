@@ -18,6 +18,13 @@ public class LevelManager : MonoBehaviour {
     private int currentTurn = 0;
     private int currentGoal = 0;
 
+    public enum Tier
+    {
+        Tier1,
+        Tier2,
+        Tier3
+    }
+
     private void Start()
     {
         isGameOver = false;
@@ -90,5 +97,10 @@ public class LevelManager : MonoBehaviour {
                 }
             }
         }
+    }
+
+    public int GetCurrentObjectiveID()
+    {
+        return currentGoal;
     }
 }

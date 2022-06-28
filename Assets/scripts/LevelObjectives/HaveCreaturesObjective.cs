@@ -10,14 +10,7 @@ public class HaveCreaturesObjective : MonoBehaviour, ILevelGoal {
     public int ID;
     public PlayerManager playerManager;
     public int targetCreatureCount;
-    public Tier activeTier;
-
-    public enum Tier
-    {
-        Tier1,
-        Tier2,
-        Tier3
-    }
+    public LevelManager.Tier activeTier;
     
     void Awake()
     {
@@ -40,19 +33,19 @@ public class HaveCreaturesObjective : MonoBehaviour, ILevelGoal {
         {
             switch (activeTier)
             {
-                case Tier.Tier1:
+                case LevelManager.Tier.Tier1:
                     if (cm.foodChainLevel == 1)
                     {
                         totalCreatures += (int)cm.speciesAmount;
                     }
                     break;
-                case Tier.Tier2:
+                case LevelManager.Tier.Tier2:
                     if (cm.foodChainLevel == 2)
                     {
                         totalCreatures += (int)cm.speciesAmount;
                     }
                     break;
-                case Tier.Tier3:
+                case LevelManager.Tier.Tier3:
                     if (cm.foodChainLevel == 3)
                     {
                         totalCreatures += (int)cm.speciesAmount;
@@ -60,7 +53,6 @@ public class HaveCreaturesObjective : MonoBehaviour, ILevelGoal {
                     break;
             }
         }
-        Debug.Log("Total Creatures: " + totalCreatures.ToString());
         return totalCreatures >= targetCreatureCount;
     }
     

@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System;
 using UnityEngine.UI;
-
+using UnityEngine.Events;
 
 public class Shop : MonoBehaviour {
 
@@ -69,7 +69,7 @@ public class Shop : MonoBehaviour {
 
     public int selectedFish = 0;
     private int currentFishes = 0;
-    private int currentSellingFishes = 0;
+    public int currentSellingFishes = 0;
 
     private WaitForSeconds buffer = new WaitForSeconds(0.2f);
     public bool buyIncreasing;
@@ -81,6 +81,8 @@ public class Shop : MonoBehaviour {
     //to check how many times the respective buttons are clicked
     public int buy_press { get; set; }
     public int sell_press { get; set; }
+
+    public UnityEvent OnSell;
 
     // Use this for initialization
     void Start()
@@ -426,6 +428,7 @@ public class Shop : MonoBehaviour {
 
     public void sellFishes()
     {
+        OnSell.Invoke();
         if (playerObj.busy)
             return;
         playerObj.SellCreatures(selectedFish, currentSellingFishes);

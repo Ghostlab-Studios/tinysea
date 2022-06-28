@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.UI;
+using UnityEngine.Events;
 
 public class PlayerManager : MonoBehaviour {
 
@@ -55,6 +56,9 @@ public class PlayerManager : MonoBehaviour {
     public ParticleSystem eatenPart;
     public ParticleSystem starvedPart;
     public ParticleSystem reproducePart;
+
+    public UnityEvent OnBuy;
+    public UnityEvent OnSell;
 
     /*
 	 * Initialize with three species at each level
@@ -216,6 +220,7 @@ public class PlayerManager : MonoBehaviour {
         for (int i = 0; i < amount; i++)
         {
             species[index].birthList.Enqueue(CharacterManager.BirthCause.Bought);
+            OnBuy.Invoke();
         }
         species[index].speciesAmount += amount;
     }
@@ -225,6 +230,7 @@ public class PlayerManager : MonoBehaviour {
         for (int i = 0; i < amount; i++)
         {
             species[index].deathList.Enqueue(CharacterManager.DeathCause.Sold);
+            OnSell.Invoke();
         }
         species[index].speciesAmount -= amount;
         moneys = moneys + species[index].cost * sellRate * amount;

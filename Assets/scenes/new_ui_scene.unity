@@ -10367,15 +10367,13 @@ GameObject:
   - component: {fileID: 301067868}
   - component: {fileID: 301067867}
   - component: {fileID: 301067869}
-  - component: {fileID: 301067871}
-  - component: {fileID: 301067870}
   m_Layer: 0
   m_Name: levelmanager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &301067867
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10410,43 +10408,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 301067866}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b3133c09d8d084049ab337690200af82, type: 3}
+  m_Script: {fileID: 11500000, guid: daa682a200656a04ba8b2dc35e2aff6a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 0
-  playerManager: {fileID: 882694906}
-  targetCreatureCount: 10
+  shop: {fileID: 1943393658}
+  amountToSell: 5
   activeTier: 0
---- !u!114 &301067870
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 301067866}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b3133c09d8d084049ab337690200af82, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ID: 2
-  playerManager: {fileID: 882694906}
-  targetCreatureCount: 1
-  activeTier: 2
---- !u!114 &301067871
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 301067866}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b3133c09d8d084049ab337690200af82, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ID: 1
-  playerManager: {fileID: 882694906}
-  targetCreatureCount: 5
-  activeTier: 1
 --- !u!1 &302354263
 GameObject:
   m_ObjectHideFlags: 0
@@ -31342,6 +31310,16 @@ MonoBehaviour:
   eatenPart: {fileID: 88464938}
   starvedPart: {fileID: 326488027}
   reproducePart: {fileID: 397025267}
+  OnBuy:
+    m_PersistentCalls:
+      m_Calls: []
+    m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  OnSell:
+    m_PersistentCalls:
+      m_Calls: []
+    m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
 --- !u!4 &882694907
 Transform:
   m_ObjectHideFlags: 0
@@ -55482,10 +55460,16 @@ MonoBehaviour:
   sellIncrease: {fileID: 601829170}
   sellDecrease: {fileID: 518654584}
   selectedFish: 0
+  currentSellingFishes: 0
   buyIncreasing: 0
   buyDecreasing: 0
   sellIncreasing: 0
   sellDecreasing: 0
+  OnSell:
+    m_PersistentCalls:
+      m_Calls: []
+    m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
 --- !u!114 &1454539741
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -72234,10 +72218,16 @@ MonoBehaviour:
   sellIncrease: {fileID: 801343740}
   sellDecrease: {fileID: 1146309020}
   selectedFish: 0
+  currentSellingFishes: 0
   buyIncreasing: 0
   buyDecreasing: 0
   sellIncreasing: 0
   sellDecreasing: 0
+  OnSell:
+    m_PersistentCalls:
+      m_Calls: []
+    m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
 --- !u!114 &1943393659
 MonoBehaviour:
   m_ObjectHideFlags: 0

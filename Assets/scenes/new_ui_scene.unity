@@ -10367,6 +10367,7 @@ GameObject:
   - component: {fileID: 301067868}
   - component: {fileID: 301067867}
   - component: {fileID: 301067869}
+  - component: {fileID: 301067870}
   m_Layer: 0
   m_Name: levelmanager
   m_TagString: Untagged
@@ -10415,6 +10416,21 @@ MonoBehaviour:
   shop: {fileID: 1943393658}
   amountToSell: 5
   activeTier: 0
+--- !u!114 &301067870
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 301067866}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3133c09d8d084049ab337690200af82, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 1
+  playerManager: {fileID: 882694906}
+  targetCreatureCount: 5
+  activeTier: 1
 --- !u!1 &302354263
 GameObject:
   m_ObjectHideFlags: 0

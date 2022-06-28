@@ -32,7 +32,6 @@ public class SellingCreaturesObjective : MonoBehaviour, ILevelGoal {
     /// </summary>
     public bool IsLevelWon()
     {
-        Debug.Log(sellCount);
         return sellCount >= amountToSell;
     }
 

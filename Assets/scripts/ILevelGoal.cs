@@ -26,7 +26,8 @@ public interface ILevelGoal {
     bool IsLevelLost();
 
     /// <summary>
-    /// Gets the level ID of this level goal. Intended to keep track of order of levels.
+    /// Gets the level ID of this level goal. Intended to keep track of order of levels in the 
+    /// LevelManager.
     /// </summary>
     /// <returns>Returns integer ID of LevelGoal.</returns>
     int GetID();

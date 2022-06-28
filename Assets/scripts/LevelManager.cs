@@ -7,20 +7,30 @@ using UnityEngine;
 /// Uses ALevelGoal abstract class to easily swap between goals.
 /// </summary>
 public class LevelManager : MonoBehaviour {
-    public ILevelGoal levelGoal;
+    public List<ILevelGoal> levelGoals = new List<ILevelGoal>(); // Guaranteed to be in order of
+                                                                 // ILevelGoal ID (0 to max ID)
+                                                                 // as long as there are no post-
+                                                                 // launch edits to the list
+    public GameObject winScreenPanel;
+    public GameObject loseScreenPanel;
+    public static bool isGameOver = false;
 
     private int currentTurn = 0;
-    private static bool isGameOver = false;
+    private int currentGoal = 0;
 
     private void Start()
     {
         isGameOver = false;
+        SortLevelGoalsByID();
     }
 
     private void Update()
     {
-        if (levelGoal.IsLevelWon()) { LevelWon(); }
-        else if (levelGoal.IsLevelLost()) { LevelLost(); }
+        if (!isGameOver)
+        {
+            if (levelGoals[currentGoal].IsLevelWon()) { ObjectiveComplete(); }
+            else if (levelGoals[currentGoal].IsLevelLost()) { LevelLost(); }
+        }
     }
 
     /// <summary>
@@ -32,11 +42,23 @@ public class LevelManager : MonoBehaviour {
     }
 
     /// <summary>
+    /// Proceeds to the next level objective, or goes to level win screen if all objectives are completed.
+    /// </summary>
+    private void ObjectiveComplete()
+    {
+        currentGoal++;
+        if (currentGoal >= levelGoals.Count) { LevelWon(); }
+    }
+
+    /// <summary>
     /// Called when the level is won
     /// </summary>
     private void LevelWon()
     {
         // To be filled in later
+        Debug.Log("Game Won");
+        loseScreenPanel.SetActive(false);
+        winScreenPanel.SetActive(true);
         isGameOver = true;
     }
 
@@ -46,6 +68,27 @@ public class LevelManager : MonoBehaviour {
     private void LevelLost()
     {
         // To be filled in later
+        winScreenPanel.SetActive(false);
+        loseScreenPanel.SetActive(true);
         isGameOver = true;
+    }
+
+    /// <summary>
+    /// Uses BubbleSort to sort level goals by ID.
+    /// </summary>
+    private void SortLevelGoalsByID()
+    {
+        for (int i = 0; i < levelGoals.Count - 1; i++)
+        {
+            for (int j = 0; j < levelGoals.Count - i - 1; j++)
+            {
+                if (levelGoals[j].GetID() > levelGoals[j + 1].GetID())
+                {
+                    ILevelGoal temp = levelGoals[j + 1];
+                    levelGoals[j + 1] = levelGoals[j];
+                    levelGoals[j] = temp;
+                }
+            }
+        }
     }
 }

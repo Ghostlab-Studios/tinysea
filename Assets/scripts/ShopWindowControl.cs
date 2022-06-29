@@ -19,7 +19,7 @@ public class ShopWindowControl : MonoBehaviour {
 	//define if it is open;
 	public bool open = false;
 
-    private float homeX = 0;
+    private float homeY = 0;
     public float slideAmount = 482;
     public float slideTime = .6f;
     public float slideTimer = 0;
@@ -27,7 +27,7 @@ public class ShopWindowControl : MonoBehaviour {
 	void Start() 
     {
 		rt = (RectTransform)window.transform;
-        homeX = rt.anchoredPosition.x;
+        homeY = rt.anchoredPosition.y;
         controller.GetComponent<Button>().
 			onClick.AddListener (() => Controler());
         exitButton.GetComponent<Button>().
@@ -54,20 +54,20 @@ public class ShopWindowControl : MonoBehaviour {
 		if (open == false)
         {
             shopIcon.SetActive(true);
-			controller.transform.rotation = Quaternion.Euler(0,0,0);
+			controller.transform.rotation = Quaternion.Euler(0,0,90);
             rt.anchoredPosition = new Vector2
-				(Mathf.Lerp (homeX + slideAmount, homeX, 1 - (slideTimer / slideTime)),
-                 rt.anchoredPosition.y);
+				(rt.anchoredPosition.x,
+                 Mathf.Lerp(homeY + slideAmount, homeY, 1 - (slideTimer / slideTime)));
 			//GameObject.Find("Main Camera").GetComponent<MovingCamera>().enabled = false;
 
 		}
 
 		if (open == true) {
             shopIcon.SetActive(false);
-			controller.transform.rotation = Quaternion.Euler(0,0,180);
+			controller.transform.rotation = Quaternion.Euler(0,0,-90);
             rt.anchoredPosition = new Vector2
-                (Mathf.Lerp(homeX, homeX + slideAmount, 1 - (slideTimer / slideTime)),
-                 rt.anchoredPosition.y);
+                (rt.anchoredPosition.x,
+                 Mathf.Lerp(homeY, homeY + slideAmount, 1 - (slideTimer / slideTime)));
 			//GameObject.Find("Main Camera").GetComponent<MovingCamera>().enabled = true;
 
 		}

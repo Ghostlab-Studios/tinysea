@@ -52,21 +52,22 @@ public class TempWindowControl : MonoBehaviour
         if (open == false)
         {
             //tempIcon.GetComponent<Image>().enabled = false;
-            controler.transform.rotation = Quaternion.Euler(0, 0, 180);
+            controler.transform.rotation = Quaternion.Euler(0, 0, 0);
             rt.anchoredPosition = new Vector2
-                (Mathf.Lerp(homeX - slideAmount, homeX, 1 - (slideTimer / slideTime)),
+                (Mathf.Lerp(homeX, homeX - slideAmount, 1 - (slideTimer / slideTime)),
                  rt.anchoredPosition.y);
+            
             //GameObject.Find("Main Camera").GetComponent<MovingCamera>().enabled = false;
 
         }
 
         if (open == true)
         {
-            //tempIcon.GetComponent<Image>().enabled = true;
-            controler.transform.rotation = Quaternion.Euler(0, 0, 0);
+            controler.transform.rotation = Quaternion.Euler(0, 0, 180);
             rt.anchoredPosition = new Vector2
-                (Mathf.Lerp(homeX, homeX - slideAmount, 1 - (slideTimer / slideTime)),
+                (Mathf.Lerp(homeX - slideAmount, homeX, 1 - (slideTimer / slideTime)),
                  rt.anchoredPosition.y);
+            //tempIcon.GetComponent<Image>().enabled = true;
             //GameObject.Find("Main Camera").GetComponent<MovingCamera>().enabled = true;
 
         }

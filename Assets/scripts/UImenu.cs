@@ -29,6 +29,7 @@ public class UImenu : MonoBehaviour
             musicAnim = new Animator();
         if (saveAnim == null)
             saveAnim = new Animator();
+        menu_on();
     }
 
     public void menu_on()

@@ -146,8 +146,7 @@ public class PlayerManager : MonoBehaviour {
                 }
             }
         }
-
-
+        
         if (/*Input.GetButtonDown("Cancel") && Input.GetButton("Submit")*/ Input.GetKeyDown("q"))
         {
             moneys += 999999;

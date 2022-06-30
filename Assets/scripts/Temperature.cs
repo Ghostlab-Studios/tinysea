@@ -53,11 +53,10 @@ public class Temperature : MonoBehaviour
     private Vector3 homePos;
 
     public float temperature;
-    public float forecastOneDay;
-    public float forecastTwoDays;
+    public float nextDayTemp;
+    public float forecastHigh;
+    public float forecastLow;
     public float forecastRand = 5;
-    public float forecastPredictionOne;
-    public float forecastPredictionTwo;
     public TemperatureTrend trend;
 
     public float currentDay = 1;    // Try changing to 0 at some point
@@ -66,8 +65,9 @@ public class Temperature : MonoBehaviour
     public float tMean = 15;        // Yearly average temperature
 
     public Text tempText;
-    public Text forecastOneText;
-    public Text forecastTwoText;
+    public Text forecastHighText;
+    public Text forecastLowText;
+    public TemperatureForecastSliderController forecastSlider;
     private float tempRound;
     public float tempVisual;
 
@@ -148,17 +148,17 @@ public class Temperature : MonoBehaviour
         
         period = 365f / step;
         temperature = tMean;
-        forecastOneDay = trend.GetTemperature(currentDay + step, period, tMean);
-        forecastTwoDays = trend.GetTemperature(currentDay + (step * 2), period, tMean);
-        forecastPredictionOne = forecastOneDay + (Random.Range(-1f, 1f) * forecastRand);
-        forecastPredictionTwo = forecastTwoDays + (Random.Range(-1f, 1f) * forecastRand);
+        nextDayTemp = trend.GetTemperature(currentDay + step, period, tMean);
+        forecastHigh = nextDayTemp + Random.Range(0, forecastRand);
+        forecastLow = nextDayTemp - Random.Range(0, forecastRand);
+        forecastSlider.UpdateSliderPositions(forecastLow, forecastHigh);
+        forecastHighText.text = Mathf.RoundToInt(forecastHigh).ToString();
+        forecastLowText.text = Mathf.RoundToInt(forecastLow).ToString();
         //GenerateTemperature(currentDay);
         generatePossibilities();
         //GenerateTemperature(currentDay);
         drawLines();
         tempText.text = temperature.ToString();
-        forecastOneText.text = Mathf.Clamp(Mathf.RoundToInt(forecastOneDay), 0, 40).ToString();
-        forecastTwoText.text = Mathf.Clamp(Mathf.RoundToInt(forecastTwoDays), 0, 40).ToString();
         tempRound = temperature;
         tempVisual = temperature;
         currentBar = bar5;
@@ -209,6 +209,7 @@ public class Temperature : MonoBehaviour
             animationTimer = 0;
             flipTimer = 0;
             PickTemperature();
+            forecastSlider.UpdateSliderPositions(forecastLow, forecastHigh);
             selectorDot.GetComponent<SpriteRenderer>().enabled = false;
             transform.position = homePos;
             return;
@@ -260,11 +261,10 @@ public class Temperature : MonoBehaviour
     void PickTemperature()
     {
         //GenerateTemperature(currentDay);
-        temperature = forecastOneDay;
-        forecastOneDay = forecastTwoDays;
-        forecastTwoDays = trend.GetTemperature(currentDay + (step * 2), period, tMean);
-        forecastPredictionOne = forecastPredictionTwo;
-        forecastPredictionTwo = forecastTwoDays + (Random.Range(-1f, 1f) * forecastRand);
+        temperature = nextDayTemp;
+        nextDayTemp = trend.GetTemperature(currentDay + step, period, tMean);
+        forecastHigh = Mathf.Clamp(nextDayTemp + Random.Range(0, forecastRand), 0, 40);
+        forecastLow = Mathf.Clamp(nextDayTemp - Random.Range(0, forecastRand), 0, 40);
         UpdateTempRound();
         UpdateTemperatureText();
         UpdateTempVisual();
@@ -294,8 +294,8 @@ public class Temperature : MonoBehaviour
     private void UpdateTemperatureText()
     {
         tempText.text = tempRound.ToString();
-        forecastOneText.text = Mathf.Clamp(Mathf.RoundToInt(forecastPredictionOne), 0, 40).ToString();
-        forecastTwoText.text = Mathf.Clamp(Mathf.RoundToInt(forecastPredictionTwo), 0, 40).ToString();
+        forecastHighText.text = Mathf.RoundToInt(forecastHigh).ToString();
+        forecastLowText.text = Mathf.RoundToInt(forecastLow).ToString();
     }
 
     private void UpdateTempVisual()

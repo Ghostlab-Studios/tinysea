@@ -20,7 +20,7 @@ public class Temperature : MonoBehaviour
     public float maxChanceDots = 1;
     public float dotSpreadChance = .5f;
 
-    public int numPredictions = 1;
+    public int numPredictions = 2;
 
     public Color hotColor = Color.red;
     public Color neutralColor = Color.yellow;
@@ -145,12 +145,18 @@ public class Temperature : MonoBehaviour
 
         //disable our selector dot
         selectorDot.GetComponent<SpriteRenderer>().enabled = false;
-        
+
         period = 365f / step;
         temperature = tMean;
         nextDayTemp = trend.GetTemperature(currentDay + step, period, tMean);
         forecastHigh = nextDayTemp + Random.Range(0, forecastRand);
         forecastLow = nextDayTemp - Random.Range(0, forecastRand);
+        possibleTemperatures = new List<float>();
+        possibleLikelihoods = new List<int>();
+        possibleTemperatures.Add(forecastHigh);
+        possibleTemperatures.Add(forecastLow);
+        possibleLikelihoods.Add(1);
+        possibleLikelihoods.Add(1);
         forecastSlider.UpdateSliderPositions(forecastLow, forecastHigh);
         forecastHighText.text = Mathf.RoundToInt(forecastHigh).ToString();
         forecastLowText.text = Mathf.RoundToInt(forecastLow).ToString();
@@ -265,6 +271,12 @@ public class Temperature : MonoBehaviour
         nextDayTemp = trend.GetTemperature(currentDay + step, period, tMean);
         forecastHigh = Mathf.Clamp(nextDayTemp + Random.Range(0, forecastRand), 0, 40);
         forecastLow = Mathf.Clamp(nextDayTemp - Random.Range(0, forecastRand), 0, 40);
+        possibleTemperatures = new List<float>();
+        possibleLikelihoods = new List<int>();
+        possibleTemperatures.Add(forecastHigh);
+        possibleTemperatures.Add(forecastLow);
+        possibleLikelihoods.Add(1);
+        possibleLikelihoods.Add(1);
         UpdateTempRound();
         UpdateTemperatureText();
         UpdateTempVisual();
@@ -273,7 +285,7 @@ public class Temperature : MonoBehaviour
         //temperature = trend.GetTemperature(currentDay);
         historicalTemperatures.Dequeue();
         historicalTemperatures.Enqueue(temperature);
-        generatePossibilities();
+        //generatePossibilities();
         drawLines();
     }
 
@@ -307,7 +319,8 @@ public class Temperature : MonoBehaviour
     {
         tempFill.fillAmount = (1 * tempRound / 40) + 0.025f;
     }
-
+    
+    /*
     float GenerateTemperature(float day)
     {
         possibleTemperatures = new List<float>();
@@ -375,6 +388,7 @@ public class Temperature : MonoBehaviour
         }
         return trend.GetTemperature(day, period, tMean);
     }
+    */
 
     //creates possible temperatures
     void generatePossibilities()

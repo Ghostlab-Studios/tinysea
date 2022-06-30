@@ -41208,7 +41208,7 @@ MonoBehaviour:
   selectorDot: {fileID: 243659373}
   dotSpacing: 3
   segmentSpacing: 2
-  historicalSegments: 6
+  historicalSegments: 24
   animationSeconds: 1
   pickSeconds: 1
   animationFlipMaxSpeed: 0.02
@@ -41218,7 +41218,7 @@ MonoBehaviour:
   nextDayTemp: 0
   forecastHigh: 0
   forecastLow: 0
-  forecastRand: 5
+  forecastRand: 10
   trend: {fileID: 859321035}
   currentDay: 0
   step: 5

@@ -8,19 +8,17 @@ using UnityEngine.UI;
 /// </summary>
 public class TemperatureForecastSliderController : MonoBehaviour {
 
-    public Slider tempSlider;
+    public RectTransform sliderTransform;
     public float minX;
     public float maxX;
 
-    private RectTransform sliderTransform;
     private float startingWidth;
     private float totalWidth;
 
     private void Start()
     {
-        sliderTransform = tempSlider.GetComponent<RectTransform>();
         startingWidth = sliderTransform.sizeDelta.x;
-        totalWidth = Mathf.Abs(minX) + Mathf.Abs(maxX);
+        totalWidth = maxX - minX;
     }
 
     /// <summary>

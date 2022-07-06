@@ -53,7 +53,7 @@ public class ShopWindowControl : MonoBehaviour {
 			onClick.AddListener (() => Controler());*/
 		if (open == false)
         {
-            shopIcon.SetActive(true);
+            //shopIcon.SetActive(true);
 			controller.transform.rotation = Quaternion.Euler(0,0,90);
             rt.anchoredPosition = new Vector2
 				(rt.anchoredPosition.x,
@@ -63,7 +63,7 @@ public class ShopWindowControl : MonoBehaviour {
 		}
 
 		if (open == true) {
-            shopIcon.SetActive(false);
+            //shopIcon.SetActive(false);
 			controller.transform.rotation = Quaternion.Euler(0,0,-90);
             rt.anchoredPosition = new Vector2
                 (rt.anchoredPosition.x,

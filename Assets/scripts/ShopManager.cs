@@ -25,6 +25,8 @@ public class ShopManager : MonoBehaviour {
     public Text totalMoneyText;
     public Text amountToBuyText;
     public Text amountToSellText;
+    public Text totalMoneyLost;
+    public Text totalMoneyGained;
     public UnityEvent onBuy;
     public UnityEvent onSell;
 
@@ -38,7 +40,7 @@ public class ShopManager : MonoBehaviour {
     private int amountToSell = 0;
     private int[] recordedVariants = new int[3];
 
-	private void Start()
+    private void Start()
     {
         StartCoroutine(LateStart(0.1f));
     }
@@ -76,6 +78,7 @@ public class ShopManager : MonoBehaviour {
         activeVariant = recordedVariants[icon];
         currentOrganismID = activeOrganism + (activeVariant * 3);
         UpdateCurve(currentOrganismID);
+        ResetBuySell();
     }
 
     public void ChangeActiveVariant(int variant)
@@ -85,6 +88,7 @@ public class ShopManager : MonoBehaviour {
         currentOrganismID = activeOrganism + (activeVariant * 3);
         organismIconSprites[activeIcon].sprite = playerManager.species[currentOrganismID].icon;
         UpdateCurve(currentOrganismID);
+        ResetBuySell();
     }
 
     public void UpdateCurve(int id)
@@ -101,10 +105,38 @@ public class ShopManager : MonoBehaviour {
         variantHighlight.SetPositionAndRotation(organismHighlight.position + (variantTransform.position - originTransform.position) + new Vector3(-0.5f, 3f, 0), variantHighlight.rotation);
     }
 
-    public void UpdateVariantHighlight()
+    public void ChangeAmountToBuy(int amount)
     {
-        RectTransform variantTransform = defaultVariantIconSprites[activeVariant].gameObject.GetComponent<RectTransform>();
-        RectTransform originTransform = organismIconSprites[0].gameObject.GetComponent<RectTransform>();
-        variantHighlight.SetPositionAndRotation(organismHighlight.position + (variantTransform.position - originTransform.position) + new Vector3(-0.5f, 3.2f, 0), variantHighlight.rotation);
+        amountToBuy = Mathf.Clamp(amountToBuy + amount, 0, Mathf.FloorToInt(playerManager.moneys / playerManager.species[currentOrganismID].cost));
+        Debug.Log(amountToBuy.ToString());
+        amountToBuyText.text = amountToBuy.ToString();
+        totalMoneyLost.text = "-" + (amountToBuy * playerManager.species[currentOrganismID].cost).ToString();
+    }
+
+    public void ChangeAmountToSell(int amount)
+    {
+        amountToSell = Mathf.Clamp(amountToSell + amount, 0, Mathf.RoundToInt(playerManager.species[currentOrganismID].speciesAmount));
+        amountToSellText.text = amountToSell.ToString();
+        totalMoneyGained.text = "+" + (amountToSell * playerManager.species[currentOrganismID].cost).ToString();
+    }
+
+    public void ResetBuySell()
+    {
+        amountToBuy = 0;
+        amountToBuyText.text = "0";
+        totalMoneyLost.text = "-0";
+        amountToSell = 0;
+        amountToSellText.text = "0";
+        totalMoneyGained.text = "+0";
+    }
+
+    public void BuyOrganism()
+    {
+
+    }
+
+    public void SellOrganism()
+    {
+
     }
 }

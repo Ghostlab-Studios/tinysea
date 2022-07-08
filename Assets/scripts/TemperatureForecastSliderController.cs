@@ -15,7 +15,7 @@ public class TemperatureForecastSliderController : MonoBehaviour {
     private float startingWidth;
     private float totalWidth;
 
-    private void Start()
+    private void Awake()
     {
         startingWidth = sliderTransform.sizeDelta.x;
         totalWidth = maxX - minX;

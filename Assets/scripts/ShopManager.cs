@@ -19,19 +19,19 @@ public class ShopManager : MonoBehaviour {
     public Text icon1MoneyText;
     public Text icon2MoneyText;
     public Text icon3MoneyText;
+    public RectTransform descriptionBox;
     public Text temperatureText;
     public Text reproductionText;
     public Text descriptionText;
     public Text totalMoneyText;
     public Text amountToBuyText;
     public Text amountToSellText;
-    public Text totalMoneyLost;
-    public Text totalMoneyGained;
+    public Text totalMoneyLostText;
+    public Text totalMoneyGainedText;
     public UnityEvent onBuy;
     public UnityEvent onSell;
 
     private int currentOrganismID = 0;
-
     private int activeTier = 0; // 0 = Tier 3, 1 = Tier 2, 2 = Tier 1
     private int activeIcon = 0;
     private int activeOrganism = 0; // 0 = Icon1, 1 = Icon2, 2 = Icon3
@@ -78,6 +78,7 @@ public class ShopManager : MonoBehaviour {
         activeVariant = recordedVariants[icon];
         currentOrganismID = activeOrganism + (activeVariant * 3);
         UpdateCurve(currentOrganismID);
+        UpdateDescriptionBox(activeIcon);
         ResetBuySell();
     }
 
@@ -87,8 +88,22 @@ public class ShopManager : MonoBehaviour {
         recordedVariants[activeIcon] = variant;
         currentOrganismID = activeOrganism + (activeVariant * 3);
         organismIconSprites[activeIcon].sprite = playerManager.species[currentOrganismID].icon;
+        UpdateDescriptionBox(activeIcon);
         UpdateCurve(currentOrganismID);
         ResetBuySell();
+    }
+
+    public void UpdateDescriptionBox(int icon)
+    {
+        descriptionBox.SetPositionAndRotation(new Vector3(organismIconSprites[icon].gameObject.GetComponent<RectTransform>().position.x, descriptionBox.position.y, 0),
+                                              descriptionBox.rotation);
+        int tierBase = activeTier * 9;
+        int organism = tierBase + icon;
+        int variant = recordedVariants[icon];
+        int id = organism + (variant * 3);
+        temperatureText.text = playerManager.species[id].temperatureThresholdText;
+        reproductionText.text = playerManager.species[id].reproductionRateText;
+        descriptionText.text = playerManager.species[id].description;
     }
 
     public void UpdateCurve(int id)
@@ -108,35 +123,44 @@ public class ShopManager : MonoBehaviour {
     public void ChangeAmountToBuy(int amount)
     {
         amountToBuy = Mathf.Clamp(amountToBuy + amount, 0, Mathf.FloorToInt(playerManager.moneys / playerManager.species[currentOrganismID].cost));
-        Debug.Log(amountToBuy.ToString());
         amountToBuyText.text = amountToBuy.ToString();
-        totalMoneyLost.text = "-" + (amountToBuy * playerManager.species[currentOrganismID].cost).ToString();
+        totalMoneyLostText.text = "- $" + (amountToBuy * playerManager.species[currentOrganismID].cost).ToString();
     }
 
     public void ChangeAmountToSell(int amount)
     {
         amountToSell = Mathf.Clamp(amountToSell + amount, 0, Mathf.RoundToInt(playerManager.species[currentOrganismID].speciesAmount));
         amountToSellText.text = amountToSell.ToString();
-        totalMoneyGained.text = "+" + (amountToSell * playerManager.species[currentOrganismID].cost).ToString();
+        totalMoneyGainedText.text = "+ $" + (amountToSell * playerManager.species[currentOrganismID].cost).ToString();
     }
 
     public void ResetBuySell()
     {
         amountToBuy = 0;
         amountToBuyText.text = "0";
-        totalMoneyLost.text = "-0";
+        totalMoneyLostText.text = "- $0";
         amountToSell = 0;
         amountToSellText.text = "0";
-        totalMoneyGained.text = "+0";
+        totalMoneyGainedText.text = "+ $0";
     }
 
     public void BuyOrganism()
     {
-
+        if (!playerManager.busy && amountToBuy > 0)
+        {
+            playerManager.BuyCreatures(currentOrganismID, amountToBuy);
+            ResetBuySell();
+            onBuy.Invoke();
+        }
     }
 
     public void SellOrganism()
     {
-
+        if (!playerManager.busy && amountToSell > 0)
+        {
+            playerManager.SellCreatures(currentOrganismID, amountToSell);
+            ResetBuySell();
+            onSell.Invoke();
+        }
     }
 }

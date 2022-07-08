@@ -149,8 +149,8 @@ public class Temperature : MonoBehaviour
         period = 365f / step;
         temperature = tMean;
         nextDayTemp = trend.GetTemperature(currentDay + step, period, tMean);
-        forecastHigh = nextDayTemp + Random.Range(0, forecastRand);
-        forecastLow = nextDayTemp - Random.Range(0, forecastRand);
+        forecastHigh = Mathf.Clamp(nextDayTemp + Random.Range(0, forecastRand), 0, 40);
+        forecastLow = Mathf.Clamp(nextDayTemp - Random.Range(0, forecastRand), 0, 40);
         possibleTemperatures = new List<float>();
         possibleLikelihoods = new List<int>();
         possibleTemperatures.Add(forecastHigh);

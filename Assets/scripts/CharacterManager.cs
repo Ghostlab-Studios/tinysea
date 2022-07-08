@@ -31,6 +31,8 @@ public class CharacterManager : MonoBehaviour {
     public int deathRateStars = 5;
     public int thermalBreadthStars = 5;
     public string description = "This is a fish";
+    public string temperatureThresholdText;
+    public string reproductionRateText;
     public Sprite icon;
 
     public enum DeathCause { Cold, Hot, Starve, Eaten, Sold};

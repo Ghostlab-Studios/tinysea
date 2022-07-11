@@ -2958,6 +2958,14 @@ Prefab:
       value: 
       objectReference: {fileID: 21300000, guid: 82fc1374ead10554f95375ac6c6e8699,
         type: 3}
+    - target: {fileID: 11467588, guid: ad58b2f655382a749b02e66437cd5fee, type: 2}
+      propertyPath: temperatureThresholdText
+      value: Low
+      objectReference: {fileID: 0}
+    - target: {fileID: 11467588, guid: ad58b2f655382a749b02e66437cd5fee, type: 2}
+      propertyPath: reproductionRateText
+      value: High
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: ad58b2f655382a749b02e66437cd5fee, type: 2}
   m_IsPrefabParent: 0
@@ -3641,7 +3649,7 @@ MonoBehaviour:
     m_HighlightedTrigger: Highlighted
     m_PressedTrigger: Pressed
     m_DisabledTrigger: Disabled
-  m_Interactable: 1
+  m_Interactable: 0
   m_TargetGraphic: {fileID: 0}
   m_FillRect: {fileID: 1136812738}
   m_HandleRect: {fileID: 0}
@@ -6241,6 +6249,14 @@ Prefab:
       value: 
       objectReference: {fileID: 21300000, guid: c035f1d498d887341a4bde379bc99f42,
         type: 3}
+    - target: {fileID: 11460378, guid: aef99a6e29bc5c149b5cef96262d3834, type: 2}
+      propertyPath: temperatureThresholdText
+      value: High
+      objectReference: {fileID: 0}
+    - target: {fileID: 11460378, guid: aef99a6e29bc5c149b5cef96262d3834, type: 2}
+      propertyPath: reproductionRateText
+      value: Low
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: aef99a6e29bc5c149b5cef96262d3834, type: 2}
   m_IsPrefabParent: 0
@@ -6520,6 +6536,7 @@ RectTransform:
   m_LocalScale: {x: 0.75, y: 1.1249999, z: 1}
   m_Children:
   - {fileID: 2083083730}
+  - {fileID: 1197575809}
   m_Father: {fileID: 2051465452}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -6703,6 +6720,14 @@ Prefab:
       value: 
       objectReference: {fileID: 21300000, guid: fd68572493f6d9047896d059897e96da,
         type: 3}
+    - target: {fileID: 11485606, guid: ae0e463ecfbf45743bebefcdd88f0317, type: 2}
+      propertyPath: temperatureThresholdText
+      value: Low
+      objectReference: {fileID: 0}
+    - target: {fileID: 11485606, guid: ae0e463ecfbf45743bebefcdd88f0317, type: 2}
+      propertyPath: reproductionRateText
+      value: High
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: ae0e463ecfbf45743bebefcdd88f0317, type: 2}
   m_IsPrefabParent: 0
@@ -6770,6 +6795,14 @@ Prefab:
       value: 
       objectReference: {fileID: 21300000, guid: 6a4b52089df8bd0498453509201ec913,
         type: 3}
+    - target: {fileID: 11438652, guid: 87ae41937cbca534da44957a4ab72853, type: 2}
+      propertyPath: temperatureThresholdText
+      value: High
+      objectReference: {fileID: 0}
+    - target: {fileID: 11438652, guid: 87ae41937cbca534da44957a4ab72853, type: 2}
+      propertyPath: reproductionRateText
+      value: Low
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 87ae41937cbca534da44957a4ab72853, type: 2}
   m_IsPrefabParent: 0
@@ -9943,6 +9976,14 @@ Prefab:
       value: 
       objectReference: {fileID: 21300000, guid: 1b358e3ceae674c44a360bc67f62b5cc,
         type: 3}
+    - target: {fileID: 11456368, guid: e3ab19f3fcc1b934e84f1f994d43e9a2, type: 2}
+      propertyPath: temperatureThresholdText
+      value: Average
+      objectReference: {fileID: 0}
+    - target: {fileID: 11456368, guid: e3ab19f3fcc1b934e84f1f994d43e9a2, type: 2}
+      propertyPath: reproductionRateText
+      value: Average
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: e3ab19f3fcc1b934e84f1f994d43e9a2, type: 2}
   m_IsPrefabParent: 0
@@ -12033,6 +12074,80 @@ CanvasRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 321591990}
+--- !u!1 &321906665
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 321906666}
+  - component: {fileID: 321906668}
+  - component: {fileID: 321906667}
+  m_Layer: 5
+  m_Name: TempText (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 4294967295
+  m_IsActive: 1
+--- !u!224 &321906666
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 321906665}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1.3333309, y: 1.3333308, z: 0.99999946}
+  m_Children: []
+  m_Father: {fileID: 358151464}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 44, y: -33}
+  m_SizeDelta: {x: 150, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &321906667
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 321906665}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+    m_TypeName: UnityEngine.UI.MaskableGraphic+CullStateChangedEvent, UnityEngine.UI,
+      Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
+  m_FontData:
+    m_Font: {fileID: 12800000, guid: 8352071b3a7fdd246895e079e19941a1, type: 3}
+    m_FontSize: 39
+    m_FontStyle: 0
+    m_BestFit: 0
+    m_MinSize: 7
+    m_MaxSize: 76
+    m_Alignment: 1
+    m_AlignByGeometry: 0
+    m_RichText: 1
+    m_HorizontalOverflow: 0
+    m_VerticalOverflow: 0
+    m_LineSpacing: 1
+  m_Text: "\xB0"
+--- !u!222 &321906668
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 321906665}
 --- !u!198 &326488027 stripped
 ParticleSystem:
   m_PrefabParentObject: {fileID: 19891406, guid: 8367ba09c3940364f8d9dd2ff73f30bd,
@@ -13199,6 +13314,7 @@ RectTransform:
   m_LocalScale: {x: 0.75, y: 0.75, z: 1}
   m_Children:
   - {fileID: 2025533716}
+  - {fileID: 321906666}
   m_Father: {fileID: 2051465452}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -13226,7 +13342,7 @@ MonoBehaviour:
       m_Calls: []
     m_TypeName: UnityEngine.UI.MaskableGraphic+CullStateChangedEvent, UnityEngine.UI,
       Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-  m_Sprite: {fileID: 21300000, guid: 4484e6b1311aa0f4eb06ce974e7b286e, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 978eb8def7db37a4fb6e997aca7a602b, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -15149,6 +15265,14 @@ Prefab:
       value: 
       objectReference: {fileID: 21300000, guid: 4e54a72645152cb4c8cbd1e57cef038d,
         type: 3}
+    - target: {fileID: 11402386, guid: f72052a7af4ba084888d736f2259bb4f, type: 2}
+      propertyPath: temperatureThresholdText
+      value: Low
+      objectReference: {fileID: 0}
+    - target: {fileID: 11402386, guid: f72052a7af4ba084888d736f2259bb4f, type: 2}
+      propertyPath: reproductionRateText
+      value: High
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: f72052a7af4ba084888d736f2259bb4f, type: 2}
   m_IsPrefabParent: 0
@@ -17355,6 +17479,14 @@ Prefab:
       value: 
       objectReference: {fileID: 21300000, guid: c34e5fa67f1920c42aaf699626964f7d,
         type: 3}
+    - target: {fileID: 11451700, guid: bdb1d12367a942b4d9c53f5567b8c2e3, type: 2}
+      propertyPath: temperatureThresholdText
+      value: Low
+      objectReference: {fileID: 0}
+    - target: {fileID: 11451700, guid: bdb1d12367a942b4d9c53f5567b8c2e3, type: 2}
+      propertyPath: reproductionRateText
+      value: High
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: bdb1d12367a942b4d9c53f5567b8c2e3, type: 2}
   m_IsPrefabParent: 0
@@ -19628,6 +19760,14 @@ Prefab:
       value: 
       objectReference: {fileID: 21300000, guid: b18c89991d6433d47a3003fba57fad95,
         type: 3}
+    - target: {fileID: 11482288, guid: 51557c2796b816a4dad08023652aaf55, type: 2}
+      propertyPath: temperatureThresholdText
+      value: High
+      objectReference: {fileID: 0}
+    - target: {fileID: 11482288, guid: 51557c2796b816a4dad08023652aaf55, type: 2}
+      propertyPath: reproductionRateText
+      value: Low
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 51557c2796b816a4dad08023652aaf55, type: 2}
   m_IsPrefabParent: 0
@@ -22620,6 +22760,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   UIAnimator: {fileID: 553585017}
+  sfxSlider: {fileID: 1301339449}
+  musicSlider: {fileID: 1745703263}
+  homeMenu: {fileID: 1519620543}
+  saveMenu: {fileID: 847613252}
 --- !u!95 &553585017 stripped
 Animator:
   m_PrefabParentObject: {fileID: 95934952777763168, guid: a854f19db5cfd874398d4cd19997c1e0,
@@ -26053,6 +26197,14 @@ Prefab:
       value: 
       objectReference: {fileID: 21300000, guid: a5292acb82f81d146b87d45e74625a89,
         type: 3}
+    - target: {fileID: 11473918, guid: 02857cde48ea74441be874c263cc9120, type: 2}
+      propertyPath: temperatureThresholdText
+      value: Low
+      objectReference: {fileID: 0}
+    - target: {fileID: 11473918, guid: 02857cde48ea74441be874c263cc9120, type: 2}
+      propertyPath: reproductionRateText
+      value: High
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 02857cde48ea74441be874c263cc9120, type: 2}
   m_IsPrefabParent: 0
@@ -27107,6 +27259,80 @@ CanvasRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 684714255}
+--- !u!1 &688401321
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 688401322}
+  - component: {fileID: 688401324}
+  - component: {fileID: 688401323}
+  m_Layer: 5
+  m_Name: TempText (2)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 4294967295
+  m_IsActive: 1
+--- !u!224 &688401322
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 688401321}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1.3333308, y: 1.3333308, z: 0.99999946}
+  m_Children: []
+  m_Father: {fileID: 1761087123}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 44, y: -33}
+  m_SizeDelta: {x: 150, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &688401323
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 688401321}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+    m_TypeName: UnityEngine.UI.MaskableGraphic+CullStateChangedEvent, UnityEngine.UI,
+      Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
+  m_FontData:
+    m_Font: {fileID: 12800000, guid: 8352071b3a7fdd246895e079e19941a1, type: 3}
+    m_FontSize: 39
+    m_FontStyle: 0
+    m_BestFit: 0
+    m_MinSize: 7
+    m_MaxSize: 76
+    m_Alignment: 1
+    m_AlignByGeometry: 0
+    m_RichText: 1
+    m_HorizontalOverflow: 0
+    m_VerticalOverflow: 0
+    m_LineSpacing: 1
+  m_Text: "\xB0"
+--- !u!222 &688401324
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 688401321}
 --- !u!1 &690700494
 GameObject:
   m_ObjectHideFlags: 0
@@ -27965,6 +28191,14 @@ Prefab:
       value: 
       objectReference: {fileID: 21300000, guid: 6c964fb92296a454992c69f3b7c55d93,
         type: 3}
+    - target: {fileID: 11467484, guid: a854f2df4fa6700449d215ee9bd2c640, type: 2}
+      propertyPath: temperatureThresholdText
+      value: Average
+      objectReference: {fileID: 0}
+    - target: {fileID: 11467484, guid: a854f2df4fa6700449d215ee9bd2c640, type: 2}
+      propertyPath: reproductionRateText
+      value: Average
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: a854f2df4fa6700449d215ee9bd2c640, type: 2}
   m_IsPrefabParent: 0
@@ -32463,6 +32697,11 @@ CanvasRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 847276329}
+--- !u!1 &847613252 stripped
+GameObject:
+  m_PrefabParentObject: {fileID: 1111091718730536, guid: a854f19db5cfd874398d4cd19997c1e0,
+    type: 2}
+  m_PrefabInternal: {fileID: 997374625}
 --- !u!1 &848529942
 GameObject:
   m_ObjectHideFlags: 0
@@ -35696,6 +35935,14 @@ Prefab:
       value: 
       objectReference: {fileID: 21300000, guid: 82c88d2d9c57b05498a15ab0c8cdee38,
         type: 3}
+    - target: {fileID: 11473588, guid: 16840f16cc3c3914abfebb50670aaef1, type: 2}
+      propertyPath: temperatureThresholdText
+      value: Average
+      objectReference: {fileID: 0}
+    - target: {fileID: 11473588, guid: 16840f16cc3c3914abfebb50670aaef1, type: 2}
+      propertyPath: reproductionRateText
+      value: Average
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 16840f16cc3c3914abfebb50670aaef1, type: 2}
   m_IsPrefabParent: 0
@@ -36371,9 +36618,9 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 1
         m_CallState: 2
-      - m_Target: {fileID: 1301339449}
-        m_MethodName: SetActive
-        m_Mode: 6
+      - m_Target: {fileID: 553585016}
+        m_MethodName: SFXPressed
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -40682,7 +40929,7 @@ Prefab:
     - target: {fileID: 114392255037079914, guid: a854f19db5cfd874398d4cd19997c1e0,
         type: 2}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.size
-      value: 3
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 114774238504426356, guid: a854f19db5cfd874398d4cd19997c1e0,
         type: 2}
@@ -40803,27 +41050,27 @@ Prefab:
     - target: {fileID: 114843277032247936, guid: a854f19db5cfd874398d4cd19997c1e0,
         type: 2}
       propertyPath: m_Enabled
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 114785833582444978, guid: a854f19db5cfd874398d4cd19997c1e0,
         type: 2}
       propertyPath: m_Enabled
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 114965039207027436, guid: a854f19db5cfd874398d4cd19997c1e0,
         type: 2}
       propertyPath: m_Enabled
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 114702359555529896, guid: a854f19db5cfd874398d4cd19997c1e0,
         type: 2}
       propertyPath: m_Enabled
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 114583931503975248, guid: a854f19db5cfd874398d4cd19997c1e0,
         type: 2}
       propertyPath: m_Enabled
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 114774238504426356, guid: a854f19db5cfd874398d4cd19997c1e0,
         type: 2}
@@ -40882,23 +41129,23 @@ Prefab:
     - target: {fileID: 114538556459118514, guid: a854f19db5cfd874398d4cd19997c1e0,
         type: 2}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: save_on
+      value: SavePressed
       objectReference: {fileID: 0}
     - target: {fileID: 114538556459118514, guid: a854f19db5cfd874398d4cd19997c1e0,
         type: 2}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 114538556459118514, guid: a854f19db5cfd874398d4cd19997c1e0,
         type: 2}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
-      value: UnityEngine.GameObject, UnityEngine
+      value: UnityEngine.Object, UnityEngine
       objectReference: {fileID: 0}
     - target: {fileID: 114538556459118514, guid: a854f19db5cfd874398d4cd19997c1e0,
         type: 2}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgument
       value: 
-      objectReference: {fileID: 1958373045}
+      objectReference: {fileID: 0}
     - target: {fileID: 95462235678092040, guid: a854f19db5cfd874398d4cd19997c1e0,
         type: 2}
       propertyPath: m_Controller
@@ -41013,11 +41260,11 @@ Prefab:
         type: 2}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_Target
       value: 
-      objectReference: {fileID: 553585015}
+      objectReference: {fileID: 553585016}
     - target: {fileID: 114392255037079914, guid: a854f19db5cfd874398d4cd19997c1e0,
         type: 2}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_MethodName
-      value: PlayAudio
+      value: MusicPressed
       objectReference: {fileID: 0}
     - target: {fileID: 114774238504426356, guid: a854f19db5cfd874398d4cd19997c1e0,
         type: 2}
@@ -41153,6 +41400,111 @@ Prefab:
     - target: {fileID: 95110789696256182, guid: a854f19db5cfd874398d4cd19997c1e0,
         type: 2}
       propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 114392255037079914, guid: a854f19db5cfd874398d4cd19997c1e0,
+        type: 2}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_BoolArgument
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 114392255037079914, guid: a854f19db5cfd874398d4cd19997c1e0,
+        type: 2}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 553585015}
+    - target: {fileID: 114392255037079914, guid: a854f19db5cfd874398d4cd19997c1e0,
+        type: 2}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: PlayAudio
+      objectReference: {fileID: 0}
+    - target: {fileID: 114392255037079914, guid: a854f19db5cfd874398d4cd19997c1e0,
+        type: 2}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 114392255037079914, guid: a854f19db5cfd874398d4cd19997c1e0,
+        type: 2}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_Mode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 114392255037079914, guid: a854f19db5cfd874398d4cd19997c1e0,
+        type: 2}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
+      objectReference: {fileID: 0}
+    - target: {fileID: 114392255037079914, guid: a854f19db5cfd874398d4cd19997c1e0,
+        type: 2}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_Arguments.m_BoolArgument
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 114392255037079914, guid: a854f19db5cfd874398d4cd19997c1e0,
+        type: 2}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1500598522121388, guid: a854f19db5cfd874398d4cd19997c1e0, type: 2}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 224156740413201032, guid: a854f19db5cfd874398d4cd19997c1e0,
+        type: 2}
+      propertyPath: m_AnchorMax.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 224156740413201032, guid: a854f19db5cfd874398d4cd19997c1e0,
+        type: 2}
+      propertyPath: m_AnchorMax.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 224213577524249138, guid: a854f19db5cfd874398d4cd19997c1e0,
+        type: 2}
+      propertyPath: m_AnchorMin.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 224213577524249138, guid: a854f19db5cfd874398d4cd19997c1e0,
+        type: 2}
+      propertyPath: m_AnchorMax.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 224213577524249138, guid: a854f19db5cfd874398d4cd19997c1e0,
+        type: 2}
+      propertyPath: m_AnchorMax.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 95816286998623034, guid: a854f19db5cfd874398d4cd19997c1e0,
+        type: 2}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1470142978025924, guid: a854f19db5cfd874398d4cd19997c1e0, type: 2}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1403605011972326, guid: a854f19db5cfd874398d4cd19997c1e0, type: 2}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 114825589407876852, guid: a854f19db5cfd874398d4cd19997c1e0,
+        type: 2}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 553585016}
+    - target: {fileID: 114825589407876852, guid: a854f19db5cfd874398d4cd19997c1e0,
+        type: 2}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: HomePressed
+      objectReference: {fileID: 0}
+    - target: {fileID: 114538556459118514, guid: a854f19db5cfd874398d4cd19997c1e0,
+        type: 2}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 553585016}
+    - target: {fileID: 1111091718730536, guid: a854f19db5cfd874398d4cd19997c1e0, type: 2}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1134016308016538, guid: a854f19db5cfd874398d4cd19997c1e0, type: 2}
+      propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents:
@@ -41326,6 +41678,14 @@ Prefab:
       value: 
       objectReference: {fileID: 21300000, guid: 1ae45741f72c2ca4dbec8621bb38d421,
         type: 3}
+    - target: {fileID: 11415732, guid: a457ca65ccc0d4d4886fb2c0d094f5f2, type: 2}
+      propertyPath: temperatureThresholdText
+      value: Average
+      objectReference: {fileID: 0}
+    - target: {fileID: 11415732, guid: a457ca65ccc0d4d4886fb2c0d094f5f2, type: 2}
+      propertyPath: reproductionRateText
+      value: Average
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: a457ca65ccc0d4d4886fb2c0d094f5f2, type: 2}
   m_IsPrefabParent: 0
@@ -42100,6 +42460,14 @@ Prefab:
       value: 
       objectReference: {fileID: 21300000, guid: c2a7a6f5f4844f64b9bde40b276e7193,
         type: 3}
+    - target: {fileID: 11483554, guid: d81d955636ea6924bafc0ee278d585a6, type: 2}
+      propertyPath: temperatureThresholdText
+      value: Average
+      objectReference: {fileID: 0}
+    - target: {fileID: 11483554, guid: d81d955636ea6924bafc0ee278d585a6, type: 2}
+      propertyPath: reproductionRateText
+      value: Average
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: d81d955636ea6924bafc0ee278d585a6, type: 2}
   m_IsPrefabParent: 0
@@ -42167,6 +42535,14 @@ Prefab:
       value: 
       objectReference: {fileID: 21300000, guid: 1116480a6249efe4ea8789efd73fa666,
         type: 3}
+    - target: {fileID: 11424892, guid: 63d49cda01b824c4d9c49eb958b9cd49, type: 2}
+      propertyPath: temperatureThresholdText
+      value: Low
+      objectReference: {fileID: 0}
+    - target: {fileID: 11424892, guid: 63d49cda01b824c4d9c49eb958b9cd49, type: 2}
+      propertyPath: reproductionRateText
+      value: High
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 63d49cda01b824c4d9c49eb958b9cd49, type: 2}
   m_IsPrefabParent: 0
@@ -48683,6 +49059,80 @@ MonoBehaviour:
     type: 2}
   m_PrefabInternal: {fileID: 652913162}
   m_Script: {fileID: 11500000, guid: e1f3ff8d3a0597b4c9e1da883ae4198f, type: 3}
+--- !u!1 &1197575808
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 1197575809}
+  - component: {fileID: 1197575811}
+  - component: {fileID: 1197575810}
+  m_Layer: 5
+  m_Name: TempText (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 4294967295
+  m_IsActive: 1
+--- !u!224 &1197575809
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1197575808}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1.3333309, y: 0.8888872, z: 0.99999946}
+  m_Children: []
+  m_Father: {fileID: 190216450}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 89, y: -14.048157}
+  m_SizeDelta: {x: 150, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1197575810
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1197575808}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+    m_TypeName: UnityEngine.UI.MaskableGraphic+CullStateChangedEvent, UnityEngine.UI,
+      Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
+  m_FontData:
+    m_Font: {fileID: 12800000, guid: 8352071b3a7fdd246895e079e19941a1, type: 3}
+    m_FontSize: 76
+    m_FontStyle: 0
+    m_BestFit: 0
+    m_MinSize: 7
+    m_MaxSize: 76
+    m_Alignment: 1
+    m_AlignByGeometry: 0
+    m_RichText: 1
+    m_HorizontalOverflow: 0
+    m_VerticalOverflow: 0
+    m_LineSpacing: 1
+  m_Text: "\xB0"
+--- !u!222 &1197575811
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1197575808}
 --- !u!1 &1197935338
 GameObject:
   m_ObjectHideFlags: 0
@@ -50160,6 +50610,14 @@ Prefab:
       value: 
       objectReference: {fileID: 21300000, guid: dbcad11729bbfac429f5dc220fa5f733,
         type: 3}
+    - target: {fileID: 11490118, guid: 270bb834eead2b84c8d2c011aea9ee1e, type: 2}
+      propertyPath: temperatureThresholdText
+      value: Low
+      objectReference: {fileID: 0}
+    - target: {fileID: 11490118, guid: 270bb834eead2b84c8d2c011aea9ee1e, type: 2}
+      propertyPath: reproductionRateText
+      value: High
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 270bb834eead2b84c8d2c011aea9ee1e, type: 2}
   m_IsPrefabParent: 0
@@ -55318,7 +55776,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0.89705884, b: 0.37738332, a: 1}
+  m_Color: {r: 0, g: 0.50735295, b: 0.2134381, a: 1}
   m_RaycastTarget: 0
   m_OnCullStateChanged:
     m_PersistentCalls:
@@ -55438,6 +55896,14 @@ Prefab:
       value: 
       objectReference: {fileID: 21300000, guid: 485589c1ae6b14a4f825d236b41fef64,
         type: 3}
+    - target: {fileID: 11489014, guid: 299703aab18f3e540b10aee84add3190, type: 2}
+      propertyPath: temperatureThresholdText
+      value: High
+      objectReference: {fileID: 0}
+    - target: {fileID: 11489014, guid: 299703aab18f3e540b10aee84add3190, type: 2}
+      propertyPath: reproductionRateText
+      value: Low
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 299703aab18f3e540b10aee84add3190, type: 2}
   m_IsPrefabParent: 0
@@ -58661,6 +59127,14 @@ Prefab:
       value: 
       objectReference: {fileID: 21300000, guid: 2b01875ae4d2f414c9fa133244362395,
         type: 3}
+    - target: {fileID: 11403940, guid: 8eaecafbbcfe7554d8773c9b35dd0e51, type: 2}
+      propertyPath: temperatureThresholdText
+      value: Low
+      objectReference: {fileID: 0}
+    - target: {fileID: 11403940, guid: 8eaecafbbcfe7554d8773c9b35dd0e51, type: 2}
+      propertyPath: reproductionRateText
+      value: High
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 8eaecafbbcfe7554d8773c9b35dd0e51, type: 2}
   m_IsPrefabParent: 0
@@ -63416,6 +63890,11 @@ CanvasRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1516906356}
+--- !u!1 &1519620543 stripped
+GameObject:
+  m_PrefabParentObject: {fileID: 1403605011972326, guid: a854f19db5cfd874398d4cd19997c1e0,
+    type: 2}
+  m_PrefabInternal: {fileID: 997374625}
 --- !u!1 &1525281809
 GameObject:
   m_ObjectHideFlags: 0
@@ -69491,6 +69970,14 @@ Prefab:
       value: 
       objectReference: {fileID: 21300000, guid: ab5634156dc4105498e9e52f596b6415,
         type: 3}
+    - target: {fileID: 11499502, guid: 7f69e947e4d576642a1710329653b50b, type: 2}
+      propertyPath: temperatureThresholdText
+      value: Average
+      objectReference: {fileID: 0}
+    - target: {fileID: 11499502, guid: 7f69e947e4d576642a1710329653b50b, type: 2}
+      propertyPath: reproductionRateText
+      value: Average
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 7f69e947e4d576642a1710329653b50b, type: 2}
   m_IsPrefabParent: 0
@@ -69786,6 +70273,14 @@ Prefab:
       value: 
       objectReference: {fileID: 21300000, guid: bddbde8a32e93ff43a2e976f15bf5f52,
         type: 3}
+    - target: {fileID: 11456696, guid: 76e496a025de4ed4bbaccdd7e1809cc6, type: 2}
+      propertyPath: temperatureThresholdText
+      value: High
+      objectReference: {fileID: 0}
+    - target: {fileID: 11456696, guid: 76e496a025de4ed4bbaccdd7e1809cc6, type: 2}
+      propertyPath: reproductionRateText
+      value: Low
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 76e496a025de4ed4bbaccdd7e1809cc6, type: 2}
   m_IsPrefabParent: 0
@@ -70530,6 +71025,11 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 14
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1745703263 stripped
+GameObject:
+  m_PrefabParentObject: {fileID: 1500598522121388, guid: a854f19db5cfd874398d4cd19997c1e0,
+    type: 2}
+  m_PrefabInternal: {fileID: 997374625}
 --- !u!1 &1746039176
 GameObject:
   m_ObjectHideFlags: 0
@@ -70853,6 +71353,14 @@ Prefab:
       value: 
       objectReference: {fileID: 21300000, guid: cc38ddbdb02da6747bc7697cb69e3458,
         type: 3}
+    - target: {fileID: 11417200, guid: 3633e847b08479c4d8b59a1d929fc6d2, type: 2}
+      propertyPath: temperatureThresholdText
+      value: High
+      objectReference: {fileID: 0}
+    - target: {fileID: 11417200, guid: 3633e847b08479c4d8b59a1d929fc6d2, type: 2}
+      propertyPath: reproductionRateText
+      value: Low
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 3633e847b08479c4d8b59a1d929fc6d2, type: 2}
   m_IsPrefabParent: 0
@@ -71237,6 +71745,7 @@ RectTransform:
   m_LocalScale: {x: 0.75000006, y: 0.75, z: 1}
   m_Children:
   - {fileID: 1047946325}
+  - {fileID: 688401322}
   m_Father: {fileID: 2051465452}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -71264,7 +71773,7 @@ MonoBehaviour:
       m_Calls: []
     m_TypeName: UnityEngine.UI.MaskableGraphic+CullStateChangedEvent, UnityEngine.UI,
       Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-  m_Sprite: {fileID: 21300000, guid: 978eb8def7db37a4fb6e997aca7a602b, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 4484e6b1311aa0f4eb06ce974e7b286e, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -71917,6 +72426,14 @@ Prefab:
       value: 
       objectReference: {fileID: 21300000, guid: 8ab2db50f00f92142abc4c674c239a1c,
         type: 3}
+    - target: {fileID: 11410708, guid: e70f05e9d22ea8d4d902ad545117265d, type: 2}
+      propertyPath: temperatureThresholdText
+      value: High
+      objectReference: {fileID: 0}
+    - target: {fileID: 11410708, guid: e70f05e9d22ea8d4d902ad545117265d, type: 2}
+      propertyPath: reproductionRateText
+      value: Low
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: e70f05e9d22ea8d4d902ad545117265d, type: 2}
   m_IsPrefabParent: 0
@@ -72194,6 +72711,14 @@ Prefab:
       value: 
       objectReference: {fileID: 21300000, guid: f89c1a59fafaa3e41aa5e9f94d051ee9,
         type: 3}
+    - target: {fileID: 11406282, guid: 0dd7938ee7374e64aa2e46501f3aa0d0, type: 2}
+      propertyPath: temperatureThresholdText
+      value: High
+      objectReference: {fileID: 0}
+    - target: {fileID: 11406282, guid: 0dd7938ee7374e64aa2e46501f3aa0d0, type: 2}
+      propertyPath: reproductionRateText
+      value: Low
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 0dd7938ee7374e64aa2e46501f3aa0d0, type: 2}
   m_IsPrefabParent: 0
@@ -72687,6 +73212,14 @@ Prefab:
       value: 
       objectReference: {fileID: 21300000, guid: 6c99fcf67936e9848800c84bcc43bf2b,
         type: 3}
+    - target: {fileID: 11434696, guid: eaa4f7fe4b373404fa9ca044eb6026ed, type: 2}
+      propertyPath: temperatureThresholdText
+      value: Average
+      objectReference: {fileID: 0}
+    - target: {fileID: 11434696, guid: eaa4f7fe4b373404fa9ca044eb6026ed, type: 2}
+      propertyPath: reproductionRateText
+      value: Average
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: eaa4f7fe4b373404fa9ca044eb6026ed, type: 2}
   m_IsPrefabParent: 0
@@ -73086,6 +73619,14 @@ Prefab:
       value: 
       objectReference: {fileID: 21300000, guid: 7af983ef6dc2bc84c9ff768388f83c29,
         type: 3}
+    - target: {fileID: 11431190, guid: 399f0e974cd2606478d58af607646dec, type: 2}
+      propertyPath: temperatureThresholdText
+      value: Average
+      objectReference: {fileID: 0}
+    - target: {fileID: 11431190, guid: 399f0e974cd2606478d58af607646dec, type: 2}
+      propertyPath: reproductionRateText
+      value: Average
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 399f0e974cd2606478d58af607646dec, type: 2}
   m_IsPrefabParent: 0
@@ -74314,6 +74855,14 @@ Prefab:
       value: 
       objectReference: {fileID: 21300000, guid: d79812befe3208b4ab6ed5d6659855ca,
         type: 3}
+    - target: {fileID: 11415740, guid: c683b4953e8e3d644b01b4c7e0a5e8cb, type: 2}
+      propertyPath: temperatureThresholdText
+      value: High
+      objectReference: {fileID: 0}
+    - target: {fileID: 11415740, guid: c683b4953e8e3d644b01b4c7e0a5e8cb, type: 2}
+      propertyPath: reproductionRateText
+      value: Low
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: c683b4953e8e3d644b01b4c7e0a5e8cb, type: 2}
   m_IsPrefabParent: 0
@@ -76925,6 +77474,14 @@ Prefab:
       value: 
       objectReference: {fileID: 21300000, guid: d9aae3af4fa89794496bd949f30aa315,
         type: 3}
+    - target: {fileID: 11465106, guid: 0f5d5b490c930de4b880101ae68eac7c, type: 2}
+      propertyPath: temperatureThresholdText
+      value: Average
+      objectReference: {fileID: 0}
+    - target: {fileID: 11465106, guid: 0f5d5b490c930de4b880101ae68eac7c, type: 2}
+      propertyPath: reproductionRateText
+      value: Average
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 0f5d5b490c930de4b880101ae68eac7c, type: 2}
   m_IsPrefabParent: 0
@@ -88487,6 +89044,14 @@ Prefab:
       value: 
       objectReference: {fileID: 21300000, guid: 078dc80444c8197489de5ae60a9b7051,
         type: 3}
+    - target: {fileID: 11412362, guid: 3032856d14a8d1f4492258bf18bb52b4, type: 2}
+      propertyPath: temperatureThresholdText
+      value: Low
+      objectReference: {fileID: 0}
+    - target: {fileID: 11412362, guid: 3032856d14a8d1f4492258bf18bb52b4, type: 2}
+      propertyPath: reproductionRateText
+      value: High
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 3032856d14a8d1f4492258bf18bb52b4, type: 2}
   m_IsPrefabParent: 0

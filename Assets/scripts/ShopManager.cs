@@ -131,7 +131,7 @@ public class ShopManager : MonoBehaviour {
     {
         amountToSell = Mathf.Clamp(amountToSell + amount, 0, Mathf.RoundToInt(playerManager.species[currentOrganismID].speciesAmount));
         amountToSellText.text = amountToSell.ToString();
-        totalMoneyGainedText.text = "+ $" + (amountToSell * playerManager.species[currentOrganismID].cost).ToString();
+        totalMoneyGainedText.text = "+ $" + (amountToSell * Mathf.RoundToInt(playerManager.species[currentOrganismID].cost * 0.75f)).ToString();
     }
 
     public void ResetBuySell()

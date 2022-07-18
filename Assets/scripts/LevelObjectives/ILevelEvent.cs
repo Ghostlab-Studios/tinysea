@@ -6,24 +6,24 @@ using UnityEngine;
 /// Level Goal interface for level goal classes. Has some goal that is checked by the LevelManager
 /// class to tell when a level is won or lost.
 /// </summary>
-public interface ILevelGoal {
+public interface ILevelEvent {
 
     /// <summary>
-    /// Sets level goal of LevelManager script (should be attached to same object).
+    /// Sets level goal of event script (should be attached to same object).
     /// </summary>
-    void InitializeLevelGoal();
+    void InitializeEvent();
 
     /// <summary>
-    /// Checks if the current level is won.
-    /// </summary>
-    /// <returns>Returns true if yes, false otherwise.</returns>
-    bool IsLevelWon();
-
-    /// <summary>
-    /// Checks if the current level is lost.
+    /// Checks if the current event is complete.
     /// </summary>
     /// <returns>Returns true if yes, false otherwise.</returns>
-    bool IsLevelLost();
+    bool IsEventComplete();
+
+    /// <summary>
+    /// Checks if the current event is failed (mostly for levels).
+    /// </summary>
+    /// <returns>Returns true if yes, false otherwise.</returns>
+    bool IsEventFailure();
 
     /// <summary>
     /// Gets the level ID of this level goal. Intended to keep track of order of levels in the 

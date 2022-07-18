@@ -5,8 +5,8 @@ using UnityEngine;
 /// <summary>
 /// Generalized class for having a certain number of creatures to complete the objective.
 /// </summary>
-public class HaveCreaturesObjective : MonoBehaviour, ILevelGoal {
-
+public class HaveCreaturesObjective : MonoBehaviour, ILevelEvent
+{
     public int ID;
     public PlayerManager playerManager;
     public int targetCreatureCount;
@@ -14,10 +14,10 @@ public class HaveCreaturesObjective : MonoBehaviour, ILevelGoal {
     
     void Awake()
     {
-        InitializeLevelGoal();
+        InitializeEvent();
     }
     
-    public void InitializeLevelGoal()
+    public void InitializeEvent()
     {
         GetComponent<LevelManager>().levelGoals.Add(this);
     }
@@ -26,7 +26,7 @@ public class HaveCreaturesObjective : MonoBehaviour, ILevelGoal {
     /// Returns true if the amount of creatures within a given tier is greater than or equal to the
     /// current amount of creatures of that tier.
     /// </summary>
-    public bool IsLevelWon()
+    public bool IsEventComplete()
     {
         int totalCreatures = 0;
         foreach (CharacterManager cm in playerManager.species)
@@ -59,7 +59,7 @@ public class HaveCreaturesObjective : MonoBehaviour, ILevelGoal {
     /// <summary>
     /// Always returns false. This objective cannot be lost.
     /// </summary>
-    public bool IsLevelLost()
+    public bool IsEventFailure()
     {
         return false;
     }

@@ -51,6 +51,10 @@ public class ShopManager : MonoBehaviour {
         ChangeActiveTier(0);
     }
 
+    /// <summary>
+    /// Changes the current viewed Tier in the shop page (of Tiers 1, 2, and 3)
+    /// </summary>
+    /// <param name="tier">The tier to display [0 - 2].</param>
     public void ChangeActiveTier(int tier)
     {
         activeTier = tier;
@@ -70,6 +74,10 @@ public class ShopManager : MonoBehaviour {
         UpdateOrganismHighlight(organismIconSprites[0].gameObject.GetComponent<RectTransform>());
     }
 
+    /// <summary>
+    /// Changes the current selected organism within the current tier.
+    /// </summary>
+    /// <param name="icon">The icon of the organism to select [0 - 2].</param>
     public void ChangeActiveOrganism(int icon)
     {
         activeIcon = icon;
@@ -82,6 +90,10 @@ public class ShopManager : MonoBehaviour {
         ResetBuySell();
     }
 
+    /// <summary>
+    /// Changes the current selected variant of the current selected organism.
+    /// </summary>
+    /// <param name="variant">The variant type of the current selected organism [0 - 2].</param>
     public void ChangeActiveVariant(int variant)
     {
         activeVariant = variant;
@@ -93,6 +105,10 @@ public class ShopManager : MonoBehaviour {
         ResetBuySell();
     }
 
+    /// <summary>
+    /// Updates the description box with organism information depending on the current selected organism.
+    /// </summary>
+    /// <param name="icon">The icon of the current selected organism [0 - 2].</param>
     public void UpdateDescriptionBox(int icon)
     {
         descriptionBox.SetPositionAndRotation(new Vector3(organismIconSprites[icon].gameObject.GetComponent<RectTransform>().position.x, descriptionBox.position.y, 0),
@@ -106,11 +122,19 @@ public class ShopManager : MonoBehaviour {
         descriptionText.text = playerManager.species[id].description;
     }
 
+    /// <summary>
+    /// Updates the thermal fitness curve based on the current selected organism.
+    /// </summary>
+    /// <param name="id">The icon of the current selected organism [0 - 2]</param>
     public void UpdateCurve(int id)
     {
         curve.curve = playerManager.species[id].thermalcurve;
     }
 
+    /// <summary>
+    /// Changes the icon highlight to be over the current selected organism.
+    /// </summary>
+    /// <param name="transform">The transform component of the icon to highlight.</param>
     public void UpdateOrganismHighlight(RectTransform transform)
     {
         organismHighlight.SetPositionAndRotation(transform.position + new Vector3(0, -4f, 0), organismHighlight.rotation);
@@ -120,6 +144,10 @@ public class ShopManager : MonoBehaviour {
         variantHighlight.SetPositionAndRotation(organismHighlight.position + (variantTransform.position - originTransform.position) + new Vector3(-0.5f, 3f, 0), variantHighlight.rotation);
     }
 
+    /// <summary>
+    /// Changes the current amount of organisms to buy. Changes UI to reflect this.
+    /// </summary>
+    /// <param name="amount">The amount to change the current amount to buy by.</param>
     public void ChangeAmountToBuy(int amount)
     {
         amountToBuy = Mathf.Clamp(amountToBuy + amount, 0, Mathf.FloorToInt(playerManager.moneys / playerManager.species[currentOrganismID].cost));
@@ -127,6 +155,10 @@ public class ShopManager : MonoBehaviour {
         totalMoneyLostText.text = "- $" + (amountToBuy * playerManager.species[currentOrganismID].cost).ToString();
     }
 
+    /// <summary>
+    /// Changes the current amount of organisms to sell. Changes the UI to reflect this.
+    /// </summary>
+    /// <param name="amount">The amount to change the current amount to sell by.</param>
     public void ChangeAmountToSell(int amount)
     {
         amountToSell = Mathf.Clamp(amountToSell + amount, 0, Mathf.RoundToInt(playerManager.species[currentOrganismID].speciesAmount));
@@ -134,6 +166,9 @@ public class ShopManager : MonoBehaviour {
         totalMoneyGainedText.text = "+ $" + (amountToSell * Mathf.RoundToInt(playerManager.species[currentOrganismID].cost * 0.75f)).ToString();
     }
 
+    /// <summary>
+    /// Resets the UI and buy/sell amounts.
+    /// </summary>
     public void ResetBuySell()
     {
         amountToBuy = 0;
@@ -144,23 +179,39 @@ public class ShopManager : MonoBehaviour {
         totalMoneyGainedText.text = "+ $0";
     }
 
+    /// <summary>
+    /// Buys the current selected organism in the quantity of <param name="amountToBuy"></param>.
+    /// </summary>
     public void BuyOrganism()
     {
         if (!playerManager.busy && amountToBuy > 0)
         {
             playerManager.BuyCreatures(currentOrganismID, amountToBuy);
-            ResetBuySell();
             onBuy.Invoke();
+            ResetBuySell();
         }
     }
 
+    /// <summary>
+    /// Sells the current selected organism in the quantity of <param name="amountToSell"></param>.
+    /// </summary>
     public void SellOrganism()
     {
         if (!playerManager.busy && amountToSell > 0)
         {
             playerManager.SellCreatures(currentOrganismID, amountToSell);
-            ResetBuySell();
             onSell.Invoke();
+            ResetBuySell();
         }
+    }
+
+    public int GetAmountToSell()
+    {
+        return amountToSell;
+    }
+
+    public int GetActiveOrganism()
+    {
+        return currentOrganismID;
     }
 }

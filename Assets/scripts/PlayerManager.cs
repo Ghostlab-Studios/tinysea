@@ -163,9 +163,13 @@ public class PlayerManager : MonoBehaviour {
             float t2Proportion = (getTotalAmountAtLevel(2) * 3) / totalFishes;
             float t3Proportion = (getTotalAmountAtLevel(3) * 9) / totalFishes;
 
-            Vector3 tiersProp = new Vector3(t1Proportion, t2Proportion, t3Proportion);
-            tiersProp.Normalize();
-            tiersProp *= 1 / Mathf.Max(Mathf.Max(tiersProp.x, tiersProp.y), tiersProp.z);
+            // UNNECESSARILY COMPUTATIONALLY EXPENSIVE, who did this
+            // Vector3 tiersProp = new Vector3(t1Proportion, t2Proportion, t3Proportion);
+            // tiersProp.Normalize();
+            // tiersProp *= 1 / Mathf.Max(Mathf.Max(tiersProp.x, tiersProp.y), tiersProp.z);
+            Vector3 tiersProp = new Vector3(t1Proportion, t2Proportion, t3Proportion) / 
+                                Mathf.Max(t1Proportion, t2Proportion, t3Proportion);
+
             tier1EcoBar.localScale = new Vector3(tiersProp.x, 1, 1);
             tier2EcoBar.localScale = new Vector3(tiersProp.y, 1, 1);
             tier3EcoBar.localScale = new Vector3(tiersProp.z, 1, 1);
@@ -269,7 +273,7 @@ public class PlayerManager : MonoBehaviour {
     }
 
     //gets the total amount of all species for a given level
-    private float getTotalAmountAtLevel(int level)
+    public float getTotalAmountAtLevel(int level)
     {
         float amount = 0;
         foreach (CharacterManager c in species)

@@ -11228,8 +11228,12 @@ GameObject:
   m_Component:
   - component: {fileID: 301067868}
   - component: {fileID: 301067867}
-  - component: {fileID: 301067869}
+  - component: {fileID: 301067874}
+  - component: {fileID: 301067873}
+  - component: {fileID: 301067872}
+  - component: {fileID: 301067871}
   - component: {fileID: 301067870}
+  - component: {fileID: 301067869}
   m_Layer: 0
   m_Name: levelmanager
   m_TagString: Untagged
@@ -11271,14 +11275,67 @@ MonoBehaviour:
   m_GameObject: {fileID: 301067866}
   m_Enabled: 1
   m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d8adda832b21a0d488c3bd375bc7f837, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 5
+  playerManager: {fileID: 882694906}
+  tierSizeDifference: 3
+  epsilon: 0.2
+--- !u!114 &301067870
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 301067866}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8c05881b10aebe449128f4d05146be4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 4
+  textPanel: {fileID: 195949018}
+  nextButton: {fileID: 354069440}
+  characterName: {fileID: 1857017987}
+  textBox: {fileID: 741415881}
+  dialogue:
+  - You're in the home stretch! For your final task, balance the food pyramid with
+    the organisms you currently have.
+--- !u!114 &301067871
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 301067866}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: daa682a200656a04ba8b2dc35e2aff6a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ID: 0
-  shop: {fileID: 1943393658}
-  amountToSell: 5
-  activeTier: 0
---- !u!114 &301067870
+  ID: 3
+  shop: {fileID: 1943393661}
+  amountToSell: 2
+  activeTier: 1
+--- !u!114 &301067872
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 301067866}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8c05881b10aebe449128f4d05146be4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 2
+  textPanel: {fileID: 195949018}
+  nextButton: {fileID: 354069440}
+  characterName: {fileID: 1857017987}
+  textBox: {fileID: 741415881}
+  dialogue:
+  - Awesome job! Your next job is to sell 2 Tier 2 creatures.
+  - Once again, good luck!
+--- !u!114 &301067873
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
@@ -11291,8 +11348,28 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ID: 1
   playerManager: {fileID: 882694906}
-  targetCreatureCount: 5
-  activeTier: 1
+  targetCreatureCount: 15
+  activeTier: 0
+--- !u!114 &301067874
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 301067866}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8c05881b10aebe449128f4d05146be4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 0
+  textPanel: {fileID: 195949018}
+  nextButton: {fileID: 354069440}
+  characterName: {fileID: 1857017987}
+  textBox: {fileID: 741415881}
+  dialogue:
+  - Welcome to the prototype for TinySea's story mode!
+  - Your first objective is to have 15 Tier 1 organisms.
+  - Good luck!
 --- !u!1 &302354263
 GameObject:
   m_ObjectHideFlags: 0
@@ -13213,6 +13290,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   source: {fileID: 347507469}
   soundType: 0
+--- !u!114 &354069440 stripped
+MonoBehaviour:
+  m_PrefabParentObject: {fileID: 114326638563339784, guid: ad6186c94a5a0f04ba616a1b4b08698c,
+    type: 2}
+  m_PrefabInternal: {fileID: 721998110}
+  m_Script: {fileID: 1392445389, guid: f70555f144d8491a825f0804e09c671c, type: 3}
 --- !u!1 &355748805
 GameObject:
   m_ObjectHideFlags: 0
@@ -28115,6 +28198,10 @@ Prefab:
       propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1825387860298650, guid: ad6186c94a5a0f04ba616a1b4b08698c, type: 2}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: ad6186c94a5a0f04ba616a1b4b08698c, type: 2}
   m_IsPrefabParent: 0
@@ -28551,6 +28638,12 @@ MonoBehaviour:
   - {fileID: 1132583631}
   - {fileID: 972149584}
   - {fileID: 480256963}
+--- !u!114 &741415881 stripped
+MonoBehaviour:
+  m_PrefabParentObject: {fileID: 114856966630631700, guid: ad6186c94a5a0f04ba616a1b4b08698c,
+    type: 2}
+  m_PrefabInternal: {fileID: 721998110}
+  m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
 --- !u!1 &742064529
 GameObject:
   m_ObjectHideFlags: 0
@@ -76120,6 +76213,12 @@ CanvasRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1856600293}
+--- !u!114 &1857017987 stripped
+MonoBehaviour:
+  m_PrefabParentObject: {fileID: 114806105734743614, guid: ad6186c94a5a0f04ba616a1b4b08698c,
+    type: 2}
+  m_PrefabInternal: {fileID: 721998110}
+  m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
 --- !u!1 &1858854125
 GameObject:
   m_ObjectHideFlags: 0

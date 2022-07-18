@@ -2,6 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Fades the UI element over a given duration. Intended to be used with the description box
+/// shop UI element.
+/// </summary>
 public class DescriptionBoxFading : MonoBehaviour {
 
     public CanvasGroup canvasGroup;

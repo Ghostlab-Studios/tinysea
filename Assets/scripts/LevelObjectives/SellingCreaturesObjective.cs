@@ -7,10 +7,10 @@ using UnityEngine.UI;
 /// Generalized class for selling a certain amount of creatures of a specified tier to complete
 /// the objective.
 /// </summary>
-public class SellingCreaturesObjective : MonoBehaviour, ILevelGoal {
-
+public class SellingCreaturesObjective : MonoBehaviour, ILevelEvent
+{
     public int ID;
-    public Shop shop;
+    public ShopManager shop;
     public int amountToSell;
     public LevelManager.Tier activeTier;
     
@@ -18,19 +18,19 @@ public class SellingCreaturesObjective : MonoBehaviour, ILevelGoal {
 
     void Awake()
     {
-        InitializeLevelGoal();
+        InitializeEvent();
     }
 
-    public void InitializeLevelGoal()
+    public void InitializeEvent()
     {
         GetComponent<LevelManager>().levelGoals.Add(this);
-        shop.OnSell.AddListener(ProcessSaleData);
+        shop.onSell.AddListener(ProcessSaleData);
     }
 
     /// <summary>
     /// Returns true if the current sold amount is above the given amount to sell, false if otherwise.
     /// </summary>
-    public bool IsLevelWon()
+    public bool IsEventComplete()
     {
         return sellCount >= amountToSell;
     }
@@ -38,7 +38,7 @@ public class SellingCreaturesObjective : MonoBehaviour, ILevelGoal {
     /// <summary>
     /// Always returns false. This objective cannot be lost.
     /// </summary>
-    public bool IsLevelLost()
+    public bool IsEventFailure()
     {
         return false;
     }
@@ -57,13 +57,13 @@ public class SellingCreaturesObjective : MonoBehaviour, ILevelGoal {
             switch (activeTier)
             {
                 case LevelManager.Tier.Tier1:
-                    if (shop.selectedFish >= 0 && shop.selectedFish < 9) { sellCount += shop.currentSellingFishes; }
+                    if (shop.GetActiveOrganism() >= 0 && shop.GetActiveOrganism() < 9) { sellCount += shop.GetAmountToSell(); }
                     break;
                 case LevelManager.Tier.Tier2:
-                    if (shop.selectedFish >= 9 && shop.selectedFish < 18) { sellCount += shop.currentSellingFishes; }
+                    if (shop.GetActiveOrganism() >= 9 && shop.GetActiveOrganism() < 18) { sellCount += shop.GetAmountToSell(); }
                     break;
                 case LevelManager.Tier.Tier3:
-                    if (shop.selectedFish >= 18 && shop.selectedFish < 27) { sellCount += shop.currentSellingFishes; }
+                    if (shop.GetActiveOrganism() >= 18 && shop.GetActiveOrganism() < 27) { sellCount += shop.GetAmountToSell(); }
                     break;
             }
         }

@@ -7,10 +7,10 @@ using UnityEngine;
 /// Uses ALevelGoal abstract class to easily swap between goals.
 /// </summary>
 public class LevelManager : MonoBehaviour {
-    public List<ILevelGoal> levelGoals = new List<ILevelGoal>(); // Guaranteed to be in order of
-                                                                 // ILevelGoal ID (0 to max ID)
-                                                                 // as long as there are no post-
-                                                                 // launch edits to the list
+    public List<ILevelEvent> levelGoals = new List<ILevelEvent>(); // Guaranteed to be in order of
+                                                                   // ILevelEvent ID (0 to max ID)
+                                                                   // as long as there are no post-
+                                                                   // launch edits to the list
     public GameObject winScreenPanel;
     public GameObject loseScreenPanel;
     public static bool isGameOver = false;
@@ -35,8 +35,8 @@ public class LevelManager : MonoBehaviour {
     {
         if (!isGameOver)
         {
-            if (levelGoals[currentGoal].IsLevelWon()) { ObjectiveComplete(); }
-            else if (levelGoals[currentGoal].IsLevelLost()) { LevelLost(); }
+            if (levelGoals[currentGoal].IsEventComplete()) { ObjectiveComplete(); }
+            else if (levelGoals[currentGoal].IsEventFailure()) { LevelLost(); }
         }
     }
 
@@ -91,7 +91,7 @@ public class LevelManager : MonoBehaviour {
             {
                 if (levelGoals[j].GetID() > levelGoals[j + 1].GetID())
                 {
-                    ILevelGoal temp = levelGoals[j + 1];
+                    ILevelEvent temp = levelGoals[j + 1];
                     levelGoals[j + 1] = levelGoals[j];
                     levelGoals[j] = temp;
                 }

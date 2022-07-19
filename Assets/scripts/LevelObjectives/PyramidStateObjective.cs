@@ -10,16 +10,18 @@ using UnityEngine;
 public class PyramidStateObjective : MonoBehaviour, ILevelEvent
 {
     public int ID;
-    public PlayerManager playerManager;
     public float tierSizeDifference = 3f; // Multiplicative size difference between each tier
-    public float epsilon = 0.15f; // [0, 1]
-    
+    public float epsilon = 0.15f; // [0, 1], easier to complete the higher epsilon is
+
+    private PlayerManager playerManager;
+
     private void Awake () {
         InitializeEvent();
 	}
 
     public void InitializeEvent()
     {
+        playerManager = GameObject.FindGameObjectWithTag("PlayerManager").GetComponent<PlayerManager>();
         GetComponent<LevelManager>().levelGoals.Add(this);
     }
 
@@ -32,6 +34,7 @@ public class PyramidStateObjective : MonoBehaviour, ILevelEvent
         int creaturesAtTier2 = Mathf.FloorToInt(playerManager.getTotalAmountAtLevel(2));
         int creaturesAtTier3 = Mathf.FloorToInt(playerManager.getTotalAmountAtLevel(3));
 
+        // Calculated the same way as in the pyramid heirarchy.
         float tier1Threshold = creaturesAtTier1;
         float tier2Threshold = creaturesAtTier2 * tierSizeDifference;
         float tier3Threshold = creaturesAtTier3 * (tierSizeDifference * tierSizeDifference);
@@ -39,7 +42,7 @@ public class PyramidStateObjective : MonoBehaviour, ILevelEvent
         tier1Threshold /= maxThreshold;
         tier2Threshold /= maxThreshold;
         tier3Threshold /= maxThreshold;
-        Debug.Log(tier1Threshold.ToString() + ", " + tier2Threshold.ToString() + ", " + tier3Threshold.ToString());
+        // Debug.Log(tier1Threshold.ToString() + ", " + tier2Threshold.ToString() + ", " + tier3Threshold.ToString());
 
         bool tier1ReachesThreshold = tier1Threshold >= 1 - epsilon;
         bool tier2ReachesThreshold = tier2Threshold >= 1 - epsilon;

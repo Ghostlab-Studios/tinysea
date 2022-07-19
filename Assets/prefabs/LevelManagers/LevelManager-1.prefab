@@ -1,0 +1,149 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1001 &100100000
+Prefab:
+  m_ObjectHideFlags: 1
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications: []
+    m_RemovedComponents: []
+  m_ParentPrefab: {fileID: 0}
+  m_RootGameObject: {fileID: 1945029702217764}
+  m_IsPrefabParent: 1
+--- !u!1 &1945029702217764
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 4031464113873868}
+  - component: {fileID: 114797226665506996}
+  - component: {fileID: 114778836043613394}
+  - component: {fileID: 114479549668011984}
+  - component: {fileID: 114222197523280238}
+  - component: {fileID: 114933582233981656}
+  - component: {fileID: 114976568383224834}
+  - component: {fileID: 114511209686402232}
+  m_Layer: 0
+  m_Name: LevelManager-1
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4031464113873868
+Transform:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1945029702217764}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 640.5752, y: 514.9764, z: -116.414185}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &114222197523280238
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1945029702217764}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8c05881b10aebe449128f4d05146be4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 2
+  dialogue:
+  - Awesome job! Your next job is to sell 2 Tier 2 creatures.
+  - Once again, good luck!
+--- !u!114 &114479549668011984
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1945029702217764}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3133c09d8d084049ab337690200af82, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 1
+  targetCreatureCount: 15
+  activeTier: 0
+--- !u!114 &114511209686402232
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1945029702217764}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d8adda832b21a0d488c3bd375bc7f837, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 5
+  tierSizeDifference: 3
+  epsilon: 0.2
+--- !u!114 &114778836043613394
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1945029702217764}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8c05881b10aebe449128f4d05146be4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 0
+  dialogue:
+  - Welcome to the prototype for TinySea's story mode!
+  - Your first objective is to have 15 Tier 1 organisms.
+  - Good luck!
+--- !u!114 &114797226665506996
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1945029702217764}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 18bed999222077c4f976817d30227725, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  winScreenPanel: {fileID: 0}
+  loseScreenPanel: {fileID: 0}
+--- !u!114 &114933582233981656
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1945029702217764}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: daa682a200656a04ba8b2dc35e2aff6a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 3
+  amountToSell: 2
+  activeTier: 1
+--- !u!114 &114976568383224834
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1945029702217764}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8c05881b10aebe449128f4d05146be4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 4
+  dialogue:
+  - You're in the home stretch! For your final task, balance the food pyramid with
+    the organisms you currently have.

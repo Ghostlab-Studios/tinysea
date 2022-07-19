@@ -7,6 +7,12 @@ TagManager:
   - Arctic
   - Common
   - Tropical
+  - DialoguePanel
+  - DialogueContinueButton
+  - DialogueTextBox
+  - DialogueCharacterName
+  - PlayerManager
+  - ShopManager
   layers:
   - Default
   - TransparentFX

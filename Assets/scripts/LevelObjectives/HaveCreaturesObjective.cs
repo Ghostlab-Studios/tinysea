@@ -8,10 +8,11 @@ using UnityEngine;
 public class HaveCreaturesObjective : MonoBehaviour, ILevelEvent
 {
     public int ID;
-    public PlayerManager playerManager;
     public int targetCreatureCount;
     public LevelManager.Tier activeTier;
-    
+
+    private PlayerManager playerManager;
+
     void Awake()
     {
         InitializeEvent();
@@ -19,6 +20,7 @@ public class HaveCreaturesObjective : MonoBehaviour, ILevelEvent
     
     public void InitializeEvent()
     {
+        playerManager = GameObject.FindGameObjectWithTag("PlayerManager").GetComponent<PlayerManager>();
         GetComponent<LevelManager>().levelGoals.Add(this);
     }
     

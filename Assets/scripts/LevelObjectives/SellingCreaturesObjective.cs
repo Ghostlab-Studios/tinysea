@@ -10,10 +10,11 @@ using UnityEngine.UI;
 public class SellingCreaturesObjective : MonoBehaviour, ILevelEvent
 {
     public int ID;
-    public ShopManager shop;
     public int amountToSell;
     public LevelManager.Tier activeTier;
-    
+
+    private ShopManager shop;
+
     private int sellCount = 0;
 
     void Awake()
@@ -23,6 +24,7 @@ public class SellingCreaturesObjective : MonoBehaviour, ILevelEvent
 
     public void InitializeEvent()
     {
+        shop = GameObject.FindGameObjectWithTag("ShopManager").GetComponent<ShopManager>();
         GetComponent<LevelManager>().levelGoals.Add(this);
         shop.onSell.AddListener(ProcessSaleData);
     }

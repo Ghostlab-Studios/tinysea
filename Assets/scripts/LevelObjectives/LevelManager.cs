@@ -6,7 +6,8 @@ using UnityEngine;
 /// Level manager script that oversees the completion status of a level's goal.
 /// Uses ALevelGoal abstract class to easily swap between goals.
 /// </summary>
-public class LevelManager : MonoBehaviour {
+public class LevelManager : MonoBehaviour
+{
     public List<ILevelEvent> levelGoals = new List<ILevelEvent>(); // Guaranteed to be in order of
                                                                    // ILevelEvent ID (0 to max ID)
                                                                    // as long as there are no post-

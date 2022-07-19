@@ -6889,13 +6889,14 @@ GameObject:
   serializedVersion: 5
   m_Component:
   - component: {fileID: 195949019}
+  - component: {fileID: 195949020}
   m_Layer: 5
   m_Name: TextPanel
-  m_TagString: Untagged
+  m_TagString: DialoguePanel
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &195949019
 RectTransform:
   m_ObjectHideFlags: 0
@@ -6915,6 +6916,17 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &195949020
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 195949018}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5cb3e89b3b153d6469a44aeb49d68756, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &196102370
 GameObject:
   m_ObjectHideFlags: 0
@@ -11219,157 +11231,6 @@ CanvasRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 297621350}
---- !u!1 &301067866
-GameObject:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  serializedVersion: 5
-  m_Component:
-  - component: {fileID: 301067868}
-  - component: {fileID: 301067867}
-  - component: {fileID: 301067874}
-  - component: {fileID: 301067873}
-  - component: {fileID: 301067872}
-  - component: {fileID: 301067871}
-  - component: {fileID: 301067870}
-  - component: {fileID: 301067869}
-  m_Layer: 0
-  m_Name: levelmanager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &301067867
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 301067866}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 18bed999222077c4f976817d30227725, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  winScreenPanel: {fileID: 195949018}
-  loseScreenPanel: {fileID: 195949018}
---- !u!4 &301067868
-Transform:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 301067866}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 640.5752, y: 514.9764, z: -116.414185}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 22
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &301067869
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 301067866}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d8adda832b21a0d488c3bd375bc7f837, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ID: 5
-  playerManager: {fileID: 882694906}
-  tierSizeDifference: 3
-  epsilon: 0.2
---- !u!114 &301067870
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 301067866}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e8c05881b10aebe449128f4d05146be4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ID: 4
-  textPanel: {fileID: 195949018}
-  nextButton: {fileID: 354069440}
-  characterName: {fileID: 1857017987}
-  textBox: {fileID: 741415881}
-  dialogue:
-  - You're in the home stretch! For your final task, balance the food pyramid with
-    the organisms you currently have.
---- !u!114 &301067871
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 301067866}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: daa682a200656a04ba8b2dc35e2aff6a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ID: 3
-  shop: {fileID: 1943393661}
-  amountToSell: 2
-  activeTier: 1
---- !u!114 &301067872
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 301067866}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e8c05881b10aebe449128f4d05146be4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ID: 2
-  textPanel: {fileID: 195949018}
-  nextButton: {fileID: 354069440}
-  characterName: {fileID: 1857017987}
-  textBox: {fileID: 741415881}
-  dialogue:
-  - Awesome job! Your next job is to sell 2 Tier 2 creatures.
-  - Once again, good luck!
---- !u!114 &301067873
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 301067866}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b3133c09d8d084049ab337690200af82, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ID: 1
-  playerManager: {fileID: 882694906}
-  targetCreatureCount: 15
-  activeTier: 0
---- !u!114 &301067874
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 301067866}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e8c05881b10aebe449128f4d05146be4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ID: 0
-  textPanel: {fileID: 195949018}
-  nextButton: {fileID: 354069440}
-  characterName: {fileID: 1857017987}
-  textBox: {fileID: 741415881}
-  dialogue:
-  - Welcome to the prototype for TinySea's story mode!
-  - Your first objective is to have 15 Tier 1 organisms.
-  - Good luck!
 --- !u!1 &302354263
 GameObject:
   m_ObjectHideFlags: 0
@@ -13290,12 +13151,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   source: {fileID: 347507469}
   soundType: 0
---- !u!114 &354069440 stripped
-MonoBehaviour:
-  m_PrefabParentObject: {fileID: 114326638563339784, guid: ad6186c94a5a0f04ba616a1b4b08698c,
-    type: 2}
-  m_PrefabInternal: {fileID: 721998110}
-  m_Script: {fileID: 1392445389, guid: f70555f144d8491a825f0804e09c671c, type: 3}
 --- !u!1 &355748805
 GameObject:
   m_ObjectHideFlags: 0
@@ -28202,6 +28057,18 @@ Prefab:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1488045825642378, guid: ad6186c94a5a0f04ba616a1b4b08698c, type: 2}
+      propertyPath: m_TagString
+      value: DialogueContinueButton
+      objectReference: {fileID: 0}
+    - target: {fileID: 1264400760083264, guid: ad6186c94a5a0f04ba616a1b4b08698c, type: 2}
+      propertyPath: m_TagString
+      value: DialogueTextBox
+      objectReference: {fileID: 0}
+    - target: {fileID: 1723731313848160, guid: ad6186c94a5a0f04ba616a1b4b08698c, type: 2}
+      propertyPath: m_TagString
+      value: DialogueCharacterName
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: ad6186c94a5a0f04ba616a1b4b08698c, type: 2}
   m_IsPrefabParent: 0
@@ -28638,12 +28505,6 @@ MonoBehaviour:
   - {fileID: 1132583631}
   - {fileID: 972149584}
   - {fileID: 480256963}
---- !u!114 &741415881 stripped
-MonoBehaviour:
-  m_PrefabParentObject: {fileID: 114856966630631700, guid: ad6186c94a5a0f04ba616a1b4b08698c,
-    type: 2}
-  m_PrefabInternal: {fileID: 721998110}
-  m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
 --- !u!1 &742064529
 GameObject:
   m_ObjectHideFlags: 0
@@ -34551,6 +34412,48 @@ CanvasRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 875304622}
+--- !u!1 &875633001
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 875633003}
+  - component: {fileID: 875633002}
+  m_Layer: 0
+  m_Name: LevelLoader
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &875633002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 875633001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fef80ec618c83a941966f45de68e7689, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  levelManagers:
+  - {fileID: 114797226665506996, guid: c87bf7b9049c9ac46b80a79638fd30e7, type: 2}
+--- !u!4 &875633003
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 875633001}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 792.74774, y: 436.98993, z: 509.7185}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 22
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &878044293
 GameObject:
   m_ObjectHideFlags: 0
@@ -34772,7 +34675,7 @@ GameObject:
   - component: {fileID: 882694906}
   m_Layer: 0
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: PlayerManager
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
@@ -62095,7 +61998,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 301067867}
+      - m_Target: {fileID: 0}
         m_MethodName: NextTurn
         m_Mode: 1
         m_Arguments:
@@ -76213,12 +76116,6 @@ CanvasRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1856600293}
---- !u!114 &1857017987 stripped
-MonoBehaviour:
-  m_PrefabParentObject: {fileID: 114806105734743614, guid: ad6186c94a5a0f04ba616a1b4b08698c,
-    type: 2}
-  m_PrefabInternal: {fileID: 721998110}
-  m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
 --- !u!1 &1858854125
 GameObject:
   m_ObjectHideFlags: 0
@@ -79827,7 +79724,7 @@ GameObject:
   - component: {fileID: 1943393661}
   m_Layer: 5
   m_Name: ShopCanvas
-  m_TagString: Untagged
+  m_TagString: ShopManager
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295

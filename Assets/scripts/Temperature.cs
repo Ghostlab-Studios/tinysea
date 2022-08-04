@@ -62,7 +62,7 @@ public class Temperature : MonoBehaviour
     public float currentDay = 1;    // Try changing to 0 at some point
     public float step = 5;          // Number of days between each turn
     public float period;            // Number of turns per year
-    public float tMean = 15;        // Yearly average temperature
+    public static float tMean;      // Yearly average temperature
 
     public Text tempText;
     public Text forecastHighText;

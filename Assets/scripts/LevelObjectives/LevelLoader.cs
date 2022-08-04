@@ -33,6 +33,18 @@ public class LevelLoader : MonoBehaviour
     }
 
     /// <summary>
+    /// Changes the temperature mean, yearly climate increase, and range of random
+    /// temperatures set by the Temperature and TemperatureTrend classes.
+    /// </summary>
+    public void SetTemperatureParameters()
+    {
+        Temperature.tMean = 15f;
+        TemperatureTrend.clim = 1;
+        TemperatureTrend.yrRange = 10;
+        TemperatureTrend.rand = 10;
+}
+
+    /// <summary>
     /// Changes active game scene to the gameplay scene. Breaks if the build order doesn't have
     /// it at 1.
     /// </summary>

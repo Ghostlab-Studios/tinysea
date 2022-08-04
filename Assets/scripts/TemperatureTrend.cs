@@ -38,9 +38,9 @@ public class TemperatureTrend : MonoBehaviour
     // the temperature corresponding to the current day
     private float finalTemperature;
 
-    public float clim = 1;          // Increases every year
-    public float yrRange = 10;      // Max diff. in temperature between summer and winter seasons
-    public float rand = 10;         // Maximum deviation for heat waves or cold snaps
+    public static float clim;         // Increases every year
+    public static float yrRange;      // Max diff. in temperature between summer and winter seasons
+    public static float rand;         // Maximum deviation for heat waves or cold snaps
 
     // amplitude and frequency for season signal 
     private float a = 5f;

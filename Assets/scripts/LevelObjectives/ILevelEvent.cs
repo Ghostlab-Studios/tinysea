@@ -6,8 +6,8 @@ using UnityEngine;
 /// Level Goal interface for level goal classes. Has some goal that is checked by the LevelManager
 /// class to tell when a level is won or lost.
 /// </summary>
-public interface ILevelEvent {
-
+public interface ILevelEvent
+{
     /// <summary>
     /// Sets level goal of event script (should be attached to same object).
     /// </summary>

@@ -9455,7 +9455,7 @@ Prefab:
         type: 2}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_Target
       value: 
-      objectReference: {fileID: 1745644783}
+      objectReference: {fileID: 1745644784}
     - target: {fileID: 114538556459118514, guid: a854f19db5cfd874398d4cd19997c1e0,
         type: 2}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_Target
@@ -9496,9 +9496,77 @@ Prefab:
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[3].m_Target
       value: 
       objectReference: {fileID: 1862367892}
+    - target: {fileID: 114882104737856306, guid: a854f19db5cfd874398d4cd19997c1e0,
+        type: 2}
+      propertyPath: m_Delegates.Array.data[0].callback.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 1602260662}
+    - target: {fileID: 114882104737856306, guid: a854f19db5cfd874398d4cd19997c1e0,
+        type: 2}
+      propertyPath: m_Delegates.Array.data[0].callback.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: PlayAudio
+      objectReference: {fileID: 0}
+    - target: {fileID: 114399420655646380, guid: a854f19db5cfd874398d4cd19997c1e0,
+        type: 2}
+      propertyPath: m_Delegates.Array.data[0].callback.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 1602260662}
+    - target: {fileID: 114399420655646380, guid: a854f19db5cfd874398d4cd19997c1e0,
+        type: 2}
+      propertyPath: m_Delegates.Array.data[0].callback.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: PlayAudio
+      objectReference: {fileID: 0}
+    - target: {fileID: 114152425486328698, guid: a854f19db5cfd874398d4cd19997c1e0,
+        type: 2}
+      propertyPath: m_Delegates.Array.data[0].callback.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 1602260662}
+    - target: {fileID: 114152425486328698, guid: a854f19db5cfd874398d4cd19997c1e0,
+        type: 2}
+      propertyPath: m_Delegates.Array.data[0].callback.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: PlayAudio
+      objectReference: {fileID: 0}
+    - target: {fileID: 114026597173178648, guid: a854f19db5cfd874398d4cd19997c1e0,
+        type: 2}
+      propertyPath: m_Delegates.Array.data[0].callback.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 1602260662}
+    - target: {fileID: 114026597173178648, guid: a854f19db5cfd874398d4cd19997c1e0,
+        type: 2}
+      propertyPath: m_Delegates.Array.data[0].callback.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: PlayAudio
+      objectReference: {fileID: 0}
+    - target: {fileID: 114851303637693728, guid: a854f19db5cfd874398d4cd19997c1e0,
+        type: 2}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_MethodName
+      value: PlayAudio
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: a854f19db5cfd874398d4cd19997c1e0, type: 2}
   m_IsPrefabParent: 0
+--- !u!82 &1602260660 stripped
+AudioSource:
+  m_PrefabParentObject: {fileID: 82874179450243792, guid: a854f19db5cfd874398d4cd19997c1e0,
+    type: 2}
+  m_PrefabInternal: {fileID: 1602260659}
+--- !u!1 &1602260661 stripped
+GameObject:
+  m_PrefabParentObject: {fileID: 1097971232311664, guid: a854f19db5cfd874398d4cd19997c1e0,
+    type: 2}
+  m_PrefabInternal: {fileID: 1602260659}
+--- !u!114 &1602260662
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1602260661}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 1602260660}
+  soundType: 0
 --- !u!1 &1624813155
 GameObject:
   m_ObjectHideFlags: 0
@@ -10189,6 +10257,7 @@ GameObject:
   - component: {fileID: 1745644782}
   - component: {fileID: 1745644781}
   - component: {fileID: 1745644783}
+  - component: {fileID: 1745644784}
   m_Layer: 0
   m_Name: background
   m_TagString: Untagged
@@ -10263,7 +10332,7 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 8300000, guid: 6854f1ad7a0fdbd4ba216ea906c83706, type: 3}
-  m_PlayOnAwake: 1
+  m_PlayOnAwake: 0
   m_Volume: 1
   m_Pitch: 1
   Loop: 0
@@ -10333,6 +10402,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &1745644784
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1745644780}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ded1fdaaa08d749828a0bfe042e1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  source: {fileID: 1745644783}
+  soundType: 0
 --- !u!1 &1750105556
 GameObject:
   m_ObjectHideFlags: 0

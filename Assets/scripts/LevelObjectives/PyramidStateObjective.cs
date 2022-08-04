@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Generalized class for telling whether or not the food pyramid is balanced at any given point
+/// For telling whether or not the food pyramid is balanced at any given point
 /// in the level. Balance between tiers is determined by the tier size difference and room for
 /// error can be adjusted with epsilon (pyramid not exactly balanced).
 /// </summary>

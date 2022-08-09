@@ -16,11 +16,6 @@ public class ThermalCurve : MonoBehaviour {
     public float lowerBound = 286;
     public float upperBound = 298;
 
-	// Use this for initialization
-	void Start () {
-
-	}
-
     public float getCurve(float temp)
     {
         //float oT = optimalTemp + 275.15f;
@@ -36,11 +31,6 @@ public class ThermalCurve : MonoBehaviour {
 
         return performance;
     }
-	
-	// Update is called once per frame
-	void Update () {
-	    
-	}
 
     public float Curves(float temp)
     {

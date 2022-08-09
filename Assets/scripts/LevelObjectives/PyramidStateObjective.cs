@@ -63,4 +63,14 @@ public class PyramidStateObjective : MonoBehaviour, ILevelEvent
     {
         return ID;
     }
+
+    public string GetLevelDescription()
+    {
+        return "Balance the pyramid hierarchy.";
+    }
+
+    public bool IsLevel()
+    {
+        return true;
+    }
 }

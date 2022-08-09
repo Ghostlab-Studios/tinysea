@@ -24,8 +24,8 @@ public class ShopManager : MonoBehaviour {
     public Text reproductionText;
     public Text descriptionText;
     public Text totalMoneyText;
-    public Text amountToBuyText;
-    public Text amountToSellText;
+    public InputField amountToBuyText;
+    public InputField amountToSellText;
     public Text totalMoneyLostText;
     public Text totalMoneyGainedText;
     public UnityEvent onBuy;
@@ -65,9 +65,9 @@ public class ShopManager : MonoBehaviour {
         organismIconSprites[1].sprite = playerManager.species[tierBase + 1].icon;
         organismIconSprites[2].sprite = playerManager.species[tierBase + 2].icon;
 
-        icon1MoneyText.text = playerManager.species[tierBase].cost.ToString();
-        icon2MoneyText.text = playerManager.species[tierBase + 1].cost.ToString();
-        icon3MoneyText.text = playerManager.species[tierBase + 2].cost.ToString();
+        icon1MoneyText.text = "$" + playerManager.species[tierBase].cost.ToString();
+        icon2MoneyText.text = "$" + playerManager.species[tierBase + 1].cost.ToString();
+        icon3MoneyText.text = "$" + playerManager.species[tierBase + 2].cost.ToString();
 
         recordedVariants = new int[3];
         ChangeActiveOrganism(0);
@@ -128,7 +128,7 @@ public class ShopManager : MonoBehaviour {
     /// <param name="id">The icon of the current selected organism [0 - 2]</param>
     public void UpdateCurve(int id)
     {
-        curve.curve = playerManager.species[id].thermalcurve;
+        curve.UpdateCurve(playerManager.species[id].thermalcurve, activeVariant);
     }
 
     /// <summary>
@@ -162,6 +162,24 @@ public class ShopManager : MonoBehaviour {
     public void ChangeAmountToSell(int amount)
     {
         amountToSell = Mathf.Clamp(amountToSell + amount, 0, Mathf.RoundToInt(playerManager.species[currentOrganismID].speciesAmount));
+        amountToSellText.text = amountToSell.ToString();
+        totalMoneyGainedText.text = "+ $" + (amountToSell * Mathf.RoundToInt(playerManager.species[currentOrganismID].cost * 0.75f)).ToString();
+    }
+
+    public void VerifyAmountToBuy()
+    {
+        int attemptedTotal = 0;
+        if (!int.TryParse(amountToBuyText.text, out attemptedTotal)) { amountToBuy = 0; }
+        else { amountToBuy = Mathf.Clamp(attemptedTotal, 0, Mathf.FloorToInt(playerManager.moneys / playerManager.species[currentOrganismID].cost)); }
+        amountToBuyText.text = amountToBuy.ToString();
+        totalMoneyLostText.text = "- $" + (amountToBuy * playerManager.species[currentOrganismID].cost).ToString();
+    }
+
+    public void VerifyAmountToSell()
+    {
+        int attemptedTotal = 0;
+        if (!int.TryParse(amountToSellText.text, out attemptedTotal)) { amountToSell = 0; }
+        else { amountToSell = Mathf.Clamp(attemptedTotal, 0, Mathf.RoundToInt(playerManager.species[currentOrganismID].speciesAmount)); }
         amountToSellText.text = amountToSell.ToString();
         totalMoneyGainedText.text = "+ $" + (amountToSell * Mathf.RoundToInt(playerManager.species[currentOrganismID].cost * 0.75f)).ToString();
     }

@@ -20,6 +20,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4031464113873868}
   - component: {fileID: 114797226665506996}
+  - component: {fileID: 114894100160699310}
   - component: {fileID: 114778836043613394}
   - component: {fileID: 114479549668011984}
   - component: {fileID: 114222197523280238}
@@ -57,7 +58,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e8c05881b10aebe449128f4d05146be4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ID: 2
+  ID: 3
   dialogue:
   - Awesome job! Your next job is to sell 2 Tier 2 creatures.
   - Once again, good luck!
@@ -72,7 +73,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3133c09d8d084049ab337690200af82, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ID: 1
+  ID: 2
   targetCreatureCount: 15
   activeTier: 0
 --- !u!114 &114511209686402232
@@ -86,7 +87,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8adda832b21a0d488c3bd375bc7f837, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ID: 5
+  ID: 6
   tierSizeDifference: 3
   epsilon: 0.2
 --- !u!114 &114778836043613394
@@ -100,7 +101,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e8c05881b10aebe449128f4d05146be4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ID: 0
+  ID: 1
   dialogue:
   - Welcome to the prototype for TinySea's story mode!
   - Your first objective is to have 15 Tier 1 organisms.
@@ -116,8 +117,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 18bed999222077c4f976817d30227725, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  levelID: 0
   winScreenPanel: {fileID: 0}
   loseScreenPanel: {fileID: 0}
+--- !u!114 &114894100160699310
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1945029702217764}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1dd7a11265b0b96429aca61a745d9697, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 0
 --- !u!114 &114933582233981656
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -129,7 +143,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: daa682a200656a04ba8b2dc35e2aff6a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ID: 3
+  ID: 4
   amountToSell: 2
   activeTier: 1
 --- !u!114 &114976568383224834
@@ -143,7 +157,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e8c05881b10aebe449128f4d05146be4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ID: 4
+  ID: 5
   dialogue:
   - You're in the home stretch! For your final task, balance the food pyramid with
     the organisms you currently have.

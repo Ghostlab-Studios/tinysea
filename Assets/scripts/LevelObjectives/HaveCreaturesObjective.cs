@@ -70,4 +70,27 @@ public class HaveCreaturesObjective : MonoBehaviour, ILevelEvent
     {
         return ID;
     }
+
+    public string GetLevelDescription()
+    {
+        string targetTier = "TIER ERROR";
+        switch (activeTier)
+        {
+            case LevelManager.Tier.Tier1:
+                targetTier = "Tier 1";
+                break;
+            case LevelManager.Tier.Tier2:
+                targetTier = "Tier 2";
+                break;
+            case LevelManager.Tier.Tier3:
+                targetTier = "Tier 3";
+                break;
+        }
+        return "Have " + targetCreatureCount.ToString() + " " + targetTier + " organisms.";
+    }
+
+    public bool IsLevel()
+    {
+        return true;
+    }
 }

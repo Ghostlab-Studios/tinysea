@@ -14,7 +14,6 @@ public class SellingCreaturesObjective : MonoBehaviour, ILevelEvent
     public LevelManager.Tier activeTier;
 
     private ShopManager shop;
-
     private int sellCount = 0;
 
     void Awake()
@@ -47,6 +46,29 @@ public class SellingCreaturesObjective : MonoBehaviour, ILevelEvent
     
     public int GetID() {
         return ID;
+    }
+
+    public string GetLevelDescription()
+    {
+        string targetTier = "TIER ERROR";
+        switch (activeTier)
+        {
+            case LevelManager.Tier.Tier1:
+                targetTier = "Tier 1";
+                break;
+            case LevelManager.Tier.Tier2:
+                targetTier = "Tier 2";
+                break;
+            case LevelManager.Tier.Tier3:
+                targetTier = "Tier 3";
+                break;
+        }
+        return "Sell " + amountToSell.ToString() + " " + targetTier + " organisms.";
+    }
+
+    public bool IsLevel()
+    {
+        return true;
     }
 
     /// <summary>

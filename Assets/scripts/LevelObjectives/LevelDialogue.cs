@@ -14,16 +14,29 @@ public class LevelDialogue : MonoBehaviour, ILevelEvent
     public List<string> dialogue;
 
     private GameObject textPanel;
+    private Animator textAnim;
     private Button nextButton;
     private Text characterName;
     private Text textBox;
     private int textIndex = 0;
     private bool isDialogueFinished = false;
     private bool hasInitialized = false;
+    private bool isOpen = true;
+    private bool hasOpenedOnce = false;
+    private string currentShownText = "";
+    private int currentShownTextIndex = 0;
+    private float textDisplayTimer = 0.0f;
+    private float timeBetweenCharDisplay = 0.03f;
+    private bool displayingText = false;
 
     private void Awake()
     {
         InitializeEvent();
+    }
+
+    private void Update()
+    {
+        if (displayingText && !isDialogueFinished) { DisplayText(); }
     }
 
     public int GetID()
@@ -34,6 +47,7 @@ public class LevelDialogue : MonoBehaviour, ILevelEvent
     public void InitializeEvent()
     {
         textPanel = GameObject.FindGameObjectWithTag("DialoguePanel");
+        textAnim = textPanel.GetComponent<Animator>();
         nextButton = GameObject.FindGameObjectWithTag("DialogueContinueButton").GetComponent<Button>();
         characterName = GameObject.FindGameObjectWithTag("DialogueCharacterName").GetComponent<Text>();
         textBox = GameObject.FindGameObjectWithTag("DialogueTextBox").GetComponent<Text>();
@@ -52,11 +66,21 @@ public class LevelDialogue : MonoBehaviour, ILevelEvent
             ProcessText();
             hasInitialized = true;
         }
-        textPanel.SetActive(!isDialogueFinished);
+        SetTextBoxActive(!isDialogueFinished);
         return isDialogueFinished;
     }
 
     public bool IsEventFailure()
+    {
+        return false;
+    }
+
+    public string GetLevelDescription()
+    {
+        return "";
+    }
+
+    public bool IsLevel()
     {
         return false;
     }
@@ -74,9 +98,56 @@ public class LevelDialogue : MonoBehaviour, ILevelEvent
                 isDialogueFinished = true;
                 return;
             }
-
-            textBox.text = dialogue[textIndex];
+            currentShownText = "";
+            textBox.text = currentShownText;
+            currentShownTextIndex = 0;
+            displayingText = true;
             textIndex++;
         }
+    }
+
+    private void DisplayText()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            currentShownText = dialogue[textIndex - 1];
+            textBox.text = currentShownText;
+            currentShownTextIndex = 0;
+            displayingText = false;
+            return;
+        }
+
+        if (textDisplayTimer >= timeBetweenCharDisplay)
+        {
+            currentShownText += dialogue[textIndex - 1][currentShownTextIndex];
+            textBox.text = currentShownText;
+            currentShownTextIndex++;
+            if (currentShownTextIndex >= dialogue[textIndex - 1].Length)
+            {
+                currentShownTextIndex = 0;
+                displayingText = false;
+            }
+            textDisplayTimer = 0f;
+        }
+        else { textDisplayTimer += Time.deltaTime; }
+    }
+
+    private void SetTextBoxActive(bool isActive)
+    {
+        textPanel.SetActive(true);
+        
+        if ((!isOpen && isActive && !isDialogueFinished) || 
+            (!hasOpenedOnce && textAnim.GetCurrentAnimatorStateInfo(0).IsName("InactiveState")))
+        {
+            isOpen = true;
+            textAnim.SetTrigger("Open");
+        }
+        else if (isOpen && !isActive)
+        {
+            isOpen = false;
+            textAnim.SetTrigger("Close");
+        }
+
+        hasOpenedOnce = true;
     }
 }

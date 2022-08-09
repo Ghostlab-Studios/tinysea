@@ -31,4 +31,15 @@ public interface ILevelEvent
     /// </summary>
     /// <returns>Returns integer ID of LevelGoal.</returns>
     int GetID();
+
+    /// <summary>
+    /// Gets the level description that pops up before the start of a level.
+    /// </summary>
+    /// <returns>Returns string description of a level section.</returns>
+    string GetLevelDescription();
+
+    /// <summary>
+    /// Tells whether or not the current LevelEvent is considered a Level.
+    /// </summary>
+    bool IsLevel();
 }

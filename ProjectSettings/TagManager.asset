@@ -13,6 +13,7 @@ TagManager:
   - DialogueCharacterName
   - PlayerManager
   - ShopManager
+  - LevelStartAnimation
   layers:
   - Default
   - TransparentFX

@@ -42,7 +42,7 @@ public class LevelLoader : MonoBehaviour
         TemperatureTrend.clim = 1;
         TemperatureTrend.yrRange = 10;
         TemperatureTrend.rand = 10;
-}
+    }
 
     /// <summary>
     /// Changes active game scene to the gameplay scene. Breaks if the build order doesn't have

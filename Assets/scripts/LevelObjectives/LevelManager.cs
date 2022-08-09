@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 /// <summary>
 /// Level manager script that oversees the completion status of a level's goal.
@@ -8,6 +9,7 @@ using UnityEngine;
 /// </summary>
 public class LevelManager : MonoBehaviour
 {
+    public int levelID;
     public List<ILevelEvent> levelGoals = new List<ILevelEvent>(); // Guaranteed to be in order of
                                                                    // ILevelEvent ID (0 to max ID)
                                                                    // as long as there are no post-
@@ -18,6 +20,9 @@ public class LevelManager : MonoBehaviour
 
     private int currentTurn = 0;
     private int currentGoal = 0;
+    private Text levelText;
+    private Text goalText;
+    private int levelSection = 0;
 
     public enum Tier
     {
@@ -34,6 +39,7 @@ public class LevelManager : MonoBehaviour
 
     private void Update()
     {
+        Debug.Log(GetCurrentObjectiveID().ToString());
         if (!isGameOver)
         {
             if (levelGoals[currentGoal].IsEventComplete()) { ObjectiveComplete(); }
@@ -54,6 +60,7 @@ public class LevelManager : MonoBehaviour
     /// </summary>
     private void ObjectiveComplete()
     {
+        if (levelGoals[currentGoal].IsLevel()) { levelSection++; }
         currentGoal++;
         if (currentGoal >= levelGoals.Count) { LevelWon(); }
     }
@@ -79,6 +86,14 @@ public class LevelManager : MonoBehaviour
         winScreenPanel.SetActive(false);
         loseScreenPanel.SetActive(true);
         isGameOver = true;
+    }
+
+    /// <summary>
+    /// Sets the text at the beginning of the level to the correct level description.
+    /// </summary>
+    private void SetLevelText()
+    {
+        levelText.text = "Level " + (levelID + 1).ToString() + "-" + (levelSection + 1).ToString();
     }
 
     /// <summary>

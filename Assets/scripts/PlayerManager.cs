@@ -210,7 +210,7 @@ public class PlayerManager : MonoBehaviour {
             }
         }
 
-        moneyText.text = Mathf.Floor(moneys).ToString();
+        moneyText.text = "$" + Mathf.Floor(moneys).ToString();
     }
 
     public void BuyCreatures(int index, float amount, bool money_access = true)

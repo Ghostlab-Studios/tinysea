@@ -11,7 +11,10 @@ public class PyramidStateObjective : MonoBehaviour, ILevelEvent
 {
     public int ID;
     public float tierSizeDifference = 3f; // Multiplicative size difference between each tier
-    public float epsilon = 0.15f; // [0, 1], easier to complete the higher epsilon is
+    public float delta = 0.15f; // [0, 1], easier to complete the higher delta is
+    public bool tier1Balance;
+    public bool tier2Balance;
+    public bool tier3Balance;
 
     private PlayerManager playerManager;
 
@@ -44,11 +47,16 @@ public class PyramidStateObjective : MonoBehaviour, ILevelEvent
         tier3Threshold /= maxThreshold;
         // Debug.Log(tier1Threshold.ToString() + ", " + tier2Threshold.ToString() + ", " + tier3Threshold.ToString());
 
-        bool tier1ReachesThreshold = tier1Threshold >= 1 - epsilon;
-        bool tier2ReachesThreshold = tier2Threshold >= 1 - epsilon;
-        bool tier3ReachesThreshold = tier3Threshold >= 1 - epsilon;
+        bool tier1ReachesThreshold = tier1Threshold >= 1 - delta;
+        bool tier2ReachesThreshold = tier2Threshold >= 1 - delta;
+        bool tier3ReachesThreshold = tier3Threshold >= 1 - delta;
 
-        return tier1ReachesThreshold && tier2ReachesThreshold && tier3ReachesThreshold;
+        bool toReturn = true;
+        if (tier1Balance) { toReturn = toReturn && tier1ReachesThreshold; }
+        if (tier2Balance) { toReturn = toReturn && tier2ReachesThreshold; }
+        if (tier3Balance) { toReturn = toReturn && tier3ReachesThreshold; }
+
+        return toReturn;
     }
 
     /// <summary>
@@ -66,7 +74,42 @@ public class PyramidStateObjective : MonoBehaviour, ILevelEvent
 
     public string GetLevelDescription()
     {
-        return "Balance the pyramid hierarchy.";
+        int total = 0;
+        if (tier1Balance) { total++; }
+        if (tier2Balance) { total++; }
+        if (tier3Balance) { total++; }
+        string pyramidText = "";
+        switch (total)
+        {
+            case 0:
+                pyramidText = "ERROR: 0";
+                break;
+            case 1:
+                pyramidText = "ERROR: 1";
+                break;
+            case 2:
+                string tier1Text = "";
+                string tier2Text = "";
+                if (tier1Balance) { tier1Text = "Tier 1"; }
+                if (tier2Balance)
+                {
+                    if (tier1Text == "")
+                    {
+                        tier1Text = "Tier 2";
+                    }
+                    else
+                    {
+                        tier2Text = "Tier 2";
+                    }
+                }
+                if (tier3Balance) { tier2Text = "Tier 3"; }
+                pyramidText = tier1Text + " and " + tier2Text;
+                break;
+            case 3:
+                pyramidText = "Tier 1, Tier 2, and Tier 3";
+                break;
+        }
+        return "Balance " + pyramidText + " organisms.";
     }
 
     public bool IsLevel()

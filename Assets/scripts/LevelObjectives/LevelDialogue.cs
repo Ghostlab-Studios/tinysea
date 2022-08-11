@@ -11,7 +11,7 @@ using UnityEngine.UI;
 public class LevelDialogue : MonoBehaviour, ILevelEvent
 {
     public int ID;
-    public List<string> dialogue;
+    public List<DialogueTuple> dialogue;
 
     private GameObject textPanel;
     private Animator textAnim;
@@ -52,6 +52,13 @@ public class LevelDialogue : MonoBehaviour, ILevelEvent
         characterName = GameObject.FindGameObjectWithTag("DialogueCharacterName").GetComponent<Text>();
         textBox = GameObject.FindGameObjectWithTag("DialogueTextBox").GetComponent<Text>();
         nextButton.onClick.AddListener(ProcessText);
+        foreach (DialogueTuple tuple in dialogue)
+        {
+            foreach (ActivatableObject aobj in tuple.activeObjects)
+            {
+                aobj.GetObject();
+            }
+        }
         GetComponent<LevelManager>().levelGoals.Add(this);
     }
 
@@ -93,6 +100,7 @@ public class LevelDialogue : MonoBehaviour, ILevelEvent
     {
         if (GetComponent<LevelManager>().GetCurrentObjectiveID() == ID)
         {
+            if (textIndex != 0) { DeactivateNonLingeringObjects(); }
             if (textIndex >= dialogue.Count)
             {
                 isDialogueFinished = true;
@@ -103,6 +111,7 @@ public class LevelDialogue : MonoBehaviour, ILevelEvent
             currentShownTextIndex = 0;
             displayingText = true;
             textIndex++;
+            ActivateNewObjects(); // Order matters here! DO NOT call ActivateNewObjects() before textIndex increments
         }
     }
 
@@ -110,7 +119,7 @@ public class LevelDialogue : MonoBehaviour, ILevelEvent
     {
         if (Input.GetMouseButtonDown(0))
         {
-            currentShownText = dialogue[textIndex - 1];
+            currentShownText = dialogue[textIndex - 1].text;
             textBox.text = currentShownText;
             currentShownTextIndex = 0;
             displayingText = false;
@@ -119,10 +128,10 @@ public class LevelDialogue : MonoBehaviour, ILevelEvent
 
         if (textDisplayTimer >= timeBetweenCharDisplay)
         {
-            currentShownText += dialogue[textIndex - 1][currentShownTextIndex];
+            currentShownText += dialogue[textIndex - 1].text[currentShownTextIndex];
             textBox.text = currentShownText;
             currentShownTextIndex++;
-            if (currentShownTextIndex >= dialogue[textIndex - 1].Length)
+            if (currentShownTextIndex >= dialogue[textIndex - 1].text.Length)
             {
                 currentShownTextIndex = 0;
                 displayingText = false;
@@ -149,5 +158,43 @@ public class LevelDialogue : MonoBehaviour, ILevelEvent
         }
 
         hasOpenedOnce = true;
+    }
+
+    private void ActivateNewObjects()
+    {
+        foreach (ActivatableObject aobj in dialogue[textIndex - 1].activeObjects)
+        {
+            aobj.GetObject().SetActive(true);
+        }
+    }
+
+    private void DeactivateNonLingeringObjects()
+    {
+        foreach (ActivatableObject aobj in dialogue[textIndex - 1].activeObjects)
+        {
+            if (!aobj.remainsActive) { aobj.GetObject().SetActive(false); }
+        }
+    }
+
+    [System.Serializable]
+    public class DialogueTuple
+    {
+        public string text;
+        public List<ActivatableObject> activeObjects;
+    }
+
+    [System.Serializable]
+    public class ActivatableObject
+    {
+        public string objectTag;
+        public bool remainsActive;
+
+        private GameObject obj;
+
+        public GameObject GetObject()
+        {
+            if (obj == null) { obj = GameObject.FindGameObjectWithTag(objectTag); }
+            return obj;
+        }
     }
 }

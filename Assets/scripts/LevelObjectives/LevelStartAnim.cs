@@ -2,12 +2,15 @@
 using System.Collections.Generic;
 using UnityEditor.Animations;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class LevelStartAnim : MonoBehaviour, ILevelEvent
 {
     public int ID;
+    public string label;
 
     private Animator anim;
+    private Text text;
     private bool hasStarted = false;
     private bool hasStopped = false;
 
@@ -28,6 +31,7 @@ public class LevelStartAnim : MonoBehaviour, ILevelEvent
 
     public void InitializeEvent()
     {
+        text = GameObject.FindGameObjectWithTag("LevelOpenText").GetComponent<Text>();
         anim = GameObject.FindGameObjectWithTag("LevelStartAnimation").GetComponent<Animator>();
         GetComponent<LevelManager>().levelGoals.Add(this);
     }
@@ -36,15 +40,13 @@ public class LevelStartAnim : MonoBehaviour, ILevelEvent
     {
         if (!hasStarted)
         {
+            text.text = label;
+            anim.gameObject.SetActive(true);
             anim.SetTrigger("OpenLevelStart");
+            anim.SetTrigger("LevelComplete");
             hasStarted = true;
         }
-        else if (!hasStopped && !IsPlaying(anim, "New State") && !IsPlaying(anim, "OpenLevelStart"))
-        {
-            //anim.SetTrigger("OpenLevelStop");
-            hasStopped = true;
-        }
-        else if (IsPlaying(anim, "DoneState"))
+        else if (!anim.GetBool("LevelComplete"))
         {
             anim.gameObject.SetActive(false);
             return true;
@@ -54,10 +56,8 @@ public class LevelStartAnim : MonoBehaviour, ILevelEvent
 
     private bool IsPlaying(Animator anim, string stateName)
     {
-        if (anim.GetCurrentAnimatorStateInfo(0).IsName(stateName) &&
-            anim.GetCurrentAnimatorStateInfo(0).normalizedTime < 1.0f)
-        { return true; }
-        else { return false; }
+        return anim.GetCurrentAnimatorStateInfo(0).fullPathHash == Animator.StringToHash(stateName) &&
+               anim.GetCurrentAnimatorStateInfo(0).normalizedTime < 1.0f;
     }
 
     public bool IsEventFailure()

@@ -73,13 +73,13 @@ public class EcoHoverOver : MonoBehaviour {
         switch (index)
         {
             case 0:
-                creatureText.text = c.speciesAmount.ToString();
+                creatureText.text = Mathf.FloorToInt(c.speciesAmount).ToString();
                 break;
             case 1:
-                creatureText1.text = c.speciesAmount.ToString();
+                creatureText1.text = Mathf.FloorToInt(c.speciesAmount).ToString();
                 break;
             case 2:
-                creatureText2.text = c.speciesAmount.ToString();
+                creatureText2.text = Mathf.FloorToInt(c.speciesAmount).ToString();
                 break;
             default:
                 Debug.Log("something went wrong witht the creature chart");

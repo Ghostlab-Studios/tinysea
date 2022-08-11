@@ -63,7 +63,8 @@ public class SellingCreaturesObjective : MonoBehaviour, ILevelEvent
                 targetTier = "Tier 3";
                 break;
         }
-        return "Sell " + amountToSell.ToString() + " " + targetTier + " organisms.";
+        return "Sell " + amountToSell.ToString() + " " + targetTier + " organisms.\n" +
+               "Current organisms: " + sellCount.ToString() + "/" + amountToSell.ToString();
     }
 
     public bool IsLevel()

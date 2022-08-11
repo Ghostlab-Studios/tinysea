@@ -25,8 +25,16 @@ GameObject:
   - component: {fileID: 114479549668011984}
   - component: {fileID: 114222197523280238}
   - component: {fileID: 114933582233981656}
+  - component: {fileID: 114031623686378536}
+  - component: {fileID: 114084539228989116}
   - component: {fileID: 114976568383224834}
   - component: {fileID: 114511209686402232}
+  - component: {fileID: 114692538636975540}
+  - component: {fileID: 114278419105613936}
+  - component: {fileID: 114315820052236304}
+  - component: {fileID: 114517129692756964}
+  - component: {fileID: 114142023154542492}
+  - component: {fileID: 114614328196809380}
   m_Layer: 0
   m_Name: LevelManager-1
   m_TagString: Untagged
@@ -47,6 +55,59 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &114031623686378536
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1945029702217764}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8c05881b10aebe449128f4d05146be4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 5
+  dialogue:
+  - text: Good job. You've been mostly working with Tier I organisms up until this
+      point, but there are other Tiers of organisms as well.
+    activeObjects: []
+  - text: Try to buy a Tier II organism. Tier II organisms feed on Tier I organisms,
+      so make sure you have a good amount of Tier I organisms first!
+    activeObjects: []
+--- !u!114 &114084539228989116
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1945029702217764}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3133c09d8d084049ab337690200af82, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 6
+  targetCreatureCount: 1
+  activeTier: 1
+--- !u!114 &114142023154542492
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1945029702217764}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8c05881b10aebe449128f4d05146be4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 13
+  dialogue:
+  - text: Awesome job! Looks like you've really gotten the hang of this.
+    activeObjects: []
+  - text: I have some other things I need to do now, and seeing as you have everything
+      under control here, I'll leave the rest to you.
+    activeObjects: []
+  - text: Again, good luck! And be sure to have fun.
+    activeObjects: []
 --- !u!114 &114222197523280238
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -60,8 +121,42 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ID: 3
   dialogue:
-  - Awesome job! Your next job is to sell 2 Tier 2 creatures.
-  - Once again, good luck!
+  - text: Awesome job! Now that you've accumulated some more organisms in your farm,
+      you should sell some to gain a profit.
+    activeObjects: []
+  - text: You can use the money you get from selling organisms to buy new ones. Try
+      it out!
+    activeObjects: []
+--- !u!114 &114278419105613936
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1945029702217764}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3133c09d8d084049ab337690200af82, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 10
+  targetCreatureCount: 1
+  activeTier: 2
+--- !u!114 &114315820052236304
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1945029702217764}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8c05881b10aebe449128f4d05146be4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 11
+  dialogue:
+  - text: Now that you have an organism of each type, try once more to balance each
+      Tier.
+    activeObjects: []
 --- !u!114 &114479549668011984
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -87,9 +182,61 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8adda832b21a0d488c3bd375bc7f837, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ID: 6
+  ID: 8
   tierSizeDifference: 3
-  epsilon: 0.2
+  delta: 0.15
+  tier1Balance: 1
+  tier2Balance: 1
+  tier3Balance: 0
+--- !u!114 &114517129692756964
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1945029702217764}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d8adda832b21a0d488c3bd375bc7f837, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 12
+  tierSizeDifference: 3
+  delta: 0.15
+  tier1Balance: 1
+  tier2Balance: 1
+  tier3Balance: 1
+--- !u!114 &114614328196809380
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1945029702217764}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1dd7a11265b0b96429aca61a745d9697, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 14
+  label: Level Complete
+--- !u!114 &114692538636975540
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1945029702217764}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8c05881b10aebe449128f4d05146be4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 9
+  dialogue:
+  - text: Great job! Looks like you really got the hang of this.
+    activeObjects: []
+  - text: 'There''s one more Tier of organisms available to you: Tier III organisms.'
+    activeObjects: []
+  - text: Try saving up enough money and buy one.
+    activeObjects: []
 --- !u!114 &114778836043613394
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -103,9 +250,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ID: 1
   dialogue:
-  - Welcome to the prototype for TinySea's story mode!
-  - Your first objective is to have 15 Tier 1 organisms.
-  - Good luck!
+  - text: Hello, nice to meet you! You must be the new aquaculture farmer.
+    activeObjects: []
+  - text: This farm is looking a little empty at the moment. To get started, click
+      the arrow to open up the shop and buy some organisms.
+    activeObjects:
+    - objectTag: ArrowIndicator2
+      remainsActive: 0
+  - text: Once you've bought a few organisms, click the "Next Turn" button to watch
+      them reproduce!
+    activeObjects:
+    - objectTag: ArrowIndicator3
+      remainsActive: 0
+  - text: Your first objective will be to get 15 Tier 1 organisms. Good luck!
+    activeObjects: []
 --- !u!114 &114797226665506996
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -118,8 +276,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   levelID: 0
-  winScreenPanel: {fileID: 0}
-  loseScreenPanel: {fileID: 0}
 --- !u!114 &114894100160699310
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -132,6 +288,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 0
+  label: Level 1
 --- !u!114 &114933582233981656
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -144,8 +301,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 4
-  amountToSell: 2
-  activeTier: 1
+  amountToSell: 5
+  activeTier: 0
 --- !u!114 &114976568383224834
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -157,7 +314,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e8c05881b10aebe449128f4d05146be4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ID: 5
+  ID: 7
   dialogue:
-  - You're in the home stretch! For your final task, balance the food pyramid with
-    the organisms you currently have.
+  - text: Great job! Now that you have Tier I and Tier II creatures, you need to make
+      sure that the amount of organisms in each tier is balanced.
+    activeObjects: []
+  - text: If the Tiers become unbalanced, some organisms could reproduce beyond control
+      or die out completely.
+    activeObjects: []
+  - text: I've given you a new menu that will help out with tracking the balance of
+      your Tiers.
+    activeObjects:
+    - objectTag: PyramidUI
+      remainsActive: 1
+    - objectTag: ArrowIndicator1
+      remainsActive: 0
+  - text: Your objective now is to balance the amount of Tier I and Tier II organisms
+      you have.
+    activeObjects: []
+  - text: You can tell how balanced your tiers are by how full each segment of the
+      pyramid is. The fuller a section is, the more balanced your pyramid is. Good
+      luck!
+    activeObjects: []

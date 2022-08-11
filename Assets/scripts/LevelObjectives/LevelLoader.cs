@@ -9,13 +9,17 @@ using UnityEngine.SceneManagement;
 /// </summary>
 public class LevelLoader : MonoBehaviour
 {
-    public static int levelToLoad = 0;
+    public static int levelToLoad = -1;
     public LevelManager[] levelManagers;
 
     private void Awake()
     {
+        if (levelToLoad < 0)
+        {
+            gameObject.SetActive(false);
+        }
         // If the active scene is the gameplay scene, create the LevelManager for that scene
-        if (SceneManager.GetActiveScene().buildIndex == 1)
+        else if (SceneManager.GetActiveScene().buildIndex == 1)
         {
             Instantiate(levelManagers[levelToLoad]);
         }
@@ -32,16 +36,29 @@ public class LevelLoader : MonoBehaviour
         levelToLoad = level;
     }
 
+    public void SetSectionToLoad(int section)
+    {
+        LevelManager.currentGoal = section;
+    }
+
     /// <summary>
     /// Changes the temperature mean, yearly climate increase, and range of random
     /// temperatures set by the Temperature and TemperatureTrend classes.
     /// </summary>
-    public void SetTemperatureParameters()
+    public void SetDefaultTemperatureParameters()
     {
         Temperature.tMean = 15f;
         TemperatureTrend.clim = 1;
         TemperatureTrend.yrRange = 10;
         TemperatureTrend.rand = 10;
+    }
+
+    public void SetLevel1TemperatureParameters()
+    {
+        Temperature.tMean = 15f;
+        TemperatureTrend.clim = 0;
+        TemperatureTrend.yrRange = 0;
+        TemperatureTrend.rand = 0;
     }
 
     /// <summary>

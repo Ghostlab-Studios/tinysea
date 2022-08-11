@@ -14,35 +14,46 @@ public class SettingsMenuController : MonoBehaviour {
     
 	public void MenuPressed()
     {
-        if (isOpen)
+        if (!IsBusy())
         {
-            UIAnimator.SetTrigger("CloseMenu");
-            isOpen = false;
-        }
-        else
-        {
-            UIAnimator.SetTrigger("OpenMenu");
-            isOpen = true;
+            if (isOpen)
+            {
+                UIAnimator.SetTrigger("CloseMenu");
+                sfxSlider.SetActive(false);
+                musicSlider.SetActive(false);
+                homeMenu.SetActive(false);
+                isOpen = false;
+            }
+            else
+            {
+                UIAnimator.SetTrigger("OpenMenu");
+                isOpen = true;
+            }
         }
     }
 
     public void MusicPressed()
     {
-        musicSlider.SetActive(!musicSlider.activeSelf);
+        if (!IsBusy()) { musicSlider.SetActive(!musicSlider.activeSelf); }
     }
 
     public void SFXPressed()
     {
-        sfxSlider.SetActive(!sfxSlider.activeSelf);
+        if (!IsBusy()) { sfxSlider.SetActive(!sfxSlider.activeSelf); }
     }
 
     public void HomePressed()
     {
-        homeMenu.SetActive(!homeMenu.activeSelf);
+        if (!IsBusy()) { homeMenu.SetActive(!homeMenu.activeSelf); }
     }
 
     public void SavePressed()
     {
-        saveMenu.SetActive(!saveMenu.activeSelf);
+        if (!IsBusy()) { saveMenu.SetActive(!saveMenu.activeSelf); }
+    }
+
+    private bool IsBusy()
+    {
+        return UIAnimator.GetBool("OpenMenu") || UIAnimator.GetBool("CloseMenu");
     }
 }

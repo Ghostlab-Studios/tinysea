@@ -33,7 +33,7 @@ public interface ILevelEvent
     int GetID();
 
     /// <summary>
-    /// Gets the level description that pops up before the start of a level.
+    /// Gets the goal description that pops up during each section of a level.
     /// </summary>
     /// <returns>Returns string description of a level section.</returns>
     string GetLevelDescription();

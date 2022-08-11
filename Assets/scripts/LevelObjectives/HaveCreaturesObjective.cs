@@ -12,6 +12,7 @@ public class HaveCreaturesObjective : MonoBehaviour, ILevelEvent
     public LevelManager.Tier activeTier;
 
     private PlayerManager playerManager;
+    private int organismTotal;
 
     void Awake()
     {
@@ -55,6 +56,7 @@ public class HaveCreaturesObjective : MonoBehaviour, ILevelEvent
                     break;
             }
         }
+        organismTotal = totalCreatures;
         return totalCreatures >= targetCreatureCount;
     }
     
@@ -86,7 +88,8 @@ public class HaveCreaturesObjective : MonoBehaviour, ILevelEvent
                 targetTier = "Tier 3";
                 break;
         }
-        return "Have " + targetCreatureCount.ToString() + " " + targetTier + " organisms.";
+        return "Have " + targetCreatureCount.ToString() + " " + targetTier + " organisms.\n" + 
+               "Current organisms: " + organismTotal.ToString() + "/" + targetCreatureCount.ToString();
     }
 
     public bool IsLevel()

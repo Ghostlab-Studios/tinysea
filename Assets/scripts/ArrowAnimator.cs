@@ -23,8 +23,8 @@ public class ArrowAnimator : MonoBehaviour
 	
 	void Update()
     {
-        float newPosX = Mathf.Lerp(transform.anchoredPosition.x, targetPosition.x, speed);
-        float newPosY = Mathf.Lerp(transform.anchoredPosition.y, targetPosition.y, speed);
+        float newPosX = Mathf.Lerp(transform.anchoredPosition.x, targetPosition.x, Time.deltaTime * speed);
+        float newPosY = Mathf.Lerp(transform.anchoredPosition.y, targetPosition.y, Time.deltaTime * speed);
         Vector2 newPos = new Vector2(newPosX, newPosY);
         transform.anchoredPosition = newPos;
         if (Mathf.Abs(transform.anchoredPosition.x - targetPosition.x) <= epsilon &&

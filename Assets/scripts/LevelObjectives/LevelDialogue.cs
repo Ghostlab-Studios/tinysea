@@ -49,7 +49,7 @@ public class LevelDialogue : MonoBehaviour, ILevelEvent
         textPanel = GameObject.FindGameObjectWithTag("DialoguePanel");
         textAnim = textPanel.GetComponent<Animator>();
         nextButton = GameObject.FindGameObjectWithTag("DialogueContinueButton").GetComponent<Button>();
-        characterName = GameObject.FindGameObjectWithTag("DialogueCharacterName").GetComponent<Text>();
+        // characterName = GameObject.FindGameObjectWithTag("DialogueCharacterName").GetComponent<Text>();
         textBox = GameObject.FindGameObjectWithTag("DialogueTextBox").GetComponent<Text>();
         nextButton.onClick.AddListener(ProcessText);
         foreach (DialogueTuple tuple in dialogue)

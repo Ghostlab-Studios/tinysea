@@ -10,7 +10,10 @@ using UnityEngine.SceneManagement;
 public class LevelLoader : MonoBehaviour
 {
     public static int levelToLoad = -1;
+    public static Sprite background;
     public LevelManager[] levelManagers;
+    public ClimateData[] climates;
+    public SpriteRenderer backgroundRenderer;
 
     private void Awake()
     {
@@ -22,6 +25,11 @@ public class LevelLoader : MonoBehaviour
         else if (SceneManager.GetActiveScene().buildIndex == 1)
         {
             Instantiate(levelManagers[levelToLoad]);
+        }
+
+        if (backgroundRenderer != null && background != null)
+        {
+            backgroundRenderer.sprite = background;
         }
     }
 
@@ -45,20 +53,13 @@ public class LevelLoader : MonoBehaviour
     /// Changes the temperature mean, yearly climate increase, and range of random
     /// temperatures set by the Temperature and TemperatureTrend classes.
     /// </summary>
-    public void SetDefaultTemperatureParameters()
+    public void SetLevelClimate(int index)
     {
-        Temperature.tMean = 15f;
-        TemperatureTrend.clim = 1;
-        TemperatureTrend.yrRange = 10;
-        TemperatureTrend.rand = 10;
-    }
-
-    public void SetLevel1TemperatureParameters()
-    {
-        Temperature.tMean = 15f;
-        TemperatureTrend.clim = 0;
-        TemperatureTrend.yrRange = 0;
-        TemperatureTrend.rand = 0;
+        Temperature.tMean = climates[index].tMean;
+        TemperatureTrend.clim = climates[index].clim;
+        TemperatureTrend.yrRange = climates[index].yrRange;
+        TemperatureTrend.rand = climates[index].rand;
+        background = climates[index].environment;
     }
 
     /// <summary>
@@ -69,4 +70,18 @@ public class LevelLoader : MonoBehaviour
     {
         SceneManager.LoadScene(1);
     }
+}
+
+/// <summary>
+/// Class for editing level climate data in the Unity Inspector.
+/// </summary>
+[System.Serializable]
+public class ClimateData
+{
+    public string name;
+    public Sprite environment;
+    public float tMean;
+    public float clim;
+    public float yrRange;
+    public float rand;
 }

@@ -163,10 +163,6 @@ public class PlayerManager : MonoBehaviour {
             float t2Proportion = (getTotalAmountAtLevel(2) * 3) / totalFishes;
             float t3Proportion = (getTotalAmountAtLevel(3) * 9) / totalFishes;
 
-            // UNNECESSARILY COMPUTATIONALLY EXPENSIVE, who did this
-            // Vector3 tiersProp = new Vector3(t1Proportion, t2Proportion, t3Proportion);
-            // tiersProp.Normalize();
-            // tiersProp *= 1 / Mathf.Max(Mathf.Max(tiersProp.x, tiersProp.y), tiersProp.z);
             Vector3 tiersProp = new Vector3(t1Proportion, t2Proportion, t3Proportion) / 
                                 Mathf.Max(t1Proportion, t2Proportion, t3Proportion);
 

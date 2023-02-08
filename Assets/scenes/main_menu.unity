@@ -344,12 +344,12 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
       - m_Target: {fileID: 858700249}
-        m_MethodName: SetLevel1TemperatureParameters
-        m_Mode: 1
+        m_MethodName: SetLevelClimate
+        m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
+          m_IntArgument: 1
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 0
@@ -980,12 +980,12 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
       - m_Target: {fileID: 858700249}
-        m_MethodName: SetLevel1TemperatureParameters
-        m_Mode: 1
+        m_MethodName: SetLevelClimate
+        m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
+          m_IntArgument: 1
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 0
@@ -1176,12 +1176,12 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
       - m_Target: {fileID: 858700249}
-        m_MethodName: SetLevel1TemperatureParameters
-        m_Mode: 1
+        m_MethodName: SetLevelClimate
+        m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
+          m_IntArgument: 1
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 0
@@ -1660,12 +1660,12 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
       - m_Target: {fileID: 858700249}
-        m_MethodName: SetLevel1TemperatureParameters
-        m_Mode: 1
+        m_MethodName: SetLevelClimate
+        m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
+          m_IntArgument: 1
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 0
@@ -2065,6 +2065,26 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   levelManagers: []
+  climates:
+  - name: Default
+    environment: {fileID: 21300000, guid: 0edbe26282f1a5b4a84ae2460646071c, type: 3}
+    tMean: 15
+    clim: 1
+    yrRange: 10
+    rand: 10
+  - name: Level1
+    environment: {fileID: 21300000, guid: 0ad6f0a802504a945b0cb0b8c789c59e, type: 3}
+    tMean: 15
+    clim: 0
+    yrRange: 0
+    rand: 0
+  - name: 
+    environment: {fileID: 0}
+    tMean: 0
+    clim: 0
+    yrRange: 0
+    rand: 0
+  backgroundRenderer: {fileID: 0}
 --- !u!224 &858700250
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2412,12 +2432,12 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
       - m_Target: {fileID: 858700249}
-        m_MethodName: SetLevel1TemperatureParameters
-        m_Mode: 1
+        m_MethodName: SetLevelClimate
+        m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
+          m_IntArgument: 1
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 0
@@ -3843,12 +3863,12 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
       - m_Target: {fileID: 858700249}
-        m_MethodName: SetLevel1TemperatureParameters
-        m_Mode: 1
+        m_MethodName: SetLevelClimate
+        m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
+          m_IntArgument: 1
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 0
@@ -4581,8 +4601,19 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
       - m_Target: {fileID: 858700249}
-        m_MethodName: SetDefaultTemperatureParameters
-        m_Mode: 1
+        m_MethodName: SetLevelToLoad
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: -1
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 858700249}
+        m_MethodName: SetLevelClimate
+        m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -5078,7 +5109,7 @@ MonoBehaviour:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1872357463}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3b546ab829cf1e94598ff104a8ab2734, type: 3}
   m_Name: 
@@ -5732,12 +5763,12 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
       - m_Target: {fileID: 858700249}
-        m_MethodName: SetLevel1TemperatureParameters
-        m_Mode: 1
+        m_MethodName: SetLevelClimate
+        m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
+          m_IntArgument: 1
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 0

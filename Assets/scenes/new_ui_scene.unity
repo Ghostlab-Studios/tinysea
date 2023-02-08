@@ -29746,7 +29746,7 @@ MonoBehaviour:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 703576249}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3b546ab829cf1e94598ff104a8ab2734, type: 3}
   m_Name: 
@@ -36472,6 +36472,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   levelManagers:
   - {fileID: 114797226665506996, guid: c87bf7b9049c9ac46b80a79638fd30e7, type: 2}
+  climates: []
+  backgroundRenderer: {fileID: 2025813448}
 --- !u!4 &875633003
 Transform:
   m_ObjectHideFlags: 0
@@ -91633,7 +91635,7 @@ AudioSource:
   m_PlayOnAwake: 1
   m_Volume: 0.2
   m_Pitch: 1
-  Loop: 0
+  Loop: 1
   Mute: 0
   Spatialize: 0
   SpatializePostEffects: 0

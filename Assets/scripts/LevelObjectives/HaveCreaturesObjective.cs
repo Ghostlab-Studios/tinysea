@@ -9,7 +9,8 @@ public class HaveCreaturesObjective : MonoBehaviour, ILevelEvent
 {
     public int ID;
     public int targetCreatureCount;
-    public LevelManager.Tier activeTier;
+    public LevelManager.Tier[] activeTiers;
+    public LevelManager.Variant[] activeVariants;
 
     private PlayerManager playerManager;
     private int organismTotal;
@@ -31,6 +32,7 @@ public class HaveCreaturesObjective : MonoBehaviour, ILevelEvent
     /// </summary>
     public bool IsEventComplete()
     {
+        /*
         int totalCreatures = 0;
         foreach (CharacterManager cm in playerManager.species)
         {
@@ -58,6 +60,65 @@ public class HaveCreaturesObjective : MonoBehaviour, ILevelEvent
         }
         organismTotal = totalCreatures;
         return totalCreatures >= targetCreatureCount;
+        */
+        int totalCreatures = 0;
+        foreach (CharacterManager cm in playerManager.species)
+        {
+            foreach (LevelManager.Tier tier in activeTiers)
+            {
+                totalCreatures += IncrementByTier(tier, cm);
+            }
+        }
+        organismTotal = totalCreatures;
+        return totalCreatures >= targetCreatureCount;
+    }
+
+    private int IncrementByTier(LevelManager.Tier tier, CharacterManager cm)
+    {
+        if (IsCorrectVariant(cm))
+        {
+            switch (tier)
+            {
+                case LevelManager.Tier.Tier1:
+                    if (cm.foodChainLevel == 1)
+                    {
+                        return (int)cm.speciesAmount;
+                    }
+                    break;
+                case LevelManager.Tier.Tier2:
+                    if (cm.foodChainLevel == 2)
+                    {
+                        return (int)cm.speciesAmount;
+                    }
+                    break;
+                case LevelManager.Tier.Tier3:
+                    if (cm.foodChainLevel == 3)
+                    {
+                        return (int)cm.speciesAmount;
+                    }
+                    break;
+            }
+        }
+        return 0;
+    }
+
+    private bool IsCorrectVariant(CharacterManager cm)
+    {
+        if (activeVariants.Length > 0)
+        {
+            foreach (LevelManager.Variant variant in activeVariants)
+            {
+                if (cm.variant == variant)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        else
+        {
+            return true;
+        }
     }
     
     /// <summary>
@@ -75,20 +136,133 @@ public class HaveCreaturesObjective : MonoBehaviour, ILevelEvent
 
     public string GetLevelDescription()
     {
-        string targetTier = "TIER ERROR";
-        switch (activeTier)
+        string targetTier = "";
+        if (activeTiers.Length > 0)
         {
-            case LevelManager.Tier.Tier1:
-                targetTier = "Tier 1";
-                break;
-            case LevelManager.Tier.Tier2:
-                targetTier = "Tier 2";
-                break;
-            case LevelManager.Tier.Tier3:
-                targetTier = "Tier 3";
-                break;
+            int numTiers = activeTiers.Length;
+
+            switch (activeTiers[0])
+            {
+                case LevelManager.Tier.Tier1:
+                    targetTier += " in Tier 1";
+                    break;
+                case LevelManager.Tier.Tier2:
+                    targetTier += " in Tier 2";
+                    break;
+                case LevelManager.Tier.Tier3:
+                    targetTier += " in Tier 3";
+                    break;
+            }
+
+            if (numTiers > 2)
+            {
+                switch (activeTiers[1])
+                {
+                    case LevelManager.Tier.Tier1:
+                        targetTier += ", Tier 1, ";
+                        break;
+                    case LevelManager.Tier.Tier2:
+                        targetTier += ", Tier 2, ";
+                        break;
+                    case LevelManager.Tier.Tier3:
+                        targetTier += ", Tier 3, ";
+                        break;
+                }
+
+                switch (activeTiers[2])
+                {
+                    case LevelManager.Tier.Tier1:
+                        targetTier += "and Tier 1";
+                        break;
+                    case LevelManager.Tier.Tier2:
+                        targetTier += "and Tier 2";
+                        break;
+                    case LevelManager.Tier.Tier3:
+                        targetTier += "and Tier 3";
+                        break;
+                }
+            }
+            else if (numTiers > 1)
+            {
+                switch (activeTiers[1])
+                {
+                    case LevelManager.Tier.Tier1:
+                        targetTier += "and Tier 1";
+                        break;
+                    case LevelManager.Tier.Tier2:
+                        targetTier += "and Tier 2";
+                        break;
+                    case LevelManager.Tier.Tier3:
+                        targetTier += "and Tier 3";
+                        break;
+                }
+            }
         }
-        return "Have " + targetCreatureCount.ToString() + " " + targetTier + " organisms.\n" + 
+
+        string targetVariants = "";
+        if (activeVariants.Length > 0)
+        {
+            int numVariants = activeVariants.Length;
+
+            switch (activeVariants[0])
+            {
+                case LevelManager.Variant.Arctic:
+                    targetVariants += " Arctic";
+                    break;
+                case LevelManager.Variant.Common:
+                    targetVariants += " Common";
+                    break;
+                case LevelManager.Variant.Tropical:
+                    targetVariants += " Tropical";
+                    break;
+            }
+
+            if (numVariants > 2)
+            {
+                switch (activeVariants[1])
+                {
+                    case LevelManager.Variant.Arctic:
+                        targetVariants += ", Arctic, ";
+                        break;
+                    case LevelManager.Variant.Common:
+                        targetVariants += ", Common, ";
+                        break;
+                    case LevelManager.Variant.Tropical:
+                        targetVariants += ", Tropical, ";
+                        break;
+                }
+
+                switch (activeVariants[2])
+                {
+                    case LevelManager.Variant.Arctic:
+                        targetVariants += "and Arctic";
+                        break;
+                    case LevelManager.Variant.Common:
+                        targetVariants += "and Common";
+                        break;
+                    case LevelManager.Variant.Tropical:
+                        targetVariants += "and Tropical";
+                        break;
+                }
+            }
+            else if (numVariants > 1)
+            {
+                switch (activeVariants[1])
+                {
+                    case LevelManager.Variant.Arctic:
+                        targetVariants += " and Arctic";
+                        break;
+                    case LevelManager.Variant.Common:
+                        targetVariants += " and Common";
+                        break;
+                    case LevelManager.Variant.Tropical:
+                        targetVariants += " and Tropical";
+                        break;
+                }
+            }
+        }
+
+        return "Have " + targetCreatureCount.ToString() + targetVariants + " organisms total" + targetTier + ".\n" + 
                "Current organisms: " + organismTotal.ToString() + "/" + targetCreatureCount.ToString();
     }
 

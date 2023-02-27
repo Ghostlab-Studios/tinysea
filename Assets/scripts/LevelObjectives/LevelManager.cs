@@ -30,7 +30,16 @@ public class LevelManager : MonoBehaviour
     {
         Tier1,
         Tier2,
-        Tier3
+        Tier3,
+        None
+    }
+
+    public enum Variant
+    {
+        Arctic,
+        Common,
+        Tropical,
+        None
     }
 
     private void Awake()

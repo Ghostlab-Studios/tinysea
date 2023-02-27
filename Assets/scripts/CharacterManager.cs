@@ -8,6 +8,7 @@ public class CharacterManager : MonoBehaviour {
 	public float performanceRate = 1;
     public float fedRate = 1;
     public float cost = 100;
+    public LevelManager.Variant variant;
 
     //object references
 	public ThermalCurve thermalcurve;

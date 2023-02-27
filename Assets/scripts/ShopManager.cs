@@ -70,8 +70,22 @@ public class ShopManager : MonoBehaviour {
         icon3MoneyText.text = "$" + playerManager.species[tierBase + 2].cost.ToString();
 
         recordedVariants = new int[3];
-        ChangeActiveOrganism(0);
-        UpdateOrganismHighlight(organismIconSprites[0].gameObject.GetComponent<RectTransform>());
+
+        if (organismIconSprites[0].gameObject.activeInHierarchy)
+        {
+            ChangeActiveOrganism(0);
+            UpdateOrganismHighlight(organismIconSprites[0].gameObject.GetComponent<RectTransform>()); 
+        }
+        else if (organismIconSprites[1].gameObject.activeInHierarchy)
+        {
+            ChangeActiveOrganism(1);
+            UpdateOrganismHighlight(organismIconSprites[1].gameObject.GetComponent<RectTransform>()); 
+        }
+        else if (organismIconSprites[2].gameObject.activeInHierarchy)
+        {
+            ChangeActiveOrganism(2);
+            UpdateOrganismHighlight(organismIconSprites[2].gameObject.GetComponent<RectTransform>()); 
+        }
     }
 
     /// <summary>

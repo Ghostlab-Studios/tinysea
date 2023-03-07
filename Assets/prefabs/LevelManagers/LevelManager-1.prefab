@@ -141,7 +141,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ID: 10
   targetCreatureCount: 1
-  activeTiers: 
+  activeTiers: 02000000
   activeVariants: 
 --- !u!114 &114315820052236304
 MonoBehaviour:

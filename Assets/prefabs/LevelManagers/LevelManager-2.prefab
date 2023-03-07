@@ -1,0 +1,278 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1001 &100100000
+Prefab:
+  m_ObjectHideFlags: 1
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications: []
+    m_RemovedComponents: []
+  m_ParentPrefab: {fileID: 0}
+  m_RootGameObject: {fileID: 1281063892643496}
+  m_IsPrefabParent: 1
+--- !u!1 &1281063892643496
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 4354914683429498}
+  - component: {fileID: 114788684687276688}
+  - component: {fileID: 114403402761230432}
+  - component: {fileID: 114245985646247952}
+  - component: {fileID: 114022457350753658}
+  - component: {fileID: 114007191255966658}
+  - component: {fileID: 114734060966628916}
+  - component: {fileID: 114193374016819450}
+  - component: {fileID: 114717629561521208}
+  - component: {fileID: 114879415365255106}
+  - component: {fileID: 114005024478522064}
+  - component: {fileID: 114693560413662534}
+  - component: {fileID: 114442828980444848}
+  - component: {fileID: 114514004477984566}
+  - component: {fileID: 114788530910481446}
+  m_Layer: 0
+  m_Name: LevelManager-2
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4354914683429498
+Transform:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1281063892643496}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 640.5752, y: 514.9764, z: -116.414185}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &114005024478522064
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1281063892643496}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 22f269ed059b77f4eaf6de0cac3be74d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 8
+  tempIncrease: 5
+  roundsBetweenIncrement: 3
+  numIncrements: 6
+--- !u!114 &114007191255966658
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1281063892643496}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8c05881b10aebe449128f4d05146be4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 3
+  dialogue:
+  - text: Give overview about temperature graph
+    activeObjects: []
+  - text: Indicate current temperature
+    activeObjects:
+    - objectTag: ArrowIndicator5
+      remainsActive: 0
+  - text: Indicate weather forecast slots
+    activeObjects:
+    - objectTag: ArrowIndicator6
+      remainsActive: 0
+  - text: Indicate temperature tracker graph
+    activeObjects:
+    - objectTag: ArrowIndicator7
+      remainsActive: 0
+  - text: Inform players of new addition to shop
+    activeObjects: []
+--- !u!114 &114022457350753658
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1281063892643496}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 068c011b941cb914d98fc40ad11f5ec2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 2
+--- !u!114 &114193374016819450
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1281063892643496}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8c05881b10aebe449128f4d05146be4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 5
+  dialogue:
+  - text: Show players new graph showing ideal temperatures for organisms
+    activeObjects:
+    - objectTag: ArrowIndicator8
+      remainsActive: 0
+  - text: 'New task: have 5 arctic organisms'
+    activeObjects: []
+--- !u!114 &114245985646247952
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1281063892643496}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8c05881b10aebe449128f4d05146be4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 1
+  dialogue:
+  - text: Test dialogue 1
+    activeObjects: []
+  - text: Activate temperature window
+    activeObjects:
+    - objectTag: TemperatureWindow
+      remainsActive: 1
+    - objectTag: ArrowIndicator4
+      remainsActive: 0
+  - text: Open temperature window
+    activeObjects: []
+--- !u!114 &114403402761230432
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1281063892643496}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1dd7a11265b0b96429aca61a745d9697, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 0
+  label: Level 2
+--- !u!114 &114442828980444848
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1281063892643496}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3133c09d8d084049ab337690200af82, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 10
+  targetCreatureCount: 5
+  activeTiers: 01000000
+  activeVariants: 02000000
+--- !u!114 &114514004477984566
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1281063892643496}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8c05881b10aebe449128f4d05146be4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 11
+  dialogue:
+  - text: Level complete
+    activeObjects: []
+--- !u!114 &114693560413662534
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1281063892643496}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8c05881b10aebe449128f4d05146be4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 9
+  dialogue:
+  - text: Get tropical tier 2 organism objective
+    activeObjects: []
+--- !u!114 &114717629561521208
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1281063892643496}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3133c09d8d084049ab337690200af82, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 6
+  targetCreatureCount: 5
+  activeTiers: 
+  activeVariants: 00000000
+--- !u!114 &114734060966628916
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1281063892643496}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 533b20b6c9daede49b1269688c200bf1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 4
+--- !u!114 &114788530910481446
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1281063892643496}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1dd7a11265b0b96429aca61a745d9697, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 12
+  label: Level Complete
+--- !u!114 &114788684687276688
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1281063892643496}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 18bed999222077c4f976817d30227725, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  levelID: 1
+--- !u!114 &114879415365255106
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1281063892643496}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8c05881b10aebe449128f4d05146be4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 7
+  dialogue:
+  - text: Start temperature increments
+    activeObjects: []

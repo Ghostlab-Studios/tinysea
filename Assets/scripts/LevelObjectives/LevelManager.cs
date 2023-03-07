@@ -19,8 +19,8 @@ public class LevelManager : MonoBehaviour
     public static int currentGoal = 0;
 
     private ObjectStorage levelOneObjects;
+    private ObjectStorage levelTwoObjects;
     private Text objectiveText;
-    // private ObjectStorage levelTwoObjects;
     private int currentTurn = 0;
     private Text levelText;
     private Text goalText;
@@ -46,13 +46,22 @@ public class LevelManager : MonoBehaviour
     {
         objectiveText = GameObject.FindGameObjectWithTag("ObjectiveText").GetComponent<Text>();
         levelOneObjects = GameObject.FindGameObjectWithTag("Level1Objects").GetComponent<ObjectStorage>();
+        levelTwoObjects = GameObject.FindGameObjectWithTag("Level2ObjectStorage").GetComponent<ObjectStorage>();
     }
 
     private void Start()
     {
         isGameOver = false;
         SortLevelGoalsByID();
-        SetLevelOneUI();
+        switch (levelID)
+        {
+            case 0:
+                SetLevelOneUI();
+                break;
+            case 1:
+                SetLevelTwoUI();
+                break;
+        }
 
         LevelDialogue[] dialogue = GetComponents<LevelDialogue>();
         foreach (LevelDialogue text in dialogue)
@@ -138,7 +147,10 @@ public class LevelManager : MonoBehaviour
 
     public void SetLevelTwoUI()
     {
-
+        foreach (GameObject obj in levelTwoObjects.objects)
+        {
+            obj.SetActive(false);
+        }
     }
 
     public void SetLevelThreeUI()

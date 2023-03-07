@@ -21,6 +21,16 @@ TagManager:
   - ArrowIndicator2
   - ArrowIndicator3
   - LevelOpenText
+  - NextTurnButton
+  - Temperature
+  - TemperatureWindow
+  - Level2ObjectStorage
+  - TempGraph
+  - ArrowIndicator4
+  - ArrowIndicator5
+  - ArrowIndicator6
+  - ArrowIndicator7
+  - ArrowIndicator8
   layers:
   - Default
   - TransparentFX

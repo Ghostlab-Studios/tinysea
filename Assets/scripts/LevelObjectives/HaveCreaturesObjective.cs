@@ -32,41 +32,19 @@ public class HaveCreaturesObjective : MonoBehaviour, ILevelEvent
     /// </summary>
     public bool IsEventComplete()
     {
-        /*
         int totalCreatures = 0;
         foreach (CharacterManager cm in playerManager.species)
         {
-            switch (activeTier)
+            if (activeTiers.Length > 0)
             {
-                case LevelManager.Tier.Tier1:
-                    if (cm.foodChainLevel == 1)
-                    {
-                        totalCreatures += (int)cm.speciesAmount;
-                    }
-                    break;
-                case LevelManager.Tier.Tier2:
-                    if (cm.foodChainLevel == 2)
-                    {
-                        totalCreatures += (int)cm.speciesAmount;
-                    }
-                    break;
-                case LevelManager.Tier.Tier3:
-                    if (cm.foodChainLevel == 3)
-                    {
-                        totalCreatures += (int)cm.speciesAmount;
-                    }
-                    break;
+                foreach (LevelManager.Tier tier in activeTiers)
+                {
+                    totalCreatures += IncrementByTier(tier, cm);
+                }
             }
-        }
-        organismTotal = totalCreatures;
-        return totalCreatures >= targetCreatureCount;
-        */
-        int totalCreatures = 0;
-        foreach (CharacterManager cm in playerManager.species)
-        {
-            foreach (LevelManager.Tier tier in activeTiers)
+            else if (IsCorrectVariant(cm))
             {
-                totalCreatures += IncrementByTier(tier, cm);
+                totalCreatures += (int)cm.speciesAmount;
             }
         }
         organismTotal = totalCreatures;

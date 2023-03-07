@@ -24,7 +24,7 @@ public class ShopWindowControl : MonoBehaviour {
     public float slideTime = .6f;
     public float slideTimer = 0;
 
-	void Start() 
+	void Start()
     {
 		rt = (RectTransform)window.transform;
         homeY = rt.anchoredPosition.y;
@@ -74,9 +74,13 @@ public class ShopWindowControl : MonoBehaviour {
 	}
 
 
-	void Controler(){
+	public void Controler(){
 		open = !open;
         slideTimer = slideTime;
 	}
 
+    public bool IsNotMoving()
+    {
+        return slideTimer == 0;
+    }
 }

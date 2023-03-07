@@ -24,6 +24,8 @@ public class TempWindowControl : MonoBehaviour
     public float slideTime = .6f;
     public float slideTimer = 0;
 
+    private bool guiPressed = false;
+
     void Start()
     {
         rt = (RectTransform)window.transform;
@@ -49,14 +51,13 @@ public class TempWindowControl : MonoBehaviour
     {
         /*controler.GetComponent<Button>().
 			onClick.AddListener (() => Controler());*/
-        if (open == false)
+        if (open == false && guiPressed)
         {
             //tempIcon.GetComponent<Image>().enabled = false;
             controler.transform.rotation = Quaternion.Euler(0, 0, 0);
             rt.anchoredPosition = new Vector2
-                (Mathf.Lerp(homeX, homeX - slideAmount, 1 - (slideTimer / slideTime)),
+                (Mathf.Lerp(homeX + slideAmount, homeX, 1 - (slideTimer / slideTime)),
                  rt.anchoredPosition.y);
-            
             //GameObject.Find("Main Camera").GetComponent<MovingCamera>().enabled = false;
 
         }
@@ -65,8 +66,9 @@ public class TempWindowControl : MonoBehaviour
         {
             controler.transform.rotation = Quaternion.Euler(0, 0, 180);
             rt.anchoredPosition = new Vector2
-                (Mathf.Lerp(homeX - slideAmount, homeX, 1 - (slideTimer / slideTime)),
+                (Mathf.Lerp(homeX, homeX + slideAmount, 1 - (slideTimer / slideTime)),
                  rt.anchoredPosition.y);
+            
             //tempIcon.GetComponent<Image>().enabled = true;
             //GameObject.Find("Main Camera").GetComponent<MovingCamera>().enabled = true;
 
@@ -74,10 +76,15 @@ public class TempWindowControl : MonoBehaviour
     }
 
 
-    void Controler()
+    public void Controler()
     {
         open = !open;
         slideTimer = slideTime;
+        guiPressed = true;
     }
 
+    public bool IsNotMoving()
+    {
+        return slideTimer == 0;
+    }
 }

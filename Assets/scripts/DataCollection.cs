@@ -65,8 +65,9 @@ public class DataCollection : MonoBehaviour
             write_csv(false);
         }
 
+        // UNCOMMENT LATER
         //reset these var so they can restart count for new turn
-        collect.species.Clear();
+        //collect.species.Clear();
         shop_.buy_press = 0;
         shop_.sell_press = 0;
         return;

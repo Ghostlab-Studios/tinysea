@@ -175,7 +175,7 @@ public class ShopManager : MonoBehaviour {
     /// <param name="amount">The amount to change the current amount to sell by.</param>
     public void ChangeAmountToSell(int amount)
     {
-        amountToSell = Mathf.Clamp(amountToSell + amount, 0, Mathf.RoundToInt(playerManager.species[currentOrganismID].speciesAmount));
+        amountToSell = Mathf.Clamp(amountToSell + amount, 0, Mathf.FloorToInt(playerManager.species[currentOrganismID].speciesAmount));
         amountToSellText.text = amountToSell.ToString();
         totalMoneyGainedText.text = "+ $" + (amountToSell * Mathf.RoundToInt(playerManager.species[currentOrganismID].cost * 0.75f)).ToString();
     }

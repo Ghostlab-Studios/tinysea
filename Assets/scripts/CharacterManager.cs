@@ -125,8 +125,8 @@ public class CharacterManager : MonoBehaviour {
         else 
         {
             float fishToMax = (player.maxFishes) - player.getTotalFishCount();
-
-            float reproduced = speciesAmount * getFinalPerformance() * (reproductionMultiplier) * days;
+            float reproReduction = foodChainLevel == 1 && !HasCreaturesOfTier(2) ? 0.85f : 1f;
+            float reproduced = speciesAmount * getFinalPerformance() * reproductionMultiplier * reproReduction * days;
             if (reproduced > fishToMax)
             {
                 reproduced = fishToMax;
@@ -150,7 +150,12 @@ public class CharacterManager : MonoBehaviour {
         }
     }
 
-
-
-	
+    private bool HasCreaturesOfTier(int tier)
+    {
+        foreach (CharacterManager c in player.species)
+        {
+            return c.foodChainLevel == tier && c.speciesAmount > 0;
+        }
+        return false;
+    }
 }

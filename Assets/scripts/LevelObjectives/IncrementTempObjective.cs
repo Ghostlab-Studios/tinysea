@@ -38,6 +38,7 @@ public class IncrementTempObjective : MonoBehaviour, ILevelEvent
 
     public bool IsEventComplete()
     {
+        if (temp.setRandomForecast) { temp.setRandomForecast = false; }
         if (!pm.busy && !pm.holder.anyCreaturesBusy() && !roundHasPassed) { roundHasPassed = true; }
         if (!eventHasStarted) { eventHasStarted = true; }
         if (roundsSinceStart >= roundsBetweenIncrement * numIncrements)
@@ -54,6 +55,20 @@ public class IncrementTempObjective : MonoBehaviour, ILevelEvent
         {
             roundsSinceStart++;
             if (roundsSinceStart % roundsBetweenIncrement == 0) { Temperature.tMean += tempIncrease; }
+            if (roundsSinceStart % roundsBetweenIncrement == roundsBetweenIncrement - 1)
+            {
+                temp.forecastHigh = Temperature.tMean + tempIncrease;
+                temp.forecastLow = Temperature.tMean + tempIncrease;
+                // temp.forecastHighText.text = temp.forecastHigh.ToString();
+                // temp.forecastLowText.text = temp.forecastLow.ToString();
+            }
+            else
+            {
+                temp.forecastHigh = Temperature.tMean;
+                temp.forecastLow = Temperature.tMean;
+                // temp.forecastHighText.text = temp.forecastHigh.ToString();
+                // temp.forecastLowText.text = temp.forecastLow.ToString();
+            }
             roundHasPassed = false;
         }
     }

@@ -59,11 +59,12 @@ public class Temperature : MonoBehaviour
     public float forecastRand = 5;
     public TemperatureTrend trend;
 
-    public float currentDay = 1;    // Try changing to 0 at some point
+    public float currentDay = 1;    // Try changing to 0 at some point?
     public float step = 5;          // Number of days between each turn
     public float period;            // Number of turns per year
     public static float tMean;      // Yearly average temperature
 
+    public bool setRandomForecast = true;
     public Text tempText;
     public Text forecastHighText;
     public Text forecastLowText;
@@ -149,17 +150,20 @@ public class Temperature : MonoBehaviour
         period = 365f / step;
         temperature = tMean;
         nextDayTemp = trend.GetTemperature(currentDay + step, period, tMean);
-        forecastHigh = Mathf.Clamp(nextDayTemp + Random.Range(0, forecastRand), 0, 40);
-        forecastLow = Mathf.Clamp(nextDayTemp - Random.Range(0, forecastRand), 0, 40);
-        possibleTemperatures = new List<float>();
-        possibleLikelihoods = new List<int>();
-        possibleTemperatures.Add(forecastHigh);
-        possibleTemperatures.Add(forecastLow);
-        possibleLikelihoods.Add(1);
-        possibleLikelihoods.Add(1);
-        forecastSlider.UpdateSliderPositions(forecastLow, forecastHigh);
-        forecastHighText.text = Mathf.RoundToInt(forecastHigh).ToString();
-        forecastLowText.text = Mathf.RoundToInt(forecastLow).ToString();
+        if (setRandomForecast)
+        {
+            forecastHigh = Mathf.Clamp(nextDayTemp + Random.Range(0, forecastRand), 0, 40);
+            forecastLow = Mathf.Clamp(nextDayTemp - Random.Range(0, forecastRand), 0, 40);
+            possibleTemperatures = new List<float>();
+            possibleLikelihoods = new List<int>();
+            possibleTemperatures.Add(forecastHigh);
+            possibleTemperatures.Add(forecastLow);
+            possibleLikelihoods.Add(1);
+            possibleLikelihoods.Add(1);
+            forecastSlider.UpdateSliderPositions(forecastLow, forecastHigh);
+            forecastHighText.text = Mathf.RoundToInt(forecastHigh).ToString();
+            forecastLowText.text = Mathf.RoundToInt(forecastLow).ToString();
+        }
         //GenerateTemperature(currentDay);
         generatePossibilities();
         //GenerateTemperature(currentDay);

@@ -176,8 +176,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 10
-  targetCreatureCount: 5
-  activeTiers: 01000000
+  targetCreatureCount: 2
+  activeTiers: 02000000
   activeVariants: 02000000
 --- !u!114 &114514004477984566
 MonoBehaviour:
@@ -207,7 +207,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ID: 9
   dialogue:
-  - text: Get tropical tier 2 organism objective
+  - text: Get tropical tier 3 organism objective
     activeObjects: []
 --- !u!114 &114717629561521208
 MonoBehaviour:

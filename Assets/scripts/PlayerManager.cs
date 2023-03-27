@@ -42,6 +42,8 @@ public class PlayerManager : MonoBehaviour {
     //gameobjects
     public Text moneyText;
 
+    public int tierScaling = 5;
+
     public RectTransform tier1EcoBar;
     public RectTransform tier2EcoBar;
     public RectTransform tier3EcoBar;
@@ -160,8 +162,8 @@ public class PlayerManager : MonoBehaviour {
         if (totalFishes > 0)
         {
             float t1Proportion = getTotalAmountAtLevel(1) / totalFishes;
-            float t2Proportion = (getTotalAmountAtLevel(2) * 3) / totalFishes;
-            float t3Proportion = (getTotalAmountAtLevel(3) * 9) / totalFishes;
+            float t2Proportion = (getTotalAmountAtLevel(2) * tierScaling) / totalFishes;
+            float t3Proportion = (getTotalAmountAtLevel(3) * tierScaling * tierScaling) / totalFishes;
 
             Vector3 tiersProp = new Vector3(t1Proportion, t2Proportion, t3Proportion) / 
                                 Mathf.Max(t1Proportion, t2Proportion, t3Proportion);
@@ -312,6 +314,7 @@ public class PlayerManager : MonoBehaviour {
             float ratio = c.speciesAmount / totalAmount;
             float eatenFish = ratio * eatAmount;
             c.speciesAmount = c.speciesAmount - eatenFish;
+            if (eatenFish > 0) Debug.Log("Amount of " + c.uniqueName + " eaten: " + eatenFish.ToString());
             for (int i = 0; i < eatenFish - .9f; i++)
             {
                 c.deathList.Enqueue(CharacterManager.DeathCause.Eaten);

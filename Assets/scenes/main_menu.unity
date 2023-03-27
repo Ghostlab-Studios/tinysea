@@ -3325,7 +3325,7 @@ MonoBehaviour:
     rand: 10
   - name: Level1
     environment: {fileID: 21300000, guid: 12dce599a493aac4a9be6e35c529701a, type: 3}
-    tMean: 15
+    tMean: 20
     clim: 0
     yrRange: 0
     rand: 0

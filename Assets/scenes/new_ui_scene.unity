@@ -3029,7 +3029,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 11467588, guid: ad58b2f655382a749b02e66437cd5fee, type: 2}
       propertyPath: deathThreashold
-      value: 0.05
+      value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 11467588, guid: ad58b2f655382a749b02e66437cd5fee, type: 2}
       propertyPath: icon
@@ -3047,6 +3047,10 @@ Prefab:
     - target: {fileID: 11467588, guid: ad58b2f655382a749b02e66437cd5fee, type: 2}
       propertyPath: variant
       value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 11467588, guid: ad58b2f655382a749b02e66437cd5fee, type: 2}
+      propertyPath: reproductionMultiplier
+      value: 0.7
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: ad58b2f655382a749b02e66437cd5fee, type: 2}
@@ -6454,7 +6458,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 11460378, guid: aef99a6e29bc5c149b5cef96262d3834, type: 2}
       propertyPath: deathThreashold
-      value: 0.05
+      value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 11460378, guid: aef99a6e29bc5c149b5cef96262d3834, type: 2}
       propertyPath: icon
@@ -6472,6 +6476,14 @@ Prefab:
     - target: {fileID: 11460378, guid: aef99a6e29bc5c149b5cef96262d3834, type: 2}
       propertyPath: variant
       value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 11460378, guid: aef99a6e29bc5c149b5cef96262d3834, type: 2}
+      propertyPath: reproductionMultiplier
+      value: 0.05
+      objectReference: {fileID: 0}
+    - target: {fileID: 11460378, guid: aef99a6e29bc5c149b5cef96262d3834, type: 2}
+      propertyPath: eatingAmount
+      value: 0.75
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: aef99a6e29bc5c149b5cef96262d3834, type: 2}
@@ -6921,7 +6933,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 11485606, guid: ae0e463ecfbf45743bebefcdd88f0317, type: 2}
       propertyPath: deathThreashold
-      value: 0.05
+      value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 11485606, guid: ae0e463ecfbf45743bebefcdd88f0317, type: 2}
       propertyPath: uniqueName
@@ -6943,6 +6955,14 @@ Prefab:
     - target: {fileID: 11485606, guid: ae0e463ecfbf45743bebefcdd88f0317, type: 2}
       propertyPath: reproductionRateText
       value: High
+      objectReference: {fileID: 0}
+    - target: {fileID: 11485606, guid: ae0e463ecfbf45743bebefcdd88f0317, type: 2}
+      propertyPath: reproductionMultiplier
+      value: 0.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 11485606, guid: ae0e463ecfbf45743bebefcdd88f0317, type: 2}
+      propertyPath: eatingAmount
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: ae0e463ecfbf45743bebefcdd88f0317, type: 2}
@@ -7004,7 +7024,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 11438652, guid: 87ae41937cbca534da44957a4ab72853, type: 2}
       propertyPath: deathThreashold
-      value: 0.05
+      value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 11438652, guid: 87ae41937cbca534da44957a4ab72853, type: 2}
       propertyPath: icon
@@ -7022,6 +7042,14 @@ Prefab:
     - target: {fileID: 11438652, guid: 87ae41937cbca534da44957a4ab72853, type: 2}
       propertyPath: variant
       value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 11438652, guid: 87ae41937cbca534da44957a4ab72853, type: 2}
+      propertyPath: reproductionMultiplier
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11438652, guid: 87ae41937cbca534da44957a4ab72853, type: 2}
+      propertyPath: eatingAmount
+      value: 1.5
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 87ae41937cbca534da44957a4ab72853, type: 2}
@@ -10332,7 +10360,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 11456368, guid: e3ab19f3fcc1b934e84f1f994d43e9a2, type: 2}
       propertyPath: deathThreashold
-      value: 0.05
+      value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 11456368, guid: e3ab19f3fcc1b934e84f1f994d43e9a2, type: 2}
       propertyPath: icon
@@ -10346,6 +10374,14 @@ Prefab:
     - target: {fileID: 11456368, guid: e3ab19f3fcc1b934e84f1f994d43e9a2, type: 2}
       propertyPath: reproductionRateText
       value: Average
+      objectReference: {fileID: 0}
+    - target: {fileID: 11456368, guid: e3ab19f3fcc1b934e84f1f994d43e9a2, type: 2}
+      propertyPath: reproductionMultiplier
+      value: 0.225
+      objectReference: {fileID: 0}
+    - target: {fileID: 11456368, guid: e3ab19f3fcc1b934e84f1f994d43e9a2, type: 2}
+      propertyPath: eatingAmount
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: e3ab19f3fcc1b934e84f1f994d43e9a2, type: 2}
@@ -16121,7 +16157,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 11402386, guid: f72052a7af4ba084888d736f2259bb4f, type: 2}
       propertyPath: deathThreashold
-      value: 0.05
+      value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 11402386, guid: f72052a7af4ba084888d736f2259bb4f, type: 2}
       propertyPath: icon
@@ -16139,6 +16175,10 @@ Prefab:
     - target: {fileID: 11402386, guid: f72052a7af4ba084888d736f2259bb4f, type: 2}
       propertyPath: variant
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11402386, guid: f72052a7af4ba084888d736f2259bb4f, type: 2}
+      propertyPath: reproductionMultiplier
+      value: 0.7
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: f72052a7af4ba084888d736f2259bb4f, type: 2}
@@ -18413,7 +18453,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 11451700, guid: bdb1d12367a942b4d9c53f5567b8c2e3, type: 2}
       propertyPath: deathThreashold
-      value: 0.05
+      value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 11451700, guid: bdb1d12367a942b4d9c53f5567b8c2e3, type: 2}
       propertyPath: icon
@@ -18427,6 +18467,10 @@ Prefab:
     - target: {fileID: 11451700, guid: bdb1d12367a942b4d9c53f5567b8c2e3, type: 2}
       propertyPath: reproductionRateText
       value: High
+      objectReference: {fileID: 0}
+    - target: {fileID: 11451700, guid: bdb1d12367a942b4d9c53f5567b8c2e3, type: 2}
+      propertyPath: reproductionMultiplier
+      value: 0.7
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: bdb1d12367a942b4d9c53f5567b8c2e3, type: 2}
@@ -21003,7 +21047,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 11482288, guid: 51557c2796b816a4dad08023652aaf55, type: 2}
       propertyPath: deathThreashold
-      value: 0.05
+      value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 11482288, guid: 51557c2796b816a4dad08023652aaf55, type: 2}
       propertyPath: icon
@@ -21017,6 +21061,10 @@ Prefab:
     - target: {fileID: 11482288, guid: 51557c2796b816a4dad08023652aaf55, type: 2}
       propertyPath: reproductionRateText
       value: Low
+      objectReference: {fileID: 0}
+    - target: {fileID: 11482288, guid: 51557c2796b816a4dad08023652aaf55, type: 2}
+      propertyPath: reproductionMultiplier
+      value: 0.45
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 51557c2796b816a4dad08023652aaf55, type: 2}
@@ -28062,7 +28110,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 11473918, guid: 02857cde48ea74441be874c263cc9120, type: 2}
       propertyPath: deathThreashold
-      value: 0.05
+      value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 11473918, guid: 02857cde48ea74441be874c263cc9120, type: 2}
       propertyPath: uniqueName
@@ -28083,6 +28131,14 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 11473918, guid: 02857cde48ea74441be874c263cc9120, type: 2}
       propertyPath: variant
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11473918, guid: 02857cde48ea74441be874c263cc9120, type: 2}
+      propertyPath: reproductionMultiplier
+      value: 0.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 11473918, guid: 02857cde48ea74441be874c263cc9120, type: 2}
+      propertyPath: eatingAmount
       value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
@@ -30067,7 +30123,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 11467484, guid: a854f2df4fa6700449d215ee9bd2c640, type: 2}
       propertyPath: deathThreashold
-      value: 0.05
+      value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 182522, guid: a854f2df4fa6700449d215ee9bd2c640, type: 2}
       propertyPath: m_Name
@@ -30089,6 +30145,10 @@ Prefab:
     - target: {fileID: 11467484, guid: a854f2df4fa6700449d215ee9bd2c640, type: 2}
       propertyPath: reproductionRateText
       value: Average
+      objectReference: {fileID: 0}
+    - target: {fileID: 11467484, guid: a854f2df4fa6700449d215ee9bd2c640, type: 2}
+      propertyPath: reproductionMultiplier
+      value: 0.45
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: a854f2df4fa6700449d215ee9bd2c640, type: 2}
@@ -36855,10 +36915,11 @@ MonoBehaviour:
   dailyIncome: 100
   netWorthIncomeRate: 0
   sellRate: 0.75
-  maxFishes: 500
+  maxFishes: 350
   stepWaitTime: 3
   busy: 0
   moneyText: {fileID: 1478096806}
+  tierScaling: 5
   tier1EcoBar: {fileID: 1104233093}
   tier2EcoBar: {fileID: 881088004}
   tier3EcoBar: {fileID: 2106667188}
@@ -38069,7 +38130,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 11473588, guid: 16840f16cc3c3914abfebb50670aaef1, type: 2}
       propertyPath: deathThreashold
-      value: 0.05
+      value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 100760, guid: 16840f16cc3c3914abfebb50670aaef1, type: 2}
       propertyPath: m_Name
@@ -38095,6 +38156,10 @@ Prefab:
     - target: {fileID: 11473588, guid: 16840f16cc3c3914abfebb50670aaef1, type: 2}
       propertyPath: variant
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11473588, guid: 16840f16cc3c3914abfebb50670aaef1, type: 2}
+      propertyPath: reproductionMultiplier
+      value: 0.45
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 16840f16cc3c3914abfebb50670aaef1, type: 2}
@@ -43627,7 +43692,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 11415732, guid: a457ca65ccc0d4d4886fb2c0d094f5f2, type: 2}
       propertyPath: deathThreashold
-      value: 0.05
+      value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 11415732, guid: a457ca65ccc0d4d4886fb2c0d094f5f2, type: 2}
       propertyPath: icon
@@ -43645,6 +43710,14 @@ Prefab:
     - target: {fileID: 11415732, guid: a457ca65ccc0d4d4886fb2c0d094f5f2, type: 2}
       propertyPath: variant
       value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 11415732, guid: a457ca65ccc0d4d4886fb2c0d094f5f2, type: 2}
+      propertyPath: reproductionMultiplier
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11415732, guid: a457ca65ccc0d4d4886fb2c0d094f5f2, type: 2}
+      propertyPath: eatingAmount
+      value: 0.5
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: a457ca65ccc0d4d4886fb2c0d094f5f2, type: 2}
@@ -44413,7 +44486,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 11483554, guid: d81d955636ea6924bafc0ee278d585a6, type: 2}
       propertyPath: deathThreashold
-      value: 0.05
+      value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 11483554, guid: d81d955636ea6924bafc0ee278d585a6, type: 2}
       propertyPath: icon
@@ -44431,6 +44504,14 @@ Prefab:
     - target: {fileID: 11483554, guid: d81d955636ea6924bafc0ee278d585a6, type: 2}
       propertyPath: variant
       value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 11483554, guid: d81d955636ea6924bafc0ee278d585a6, type: 2}
+      propertyPath: reproductionMultiplier
+      value: 0.225
+      objectReference: {fileID: 0}
+    - target: {fileID: 11483554, guid: d81d955636ea6924bafc0ee278d585a6, type: 2}
+      propertyPath: eatingAmount
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: d81d955636ea6924bafc0ee278d585a6, type: 2}
@@ -44492,7 +44573,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 11424892, guid: 63d49cda01b824c4d9c49eb958b9cd49, type: 2}
       propertyPath: deathThreashold
-      value: 0.05
+      value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 11424892, guid: 63d49cda01b824c4d9c49eb958b9cd49, type: 2}
       propertyPath: icon
@@ -44506,6 +44587,14 @@ Prefab:
     - target: {fileID: 11424892, guid: 63d49cda01b824c4d9c49eb958b9cd49, type: 2}
       propertyPath: reproductionRateText
       value: High
+      objectReference: {fileID: 0}
+    - target: {fileID: 11424892, guid: 63d49cda01b824c4d9c49eb958b9cd49, type: 2}
+      propertyPath: reproductionMultiplier
+      value: 0.15
+      objectReference: {fileID: 0}
+    - target: {fileID: 11424892, guid: 63d49cda01b824c4d9c49eb958b9cd49, type: 2}
+      propertyPath: eatingAmount
+      value: 0.5
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 63d49cda01b824c4d9c49eb958b9cd49, type: 2}
@@ -46930,6 +47019,7 @@ MonoBehaviour:
   currentDay: 0
   step: 5
   period: 0
+  setRandomForecast: 1
   tempText: {fileID: 2083083731}
   forecastHighText: {fileID: 1047946326}
   forecastLowText: {fileID: 2025533717}
@@ -52922,7 +53012,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 11490118, guid: 270bb834eead2b84c8d2c011aea9ee1e, type: 2}
       propertyPath: deathThreashold
-      value: 0.05
+      value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 11490118, guid: 270bb834eead2b84c8d2c011aea9ee1e, type: 2}
       propertyPath: icon
@@ -52940,6 +53030,14 @@ Prefab:
     - target: {fileID: 11490118, guid: 270bb834eead2b84c8d2c011aea9ee1e, type: 2}
       propertyPath: variant
       value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 11490118, guid: 270bb834eead2b84c8d2c011aea9ee1e, type: 2}
+      propertyPath: reproductionMultiplier
+      value: 0.15
+      objectReference: {fileID: 0}
+    - target: {fileID: 11490118, guid: 270bb834eead2b84c8d2c011aea9ee1e, type: 2}
+      propertyPath: eatingAmount
+      value: 0.5
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 270bb834eead2b84c8d2c011aea9ee1e, type: 2}
@@ -58521,7 +58619,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 11489014, guid: 299703aab18f3e540b10aee84add3190, type: 2}
       propertyPath: deathThreashold
-      value: 0.05
+      value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 11489014, guid: 299703aab18f3e540b10aee84add3190, type: 2}
       propertyPath: icon
@@ -58539,6 +58637,10 @@ Prefab:
     - target: {fileID: 11489014, guid: 299703aab18f3e540b10aee84add3190, type: 2}
       propertyPath: variant
       value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 11489014, guid: 299703aab18f3e540b10aee84add3190, type: 2}
+      propertyPath: reproductionMultiplier
+      value: 0.45
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 299703aab18f3e540b10aee84add3190, type: 2}
@@ -61847,7 +61949,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 11403940, guid: 8eaecafbbcfe7554d8773c9b35dd0e51, type: 2}
       propertyPath: deathThreashold
-      value: 0.05
+      value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 11403940, guid: 8eaecafbbcfe7554d8773c9b35dd0e51, type: 2}
       propertyPath: uniqueName
@@ -61873,6 +61975,14 @@ Prefab:
     - target: {fileID: 11403940, guid: 8eaecafbbcfe7554d8773c9b35dd0e51, type: 2}
       propertyPath: variant
       value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 11403940, guid: 8eaecafbbcfe7554d8773c9b35dd0e51, type: 2}
+      propertyPath: reproductionMultiplier
+      value: 0.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 11403940, guid: 8eaecafbbcfe7554d8773c9b35dd0e51, type: 2}
+      propertyPath: eatingAmount
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 8eaecafbbcfe7554d8773c9b35dd0e51, type: 2}
@@ -73347,7 +73457,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 11499502, guid: 7f69e947e4d576642a1710329653b50b, type: 2}
       propertyPath: deathThreashold
-      value: 0.05
+      value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 11499502, guid: 7f69e947e4d576642a1710329653b50b, type: 2}
       propertyPath: icon
@@ -73364,6 +73474,14 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 11499502, guid: 7f69e947e4d576642a1710329653b50b, type: 2}
       propertyPath: variant
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11499502, guid: 7f69e947e4d576642a1710329653b50b, type: 2}
+      propertyPath: reproductionMultiplier
+      value: 0.225
+      objectReference: {fileID: 0}
+    - target: {fileID: 11499502, guid: 7f69e947e4d576642a1710329653b50b, type: 2}
+      propertyPath: eatingAmount
       value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
@@ -73654,7 +73772,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 11456696, guid: 76e496a025de4ed4bbaccdd7e1809cc6, type: 2}
       propertyPath: deathThreashold
-      value: 0.05
+      value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 11456696, guid: 76e496a025de4ed4bbaccdd7e1809cc6, type: 2}
       propertyPath: icon
@@ -73672,6 +73790,14 @@ Prefab:
     - target: {fileID: 11456696, guid: 76e496a025de4ed4bbaccdd7e1809cc6, type: 2}
       propertyPath: variant
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11456696, guid: 76e496a025de4ed4bbaccdd7e1809cc6, type: 2}
+      propertyPath: reproductionMultiplier
+      value: 0.05
+      objectReference: {fileID: 0}
+    - target: {fileID: 11456696, guid: 76e496a025de4ed4bbaccdd7e1809cc6, type: 2}
+      propertyPath: eatingAmount
+      value: 0.75
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 76e496a025de4ed4bbaccdd7e1809cc6, type: 2}
@@ -74769,7 +74895,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 11417200, guid: 3633e847b08479c4d8b59a1d929fc6d2, type: 2}
       propertyPath: deathThreashold
-      value: 0.05
+      value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 11417200, guid: 3633e847b08479c4d8b59a1d929fc6d2, type: 2}
       propertyPath: icon
@@ -74783,6 +74909,14 @@ Prefab:
     - target: {fileID: 11417200, guid: 3633e847b08479c4d8b59a1d929fc6d2, type: 2}
       propertyPath: reproductionRateText
       value: Low
+      objectReference: {fileID: 0}
+    - target: {fileID: 11417200, guid: 3633e847b08479c4d8b59a1d929fc6d2, type: 2}
+      propertyPath: reproductionMultiplier
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11417200, guid: 3633e847b08479c4d8b59a1d929fc6d2, type: 2}
+      propertyPath: eatingAmount
+      value: 1.5
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 3633e847b08479c4d8b59a1d929fc6d2, type: 2}
@@ -75854,7 +75988,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 11410708, guid: e70f05e9d22ea8d4d902ad545117265d, type: 2}
       propertyPath: deathThreashold
-      value: 0.05
+      value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 11410708, guid: e70f05e9d22ea8d4d902ad545117265d, type: 2}
       propertyPath: fedRate
@@ -75876,6 +76010,14 @@ Prefab:
     - target: {fileID: 11410708, guid: e70f05e9d22ea8d4d902ad545117265d, type: 2}
       propertyPath: variant
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11410708, guid: e70f05e9d22ea8d4d902ad545117265d, type: 2}
+      propertyPath: reproductionMultiplier
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11410708, guid: e70f05e9d22ea8d4d902ad545117265d, type: 2}
+      propertyPath: eatingAmount
+      value: 1.5
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: e70f05e9d22ea8d4d902ad545117265d, type: 2}
@@ -76147,7 +76289,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 11406282, guid: 0dd7938ee7374e64aa2e46501f3aa0d0, type: 2}
       propertyPath: deathThreashold
-      value: 0.05
+      value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 11406282, guid: 0dd7938ee7374e64aa2e46501f3aa0d0, type: 2}
       propertyPath: icon
@@ -76165,6 +76307,10 @@ Prefab:
     - target: {fileID: 11406282, guid: 0dd7938ee7374e64aa2e46501f3aa0d0, type: 2}
       propertyPath: variant
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11406282, guid: 0dd7938ee7374e64aa2e46501f3aa0d0, type: 2}
+      propertyPath: reproductionMultiplier
+      value: 0.45
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 0dd7938ee7374e64aa2e46501f3aa0d0, type: 2}
@@ -76652,7 +76798,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 11434696, guid: eaa4f7fe4b373404fa9ca044eb6026ed, type: 2}
       propertyPath: deathThreashold
-      value: 0.05
+      value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 11434696, guid: eaa4f7fe4b373404fa9ca044eb6026ed, type: 2}
       propertyPath: icon
@@ -76666,6 +76812,14 @@ Prefab:
     - target: {fileID: 11434696, guid: eaa4f7fe4b373404fa9ca044eb6026ed, type: 2}
       propertyPath: reproductionRateText
       value: Average
+      objectReference: {fileID: 0}
+    - target: {fileID: 11434696, guid: eaa4f7fe4b373404fa9ca044eb6026ed, type: 2}
+      propertyPath: reproductionMultiplier
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11434696, guid: eaa4f7fe4b373404fa9ca044eb6026ed, type: 2}
+      propertyPath: eatingAmount
+      value: 0.5
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: eaa4f7fe4b373404fa9ca044eb6026ed, type: 2}
@@ -77051,7 +77205,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 11431190, guid: 399f0e974cd2606478d58af607646dec, type: 2}
       propertyPath: deathThreashold
-      value: 0.05
+      value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 145568, guid: 399f0e974cd2606478d58af607646dec, type: 2}
       propertyPath: m_Name
@@ -77077,6 +77231,10 @@ Prefab:
     - target: {fileID: 11431190, guid: 399f0e974cd2606478d58af607646dec, type: 2}
       propertyPath: variant
       value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 11431190, guid: 399f0e974cd2606478d58af607646dec, type: 2}
+      propertyPath: reproductionMultiplier
+      value: 0.45
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 399f0e974cd2606478d58af607646dec, type: 2}
@@ -78299,7 +78457,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 11415740, guid: c683b4953e8e3d644b01b4c7e0a5e8cb, type: 2}
       propertyPath: deathThreashold
-      value: 0.05
+      value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 11415740, guid: c683b4953e8e3d644b01b4c7e0a5e8cb, type: 2}
       propertyPath: icon
@@ -78313,6 +78471,14 @@ Prefab:
     - target: {fileID: 11415740, guid: c683b4953e8e3d644b01b4c7e0a5e8cb, type: 2}
       propertyPath: reproductionRateText
       value: Low
+      objectReference: {fileID: 0}
+    - target: {fileID: 11415740, guid: c683b4953e8e3d644b01b4c7e0a5e8cb, type: 2}
+      propertyPath: reproductionMultiplier
+      value: 0.15
+      objectReference: {fileID: 0}
+    - target: {fileID: 11415740, guid: c683b4953e8e3d644b01b4c7e0a5e8cb, type: 2}
+      propertyPath: eatingAmount
+      value: 0.75
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: c683b4953e8e3d644b01b4c7e0a5e8cb, type: 2}
@@ -80918,7 +81084,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 11465106, guid: 0f5d5b490c930de4b880101ae68eac7c, type: 2}
       propertyPath: deathThreashold
-      value: 0.05
+      value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 11465106, guid: 0f5d5b490c930de4b880101ae68eac7c, type: 2}
       propertyPath: icon
@@ -80936,6 +81102,14 @@ Prefab:
     - target: {fileID: 11465106, guid: 0f5d5b490c930de4b880101ae68eac7c, type: 2}
       propertyPath: variant
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11465106, guid: 0f5d5b490c930de4b880101ae68eac7c, type: 2}
+      propertyPath: reproductionMultiplier
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11465106, guid: 0f5d5b490c930de4b880101ae68eac7c, type: 2}
+      propertyPath: eatingAmount
+      value: 0.5
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 0f5d5b490c930de4b880101ae68eac7c, type: 2}
@@ -92851,7 +93025,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 11412362, guid: 3032856d14a8d1f4492258bf18bb52b4, type: 2}
       propertyPath: deathThreashold
-      value: 0.05
+      value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 11412362, guid: 3032856d14a8d1f4492258bf18bb52b4, type: 2}
       propertyPath: icon
@@ -92869,6 +93043,14 @@ Prefab:
     - target: {fileID: 11412362, guid: 3032856d14a8d1f4492258bf18bb52b4, type: 2}
       propertyPath: variant
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11412362, guid: 3032856d14a8d1f4492258bf18bb52b4, type: 2}
+      propertyPath: reproductionMultiplier
+      value: 0.15
+      objectReference: {fileID: 0}
+    - target: {fileID: 11412362, guid: 3032856d14a8d1f4492258bf18bb52b4, type: 2}
+      propertyPath: eatingAmount
+      value: 0.5
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 3032856d14a8d1f4492258bf18bb52b4, type: 2}

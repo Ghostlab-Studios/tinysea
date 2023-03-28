@@ -153,17 +153,17 @@ public class PlayerManager : MonoBehaviour {
 
         //set ecosystem pyramid.
         float totalFishes = getTotalFishCount();
-        if (totalFishes <= 0)
+        if (Mathf.FloorToInt(totalFishes) <= 0)
         {
             tier1EcoBar.localScale = new Vector3(0, 1, 1);
             tier2EcoBar.localScale = new Vector3(0, 1, 1);
             tier3EcoBar.localScale = new Vector3(0, 1, 1);
         }
-        if (totalFishes > 0)
+        if (Mathf.FloorToInt(totalFishes) > 0)
         {
-            float t1Proportion = getTotalAmountAtLevel(1) / totalFishes;
-            float t2Proportion = (getTotalAmountAtLevel(2) * tierScaling) / totalFishes;
-            float t3Proportion = (getTotalAmountAtLevel(3) * tierScaling * tierScaling) / totalFishes;
+            float t1Proportion = Mathf.FloorToInt(getTotalAmountAtLevel(1)) / totalFishes;
+            float t2Proportion = (Mathf.FloorToInt(getTotalAmountAtLevel(2)) * tierScaling) / totalFishes;
+            float t3Proportion = (Mathf.FloorToInt(getTotalAmountAtLevel(3)) * tierScaling * tierScaling) / totalFishes;
 
             Vector3 tiersProp = new Vector3(t1Proportion, t2Proportion, t3Proportion) / 
                                 Mathf.Max(t1Proportion, t2Proportion, t3Proportion);
@@ -178,6 +178,10 @@ public class PlayerManager : MonoBehaviour {
                 tier2Glow.gameObject.SetActive(false);
                 tier3Glow.gameObject.SetActive(false);
                 fullGlow.gameObject.SetActive(true);
+            }
+            else
+            {
+                fullGlow.gameObject.SetActive(false);
             }
 
             if (tiersProp.x == 1)

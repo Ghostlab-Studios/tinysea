@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Controls animations for the Settings Menu found in the main menu screen and gameplay scene.
+/// </summary>
 public class SettingsMenuController : MonoBehaviour {
 
     public Animator UIAnimator;
@@ -21,7 +24,7 @@ public class SettingsMenuController : MonoBehaviour {
                 UIAnimator.SetTrigger("CloseMenu");
                 sfxSlider.SetActive(false);
                 musicSlider.SetActive(false);
-                homeMenu.SetActive(false);
+                if (homeMenu) { homeMenu.SetActive(false); }
                 isOpen = false;
             }
             else
@@ -44,7 +47,7 @@ public class SettingsMenuController : MonoBehaviour {
 
     public void HomePressed()
     {
-        if (!IsBusy()) { homeMenu.SetActive(!homeMenu.activeSelf); }
+        if (!IsBusy() && homeMenu) { homeMenu.SetActive(!homeMenu.activeSelf); }
     }
 
     public void SavePressed()

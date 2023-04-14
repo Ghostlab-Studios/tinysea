@@ -52,7 +52,7 @@ public class EcoWindowControl : MonoBehaviour
         if (open == false)
         {
             //ecoIcon.GetComponent<Image>().enabled = true;
-            controler.transform.rotation = Quaternion.Euler(0, 0, 180);
+            controler.transform.rotation = Quaternion.Euler(0, 0, 0);
             rt.anchoredPosition = new Vector2
                 (Mathf.Lerp(homeX - slideAmount, homeX, 1 - (slideTimer / slideTime)),
                  rt.anchoredPosition.y);
@@ -63,7 +63,7 @@ public class EcoWindowControl : MonoBehaviour
         if (open == true)
         {
             //ecoIcon.GetComponent<Image>().enabled = false;
-            controler.transform.rotation = Quaternion.Euler(0, 0, 0);
+            controler.transform.rotation = Quaternion.Euler(0, 0, 180);
             rt.anchoredPosition = new Vector2
                 (Mathf.Lerp(homeX, homeX - slideAmount, 1 - (slideTimer / slideTime)),
                  rt.anchoredPosition.y);

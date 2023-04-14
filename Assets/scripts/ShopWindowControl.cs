@@ -54,7 +54,7 @@ public class ShopWindowControl : MonoBehaviour {
 		if (open == false)
         {
             //shopIcon.SetActive(true);
-			controller.transform.rotation = Quaternion.Euler(0,0,90);
+			controller.transform.rotation = Quaternion.Euler(0,0,-90);
             rt.anchoredPosition = new Vector2
 				(rt.anchoredPosition.x,
                  Mathf.Lerp(homeY + slideAmount, homeY, 1 - (slideTimer / slideTime)));
@@ -64,7 +64,7 @@ public class ShopWindowControl : MonoBehaviour {
 
 		if (open == true) {
             //shopIcon.SetActive(false);
-			controller.transform.rotation = Quaternion.Euler(0,0,-90);
+			controller.transform.rotation = Quaternion.Euler(0,0,90);
             rt.anchoredPosition = new Vector2
                 (rt.anchoredPosition.x,
                  Mathf.Lerp(homeY, homeY + slideAmount, 1 - (slideTimer / slideTime)));

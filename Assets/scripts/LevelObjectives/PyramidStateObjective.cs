@@ -17,6 +17,7 @@ public class PyramidStateObjective : MonoBehaviour, ILevelEvent
     public bool tier3Balance;
 
     private PlayerManager playerManager;
+    private Animator textAnim;
 
     private void Awake () {
         InitializeEvent();
@@ -26,6 +27,7 @@ public class PyramidStateObjective : MonoBehaviour, ILevelEvent
     {
         playerManager = GameObject.FindGameObjectWithTag("PlayerManager").GetComponent<PlayerManager>();
         GetComponent<LevelManager>().levelGoals.Add(this);
+        textAnim = GameObject.FindGameObjectWithTag("DialoguePanel").GetComponent<Animator>();
     }
 
     /// <summary>
@@ -33,6 +35,9 @@ public class PyramidStateObjective : MonoBehaviour, ILevelEvent
     /// </summary>
     public bool IsEventComplete()
     {
+        // If the PlayerManager is currently calculating new round's organism totals, don't return true mid-calcs
+        if (playerManager.busy || playerManager.holder.anyCreaturesBusy()) { return false; }
+
         int creaturesAtTier1 = Mathf.FloorToInt(playerManager.getTotalAmountAtLevel(1));
         int creaturesAtTier2 = Mathf.FloorToInt(playerManager.getTotalAmountAtLevel(2));
         int creaturesAtTier3 = Mathf.FloorToInt(playerManager.getTotalAmountAtLevel(3));
@@ -56,7 +61,7 @@ public class PyramidStateObjective : MonoBehaviour, ILevelEvent
         if (tier2Balance) { toReturn = toReturn && tier2ReachesThreshold; }
         if (tier3Balance) { toReturn = toReturn && tier3ReachesThreshold; }
 
-        return toReturn;
+        return toReturn && textAnim.GetCurrentAnimatorStateInfo(0).IsName("InactiveState");
     }
 
     /// <summary>

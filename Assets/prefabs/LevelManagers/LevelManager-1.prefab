@@ -68,11 +68,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ID: 5
   dialogue:
-  - text: Good job. You've been mostly working with Tier I organisms up until this
-      point, but there are other Tiers of organisms as well.
+  - text: "Good job. You\u2019ve created a farm full of plankton! However, there are
+      other Tiers of organisms as well: animals that eat the plankton."
     activeObjects: []
-  - text: Try to buy a Tier II organism. Tier II organisms feed on Tier I organisms,
-      so make sure you have a good amount of Tier I organisms first!
+  - text: You can use the money you got from selling your plankton to buy a Tier II
+      organism. These are known as Herbivores because they eat the plant-like plankton.
+      Herbivores feed on Producers, so make sure you have a good number of plankton
+      first.
     activeObjects: []
 --- !u!114 &114084539228989116
 MonoBehaviour:
@@ -102,12 +104,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ID: 13
   dialogue:
-  - text: Awesome job! Looks like you've really gotten the hang of this.
+  - text: Great! Your food chain is looking healthy and your farm is up and running.
     activeObjects: []
-  - text: I have some other things I need to do now, and seeing as you have everything
-      under control here, I'll leave the rest to you.
+  - text: 'Apart from making sure you have a balanced food chain on your farm, there
+      are more processes that come looking when maintaining a successful aquaculture
+      business.  '
     activeObjects: []
-  - text: Again, good luck! And be sure to have fun.
+  - text: 'For example, the water temperature could change how comfortable your animals
+      are! '
+    activeObjects: []
+  - text: "And gosh, it\u2019s getting warm in here."
     activeObjects: []
 --- !u!114 &114222197523280238
 MonoBehaviour:
@@ -122,11 +128,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ID: 3
   dialogue:
-  - text: Awesome job! Now that you've accumulated some more organisms in your farm,
-      you should sell some to gain a profit.
-    activeObjects: []
-  - text: You can use the money you get from selling organisms to buy new ones. Try
-      it out!
+  - text: Awesome job! Now that you've figured out how to successfully grow plankton,
+      you should sell some to make a profit. Try it out!
     activeObjects: []
 --- !u!114 &114278419105613936
 MonoBehaviour:
@@ -156,8 +159,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ID: 11
   dialogue:
-  - text: Now that you have an organism of each type, try once more to balance each
-      Tier.
+  - text: 'Now that you have an organism of each type, try once more to balance your
+      food pyramid. Remember that for every Predator, 3 Herbivores are needed each
+      turn, and for each Herbivore, 3 Producers are needed each turn. '
+    activeObjects: []
+  - text: This means you need 9 Producers each turn per Predator!
     activeObjects: []
 --- !u!114 &114479549668011984
 MonoBehaviour:
@@ -186,7 +192,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 8
-  tierSizeDifference: 3
+  tierSizeDifference: 5
   delta: 0.15
   tier1Balance: 1
   tier2Balance: 1
@@ -203,7 +209,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 12
-  tierSizeDifference: 3
+  tierSizeDifference: 5
   delta: 0.15
   tier1Balance: 1
   tier2Balance: 1
@@ -236,9 +242,16 @@ MonoBehaviour:
   dialogue:
   - text: Great job! Looks like you really got the hang of this.
     activeObjects: []
-  - text: 'There''s one more Tier of organisms available to you: Tier III organisms.'
+  - text: While Herbivores take more work than Producers do, they also allow you to
+      make more profit. Try selling a Herbivore to see for yourself!
     activeObjects: []
-  - text: Try saving up enough money and buy one.
+  - text: 'There''s one more Tier of organisms available to you: Tier III organisms,
+      the Predators, which eat the Herbivores.'
+    activeObjects: []
+  - text: 'Like Herbivores they are hungry, and need to eat about 3 Herbivores each
+      turn to survive and reproduce. '
+    activeObjects: []
+  - text: Manage your farm and save up for a Predator in your system.
     activeObjects: []
 --- !u!114 &114778836043613394
 MonoBehaviour:
@@ -253,19 +266,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ID: 1
   dialogue:
-  - text: Hello, nice to meet you! You must be the new aquaculture farmer.
+  - text: "Hello, nice to meet you! You must be the new hire! Welcome to what we in
+      the business call \u201Caquaculture\u201D. "
     activeObjects: []
-  - text: This farm is looking a little empty at the moment. To get started, click
-      the arrow to open up the shop and buy some organisms.
+  - text: This enclosure is looking a little empty at the moment. To get started,
+      click the arrow to open up the shop and buy some Tier I organisms.
     activeObjects:
     - objectTag: ArrowIndicator2
       remainsActive: 0
-  - text: Once you've bought a few organisms, click the "Next Turn" button to watch
-      them reproduce!
+  - text: "These Tier 1 organisms are plankton that are the base of what we call a
+      \u201Cfood chain\u201D. These organisms are called Producers because they get
+      their energy from the sun."
+    activeObjects: []
+  - text: Once you've stocked your farm with a few organisms, click the "Next Turn"
+      button to watch them reproduce!
     activeObjects:
     - objectTag: ArrowIndicator3
       remainsActive: 0
-  - text: Your first objective will be to get 15 Tier 1 organisms. Good luck!
+  - text: Your first objective will be to get 15 plankton. Good luck!
     activeObjects: []
 --- !u!114 &114797226665506996
 MonoBehaviour:
@@ -319,23 +337,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ID: 7
   dialogue:
-  - text: Great job! Now that you have Tier I and Tier II creatures, you need to make
-      sure that the amount of organisms in each tier is balanced.
+  - text: Great job! Now that you have Producer (Tier I) and Herbivore (Tier II) organisms,
+      you need to make sure that the food chain is balanced with enough plankton to
+      feed your hungry Herbivores.
     activeObjects: []
-  - text: If the Tiers become unbalanced, some organisms could reproduce beyond control
-      or die out completely.
+  - text: Each one will need to eat about 3 plankton every turn to survive and reproduce.
+    activeObjects: []
+  - text: "If there aren\u2019t enough plankton (producers) in Tier 1 to support all
+      of the Herbivores in Tier 2, the Tier 2 animals will go hungry and die."
     activeObjects: []
   - text: I've given you a new menu that will help out with tracking the balance of
-      your Tiers.
+      your Tiers, you can find this in the top right of your screen.
     activeObjects:
     - objectTag: PyramidUI
       remainsActive: 1
     - objectTag: ArrowIndicator1
       remainsActive: 0
-  - text: Your objective now is to balance the amount of Tier I and Tier II organisms
-      you have.
+  - text: Your objective now is to make sure you maintain enough Tier 1 Producers
+      to support all the Herbivores on your farm.
     activeObjects: []
-  - text: You can tell how balanced your tiers are by how full each segment of the
-      pyramid is. The fuller a section is, the more balanced your pyramid is. Good
-      luck!
+  - text: A healthy food chain looks like a pyramid, where the number of Producers
+      at the base of the web is always large enough to support the rest of the chain.
     activeObjects: []

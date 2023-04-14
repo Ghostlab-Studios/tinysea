@@ -13,6 +13,7 @@ public class IncrementTempObjective : MonoBehaviour, ILevelEvent
     public int tempIncrease;
     public int roundsBetweenIncrement;
     public int numIncrements;
+    public int organismGoal;
 
     private PlayerManager pm;
     private Button nextTurnButton;
@@ -34,6 +35,11 @@ public class IncrementTempObjective : MonoBehaviour, ILevelEvent
         nextTurnButton = GameObject.FindGameObjectWithTag("NextTurnButton").GetComponent<Button>();
         nextTurnButton.onClick.AddListener(OnNextTurnPressed);
         temp = GameObject.FindGameObjectWithTag("Temperature").GetComponent<Temperature>();
+        temp.setRandomForecast = false;
+        temp.forecastHigh = Temperature.tMean;
+        temp.forecastLow = Temperature.tMean;
+        temp.forecastHighText.text = Mathf.RoundToInt(temp.forecastHigh).ToString();
+        temp.forecastLowText.text = Mathf.RoundToInt(temp.forecastLow).ToString();
     }
 
     public bool IsEventComplete()
@@ -85,7 +91,7 @@ public class IncrementTempObjective : MonoBehaviour, ILevelEvent
 
     public string GetLevelDescription()
     {
-        return "Try to have as many organisms as possible at the end of " + (roundsBetweenIncrement * numIncrements).ToString() + " rounds.\n" +
+        return "Try to have " + organismGoal.ToString() + " organisms at the end of " + (roundsBetweenIncrement * numIncrements).ToString() + " rounds.\n" +
                "Current Rounds: " + roundsSinceStart.ToString() + "/" + (roundsBetweenIncrement * numIncrements).ToString();
     }
 

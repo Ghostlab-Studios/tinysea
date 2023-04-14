@@ -151,11 +151,11 @@ public class ShopManager : MonoBehaviour {
     /// <param name="transform">The transform component of the icon to highlight.</param>
     public void UpdateOrganismHighlight(RectTransform transform)
     {
-        organismHighlight.SetPositionAndRotation(transform.position + new Vector3(0, -4f, 0), organismHighlight.rotation);
+        organismHighlight.SetPositionAndRotation(transform.position + new Vector3(0, -3f, 0), organismHighlight.rotation);
 
         RectTransform variantTransform = defaultVariantIconSprites[activeVariant].gameObject.GetComponent<RectTransform>();
         RectTransform originTransform = organismIconSprites[0].gameObject.GetComponent<RectTransform>();
-        variantHighlight.SetPositionAndRotation(organismHighlight.position + (variantTransform.position - originTransform.position) + new Vector3(-0.5f, 3f, 0), variantHighlight.rotation);
+        variantHighlight.SetPositionAndRotation(organismHighlight.position + (variantTransform.position - originTransform.position) + new Vector3(0, 2f, 0), variantHighlight.rotation);
     }
 
     /// <summary>

@@ -15,29 +15,18 @@ public class SoundManager : MonoBehaviour {
         Music
     }
 
-    public static SoundManager Instance { get; private set; }
-    public float sfxVolume = 1f;    // Volume scale for SFX from 0.0 to 1.0, works on a percentage of starting volume of corresponding audio sources
-    public float musicVolume = 1f;  // Volume scale for music from 0.0 to 1.0, works on a percentage of starting volume of corresponding audio sources
-
+    public static float sfxVolume = 1f;    // Volume scale for SFX from 0.0 to 1.0, works on a percentage of starting volume of corresponding audio sources
+    public static float musicVolume = 1f;  // Volume scale for music from 0.0 to 1.0, works on a percentage of starting volume of corresponding audio sources
     public Slider musicSlider;
     public Slider soundSlider;
 
-    private void OnValidate()
+    private void Start()
     {
         sfxVolume = Mathf.Clamp(sfxVolume, 0f, 1f);
         musicVolume = Mathf.Clamp(musicVolume, 0f, 1f);
+        musicSlider.value = musicVolume;
+        soundSlider.value = sfxVolume;
     }
-
-    private void Awake()
-    {
-        // Delete self if instance already exists, otherwise set this to instance
-        if (Instance == null) { Instance = this; }
-        else if (Instance != this) { Destroy(this); }
-    }
-
-    private void Start() {
-        DontDestroyOnLoad(this);
-	}
 
     public void ChangeMusicVolume()
     {

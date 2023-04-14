@@ -24,8 +24,8 @@ GameObject:
   - component: {fileID: 114245985646247952}
   - component: {fileID: 114022457350753658}
   - component: {fileID: 114007191255966658}
-  - component: {fileID: 114734060966628916}
-  - component: {fileID: 114193374016819450}
+  - component: {fileID: 114601773111227886}
+  - component: {fileID: 114292669202769890}
   - component: {fileID: 114717629561521208}
   - component: {fileID: 114879415365255106}
   - component: {fileID: 114005024478522064}
@@ -66,8 +66,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ID: 8
   tempIncrease: 5
-  roundsBetweenIncrement: 3
+  roundsBetweenIncrement: 2
   numIncrements: 6
+  organismGoal: 10
 --- !u!114 &114007191255966658
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -81,21 +82,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ID: 3
   dialogue:
-  - text: Give overview about temperature graph
+  - text: "Here you\u2019ll see the current temperature. Looks like the water is 5
+      degrees Celsius right now - just a bit above freezing."
     activeObjects: []
-  - text: Indicate current temperature
-    activeObjects:
-    - objectTag: ArrowIndicator5
-      remainsActive: 0
-  - text: Indicate weather forecast slots
-    activeObjects:
-    - objectTag: ArrowIndicator6
-      remainsActive: 0
-  - text: Indicate temperature tracker graph
-    activeObjects:
-    - objectTag: ArrowIndicator7
-      remainsActive: 0
-  - text: Inform players of new addition to shop
+  - text: "If you take a look at your shop, you\u2019ll see that there are now arctic
+      and tropical varieties of the plankton you were growing earlier."
     activeObjects: []
 --- !u!114 &114022457350753658
 MonoBehaviour:
@@ -109,25 +100,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 2
---- !u!114 &114193374016819450
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1281063892643496}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e8c05881b10aebe449128f4d05146be4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ID: 5
-  dialogue:
-  - text: Show players new graph showing ideal temperatures for organisms
-    activeObjects:
-    - objectTag: ArrowIndicator8
-      remainsActive: 0
-  - text: 'New task: have 5 arctic organisms'
-    activeObjects: []
+  waitTime: 0.5
 --- !u!114 &114245985646247952
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -141,15 +114,30 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ID: 1
   dialogue:
-  - text: Test dialogue 1
+  - text: 'Similar to you and me, ocean species also have preferred temperatures.
+      Some like it really warm, while others like living in an ice bath. '
     activeObjects: []
-  - text: Activate temperature window
+  - text: Take a look at the upper left corner of your screen.
     activeObjects:
     - objectTag: TemperatureWindow
       remainsActive: 1
     - objectTag: ArrowIndicator4
       remainsActive: 0
-  - text: Open temperature window
+--- !u!114 &114292669202769890
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1281063892643496}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8c05881b10aebe449128f4d05146be4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 5
+  dialogue:
+  - text: Given the water temperature, which one do you think will do best? Whatever
+      you choose, try to get 10 Producers on your farm!
     activeObjects: []
 --- !u!114 &114403402761230432
 MonoBehaviour:
@@ -177,7 +165,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ID: 10
   targetCreatureCount: 2
-  activeTiers: 02000000
+  activeTiers: 01000000
   activeVariants: 02000000
 --- !u!114 &114514004477984566
 MonoBehaviour:
@@ -192,8 +180,23 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ID: 11
   dialogue:
-  - text: Level complete
+  - text: "Wow! You\u2019re really getting the hang of this. Now you know how to keep
+      a healthy farm at different temperatures."
     activeObjects: []
+  - text: 'Make sure to keep checking the temperature graph when building your farm! '
+    activeObjects: []
+--- !u!114 &114601773111227886
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1281063892643496}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 533b20b6c9daede49b1269688c200bf1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 4
 --- !u!114 &114693560413662534
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -207,7 +210,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ID: 9
   dialogue:
-  - text: Get tropical tier 3 organism objective
+  - text: "Nice job! Now that it\u2019s a bit warmer, you\u2019ve hopefully decided
+      to focus on raising tropical organisms."
     activeObjects: []
 --- !u!114 &114717629561521208
 MonoBehaviour:
@@ -221,21 +225,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 6
-  targetCreatureCount: 5
-  activeTiers: 
-  activeVariants: 00000000
---- !u!114 &114734060966628916
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1281063892643496}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 533b20b6c9daede49b1269688c200bf1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ID: 4
+  targetCreatureCount: 10
+  activeTiers: 00000000
+  activeVariants: 
 --- !u!114 &114788530910481446
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -274,5 +266,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ID: 7
   dialogue:
-  - text: Start temperature increments
+  - text: 'Good job! The arctic organisms seem to thrive in your system. However,
+      temperatures may change. '
+    activeObjects: []
+  - text: Keep an eye on the temperature graph.
+    activeObjects: []
+  - text: Now, make sure that 10 Producers remain in your system for 5 rounds while
+      the temperature changes.
+    activeObjects: []
+  - text: "Remember: you\u2019re able to sell your arctic organisms to buy ones more
+      suited to the new temperature!"
     activeObjects: []

@@ -25,6 +25,6 @@ public class SoundPlayer : MonoBehaviour {
     private void Update()
     {
         // Adjusts volume depending on type of sound being played
-        source.volume = (soundType == SoundManager.SoundType.SFX) ? maxVolume * SoundManager.Instance.sfxVolume : maxVolume * SoundManager.Instance.musicVolume;
+        source.volume = (soundType == SoundManager.SoundType.SFX) ? maxVolume * SoundManager.sfxVolume : maxVolume * SoundManager.musicVolume;
     }
 }

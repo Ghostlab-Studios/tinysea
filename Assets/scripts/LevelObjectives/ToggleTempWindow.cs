@@ -8,11 +8,14 @@ using UnityEngine;
 public class ToggleTempWindow : MonoBehaviour, ILevelEvent
 {
     public int ID;
+    public float waitTime = 1f;
 
     private TempWindowControl twc;
     private GameObject textPanel;
     private Animator textAnim;
+    private bool timeReached = false;
     private bool isToggled = false;
+    private bool timerStarted = false;
 
     private void Awake()
     {
@@ -44,7 +47,17 @@ public class ToggleTempWindow : MonoBehaviour, ILevelEvent
             twc.Controler();
             isToggled = true;
         }
-        return twc.IsNotMoving() && textAnim.GetCurrentAnimatorStateInfo(0).IsName("InactiveState");
+        if (!timerStarted && twc.IsNotMoving())
+        {
+            Invoke("TimerDone", waitTime);
+            timerStarted = true;
+        }
+        return timeReached && textAnim.GetCurrentAnimatorStateInfo(0).IsName("InactiveState");
+    }
+
+    private void TimerDone()
+    {
+        timeReached = true;
     }
 
     public bool IsEventFailure()

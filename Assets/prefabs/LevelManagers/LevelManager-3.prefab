@@ -19,6 +19,25 @@ GameObject:
   serializedVersion: 5
   m_Component:
   - component: {fileID: 4818538190141490}
+  - component: {fileID: 114841174039094584}
+  - component: {fileID: 114957524305977498}
+  - component: {fileID: 114072091598568470}
+  - component: {fileID: 114644163595055922}
+  - component: {fileID: 114236398444136312}
+  - component: {fileID: 114999811695202282}
+  - component: {fileID: 114514551618172602}
+  - component: {fileID: 114813363016255154}
+  - component: {fileID: 114880514715773944}
+  - component: {fileID: 114918043275273026}
+  - component: {fileID: 114076670173122784}
+  - component: {fileID: 114641221619536598}
+  - component: {fileID: 114557162754345056}
+  - component: {fileID: 114518087382937848}
+  - component: {fileID: 114688544510107398}
+  - component: {fileID: 114627161521413052}
+  - component: {fileID: 114466650628325022}
+  - component: {fileID: 114504375057193586}
+  - component: {fileID: 114617503364540150}
   m_Layer: 0
   m_Name: LevelManager-3
   m_TagString: Untagged
@@ -39,3 +58,321 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &114072091598568470
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1573924669497746}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8c05881b10aebe449128f4d05146be4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 1
+  closeShopBeforeDialogue: 0
+  dialogue:
+  - text: "Let\u2019s try an experiment. Using whichever organism is most appropriate
+      for the temperature, try and get as many Producers as possible within 3 rounds."
+    activeObjects: []
+--- !u!114 &114076670173122784
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1573924669497746}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: adbeb157c1171da4c81cc9c262cb183e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 9
+  numRounds: 3
+  tier: 0
+--- !u!114 &114236398444136312
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1573924669497746}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8c05881b10aebe449128f4d05146be4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 3
+  closeShopBeforeDialogue: 1
+  dialogue:
+  - text: Take note of how many organisms are currently living on your farm.
+    activeObjects: []
+  - text: 'So far, the organisms on your farm have been doing well across a wide range
+      of temperatures. They may be happiest in the middle of that temperature range,
+      but the water can get much cooler or warmer before they die. '
+    activeObjects: []
+  - text: Now let's open the shop.
+    activeObjects:
+    - objectTag: OrganismIcon3
+      remainsActive: 1
+--- !u!114 &114466650628325022
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1573924669497746}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3133c09d8d084049ab337690200af82, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 15
+  targetCreatureCount: 1
+  activeTiers: 02000000
+  activeVariants: 
+  achieveInNumRounds: 1
+  numRounds: 10
+--- !u!114 &114504375057193586
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1573924669497746}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8c05881b10aebe449128f4d05146be4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 16
+  closeShopBeforeDialogue: 0
+  dialogue:
+  - text: Awesome job! Looks like you've really gotten the hang of this.
+    activeObjects: []
+  - text: I have some other things I need to do now, and seeing as you have everything
+      under control here, I'll leave the rest to you.
+    activeObjects: []
+  - text: Again, good luck! Be sure to have fun and build a healthy, profitable aquaculture
+      farm!
+    activeObjects: []
+--- !u!114 &114514551618172602
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1573924669497746}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8c05881b10aebe449128f4d05146be4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 5
+  closeShopBeforeDialogue: 0
+  dialogue:
+  - text: "You\u2019ll see two new organisms in the plankton section. When you select
+      those, look at the difference in sensitivity graph.  "
+    activeObjects: []
+  - text: "Up until now, the organisms you\u2019ve worked with have a wide sensitivity
+      graph. These types of organisms are known as generalists."
+    activeObjects: []
+  - text: The other creatures have a much narrower graph, but a higher peak. This
+      means that they require a more specific environment, but they perform much better
+      at their perfect temperature than generalists would.
+    activeObjects: []
+--- !u!114 &114518087382937848
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1573924669497746}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3133c09d8d084049ab337690200af82, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 12
+  targetCreatureCount: 1
+  activeTiers: 02000000
+  activeVariants: 
+  achieveInNumRounds: 1
+  numRounds: 10
+--- !u!114 &114557162754345056
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1573924669497746}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae7be919a4174e3489659f314489a0ab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 11
+  temperatureMean: 20
+  climateChange: 0
+  yearlyRange: 5
+  fluctuation: 10
+--- !u!114 &114617503364540150
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1573924669497746}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1dd7a11265b0b96429aca61a745d9697, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 17
+  label: Level Complete
+--- !u!114 &114627161521413052
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1573924669497746}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae7be919a4174e3489659f314489a0ab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 14
+  temperatureMean: 20
+  climateChange: 0
+  yearlyRange: 0
+  fluctuation: 3
+--- !u!114 &114641221619536598
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1573924669497746}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8c05881b10aebe449128f4d05146be4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 10
+  closeShopBeforeDialogue: 0
+  dialogue:
+  - text: Compare the number of specialist Producers you have now with the number
+      of generalist Producers you had earlier. See how many more you have?
+    activeObjects: []
+  - text: Specialist organisms are great if you have a constant temperature and a
+      stable environment, but if the temperature starts fluctuating, they might die
+      off much more quickly than generalists would.
+    activeObjects: []
+  - text: "Now let\u2019s put your knowledge to the test. The temperature on your
+      farm is about to go through a period of high fluctuation. You\u2019ve been hired
+      to raise at least 1 Predator. For 1 to grow, it needs to survive 7 rounds."
+    activeObjects: []
+--- !u!114 &114644163595055922
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1573924669497746}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: adbeb157c1171da4c81cc9c262cb183e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 2
+  numRounds: 3
+  tier: 0
+--- !u!114 &114688544510107398
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1573924669497746}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8c05881b10aebe449128f4d05146be4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 13
+  closeShopBeforeDialogue: 0
+  dialogue:
+  - text: 'Great job! You made the client so happy, they want you to raise another
+      Predator for them. '
+    activeObjects: []
+  - text: Unfortunately, the temperature on your farm is about to shift from high
+      to low fluctuation, so you may need to change your strategy in order to be successful.
+    activeObjects: []
+--- !u!114 &114813363016255154
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1573924669497746}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b742533b0118181419bbce3925619c5a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 6
+--- !u!114 &114841174039094584
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1573924669497746}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 18bed999222077c4f976817d30227725, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  levelID: 2
+--- !u!114 &114880514715773944
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1573924669497746}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 032236f52d3f8df4384cd6e8e8c8bdec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 7
+  money: 500
+--- !u!114 &114918043275273026
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1573924669497746}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8c05881b10aebe449128f4d05146be4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 8
+  closeShopBeforeDialogue: 0
+  dialogue:
+  - text: We now have water at the perfect temperature for one of the specialists.
+      See how many specialist Producers you can get within those same 3 rounds!
+    activeObjects: []
+--- !u!114 &114957524305977498
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1573924669497746}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1dd7a11265b0b96429aca61a745d9697, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 0
+  label: Level 3
+--- !u!114 &114999811695202282
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1573924669497746}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 533b20b6c9daede49b1269688c200bf1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 4

@@ -67,6 +67,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 5
+  closeShopBeforeDialogue: 0
   dialogue:
   - text: "Good job. You\u2019ve created a farm full of plankton! However, there are
       other Tiers of organisms as well: animals that eat the plankton."
@@ -103,6 +104,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 13
+  closeShopBeforeDialogue: 0
   dialogue:
   - text: Great! Your food chain is looking healthy and your farm is up and running.
     activeObjects: []
@@ -127,6 +129,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 3
+  closeShopBeforeDialogue: 0
   dialogue:
   - text: Awesome job! Now that you've figured out how to successfully grow plankton,
       you should sell some to make a profit. Try it out!
@@ -158,6 +161,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 11
+  closeShopBeforeDialogue: 0
   dialogue:
   - text: 'Now that you have an organism of each type, try once more to balance your
       food pyramid. Remember that for every Predator, 3 Herbivores are needed each
@@ -239,6 +243,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 9
+  closeShopBeforeDialogue: 0
   dialogue:
   - text: Great job! Looks like you really got the hang of this.
     activeObjects: []
@@ -265,6 +270,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 1
+  closeShopBeforeDialogue: 0
   dialogue:
   - text: "Hello, nice to meet you! You must be the new hire! Welcome to what we in
       the business call \u201Caquaculture\u201D. "
@@ -336,6 +342,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 7
+  closeShopBeforeDialogue: 0
   dialogue:
   - text: Great job! Now that you have Producer (Tier I) and Herbivore (Tier II) organisms,
       you need to make sure that the food chain is balanced with enough plankton to

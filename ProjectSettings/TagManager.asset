@@ -31,6 +31,10 @@ TagManager:
   - ArrowIndicator6
   - ArrowIndicator7
   - ArrowIndicator8
+  - Level3ObjectStorage
+  - OrganismIcon1
+  - OrganismIcon2
+  - OrganismIcon3
   layers:
   - Default
   - TransparentFX

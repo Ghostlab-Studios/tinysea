@@ -81,6 +81,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 3
+  closeShopBeforeDialogue: 0
   dialogue:
   - text: "Here you\u2019ll see the current temperature. Looks like the water is 5
       degrees Celsius right now - just a bit above freezing."
@@ -113,6 +114,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 1
+  closeShopBeforeDialogue: 0
   dialogue:
   - text: 'Similar to you and me, ocean species also have preferred temperatures.
       Some like it really warm, while others like living in an ice bath. '
@@ -135,6 +137,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 5
+  closeShopBeforeDialogue: 0
   dialogue:
   - text: Given the water temperature, which one do you think will do best? Whatever
       you choose, try to get 10 Producers on your farm!
@@ -179,6 +182,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 11
+  closeShopBeforeDialogue: 0
   dialogue:
   - text: "Wow! You\u2019re really getting the hang of this. Now you know how to keep
       a healthy farm at different temperatures."
@@ -209,6 +213,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 9
+  closeShopBeforeDialogue: 0
   dialogue:
   - text: "Nice job! Now that it\u2019s a bit warmer, you\u2019ve hopefully decided
       to focus on raising tropical organisms."
@@ -265,6 +270,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 7
+  closeShopBeforeDialogue: 0
   dialogue:
   - text: 'Good job! The arctic organisms seem to thrive in your system. However,
       temperatures may change. '

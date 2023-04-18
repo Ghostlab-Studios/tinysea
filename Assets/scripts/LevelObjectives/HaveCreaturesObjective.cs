@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 /// <summary>
 /// Generalized class for having a certain number of creatures to complete the objective.
@@ -11,9 +12,13 @@ public class HaveCreaturesObjective : MonoBehaviour, ILevelEvent
     public int targetCreatureCount;
     public LevelManager.Tier[] activeTiers;
     public LevelManager.Variant[] activeVariants;
+    public bool achieveInNumRounds = false;
+    public int numRounds;
 
     private PlayerManager playerManager;
+    private bool eventRunning = false;
     private int organismTotal;
+    private int currRound;
 
     void Awake()
     {
@@ -24,6 +29,8 @@ public class HaveCreaturesObjective : MonoBehaviour, ILevelEvent
     {
         playerManager = GameObject.FindGameObjectWithTag("PlayerManager").GetComponent<PlayerManager>();
         GetComponent<LevelManager>().levelGoals.Add(this);
+        Button nextTurnButton = GameObject.FindGameObjectWithTag("NextTurnButton").GetComponent<Button>();
+        nextTurnButton.onClick.AddListener(OnNextTurnPressed);
     }
     
     /// <summary>
@@ -32,6 +39,7 @@ public class HaveCreaturesObjective : MonoBehaviour, ILevelEvent
     /// </summary>
     public bool IsEventComplete()
     {
+        if (!eventRunning) { eventRunning = true; }
         int totalCreatures = 0;
         foreach (CharacterManager cm in playerManager.species)
         {
@@ -48,7 +56,10 @@ public class HaveCreaturesObjective : MonoBehaviour, ILevelEvent
             }
         }
         organismTotal = totalCreatures;
-        return totalCreatures >= targetCreatureCount;
+        bool eventComplete = totalCreatures >= targetCreatureCount;
+        if (achieveInNumRounds) { eventComplete = eventComplete && currRound >= numRounds; }
+        if (eventComplete) { eventRunning = false; }
+        return eventComplete;
     }
 
     private int IncrementByTier(LevelManager.Tier tier, CharacterManager cm)
@@ -98,7 +109,19 @@ public class HaveCreaturesObjective : MonoBehaviour, ILevelEvent
             return true;
         }
     }
-    
+
+    /// <summary>
+    /// Assigned to the Next Turn button to increment internal round counter. Does 
+    /// nothing until the corresponding event is activated.
+    /// </summary>
+    public void OnNextTurnPressed()
+    {
+        if (achieveInNumRounds && eventRunning)
+        {
+            currRound++;
+        }
+    }
+
     /// <summary>
     /// Always returns false. This objective cannot be lost.
     /// </summary>
@@ -240,8 +263,17 @@ public class HaveCreaturesObjective : MonoBehaviour, ILevelEvent
             }
         }
 
-        return "Have " + targetCreatureCount.ToString() + targetVariants + " organisms total" + targetTier + ".\n" + 
-               "Current organisms: " + organismTotal.ToString() + "/" + targetCreatureCount.ToString();
+        string inNumRounds = "";
+        string currRounds = "";
+        if (achieveInNumRounds) 
+        { 
+            inNumRounds = " in " + numRounds.ToString() + " rounds";
+            currRounds = "\nCurrent round: " + currRound.ToString() + "/" + numRounds;
+        }
+
+        return "Have " + targetCreatureCount.ToString() + targetVariants + " organisms total" + targetTier + inNumRounds + ".\n" + 
+               "Current organisms: " + organismTotal.ToString() + "/" + targetCreatureCount.ToString() +
+               currRounds;
     }
 
     public bool IsLevel()

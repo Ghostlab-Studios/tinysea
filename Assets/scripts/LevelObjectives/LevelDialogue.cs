@@ -11,6 +11,7 @@ using UnityEngine.UI;
 public class LevelDialogue : MonoBehaviour, ILevelEvent
 {
     public int ID;
+    public bool closeShopBeforeDialogue;
     public List<DialogueTuple> dialogue;
 
     private GameObject textPanel;
@@ -28,6 +29,8 @@ public class LevelDialogue : MonoBehaviour, ILevelEvent
     private float textDisplayTimer = 0.0f;
     private float timeBetweenCharDisplay = 0.03f;
     private bool displayingText = false;
+    private ShopWindowControl swc;
+    private bool shopClosed = false;
 
     private void Awake()
     {
@@ -46,6 +49,8 @@ public class LevelDialogue : MonoBehaviour, ILevelEvent
 
     public void InitializeEvent()
     {
+        if (!closeShopBeforeDialogue) { shopClosed = true; }
+        else { swc = GameObject.FindGameObjectWithTag("ShopManager").GetComponent<ShopWindowControl>(); }
         textPanel = GameObject.FindGameObjectWithTag("DialoguePanel");
         textAnim = textPanel.GetComponent<Animator>();
         nextButton = GameObject.FindGameObjectWithTag("DialogueContinueButton").GetComponent<Button>();
@@ -68,12 +73,19 @@ public class LevelDialogue : MonoBehaviour, ILevelEvent
     /// <returns>Returns true if all dialogue is exhausted, false if otherwise.</returns>
     public bool IsEventComplete()
     {
-        if (!hasInitialized)
+        if (shopClosed)
         {
-            ProcessText();
-            hasInitialized = true;
+            if (!hasInitialized)
+            {
+                ProcessText();
+                hasInitialized = true;
+            }
+            SetTextBoxActive(!isDialogueFinished);
         }
-        SetTextBoxActive(!isDialogueFinished);
+        else
+        {
+            CloseShop();
+        }
         return isDialogueFinished;
     }
 
@@ -174,6 +186,15 @@ public class LevelDialogue : MonoBehaviour, ILevelEvent
         {
             if (!aobj.remainsActive) { aobj.GetObject().SetActive(false); }
         }
+    }
+
+    private void CloseShop()
+    {
+        if (swc.open)
+        {
+            swc.Controler();
+        }
+        shopClosed = true;
     }
 
     [System.Serializable]

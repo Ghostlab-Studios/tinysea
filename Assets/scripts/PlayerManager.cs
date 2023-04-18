@@ -298,6 +298,19 @@ public class PlayerManager : MonoBehaviour {
         return amount;
     }
 
+    public int GetTotalFishAtLevelInt(int level)
+    {
+        int amount = 0;
+        foreach (CharacterManager c in species)
+        {
+            if (c.foodChainLevel == level)
+            {
+                amount += (int)c.speciesAmount;
+            }
+        }
+        return amount;
+    }
+
     //returns a list of all the creatures for a given level
     private List<CharacterManager> getCharactersAtLevel(int level)
     {

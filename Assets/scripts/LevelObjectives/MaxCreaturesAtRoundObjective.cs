@@ -10,6 +10,7 @@ public class MaxCreaturesAtRoundObjective : MonoBehaviour, ILevelEvent
 {
     public int ID;
     public int numRounds;
+    public LevelManager.Tier tier;
 
     private PlayerManager pm;
     private int roundsSinceStart;
@@ -55,9 +56,48 @@ public class MaxCreaturesAtRoundObjective : MonoBehaviour, ILevelEvent
 
     public string GetLevelDescription()
     {
-        return "Get as many organisms as possible in " + numRounds.ToString() + " rounds.\n" +
+        return "Get as many " + GetTier() + "organisms as possible in " + numRounds.ToString() + " rounds.\n" +
                "Current round: " + roundsSinceStart.ToString() + "/" + numRounds.ToString() + "\n" +
-               "Current organism total: " + pm.GetTotalFishInt().ToString();
+               "Current organism total: " + GetTierTotal().ToString();
+    }
+
+    private string GetTier()
+    {
+        string tierText = "";
+        switch (tier)
+        {
+            case LevelManager.Tier.Tier1:
+                tierText = "Tier 1 ";
+                break;
+            case LevelManager.Tier.Tier2:
+                tierText = "Tier 2 ";
+                break;
+            case LevelManager.Tier.Tier3:
+                tierText = "Tier 3 ";
+                break;
+        }
+        return tierText;
+    }
+
+    private int GetTierTotal()
+    {
+        int total;
+        switch (tier)
+        {
+            case LevelManager.Tier.Tier1:
+                total = pm.GetTotalFishAtLevelInt(1);
+                break;
+            case LevelManager.Tier.Tier2:
+                total = pm.GetTotalFishAtLevelInt(2);
+                break;
+            case LevelManager.Tier.Tier3:
+                total = pm.GetTotalFishAtLevelInt(3);
+                break;
+            default:
+                total = pm.GetTotalFishInt();
+                break;
+        }
+        return total;
     }
 
     public int GetID()

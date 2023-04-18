@@ -9,7 +9,7 @@ public class Temperature : MonoBehaviour
 
     private List<LineRenderer> predictionLines;
     private List<LineRenderer> historicalLineRenders;
-    private List<TempDot> dots; 
+    private List<TempDot> dots;
 
     public float maxTemp = 40;
     public float minTemp = 0;
@@ -92,6 +92,7 @@ public class Temperature : MonoBehaviour
         homePos = transform.position;
         //create our historical lines
         //historyLine = GetComponent<LineRenderer>();
+        temperature = tMean;
         historicalTemperatures = new Queue<float>();
         for (int i = 0; i < historicalSegments; i++)
         {

@@ -55,6 +55,10 @@ public class IncrementTempObjective : MonoBehaviour, ILevelEvent
         return false;
     }
 
+    /// <summary>
+    /// Assigned to the Next Turn button to increment temperature on new rounds. Does 
+    /// nothing until the corresponding event is activated.
+    /// </summary>
     public void OnNextTurnPressed()
     {
         if (roundHasPassed && eventHasStarted && !eventHasEnded)

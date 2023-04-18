@@ -20,6 +20,7 @@ public class LevelManager : MonoBehaviour
 
     private ObjectStorage levelOneObjects;
     private ObjectStorage levelTwoObjects;
+    private ObjectStorage levelThreeObjects;
     private Text objectiveText;
     private int currentTurn = 0;
     private Text levelText;
@@ -47,6 +48,7 @@ public class LevelManager : MonoBehaviour
         objectiveText = GameObject.FindGameObjectWithTag("ObjectiveText").GetComponent<Text>();
         levelOneObjects = GameObject.FindGameObjectWithTag("Level1Objects").GetComponent<ObjectStorage>();
         levelTwoObjects = GameObject.FindGameObjectWithTag("Level2ObjectStorage").GetComponent<ObjectStorage>();
+        levelThreeObjects = GameObject.FindGameObjectWithTag("Level3ObjectStorage").GetComponent<ObjectStorage>();
     }
 
     private void Start()
@@ -60,6 +62,9 @@ public class LevelManager : MonoBehaviour
                 break;
             case 1:
                 SetLevelTwoUI();
+                break;
+            case 2:
+                SetLevelThreeUI();
                 break;
         }
 
@@ -155,7 +160,10 @@ public class LevelManager : MonoBehaviour
 
     public void SetLevelThreeUI()
     {
-        // Do nothing probably? Why is this even declared? Maybe I'll need it someday
+        foreach (GameObject obj in levelThreeObjects.objects)
+        {
+            obj.SetActive(false);
+        }
     }
 
     /// <summary>

@@ -274,6 +274,16 @@ public class PlayerManager : MonoBehaviour {
         return totalFish;
     }
 
+    public int GetTotalFishInt()
+    {
+        int totalFish = 0;
+        foreach (CharacterManager c in species)
+        {
+            totalFish += (int)c.speciesAmount;
+        }
+        return totalFish;
+    }
+
     //gets the total amount of all species for a given level
     public float getTotalAmountAtLevel(int level)
     {

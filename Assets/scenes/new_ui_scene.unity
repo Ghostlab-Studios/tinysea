@@ -24771,6 +24771,27 @@ Prefab:
     - {fileID: 114788530910481446, guid: d9a7ea9d518ab7f4f94ab4206409f265, type: 2}
   m_ParentPrefab: {fileID: 100100000, guid: d9a7ea9d518ab7f4f94ab4206409f265, type: 2}
   m_IsPrefabParent: 0
+--- !u!1 &588856763 stripped
+GameObject:
+  m_PrefabParentObject: {fileID: 1281063892643496, guid: d9a7ea9d518ab7f4f94ab4206409f265,
+    type: 2}
+  m_PrefabInternal: {fileID: 588856762}
+--- !u!114 &588856764
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 588856763}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8c05881b10aebe449128f4d05146be4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 1
+  dialogue:
+  - text: "Let\u2019s try an experiment. Using whichever organism is most appropriate
+      for the temperature, try and get as many Producers as possible within 3 rounds."
+    activeObjects: []
 --- !u!4 &589459590 stripped
 Transform:
   m_PrefabParentObject: {fileID: 485494, guid: 0dd7938ee7374e64aa2e46501f3aa0d0, type: 2}

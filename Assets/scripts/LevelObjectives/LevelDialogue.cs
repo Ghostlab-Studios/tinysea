@@ -17,6 +17,7 @@ public class LevelDialogue : MonoBehaviour, ILevelEvent
     private GameObject textPanel;
     private Animator textAnim;
     private Button nextButton;
+    private Button backButton;
     private Text characterName;
     private Text textBox;
     private int textIndex = 0;
@@ -54,9 +55,11 @@ public class LevelDialogue : MonoBehaviour, ILevelEvent
         textPanel = GameObject.FindGameObjectWithTag("DialoguePanel");
         textAnim = textPanel.GetComponent<Animator>();
         nextButton = GameObject.FindGameObjectWithTag("DialogueContinueButton").GetComponent<Button>();
+        backButton = GameObject.FindGameObjectWithTag("DialogueBackButton").GetComponent<Button>();
         // characterName = GameObject.FindGameObjectWithTag("DialogueCharacterName").GetComponent<Text>();
         textBox = GameObject.FindGameObjectWithTag("DialogueTextBox").GetComponent<Text>();
         nextButton.onClick.AddListener(ProcessText);
+        backButton.onClick.AddListener(DecrementText);
         foreach (DialogueTuple tuple in dialogue)
         {
             foreach (ActivatableObject aobj in tuple.activeObjects)
@@ -86,6 +89,7 @@ public class LevelDialogue : MonoBehaviour, ILevelEvent
         {
             CloseShop();
         }
+        LevelManager.isBusy = !isDialogueFinished;
         return isDialogueFinished;
     }
 
@@ -124,6 +128,20 @@ public class LevelDialogue : MonoBehaviour, ILevelEvent
             displayingText = true;
             textIndex++;
             ActivateNewObjects(); // Order matters here! DO NOT call ActivateNewObjects() before textIndex increments
+        }
+    }
+
+    private void DecrementText()
+    {
+        if (textIndex != 0 && textIndex != 1 && GetComponent<LevelManager>().GetCurrentObjectiveID() == ID)
+        {
+            if (textIndex != 0) { DeactivateNonLingeringObjects(); }
+            currentShownText = "";
+            textBox.text = currentShownText;
+            currentShownTextIndex = 0;
+            displayingText = true;
+            textIndex--;
+            ActivateNewObjects();
         }
     }
 

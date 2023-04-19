@@ -37,6 +37,7 @@ public class LevelStartAnim : MonoBehaviour, ILevelEvent
 
     public bool IsEventComplete()
     {
+        if (!LevelManager.isBusy) { LevelManager.isBusy = true; }
         if (!hasStarted)
         {
             text.text = label;

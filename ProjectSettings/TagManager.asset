@@ -35,6 +35,7 @@ TagManager:
   - OrganismIcon1
   - OrganismIcon2
   - OrganismIcon3
+  - DialogueBackButton
   layers:
   - Default
   - TransparentFX

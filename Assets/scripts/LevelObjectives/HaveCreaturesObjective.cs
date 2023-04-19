@@ -29,8 +29,9 @@ public class HaveCreaturesObjective : MonoBehaviour, ILevelEvent
     {
         playerManager = GameObject.FindGameObjectWithTag("PlayerManager").GetComponent<PlayerManager>();
         GetComponent<LevelManager>().levelGoals.Add(this);
-        Button nextTurnButton = GameObject.FindGameObjectWithTag("NextTurnButton").GetComponent<Button>();
-        nextTurnButton.onClick.AddListener(OnNextTurnPressed);
+        //Button nextTurnButton = GameObject.FindGameObjectWithTag("NextTurnButton").GetComponent<Button>();
+        //nextTurnButton.onClick.AddListener(OnNextTurnPressed);
+        playerManager.onNextTurn.AddListener(OnNextTurnPressed);
     }
     
     /// <summary>

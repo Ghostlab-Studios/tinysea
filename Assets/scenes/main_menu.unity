@@ -4173,7 +4173,7 @@ MonoBehaviour:
     rand: 0
   - name: Level2
     environment: {fileID: 21300000, guid: 0ad6f0a802504a945b0cb0b8c789c59e, type: 3}
-    tMean: 20
+    tMean: 5
     clim: 0
     yrRange: 0
     rand: 0

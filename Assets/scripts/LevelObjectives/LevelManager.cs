@@ -17,6 +17,7 @@ public class LevelManager : MonoBehaviour
                                                                    // launch edits to the list
     public static bool isGameOver = false;
     public static int currentGoal = 0;
+    public static bool isBusy = false;
 
     private ObjectStorage levelOneObjects;
     private ObjectStorage levelTwoObjects;

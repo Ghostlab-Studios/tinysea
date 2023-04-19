@@ -32,8 +32,9 @@ public class IncrementTempObjective : MonoBehaviour, ILevelEvent
     {
         pm = GameObject.FindGameObjectWithTag("PlayerManager").GetComponent<PlayerManager>();
         GetComponent<LevelManager>().levelGoals.Add(this);
-        nextTurnButton = GameObject.FindGameObjectWithTag("NextTurnButton").GetComponent<Button>();
-        nextTurnButton.onClick.AddListener(OnNextTurnPressed);
+        //nextTurnButton = GameObject.FindGameObjectWithTag("NextTurnButton").GetComponent<Button>();
+        //nextTurnButton.onClick.AddListener(OnNextTurnPressed);
+        pm.onNextTurn.AddListener(OnNextTurnPressed);
         temp = GameObject.FindGameObjectWithTag("Temperature").GetComponent<Temperature>();
         temp.setRandomForecast = false;
         temp.forecastHigh = Temperature.tMean;

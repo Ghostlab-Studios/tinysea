@@ -25,8 +25,9 @@ public class MaxCreaturesAtRoundObjective : MonoBehaviour, ILevelEvent
     {
         pm = GameObject.FindGameObjectWithTag("PlayerManager").GetComponent<PlayerManager>();
         GetComponent<LevelManager>().levelGoals.Add(this);
-        Button nextTurnButton = GameObject.FindGameObjectWithTag("NextTurnButton").GetComponent<Button>();
-        nextTurnButton.onClick.AddListener(OnNextTurnPressed);
+        //Button nextTurnButton = GameObject.FindGameObjectWithTag("NextTurnButton").GetComponent<Button>();
+        //nextTurnButton.onClick.AddListener(OnNextTurnPressed);
+        pm.onNextTurn.AddListener(OnNextTurnPressed);
     }
 
     public bool IsEventComplete()

@@ -89,6 +89,7 @@ public class Temperature : MonoBehaviour
     // Use this for initialization
     void Start()
     {
+        temperature = tMean;
         homePos = transform.position;
         //create our historical lines
         //historyLine = GetComponent<LineRenderer>();

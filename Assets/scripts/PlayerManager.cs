@@ -29,6 +29,7 @@ public class PlayerManager : MonoBehaviour {
     public float sellRate = .5f;
     public float maxFishes = 200;
     public float stepWaitTime = 1;
+    public UnityEvent onNextTurn;
     //float stepTimer = 0;
     bool waitingForTemperature = false;
     bool waitingForSteps = false;
@@ -74,18 +75,19 @@ public class PlayerManager : MonoBehaviour {
 
     public void nextTurn()
     {
-        if(!busy && !holder.anyCreaturesBusy())
+        if(!busy && !holder.anyCreaturesBusy() && !LevelManager.isBusy)
         {
             waitingForTemperature = true;
             busy = true;
             temperature.updateTemperature();
             temperature.updateDay();
+            onNextTurn.Invoke();
         }
     }
 
     public void Update()
     {
-        if (Input.GetButtonDown("Submit"))
+        if (Input.GetKeyDown(KeyCode.Space))
         {
             nextTurn();
         }

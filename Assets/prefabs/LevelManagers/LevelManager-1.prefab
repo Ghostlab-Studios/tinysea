@@ -22,6 +22,8 @@ GameObject:
   - component: {fileID: 114797226665506996}
   - component: {fileID: 114894100160699310}
   - component: {fileID: 114778836043613394}
+  - component: {fileID: 114498906597417218}
+  - component: {fileID: 114824048437854704}
   - component: {fileID: 114479549668011984}
   - component: {fileID: 114222197523280238}
   - component: {fileID: 114933582233981656}
@@ -66,7 +68,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e8c05881b10aebe449128f4d05146be4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ID: 5
+  ID: 7
   closeShopBeforeDialogue: 0
   dialogue:
   - text: "Good job. You\u2019ve created a farm full of plankton! However, there are
@@ -88,10 +90,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3133c09d8d084049ab337690200af82, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ID: 6
+  ID: 8
   targetCreatureCount: 1
   activeTiers: 01000000
   activeVariants: 
+  achieveInNumRounds: 0
+  numRounds: 0
 --- !u!114 &114142023154542492
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -103,7 +107,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e8c05881b10aebe449128f4d05146be4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ID: 13
+  ID: 15
   closeShopBeforeDialogue: 0
   dialogue:
   - text: Great! Your food chain is looking healthy and your farm is up and running.
@@ -128,7 +132,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e8c05881b10aebe449128f4d05146be4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ID: 3
+  ID: 5
   closeShopBeforeDialogue: 0
   dialogue:
   - text: Awesome job! Now that you've figured out how to successfully grow plankton,
@@ -145,10 +149,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3133c09d8d084049ab337690200af82, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ID: 10
+  ID: 12
   targetCreatureCount: 1
   activeTiers: 02000000
   activeVariants: 
+  achieveInNumRounds: 0
+  numRounds: 0
 --- !u!114 &114315820052236304
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -160,7 +166,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e8c05881b10aebe449128f4d05146be4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ID: 11
+  ID: 13
   closeShopBeforeDialogue: 0
   dialogue:
   - text: 'Now that you have an organism of each type, try once more to balance your
@@ -180,10 +186,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3133c09d8d084049ab337690200af82, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ID: 2
+  ID: 4
   targetCreatureCount: 15
   activeTiers: 00000000
   activeVariants: 
+  achieveInNumRounds: 0
+  numRounds: 0
+--- !u!114 &114498906597417218
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1945029702217764}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 533b20b6c9daede49b1269688c200bf1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 2
 --- !u!114 &114511209686402232
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -195,9 +215,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8adda832b21a0d488c3bd375bc7f837, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ID: 8
+  ID: 10
   tierSizeDifference: 5
-  delta: 0.15
+  delta: 0.2
   tier1Balance: 1
   tier2Balance: 1
   tier3Balance: 0
@@ -212,9 +232,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8adda832b21a0d488c3bd375bc7f837, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ID: 12
+  ID: 14
   tierSizeDifference: 5
-  delta: 0.15
+  delta: 0.25
   tier1Balance: 1
   tier2Balance: 1
   tier3Balance: 1
@@ -229,7 +249,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1dd7a11265b0b96429aca61a745d9697, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ID: 14
+  ID: 16
   label: Level Complete
 --- !u!114 &114692538636975540
 MonoBehaviour:
@@ -242,7 +262,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e8c05881b10aebe449128f4d05146be4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ID: 9
+  ID: 11
   closeShopBeforeDialogue: 0
   dialogue:
   - text: Great job! Looks like you really got the hang of this.
@@ -280,17 +300,6 @@ MonoBehaviour:
     activeObjects:
     - objectTag: ArrowIndicator2
       remainsActive: 0
-  - text: "These Tier 1 organisms are plankton that are the base of what we call a
-      \u201Cfood chain\u201D. These organisms are called Producers because they get
-      their energy from the sun."
-    activeObjects: []
-  - text: Once you've stocked your farm with a few organisms, click the "Next Turn"
-      button to watch them reproduce!
-    activeObjects:
-    - objectTag: ArrowIndicator3
-      remainsActive: 0
-  - text: Your first objective will be to get 15 plankton. Good luck!
-    activeObjects: []
 --- !u!114 &114797226665506996
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -303,6 +312,29 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   levelID: 0
+--- !u!114 &114824048437854704
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1945029702217764}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8c05881b10aebe449128f4d05146be4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 3
+  closeShopBeforeDialogue: 0
+  dialogue:
+  - text: "These Tier 1 organisms are plankton that are the base of what we call a
+      \u201Cfood chain\u201D. These organisms are called Producers because they get
+      their energy from the sun."
+    activeObjects: []
+  - text: Once you've stocked your farm with a few organisms, click the "Next Turn"
+      button or the spacebar to watch them reproduce!
+    activeObjects: []
+  - text: Your first objective will be to get 15 plankton. Good luck!
+    activeObjects: []
 --- !u!114 &114894100160699310
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -327,7 +359,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: daa682a200656a04ba8b2dc35e2aff6a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ID: 4
+  ID: 6
   amountToSell: 5
   activeTier: 0
 --- !u!114 &114976568383224834
@@ -341,7 +373,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e8c05881b10aebe449128f4d05146be4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ID: 7
+  ID: 9
   closeShopBeforeDialogue: 0
   dialogue:
   - text: Great job! Now that you have Producer (Tier I) and Herbivore (Tier II) organisms,

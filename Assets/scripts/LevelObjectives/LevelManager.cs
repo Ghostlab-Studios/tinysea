@@ -18,10 +18,13 @@ public class LevelManager : MonoBehaviour
     public static bool isGameOver = false;
     public static int currentGoal = 0;
     public static bool isBusy = false;
+    [SerializeField] private ObjectivePanelController objectivePanelPrefab;
 
     private ObjectStorage levelOneObjects;
     private ObjectStorage levelTwoObjects;
     private ObjectStorage levelThreeObjects;
+    private GameObject scrollBarContent;
+    private ObjectivePanelController currentObjectivePanel;
     private Text objectiveText;
     private int currentTurn = 0;
     private Text levelText;
@@ -46,10 +49,11 @@ public class LevelManager : MonoBehaviour
 
     private void Awake()
     {
-        objectiveText = GameObject.FindGameObjectWithTag("ObjectiveText").GetComponent<Text>();
+        // objectiveText = GameObject.FindGameObjectWithTag("ObjectiveText").GetComponent<Text>();
         levelOneObjects = GameObject.FindGameObjectWithTag("Level1Objects").GetComponent<ObjectStorage>();
         levelTwoObjects = GameObject.FindGameObjectWithTag("Level2ObjectStorage").GetComponent<ObjectStorage>();
         levelThreeObjects = GameObject.FindGameObjectWithTag("Level3ObjectStorage").GetComponent<ObjectStorage>();
+        scrollBarContent = GameObject.FindGameObjectWithTag("ScrollBarContent");
     }
 
     private void Start()
@@ -93,7 +97,16 @@ public class LevelManager : MonoBehaviour
         Debug.Log(GetCurrentObjectiveID().ToString());
         if (!isGameOver)
         {
-            if (levelGoals[currentGoal].IsLevel()) { objectiveText.text = levelGoals[currentGoal].GetLevelDescription(); }
+            if (levelGoals[currentGoal].IsLevel() && levelGoals[currentGoal].GetLevelDescription() != "") 
+            {
+                if (currentObjectivePanel == null) 
+                { 
+                    currentObjectivePanel = Instantiate(objectivePanelPrefab, scrollBarContent.transform);
+                    currentObjectivePanel.transform.SetSiblingIndex(0); // Move to the top of the list
+                }
+                currentObjectivePanel.SetObjectiveText(levelGoals[currentGoal].GetLevelDescription()); 
+            }
+
             if (levelGoals[currentGoal].IsEventComplete()) { ObjectiveComplete(); }
             else if (levelGoals[currentGoal].IsEventFailure()) { LevelLost(); }
         }
@@ -113,7 +126,13 @@ public class LevelManager : MonoBehaviour
     private void ObjectiveComplete()
     {
         if (levelGoals[currentGoal].IsLevel()) { levelSection++; }
-        objectiveText.text = levelGoals[currentGoal].GetLevelDescription();
+        // objectiveText.text = levelGoals[currentGoal].GetLevelDescription();
+        if (currentObjectivePanel != null)
+        {
+            currentObjectivePanel.SetObjectiveText(levelGoals[currentGoal].GetLevelDescription());
+            currentObjectivePanel.ObjectiveIsComplete();
+            currentObjectivePanel = null;
+        }
         currentGoal++;
         if (currentGoal >= levelGoals.Count) { LevelWon(); }
     }

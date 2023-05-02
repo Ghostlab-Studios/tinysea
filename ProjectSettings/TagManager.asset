@@ -36,6 +36,7 @@ TagManager:
   - OrganismIcon2
   - OrganismIcon3
   - DialogueBackButton
+  - ScrollBarContent
   layers:
   - Default
   - TransparentFX

@@ -312,6 +312,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   levelID: 0
+  objectivePanelPrefab: {fileID: 114737607588347552, guid: 8d53d9cec59994049a6cf46f97b89a56,
+    type: 2}
 --- !u!114 &114824048437854704
 MonoBehaviour:
   m_ObjectHideFlags: 1

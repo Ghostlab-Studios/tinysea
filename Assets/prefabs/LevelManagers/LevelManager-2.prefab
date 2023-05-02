@@ -170,6 +170,8 @@ MonoBehaviour:
   targetCreatureCount: 2
   activeTiers: 01000000
   activeVariants: 02000000
+  achieveInNumRounds: 0
+  numRounds: 0
 --- !u!114 &114514004477984566
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -233,6 +235,8 @@ MonoBehaviour:
   targetCreatureCount: 10
   activeTiers: 00000000
   activeVariants: 
+  achieveInNumRounds: 0
+  numRounds: 0
 --- !u!114 &114788530910481446
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -258,6 +262,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   levelID: 1
+  objectivePanelPrefab: {fileID: 114737607588347552, guid: 8d53d9cec59994049a6cf46f97b89a56,
+    type: 2}
 --- !u!114 &114879415365255106
 MonoBehaviour:
   m_ObjectHideFlags: 1

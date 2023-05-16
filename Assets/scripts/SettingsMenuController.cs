@@ -5,13 +5,14 @@ using UnityEngine;
 /// <summary>
 /// Controls animations for the Settings Menu found in the main menu screen and gameplay scene.
 /// </summary>
-public class SettingsMenuController : MonoBehaviour {
-
+public class SettingsMenuController : MonoBehaviour 
+{
     public Animator UIAnimator;
     public GameObject sfxSlider;
     public GameObject musicSlider;
     public GameObject homeMenu;
     public GameObject saveMenu;
+    [SerializeField] private SceneLoad sceneLoader;
 
     private bool isOpen = false;
     
@@ -53,6 +54,12 @@ public class SettingsMenuController : MonoBehaviour {
     public void SavePressed()
     {
         if (!IsBusy()) { saveMenu.SetActive(!saveMenu.activeSelf); }
+    }
+
+    public void ReturnHome()
+    {
+        SessionRecorder.instance.WriteToSessionDataWithRound("Return Home Selected,,");
+        sceneLoader.LoadByIndex(0);
     }
 
     private bool IsBusy()

@@ -49,6 +49,8 @@ public class PlayerManager : MonoBehaviour {
     public RectTransform tier2EcoBar;
     public RectTransform tier3EcoBar;
 
+    private Vector3 tierProportions;
+
     public RectTransform tier1Glow;
     public RectTransform tier2Glow;
     public RectTransform tier3Glow;
@@ -63,7 +65,8 @@ public class PlayerManager : MonoBehaviour {
     /*
 	 * Initialize with three species at each level
 	 */
-    void Awake(){
+    private void Awake() 
+    {
         species = new List<CharacterManager>(GetComponentsInChildren<CharacterManager>());
         foreach (CharacterManager c in species)
         {
@@ -73,10 +76,33 @@ public class PlayerManager : MonoBehaviour {
         holder = FindObjectOfType<SwimmingHolder>();
 	}
 
+    private void Start()
+    {
+        SessionTimer.ResetRoundTime();
+    }
+
     public void nextTurn()
     {
         if(!busy && !holder.anyCreaturesBusy() && !LevelManager.isBusy)
         {
+            string linesToWrite = "Next Round Pressed,,,\n" +
+                                  ",,,Round Duration," + SessionTimer.FormatSessionRoundTime() + "\n" +
+                                  ",,,Money," + moneys.ToString() + "\n" +
+                                  ",,,Current Temperature," + temperature.temperature.ToString() + "\n" +
+                                  ",,,Forecast Low," + temperature.forecastLow.ToString() + "\n" +
+                                  ",,,Forecast High," + temperature.forecastHigh.ToString() + "\n" +
+                                  ",,,Ecosystem Pyramid by Percentage," + tierProportions.x.ToString() + "/" + tierProportions.y.ToString() + "/" + tierProportions.z.ToString() + "\n";
+            foreach (CharacterManager cm in species)
+            {
+                if (cm.speciesAmount >= 1)
+                {
+                    linesToWrite += ",,,Total " + cm.GetSessionRecorderText() + "," + cm.speciesAmount.ToString() + "\n";
+                }
+            }
+            linesToWrite = linesToWrite.Substring(0, linesToWrite.Length - 1);
+            SessionRecorder.instance.WriteToSessionDataWithRound(linesToWrite);
+            SessionTimer.ResetRoundTime();
+
             waitingForTemperature = true;
             busy = true;
             temperature.updateTemperature();
@@ -167,14 +193,14 @@ public class PlayerManager : MonoBehaviour {
             float t2Proportion = (Mathf.FloorToInt(getTotalAmountAtLevel(2)) * tierScaling) / totalFishes;
             float t3Proportion = (Mathf.FloorToInt(getTotalAmountAtLevel(3)) * tierScaling * tierScaling) / totalFishes;
 
-            Vector3 tiersProp = new Vector3(t1Proportion, t2Proportion, t3Proportion) / 
+            tierProportions = new Vector3(t1Proportion, t2Proportion, t3Proportion) / 
                                 Mathf.Max(t1Proportion, t2Proportion, t3Proportion);
 
-            tier1EcoBar.localScale = new Vector3(tiersProp.x, 1, 1);
-            tier2EcoBar.localScale = new Vector3(tiersProp.y, 1, 1);
-            tier3EcoBar.localScale = new Vector3(tiersProp.z, 1, 1);
+            tier1EcoBar.localScale = new Vector3(tierProportions.x, 1, 1);
+            tier2EcoBar.localScale = new Vector3(tierProportions.y, 1, 1);
+            tier3EcoBar.localScale = new Vector3(tierProportions.z, 1, 1);
 
-            if (tiersProp.x == 1 && tiersProp.y == 1 && tiersProp.z == 1)
+            if (tierProportions.x == 1 && tierProportions.y == 1 && tierProportions.z == 1)
             {
                 tier1Glow.gameObject.SetActive(false);
                 tier2Glow.gameObject.SetActive(false);
@@ -186,7 +212,7 @@ public class PlayerManager : MonoBehaviour {
                 fullGlow.gameObject.SetActive(false);
             }
 
-            if (tiersProp.x == 1)
+            if (tierProportions.x == 1)
             {
                 tier1Glow.gameObject.SetActive(true);
             }
@@ -195,7 +221,7 @@ public class PlayerManager : MonoBehaviour {
                 tier1Glow.gameObject.SetActive(false);
             }
 
-            if (tiersProp.y == 1)
+            if (tierProportions.y == 1)
             {
                 tier2Glow.gameObject.SetActive(true);
             }
@@ -204,7 +230,7 @@ public class PlayerManager : MonoBehaviour {
                 tier2Glow.gameObject.SetActive(false);
             }
 
-            if (tiersProp.z == 1)
+            if (tierProportions.z == 1)
             {
                 tier3Glow.gameObject.SetActive(true);
             }
@@ -343,7 +369,11 @@ public class PlayerManager : MonoBehaviour {
             float ratio = c.speciesAmount / totalAmount;
             float eatenFish = ratio * eatAmount;
             c.speciesAmount = c.speciesAmount - eatenFish;
-            if (eatenFish > 0) Debug.Log("Amount of " + c.uniqueName + " eaten: " + eatenFish.ToString());
+            if (eatenFish > 0)
+            {
+                Debug.Log("Amount of " + c.uniqueName + " eaten: " + eatenFish.ToString());
+                SessionRecorder.instance.WriteToSessionDataWithRound(",Death - " + c.GetSessionRecorderText() + " Eaten," + eatenFish.ToString());
+            }
             for (int i = 0; i < eatenFish - .9f; i++)
             {
                 c.deathList.Enqueue(CharacterManager.DeathCause.Eaten);

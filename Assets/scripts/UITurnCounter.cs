@@ -22,4 +22,9 @@ public class UITurnCounter : MonoBehaviour
 		turnCount++;
 		turnText.text = turnCount.ToString();
     }
+
+	public int GetTurn()
+    {
+		return turnCount;
+    }
 }

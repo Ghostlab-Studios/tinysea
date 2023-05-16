@@ -37,6 +37,8 @@ TagManager:
   - OrganismIcon3
   - DialogueBackButton
   - ScrollBarContent
+  - SessionRecorder
+  - TurnCounter
   layers:
   - Default
   - TransparentFX

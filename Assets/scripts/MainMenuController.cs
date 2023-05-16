@@ -26,6 +26,7 @@ public class MainMenuController : MonoBehaviour
 
     public void FreeplayPressed()
     {
+        SessionRecorder.instance.WriteToSessionData("Freeplay Selected,,,");
         scene = 1;
         LevelLoader.levelToLoad = -1;
         anim.SetTrigger("FinishedState");
@@ -36,5 +37,10 @@ public class MainMenuController : MonoBehaviour
     {
         anim.SetTrigger("FinishedState");
         anim.SetTrigger("LevelSelectClicked");
+    }
+
+    public void RecordLevel(int level)
+    {
+        SessionRecorder.instance.WriteToSessionData("Level Selected,,Level " + level.ToString());
     }
 }

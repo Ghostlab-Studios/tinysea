@@ -47,4 +47,14 @@ public class SoundManager : MonoBehaviour {
     {
         if (soundSlider != null) { sfxVolume = soundSlider.value; }
     }
+
+    public void RecordMusicChange()
+    {
+        SessionRecorder.instance.WriteToSessionData("Volume Change,Music," + musicVolume.ToString());
+    }
+
+    public void RecordSFXChange()
+    {
+        SessionRecorder.instance.WriteToSessionData("Volume Change,SFX," + musicVolume.ToString());
+    }
 }

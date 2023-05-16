@@ -76,6 +76,8 @@ public class EcoWindowControl : MonoBehaviour
     void Controler()
     {
         open = !open;
+        string value = open ? "Open" : "Close";
+        SessionRecorder.instance.WriteToSessionDataWithRound("Select Ecosystem Menu,," + value);
         slideTimer = slideTime;
     }
 

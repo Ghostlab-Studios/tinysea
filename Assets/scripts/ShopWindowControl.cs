@@ -76,6 +76,8 @@ public class ShopWindowControl : MonoBehaviour {
 
 	public void Controler(){
 		open = !open;
+        string value = open ? "Open" : "Close";
+        SessionRecorder.instance.WriteToSessionDataWithRound("Select Shop Menu,," + value);
         slideTimer = slideTime;
 	}
 

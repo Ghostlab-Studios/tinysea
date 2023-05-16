@@ -219,6 +219,9 @@ public class ShopManager : MonoBehaviour {
         if (!playerManager.busy && amountToBuy > 0)
         {
             playerManager.BuyCreatures(currentOrganismID, amountToBuy);
+            CharacterManager species = playerManager.species[currentOrganismID];
+            string speciesText = species.GetSessionRecorderText();
+            SessionRecorder.instance.WriteToSessionDataWithRound("Buy Organism," + speciesText + "," + amountToBuy.ToString());
             onBuy.Invoke();
             ResetBuySell();
         }
@@ -232,6 +235,9 @@ public class ShopManager : MonoBehaviour {
         if (!playerManager.busy && amountToSell > 0)
         {
             playerManager.SellCreatures(currentOrganismID, amountToSell);
+            CharacterManager species = playerManager.species[currentOrganismID];
+            string speciesText = species.GetSessionRecorderText();
+            SessionRecorder.instance.WriteToSessionDataWithRound("Sell Organism," + speciesText + "," + amountToSell.ToString());
             onSell.Invoke();
             ResetBuySell();
         }

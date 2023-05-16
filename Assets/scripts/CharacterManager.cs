@@ -82,6 +82,7 @@ public class CharacterManager : MonoBehaviour {
             if (fedRate < deathThreashold)
             {
                 Debug.Log("died from starvation");
+                SessionRecorder.instance.WriteToSessionDataWithRound(",Death - " + GetSessionRecorderText() + " Starvation," + deaths.ToString());
                 for (int i = 0; i < deaths; i++)
                 {
                     deathList.Enqueue(DeathCause.Starve);
@@ -92,6 +93,7 @@ public class CharacterManager : MonoBehaviour {
                 if (lastTemp + 273 < thermalcurve.optimalTemp)
                 {
                     Debug.Log("died from cold");
+                    SessionRecorder.instance.WriteToSessionDataWithRound(",Death - " + GetSessionRecorderText() + " Freeze," + deaths.ToString());
                     for (int i = 0; i < deaths; i++)
                     {
                         deathList.Enqueue(DeathCause.Cold);
@@ -100,6 +102,7 @@ public class CharacterManager : MonoBehaviour {
                 else
                 {
                     Debug.Log("died from heat");
+                    SessionRecorder.instance.WriteToSessionDataWithRound(",Death - " + GetSessionRecorderText() + " Heat," + deaths.ToString());
                     for (int i = 0; i < deaths; i++)
                     {
                         deathList.Enqueue(DeathCause.Hot);
@@ -133,6 +136,7 @@ public class CharacterManager : MonoBehaviour {
             }
             speciesAmount = speciesAmount + reproduced;
             Debug.Log("reproduced : " + reproduced);
+            SessionRecorder.instance.WriteToSessionDataWithRound(",Reproduction - " + GetSessionRecorderText() + "," + reproduced.ToString());
             for (int i = 0; i < reproduced -.9f; i++)
             {
                 birthList.Enqueue(BirthCause.Reproduction);
@@ -148,6 +152,29 @@ public class CharacterManager : MonoBehaviour {
             deathList.Enqueue(DeathCause.Starve);
             deathList.Enqueue(DeathCause.Starve);
         }
+    }
+
+    public string GetSessionRecorderText()
+    {
+        return "Tier " + foodChainLevel + " " + variant.ToString() + " " + GetGeneralistOrSpecialistType();
+    }
+
+    private string GetGeneralistOrSpecialistType()
+    {
+        string textToReturn = "ERR";
+        switch (reproductionRateText)
+        {
+            case "Low":
+                textToReturn = "Generalist";
+                break;
+            case "Average":
+                textToReturn = "Average Species";
+                break;
+            case "High":
+                textToReturn = "Specialist";
+                break;
+        }
+        return textToReturn;
     }
 
     private bool HasCreaturesOfTier(int tier)

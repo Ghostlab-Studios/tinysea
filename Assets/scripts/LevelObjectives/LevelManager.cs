@@ -94,7 +94,7 @@ public class LevelManager : MonoBehaviour
 
     private void Update()
     {
-        Debug.Log(GetCurrentObjectiveID().ToString());
+        // Debug.Log(GetCurrentObjectiveID().ToString());
         if (!isGameOver)
         {
             if (levelGoals[currentGoal].IsLevel() && levelGoals[currentGoal].GetLevelDescription() != "") 
@@ -133,6 +133,7 @@ public class LevelManager : MonoBehaviour
             currentObjectivePanel.ObjectiveIsComplete();
             currentObjectivePanel = null;
         }
+        SessionRecorder.instance.WriteToSessionDataWithRound(",Objective Complete - " + levelGoals[currentGoal].GetType().Name + "," + currentGoal.ToString());
         currentGoal++;
         if (currentGoal >= levelGoals.Count) { LevelWon(); }
     }
@@ -143,6 +144,7 @@ public class LevelManager : MonoBehaviour
     private void LevelWon()
     {
         isGameOver = true;
+        SessionRecorder.instance.WriteToSessionDataWithRound(",Level Complete,,");
         SceneManager.LoadScene(0);
     }
 

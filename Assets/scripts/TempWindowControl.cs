@@ -79,6 +79,8 @@ public class TempWindowControl : MonoBehaviour
     public void Controler()
     {
         open = !open;
+        string value = open ? "Open" : "Close";
+        SessionRecorder.instance.WriteToSessionDataWithRound("Select Temperature Menu,," + value);
         slideTimer = slideTime;
         guiPressed = true;
     }

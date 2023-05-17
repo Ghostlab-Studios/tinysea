@@ -85,6 +85,15 @@ public class TempWindowControl : MonoBehaviour
         guiPressed = true;
     }
 
+    public void AutoToggleWindow()
+    {
+        open = !open;
+        string value = open ? "Open" : "Close";
+        SessionRecorder.instance.WriteToSessionDataWithRound(",Auto-Toggle Temperature Window," + value);
+        slideTimer = slideTime;
+        guiPressed = true;
+    }
+
     public bool IsNotMoving()
     {
         return slideTimer == 0;

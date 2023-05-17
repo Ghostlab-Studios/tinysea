@@ -33,7 +33,7 @@ public class MaxCreaturesAtRoundObjective : MonoBehaviour, ILevelEvent
     public bool IsEventComplete()
     {
         if (!eventRunning) { eventRunning = true; }
-        bool isLevelOver = roundsSinceStart >= numRounds;
+        bool isLevelOver = roundsSinceStart >= numRounds && !pm.busy;
         if (isLevelOver) { eventRunning = false; }
         return isLevelOver;
     }

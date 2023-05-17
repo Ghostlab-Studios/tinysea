@@ -31,11 +31,11 @@ GameObject:
   - component: {fileID: 114918043275273026}
   - component: {fileID: 114076670173122784}
   - component: {fileID: 114641221619536598}
-  - component: {fileID: 114557162754345056}
-  - component: {fileID: 114518087382937848}
-  - component: {fileID: 114688544510107398}
   - component: {fileID: 114627161521413052}
   - component: {fileID: 114466650628325022}
+  - component: {fileID: 114688544510107398}
+  - component: {fileID: 114557162754345056}
+  - component: {fileID: 114518087382937848}
   - component: {fileID: 114504375057193586}
   - component: {fileID: 114617503364540150}
   m_Layer: 0
@@ -124,12 +124,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3133c09d8d084049ab337690200af82, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ID: 15
+  ID: 12
   targetCreatureCount: 1
   activeTiers: 02000000
   activeVariants: 
   achieveInNumRounds: 1
-  numRounds: 10
+  numRounds: 7
 --- !u!114 &114504375057193586
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -187,12 +187,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3133c09d8d084049ab337690200af82, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ID: 12
+  ID: 15
   targetCreatureCount: 1
   activeTiers: 02000000
   activeVariants: 
   achieveInNumRounds: 1
-  numRounds: 10
+  numRounds: 7
 --- !u!114 &114557162754345056
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -204,7 +204,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae7be919a4174e3489659f314489a0ab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ID: 11
+  ID: 14
   temperatureMean: 20
   climateChange: 0
   yearlyRange: 5
@@ -233,7 +233,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae7be919a4174e3489659f314489a0ab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ID: 14
+  ID: 11
   temperatureMean: 20
   climateChange: 0
   yearlyRange: 0

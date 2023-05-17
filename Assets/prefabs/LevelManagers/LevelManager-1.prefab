@@ -76,7 +76,8 @@ MonoBehaviour:
     activeObjects: []
   - text: You can use the money you got from selling your plankton to buy a Tier II
       organism. These are known as Herbivores because they eat the plant-like plankton.
-      Herbivores feed on Producers, so make sure you have a good number of plankton
+    activeObjects: []
+  - text: Herbivores feed on Producers, so make sure you have a good number of plankton
       first.
     activeObjects: []
 --- !u!114 &114084539228989116
@@ -169,9 +170,11 @@ MonoBehaviour:
   ID: 13
   closeShopBeforeDialogue: 0
   dialogue:
-  - text: 'Now that you have an organism of each type, try once more to balance your
-      food pyramid. Remember that for every Predator, 3 Herbivores are needed each
-      turn, and for each Herbivore, 3 Producers are needed each turn. '
+  - text: Now that you have an organism of each type, try once more to balance your
+      food pyramid.
+    activeObjects: []
+  - text: Remember that for every Predator, 3 Herbivores are needed each turn, and
+      for each Herbivore, 3 Producers are needed each turn.
     activeObjects: []
   - text: This means you need 9 Producers each turn per Predator!
     activeObjects: []
@@ -313,8 +316,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   levelID: 0
   objectivePanelPrefab: {fileID: 114737607588347552, guid: 8d53d9cec59994049a6cf46f97b89a56,
-    type: 2}
-  wwwAdapter: {fileID: 114751743095743724, guid: b43d31472dcc3ed4597b09947a852817,
     type: 2}
 --- !u!114 &114824048437854704
 MonoBehaviour:

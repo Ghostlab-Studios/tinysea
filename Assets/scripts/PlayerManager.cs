@@ -85,22 +85,7 @@ public class PlayerManager : MonoBehaviour {
     {
         if(!busy && !holder.anyCreaturesBusy() && !LevelManager.isBusy)
         {
-            string linesToWrite = "Next Round Pressed,,,\n" +
-                                  ",,,Round Duration," + SessionTimer.FormatSessionRoundTime() + "\n" +
-                                  ",,,Money," + moneys.ToString() + "\n" +
-                                  ",,,Current Temperature," + temperature.temperature.ToString() + "\n" +
-                                  ",,,Forecast Low," + temperature.forecastLow.ToString() + "\n" +
-                                  ",,,Forecast High," + temperature.forecastHigh.ToString() + "\n" +
-                                  ",,,Ecosystem Pyramid by Percentage," + tierProportions.x.ToString() + "/" + tierProportions.y.ToString() + "/" + tierProportions.z.ToString() + "\n";
-            foreach (CharacterManager cm in species)
-            {
-                if (cm.speciesAmount >= 1)
-                {
-                    linesToWrite += ",,,Total " + cm.GetSessionRecorderText() + "," + cm.speciesAmount.ToString() + "\n";
-                }
-            }
-            linesToWrite = linesToWrite.Substring(0, linesToWrite.Length - 1);
-            SessionRecorder.instance.WriteToSessionDataWithRound(linesToWrite);
+            RecordRoundData();
             SessionTimer.ResetRoundTime();
 
             waitingForTemperature = true;
@@ -193,8 +178,12 @@ public class PlayerManager : MonoBehaviour {
             float t2Proportion = (Mathf.FloorToInt(getTotalAmountAtLevel(2)) * tierScaling) / totalFishes;
             float t3Proportion = (Mathf.FloorToInt(getTotalAmountAtLevel(3)) * tierScaling * tierScaling) / totalFishes;
 
-            tierProportions = new Vector3(t1Proportion, t2Proportion, t3Proportion) / 
+            if (Mathf.Max(t1Proportion, t2Proportion, t3Proportion) > 0)
+            {
+                tierProportions = new Vector3(t1Proportion, t2Proportion, t3Proportion) /
                                 Mathf.Max(t1Proportion, t2Proportion, t3Proportion);
+            }
+            else { tierProportions = new Vector3(0, 0, 0); }
 
             tier1EcoBar.localScale = new Vector3(tierProportions.x, 1, 1);
             tier2EcoBar.localScale = new Vector3(tierProportions.y, 1, 1);
@@ -372,7 +361,7 @@ public class PlayerManager : MonoBehaviour {
             if (eatenFish > 0)
             {
                 Debug.Log("Amount of " + c.uniqueName + " eaten: " + eatenFish.ToString());
-                SessionRecorder.instance.WriteToSessionDataWithRound(",Death - " + c.GetSessionRecorderText() + " Eaten," + eatenFish.ToString());
+                SessionRecorder.instance.WriteToSessionDataWithRound(",Death by Predator - " + c.GetSessionRecorderText() + "," + eatenFish.ToString());
             }
             for (int i = 0; i < eatenFish - .9f; i++)
             {
@@ -418,5 +407,24 @@ public class PlayerManager : MonoBehaviour {
             eatAtLevel(tier - 1, foodRequestAmount);
         }
     }
-
+    
+    public void RecordRoundData()
+    {
+        string linesToWrite = "Next Round Pressed,,,\n" +
+                                  ",,,Round Duration," + SessionTimer.FormatSessionRoundTime() + "\n" +
+                                  ",,,Money," + moneys.ToString() + "\n" +
+                                  ",,,Current Temperature," + temperature.temperature.ToString() + "\n" +
+                                  ",,,Forecast Low," + temperature.forecastLow.ToString() + "\n" +
+                                  ",,,Forecast High," + temperature.forecastHigh.ToString() + "\n" +
+                                  ",,,Ecosystem Pyramid by Percentage," + tierProportions.x.ToString() + "/" + tierProportions.y.ToString() + "/" + tierProportions.z.ToString() + "\n";
+        foreach (CharacterManager cm in species)
+        {
+            if (cm.speciesAmount >= 1)
+            {
+                linesToWrite += ",,,Total " + cm.GetSessionRecorderText() + "," + cm.speciesAmount.ToString() + "\n";
+            }
+        }
+        linesToWrite = linesToWrite.Substring(0, linesToWrite.Length - 1);
+        SessionRecorder.instance.WriteToSessionDataWithRound(linesToWrite);
+    }
 }

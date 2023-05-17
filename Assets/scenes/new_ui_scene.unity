@@ -585,7 +585,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 34.4, y: 12.5}
+  m_AnchoredPosition: {x: 34.4, y: 17.546326}
   m_SizeDelta: {x: 24.44, y: 14.795}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &20245946
@@ -3074,7 +3074,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 11467588, guid: ad58b2f655382a749b02e66437cd5fee, type: 2}
       propertyPath: reproductionMultiplier
-      value: 0.7
+      value: 0.55
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: ad58b2f655382a749b02e66437cd5fee, type: 2}
@@ -15878,7 +15878,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 11402386, guid: f72052a7af4ba084888d736f2259bb4f, type: 2}
       propertyPath: reproductionMultiplier
-      value: 0.6
+      value: 0.55
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: f72052a7af4ba084888d736f2259bb4f, type: 2}
@@ -18096,7 +18096,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 11451700, guid: bdb1d12367a942b4d9c53f5567b8c2e3, type: 2}
       propertyPath: reproductionMultiplier
-      value: 0.7
+      value: 0.55
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: bdb1d12367a942b4d9c53f5567b8c2e3, type: 2}
@@ -29263,8 +29263,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -89.375}
-  m_SizeDelta: {x: 593.1, y: 177.7}
+  m_AnchoredPosition: {x: 0, y: -76.3}
+  m_SizeDelta: {x: 593.1, y: 151.5}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1001 &722503148
 Prefab:
@@ -70139,8 +70139,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0.19999999, y: -15.1}
-  m_SizeDelta: {x: 557.1, y: 94.5}
+  m_AnchoredPosition: {x: -0.19999999, y: -6}
+  m_SizeDelta: {x: 557.1, y: 63.43}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1633375937
 MonoBehaviour:
@@ -70175,7 +70175,11 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: New Text
+  m_Text: 'New Text
+
+    New Text
+
+    New Text'
 --- !u!222 &1633375938
 CanvasRenderer:
   m_ObjectHideFlags: 0

@@ -82,7 +82,7 @@ public class CharacterManager : MonoBehaviour {
             if (fedRate < deathThreashold)
             {
                 Debug.Log("died from starvation");
-                SessionRecorder.instance.WriteToSessionDataWithRound(",Death - " + GetSessionRecorderText() + " Starvation," + deaths.ToString());
+                SessionRecorder.instance.WriteToSessionDataWithRound(",Death by Starve - " + GetSessionRecorderText() + "," + deaths.ToString());
                 for (int i = 0; i < deaths; i++)
                 {
                     deathList.Enqueue(DeathCause.Starve);
@@ -93,7 +93,7 @@ public class CharacterManager : MonoBehaviour {
                 if (lastTemp + 273 < thermalcurve.optimalTemp)
                 {
                     Debug.Log("died from cold");
-                    SessionRecorder.instance.WriteToSessionDataWithRound(",Death - " + GetSessionRecorderText() + " Freeze," + deaths.ToString());
+                    SessionRecorder.instance.WriteToSessionDataWithRound(",Death by Freeze - " + GetSessionRecorderText() + "," + deaths.ToString());
                     for (int i = 0; i < deaths; i++)
                     {
                         deathList.Enqueue(DeathCause.Cold);
@@ -102,7 +102,7 @@ public class CharacterManager : MonoBehaviour {
                 else
                 {
                     Debug.Log("died from heat");
-                    SessionRecorder.instance.WriteToSessionDataWithRound(",Death - " + GetSessionRecorderText() + " Heat," + deaths.ToString());
+                    SessionRecorder.instance.WriteToSessionDataWithRound(",Death by Heat - " + GetSessionRecorderText() + "," + deaths.ToString());
                     for (int i = 0; i < deaths; i++)
                     {
                         deathList.Enqueue(DeathCause.Hot);

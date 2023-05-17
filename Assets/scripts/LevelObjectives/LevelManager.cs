@@ -20,6 +20,7 @@ public class LevelManager : MonoBehaviour
     public static bool isBusy = false;
     [SerializeField] private ObjectivePanelController objectivePanelPrefab;
 
+    private PlayerManager playerManager;
     private ObjectStorage levelOneObjects;
     private ObjectStorage levelTwoObjects;
     private ObjectStorage levelThreeObjects;
@@ -54,6 +55,7 @@ public class LevelManager : MonoBehaviour
         levelTwoObjects = GameObject.FindGameObjectWithTag("Level2ObjectStorage").GetComponent<ObjectStorage>();
         levelThreeObjects = GameObject.FindGameObjectWithTag("Level3ObjectStorage").GetComponent<ObjectStorage>();
         scrollBarContent = GameObject.FindGameObjectWithTag("ScrollBarContent");
+        playerManager = GameObject.FindGameObjectWithTag("PlayerManager").GetComponent<PlayerManager>();
     }
 
     private void Start()
@@ -145,6 +147,7 @@ public class LevelManager : MonoBehaviour
     {
         isGameOver = true;
         SessionRecorder.instance.WriteToSessionDataWithRound(",Level Complete,,");
+        playerManager.RecordRoundData();
         SceneManager.LoadScene(0);
     }
 

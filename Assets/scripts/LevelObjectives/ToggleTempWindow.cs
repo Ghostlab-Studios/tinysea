@@ -44,7 +44,7 @@ public class ToggleTempWindow : MonoBehaviour, ILevelEvent
     {
         if (!isToggled)
         {
-            twc.Controler();
+            twc.AutoToggleWindow();
             isToggled = true;
         }
         if (!timerStarted && twc.IsNotMoving())

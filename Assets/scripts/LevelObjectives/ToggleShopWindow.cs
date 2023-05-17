@@ -41,7 +41,7 @@ public class ToggleShopWindow : MonoBehaviour, ILevelEvent
     {
         if (!isToggled)
         {
-            swc.Controler();
+            swc.AutoToggleWindow();
             isToggled = true;
         }
         return swc.IsNotMoving() && textAnim.GetCurrentAnimatorStateInfo(0).IsName("InactiveState");

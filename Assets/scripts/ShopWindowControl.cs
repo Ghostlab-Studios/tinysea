@@ -2,8 +2,8 @@
 using System.Collections;
 using UnityEngine.UI;
 
-public class ShopWindowControl : MonoBehaviour {
-
+public class ShopWindowControl : MonoBehaviour 
+{
 	//initialize the window
 	public GameObject window;
 	//public Renderer button;
@@ -80,6 +80,14 @@ public class ShopWindowControl : MonoBehaviour {
         SessionRecorder.instance.WriteToSessionDataWithRound("Select Shop Menu,," + value);
         slideTimer = slideTime;
 	}
+
+    public void AutoToggleWindow()
+    {
+        open = !open;
+        string value = open ? "Open" : "Close";
+        SessionRecorder.instance.WriteToSessionDataWithRound(",Auto-Toggle Shop Window," + value);
+        slideTimer = slideTime;
+    }
 
     public bool IsNotMoving()
     {

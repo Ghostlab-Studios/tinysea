@@ -17,26 +17,33 @@ public class MainMenuController : MonoBehaviour
         }
     }
 
+    /*
     public void TutorialPressed()
     {
         scene = 2;
         anim.SetTrigger("FinishedState");
         anim.SetTrigger("TutorialClicked");
     }
+    */
 
     public void FreeplayPressed()
     {
         SessionRecorder.instance.WriteToSessionData("Freeplay Selected,,,");
         scene = 1;
         LevelLoader.levelToLoad = -1;
-        anim.SetTrigger("FinishedState");
-        anim.SetTrigger("FreeplayClicked");
+        // anim.SetTrigger("FinishedState");
+        anim.SetTrigger("FreeplayPressed");
     }
 
-    public void LevelSelectPressed()
+    public void LevelSelectOpenPressed()
     {
-        anim.SetTrigger("FinishedState");
-        anim.SetTrigger("LevelSelectClicked");
+        // anim.SetTrigger("FinishedState");
+        anim.SetTrigger("LevelOpenPressed");
+    }
+
+    public void LevelSelectClosedPressed()
+    {
+        anim.SetTrigger("LevelClosedPressed");
     }
 
     public void RecordLevel(int level)

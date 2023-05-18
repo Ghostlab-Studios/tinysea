@@ -90,7 +90,7 @@ public class LevelDialogue : MonoBehaviour, ILevelEvent
             CloseShop();
         }
         LevelManager.isBusy = !isDialogueFinished;
-        return isDialogueFinished;
+        return isDialogueFinished && textAnim.GetCurrentAnimatorStateInfo(0).IsName("InactiveState");
     }
 
     public bool IsEventFailure()
@@ -218,6 +218,7 @@ public class LevelDialogue : MonoBehaviour, ILevelEvent
     [System.Serializable]
     public class DialogueTuple
     {
+        [TextArea(7, 20)]
         public string text;
         public List<ActivatableObject> activeObjects;
     }

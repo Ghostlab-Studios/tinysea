@@ -159,10 +159,12 @@ public class PlayerManager : MonoBehaviour {
             }
         }
         
-        if (/*Input.GetButtonDown("Cancel") && Input.GetButton("Submit")*/ Input.GetKeyDown("q"))
+        /*
+        if (Input.GetKeyDown("q"))
         {
             moneys += 999999;
         }
+        */
 
         //set ecosystem pyramid.
         float totalFishes = getTotalFishCount();
@@ -411,12 +413,12 @@ public class PlayerManager : MonoBehaviour {
     public void RecordRoundData()
     {
         string linesToWrite = "Next Round Pressed,,,\n" +
-                                  ",,,Round Duration," + SessionTimer.FormatSessionRoundTime() + "\n" +
-                                  ",,,Money," + moneys.ToString() + "\n" +
-                                  ",,,Current Temperature," + temperature.temperature.ToString() + "\n" +
-                                  ",,,Forecast Low," + temperature.forecastLow.ToString() + "\n" +
-                                  ",,,Forecast High," + temperature.forecastHigh.ToString() + "\n" +
-                                  ",,,Ecosystem Pyramid by Percentage," + tierProportions.x.ToString() + "/" + tierProportions.y.ToString() + "/" + tierProportions.z.ToString() + "\n";
+                              ",,,Round Duration," + SessionTimer.FormatSessionRoundTime() + "\n" +
+                              ",,,Money," + moneys.ToString() + "\n" +
+                              ",,,Current Temperature," + temperature.temperature.ToString() + "\n" +
+                              ",,,Forecast Low," + temperature.forecastLow.ToString() + "\n" +
+                              ",,,Forecast High," + temperature.forecastHigh.ToString() + "\n" +
+                              ",,,Ecosystem Pyramid by Percentage," + tierProportions.x.ToString() + "/" + tierProportions.y.ToString() + "/" + tierProportions.z.ToString() + "\n";
         foreach (CharacterManager cm in species)
         {
             if (cm.speciesAmount >= 1)

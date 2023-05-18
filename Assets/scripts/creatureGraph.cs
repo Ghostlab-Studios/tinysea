@@ -61,19 +61,19 @@ public class creatureGraph : MonoBehaviour
         switch(tier)
         {
             case 1:
-                value[0] = manager_T1[0].speciesAmount + manager_T1[1].speciesAmount + manager_T1[2].speciesAmount;
-                value[1] = manager_T1[3].speciesAmount + manager_T1[4].speciesAmount + manager_T1[5].speciesAmount;
-                value[2] = manager_T1[6].speciesAmount + manager_T1[7].speciesAmount + manager_T1[8].speciesAmount;
+                value[0] = Mathf.FloorToInt(manager_T1[0].speciesAmount) + Mathf.FloorToInt(manager_T1[1].speciesAmount) + Mathf.FloorToInt(manager_T1[2].speciesAmount);
+                value[1] = Mathf.FloorToInt(manager_T1[3].speciesAmount) + Mathf.FloorToInt(manager_T1[4].speciesAmount) + Mathf.FloorToInt(manager_T1[5].speciesAmount);
+                value[2] = Mathf.FloorToInt(manager_T1[6].speciesAmount) + Mathf.FloorToInt(manager_T1[7].speciesAmount) + Mathf.FloorToInt(manager_T1[8].speciesAmount);
                 break;
             case 2:
-                value[0] = manager_T2[0].speciesAmount + manager_T2[1].speciesAmount + manager_T2[2].speciesAmount;
-                value[1] = manager_T2[3].speciesAmount + manager_T2[4].speciesAmount + manager_T2[5].speciesAmount;
-                value[2] = manager_T2[6].speciesAmount + manager_T2[7].speciesAmount + manager_T2[8].speciesAmount;
+                value[0] = Mathf.FloorToInt(manager_T2[0].speciesAmount) + Mathf.FloorToInt(manager_T2[1].speciesAmount) + Mathf.FloorToInt(manager_T2[2].speciesAmount);
+                value[1] = Mathf.FloorToInt(manager_T2[3].speciesAmount) + Mathf.FloorToInt(manager_T2[4].speciesAmount) + Mathf.FloorToInt(manager_T2[5].speciesAmount);
+                value[2] = Mathf.FloorToInt(manager_T2[6].speciesAmount) + Mathf.FloorToInt(manager_T2[7].speciesAmount) + Mathf.FloorToInt(manager_T2[8].speciesAmount);
                 break;
             case 3:
-                value[0] = manager_T3[0].speciesAmount + manager_T3[1].speciesAmount + manager_T3[2].speciesAmount;
-                value[1] = manager_T3[3].speciesAmount + manager_T3[4].speciesAmount + manager_T3[5].speciesAmount;
-                value[2] = manager_T3[6].speciesAmount + manager_T3[7].speciesAmount + manager_T3[8].speciesAmount;
+                value[0] = Mathf.FloorToInt(manager_T3[0].speciesAmount) + Mathf.FloorToInt(manager_T3[1].speciesAmount) + Mathf.FloorToInt(manager_T3[2].speciesAmount);
+                value[1] = Mathf.FloorToInt(manager_T3[3].speciesAmount) + Mathf.FloorToInt(manager_T3[4].speciesAmount) + Mathf.FloorToInt(manager_T3[5].speciesAmount);
+                value[2] = Mathf.FloorToInt(manager_T3[6].speciesAmount) + Mathf.FloorToInt(manager_T3[7].speciesAmount) + Mathf.FloorToInt(manager_T3[8].speciesAmount);
                 break;
             default:
                 Debug.Log("wrong tier info");

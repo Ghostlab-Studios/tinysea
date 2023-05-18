@@ -173,10 +173,10 @@ MonoBehaviour:
   - text: Now that you have an organism of each type, try once more to balance your
       food pyramid.
     activeObjects: []
-  - text: Remember that for every Predator, 3 Herbivores are needed each turn, and
-      for each Herbivore, 3 Producers are needed each turn.
+  - text: Remember that for every Predator, 5 Herbivores are needed each turn, and
+      for each Herbivore, 5 Producers are needed each turn.
     activeObjects: []
-  - text: This means you need 9 Producers each turn per Predator!
+  - text: This means you need 25 Producers each turn per Predator!
     activeObjects: []
 --- !u!114 &114479549668011984
 MonoBehaviour:
@@ -276,8 +276,9 @@ MonoBehaviour:
   - text: 'There''s one more Tier of organisms available to you: Tier III organisms,
       the Predators, which eat the Herbivores.'
     activeObjects: []
-  - text: 'Like Herbivores they are hungry, and need to eat about 3 Herbivores each
-      turn to survive and reproduce. '
+  - text: Like Herbivores they are hungry, and need to eat  Herbivores each turn to
+      survive and reproduce. For every 1 Predator, you will need about 5 Herbivores
+      to keep the food chain balanced.
     activeObjects: []
   - text: Manage your farm and save up for a Predator in your system.
     activeObjects: []
@@ -385,7 +386,8 @@ MonoBehaviour:
       you need to make sure that the food chain is balanced with enough plankton to
       feed your hungry Herbivores.
     activeObjects: []
-  - text: Each one will need to eat about 3 plankton every turn to survive and reproduce.
+  - text: For every 1 Herbivore you have, you will need about 5 plankton to keep the
+      food chain balanced.
     activeObjects: []
   - text: "If there aren\u2019t enough plankton (producers) in Tier 1 to support all
       of the Herbivores in Tier 2, the Tier 2 animals will go hungry and die."

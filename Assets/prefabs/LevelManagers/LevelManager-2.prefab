@@ -67,7 +67,7 @@ MonoBehaviour:
   ID: 8
   tempIncrease: 5
   roundsBetweenIncrement: 2
-  numIncrements: 6
+  numIncrements: 7
   organismGoal: 10
 --- !u!114 &114007191255966658
 MonoBehaviour:
@@ -86,8 +86,9 @@ MonoBehaviour:
   - text: "Here you\u2019ll see the current temperature. Looks like the water is 5
       degrees Celsius right now - just a bit above freezing."
     activeObjects: []
-  - text: "If you take a look at your shop, you\u2019ll see that there are now arctic
-      and tropical varieties of the plankton you were growing earlier."
+  - text: "That's a bit cold for the species you've been raising so far. Don't worry,
+      though! If you take a look at your shop, you\u2019ll see that there are a few
+      new additions."
     activeObjects: []
 --- !u!114 &114022457350753658
 MonoBehaviour:
@@ -139,6 +140,15 @@ MonoBehaviour:
   ID: 5
   closeShopBeforeDialogue: 0
   dialogue:
+  - text: Next to each organism, there are now two new buttons that let you buy new
+      variants of the organism.
+    activeObjects: []
+  - text: "These new variants are similar to the kinds of organisms you\u2019ve raised
+      before, but these particular species have adapted to different climates."
+    activeObjects: []
+  - text: In the middle of the shop is a new graph that shows what range of temperatures
+      each variant thrives in the most.
+    activeObjects: []
   - text: Given the water temperature, which one do you think will do best? Whatever
       you choose, try to get 10 Producers on your farm!
     activeObjects: []
@@ -167,7 +177,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 10
-  targetCreatureCount: 2
+  targetCreatureCount: 10
   activeTiers: 01000000
   activeVariants: 02000000
   achieveInNumRounds: 0
@@ -219,6 +229,9 @@ MonoBehaviour:
   dialogue:
   - text: "Nice job! Now that it\u2019s a bit warmer, you\u2019ve hopefully decided
       to focus on raising tropical organisms."
+    activeObjects: []
+  - text: See if you can raise enough tropical Producers to support at least 10 tropical
+      Herbivores.
     activeObjects: []
 --- !u!114 &114717629561521208
 MonoBehaviour:
@@ -278,12 +291,13 @@ MonoBehaviour:
   ID: 7
   closeShopBeforeDialogue: 0
   dialogue:
-  - text: 'Good job! The arctic organisms seem to thrive in your system. However,
-      temperatures may change. '
+  - text: Good job! The arctic organisms seem to thrive in your system. However, temperatures
+      may change.
     activeObjects: []
-  - text: Keep an eye on the temperature graph.
+  - text: We're about to enter a period of fluctuating temperatures, so keep an eye
+      on the temperature graph.
     activeObjects: []
-  - text: Now, make sure that 10 Producers remain in your system for 5 rounds while
+  - text: Now, make sure that 10 Producers remain in your system for 14 rounds while
       the temperature changes.
     activeObjects: []
   - text: "Remember: you\u2019re able to sell your arctic organisms to buy ones more

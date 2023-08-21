@@ -53,20 +53,31 @@ public class SessionRecorder : MonoBehaviour
 
 	private void WebRequestEnqueue(string data)
     {
-		if (sessionQueue.Count == 0)
-        {
-			sessionQueue.Enqueue(data);
-			RunWebRequestQueue();
-        }
-		else
-        {
-			sessionQueue.Enqueue(data);
-		}
+		sessionQueue.Enqueue(data);
     }
 
-	private void RunWebRequestQueue()
+	private string CompileWebRequestQueue()
     {
-		string node = sessionQueue.Dequeue();
+		string compilation = "";
+
+		while (sessionQueue.Count > 0)
+        {
+			string node = sessionQueue.Dequeue();
+			compilation += node;
+        }
+
+		return compilation;
+    }
+
+	public void RunWebRequestQueue()
+    {
+		string node = CompileWebRequestQueue();
+		if (node == "")
+        {
+			Debug.Log("Write failed: empty queue");
+			return;
+        }
+
 		string node_output = "test_output";
 		node_output = UnityWebRequest.EscapeURL(node);
 		string url = urlbase + "&csv=" + node_output + "&file=" + SessionIDGenerator.sessionID.ToString() + ".csv";
@@ -81,12 +92,8 @@ public class SessionRecorder : MonoBehaviour
 			// Debug.Log(url + " : Web response code: " + data.downloadHandler.text);
 			if (data.error != null)
 			{
-				// Debug.Log("Web error: " + data.error);
+				Debug.Log("Web error: " + data.error);
 			}
-			if (sessionQueue.Count > 0)
-            {
-				RunWebRequestQueue();
-            }
 		}
 	}
 }

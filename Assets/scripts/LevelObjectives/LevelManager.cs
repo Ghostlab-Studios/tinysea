@@ -148,6 +148,7 @@ public class LevelManager : MonoBehaviour
         isGameOver = true;
         SessionRecorder.instance.WriteToSessionDataWithRound(",Level Complete,,");
         playerManager.RecordRoundData();
+        SessionRecorder.instance.RunWebRequestQueue();
         SceneManager.LoadScene(0);
     }
 

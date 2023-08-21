@@ -59,6 +59,7 @@ public class SettingsMenuController : MonoBehaviour
     public void ReturnHome()
     {
         SessionRecorder.instance.WriteToSessionDataWithRound("Return Home Selected,,");
+        SessionRecorder.instance.RunWebRequestQueue();
         sceneLoader.LoadByIndex(0);
     }
 

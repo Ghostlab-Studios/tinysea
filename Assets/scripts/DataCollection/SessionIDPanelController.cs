@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class SessionIDPanelController : MonoBehaviour 
 {
-	[SerializeField] private Text sessionIDText;
+	[SerializeField] private InputField sessionIDText;
 
 	private void Start()
     {

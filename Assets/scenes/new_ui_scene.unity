@@ -28779,7 +28779,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Turn Counter
+  m_Text: Turn Number
 --- !u!222 &696257996
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -36002,7 +36002,7 @@ MonoBehaviour:
   dailyIncome: 100
   netWorthIncomeRate: 0
   sellRate: 0.75
-  maxFishes: 350
+  maxFishes: 200
   stepWaitTime: 3
   onNextTurn:
     m_PersistentCalls:
@@ -70166,9 +70166,9 @@ MonoBehaviour:
     m_Font: {fileID: 12800000, guid: 8352071b3a7fdd246895e079e19941a1, type: 3}
     m_FontSize: 19
     m_FontStyle: 0
-    m_BestFit: 0
+    m_BestFit: 1
     m_MinSize: 1
-    m_MaxSize: 40
+    m_MaxSize: 19
     m_Alignment: 0
     m_AlignByGeometry: 0
     m_RichText: 1

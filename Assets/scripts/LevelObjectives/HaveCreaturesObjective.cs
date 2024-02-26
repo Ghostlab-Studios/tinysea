@@ -3,17 +3,17 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// Generalized class for having a certain number of creatures to complete the objective.
-/// </summary>
+/*!
+ * Level Event for having a certain number of creatures of a specified tier and/or variant to complete the objective.
+ */
 public class HaveCreaturesObjective : MonoBehaviour, ILevelEvent
 {
-    public int ID;
-    public int targetCreatureCount;
-    public LevelManager.Tier[] activeTiers;
-    public LevelManager.Variant[] activeVariants;
-    public bool achieveInNumRounds = false;
-    public int numRounds;
+    public int ID;                                  /*! Ordered ID of this level event. */
+    public int targetCreatureCount;                 /*! Target amount of organisms to complete the objective. */
+    public LevelManager.Tier[] activeTiers;         /*! Required tiers of organisms needed to complete the objective. */
+    public LevelManager.Variant[] activeVariants;   /*! Required variants of organisms needed to complete the objective. */
+    public int numRounds;                           /*! Number of rounds required to complete the objective within (0 if N/A) */
+    public bool achieveInNumRounds = false;         /*! Whether or not the objective was completed in the required number of rounds */
 
     private PlayerManager playerManager;
     private bool eventRunning = false;
@@ -29,8 +29,6 @@ public class HaveCreaturesObjective : MonoBehaviour, ILevelEvent
     {
         playerManager = GameObject.FindGameObjectWithTag("PlayerManager").GetComponent<PlayerManager>();
         GetComponent<LevelManager>().levelGoals.Add(this);
-        //Button nextTurnButton = GameObject.FindGameObjectWithTag("NextTurnButton").GetComponent<Button>();
-        //nextTurnButton.onClick.AddListener(OnNextTurnPressed);
         playerManager.onNextTurn.AddListener(OnNextTurnPressed);
     }
     

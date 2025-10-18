@@ -1,80 +1,191 @@
 fileFormatVersion: 2
 guid: 3dd19a0382ee4b1419daa4147997eb1a
-timeCreated: 1433264181
-licenseType: Free
 TextureImporter:
-  fileIDToRecycleName:
-    21300000: grabbler_t_0
-    21300002: grabbler_t_1
-    21300004: grabbler_t_2
-    21300006: grabbler_t_3
-    21300008: grabbler_t_4
-    21300010: grabbler_t_5
-    21300012: grabbler_t_6
-    21300014: grabbler_t_7
-    21300016: grabbler_t_8
-    21300018: grabbler_t_9
-    21300020: grabbler_t_10
-    21300022: grabbler_t_11
-    21300024: grabbler_t_12
-    21300026: grabbler_t_13
-    21300028: grabbler_t_14
-    21300030: grabbler_t_15
-    21300032: grabbler_t_16
-    21300034: grabbler_t_17
-    21300036: grabbler_t_18
-    21300038: grabbler_t_19
-    21300040: grabbler_t_20
-    21300042: grabbler_t_21
-    21300044: grabbler_t_22
-    21300046: grabbler_t_23
-    21300048: grabbler_t_24
-  serializedVersion: 2
+  internalIDToNameTable:
+  - first:
+      213: 21300000
+    second: grabbler_t_0
+  - first:
+      213: 21300002
+    second: grabbler_t_1
+  - first:
+      213: 21300004
+    second: grabbler_t_2
+  - first:
+      213: 21300006
+    second: grabbler_t_3
+  - first:
+      213: 21300008
+    second: grabbler_t_4
+  - first:
+      213: 21300010
+    second: grabbler_t_5
+  - first:
+      213: 21300012
+    second: grabbler_t_6
+  - first:
+      213: 21300014
+    second: grabbler_t_7
+  - first:
+      213: 21300016
+    second: grabbler_t_8
+  - first:
+      213: 21300018
+    second: grabbler_t_9
+  - first:
+      213: 21300020
+    second: grabbler_t_10
+  - first:
+      213: 21300022
+    second: grabbler_t_11
+  - first:
+      213: 21300024
+    second: grabbler_t_12
+  - first:
+      213: 21300026
+    second: grabbler_t_13
+  - first:
+      213: 21300028
+    second: grabbler_t_14
+  - first:
+      213: 21300030
+    second: grabbler_t_15
+  - first:
+      213: 21300032
+    second: grabbler_t_16
+  - first:
+      213: 21300034
+    second: grabbler_t_17
+  - first:
+      213: 21300036
+    second: grabbler_t_18
+  - first:
+      213: 21300038
+    second: grabbler_t_19
+  - first:
+      213: 21300040
+    second: grabbler_t_20
+  - first:
+      213: 21300042
+    second: grabbler_t_21
+  - first:
+      213: 21300044
+    second: grabbler_t_22
+  - first:
+      213: 21300046
+    second: grabbler_t_23
+  - first:
+      213: 21300048
+    second: grabbler_t_24
+  externalObjects: {}
+  serializedVersion: 13
   mipmaps:
     mipMapMode: 0
     enableMipMap: 1
+    sRGBTexture: 1
     linearTexture: 0
-    correctGamma: 0
     fadeOut: 0
     borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
     mipMapFadeDistanceStart: 1
     mipMapFadeDistanceEnd: 3
   bumpmap:
     convertToNormalMap: 0
     externalNormalMap: 0
-    heightScale: .25
+    heightScale: 0.25
     normalMapFilter: 0
+    flipGreenChannel: 0
   isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
   grayScaleToAlpha: 0
-  generateCubemap: 0
+  generateCubemap: 6
   cubemapConvolution: 0
-  cubemapConvolutionSteps: 8
-  cubemapConvolutionExponent: 1.5
   seamlessCubemap: 0
   textureFormat: -3
   maxTextureSize: 2048
   textureSettings:
-    filterMode: -1
+    serializedVersion: 2
+    filterMode: 1
     aniso: 16
-    mipBias: -1
-    wrapMode: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
   nPOTScale: 0
   lightmap: 0
-  rGBM: 0
   compressionQuality: 50
   spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
-  spritePivot: {x: .5, y: .5}
-  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spritePivot: {x: 0.5, y: 0.5}
   spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
   alphaIsTransparency: 1
+  spriteTessellationDetail: -1
   textureType: 8
-  buildTargetSettings: []
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 1
+  swizzle: 50462976
+  cookieLightType: 1
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
+    serializedVersion: 2
     sprites:
-    - name: grabbler_t_0
+    - serializedVersion: 2
+      name: grabbler_t_0
       rect:
         serializedVersion: 2
         x: 2434
@@ -84,7 +195,19 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
-    - name: grabbler_t_1
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 02305410000000000800000000000000
+      internalID: 21300000
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grabbler_t_1
       rect:
         serializedVersion: 2
         x: 2572
@@ -94,7 +217,19 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
-    - name: grabbler_t_2
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 22305410000000000800000000000000
+      internalID: 21300002
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grabbler_t_2
       rect:
         serializedVersion: 2
         x: 2675
@@ -104,7 +239,19 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
-    - name: grabbler_t_3
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 42305410000000000800000000000000
+      internalID: 21300004
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grabbler_t_3
       rect:
         serializedVersion: 2
         x: 2926
@@ -114,7 +261,19 @@ TextureImporter:
       alignment: 8
       pivot: {x: 1, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
-    - name: grabbler_t_4
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 62305410000000000800000000000000
+      internalID: 21300006
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grabbler_t_4
       rect:
         serializedVersion: 2
         x: 3251
@@ -122,9 +281,21 @@ TextureImporter:
         width: 107
         height: 358
       alignment: 9
-      pivot: {x: .183810517, y: .013164158}
+      pivot: {x: 0.18381052, y: 0.013164158}
       border: {x: 0, y: 0, z: 0, w: 0}
-    - name: grabbler_t_5
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 82305410000000000800000000000000
+      internalID: 21300008
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grabbler_t_5
       rect:
         serializedVersion: 2
         x: 3523
@@ -134,7 +305,19 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
-    - name: grabbler_t_6
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a2305410000000000800000000000000
+      internalID: 21300010
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grabbler_t_6
       rect:
         serializedVersion: 2
         x: 366
@@ -142,9 +325,21 @@ TextureImporter:
         width: 499
         height: 353
       alignment: 9
-      pivot: {x: 1.00365293, y: .230203688}
+      pivot: {x: 1.0036529, y: 0.23020369}
       border: {x: 0, y: 0, z: 0, w: 0}
-    - name: grabbler_t_7
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c2305410000000000800000000000000
+      internalID: 21300012
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grabbler_t_7
       rect:
         serializedVersion: 2
         x: 1542
@@ -152,9 +347,21 @@ TextureImporter:
         width: 500
         height: 352
       alignment: 9
-      pivot: {x: .0079365233, y: .221921578}
+      pivot: {x: 0.007936523, y: 0.22192158}
       border: {x: 0, y: 0, z: 0, w: 0}
-    - name: grabbler_t_8
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e2305410000000000800000000000000
+      internalID: 21300014
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grabbler_t_8
       rect:
         serializedVersion: 2
         x: 2196
@@ -162,9 +369,21 @@ TextureImporter:
         width: 543
         height: 312
       alignment: 9
-      pivot: {x: .945583165, y: .87459898}
+      pivot: {x: 0.94558316, y: 0.874599}
       border: {x: 0, y: 0, z: 0, w: 0}
-    - name: grabbler_t_9
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 03305410000000000800000000000000
+      internalID: 21300016
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grabbler_t_9
       rect:
         serializedVersion: 2
         x: 2860
@@ -174,7 +393,19 @@ TextureImporter:
       alignment: 8
       pivot: {x: 1, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
-    - name: grabbler_t_10
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 23305410000000000800000000000000
+      internalID: 21300018
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grabbler_t_10
       rect:
         serializedVersion: 2
         x: 3209
@@ -184,7 +415,19 @@ TextureImporter:
       alignment: 6
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
-    - name: grabbler_t_11
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 43305410000000000800000000000000
+      internalID: 21300020
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grabbler_t_11
       rect:
         serializedVersion: 2
         x: 2348
@@ -192,9 +435,21 @@ TextureImporter:
         width: 299
         height: 178
       alignment: 9
-      pivot: {x: .935461164, y: .903175592}
+      pivot: {x: 0.93546116, y: 0.9031756}
       border: {x: 0, y: 0, z: 0, w: 0}
-    - name: grabbler_t_12
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 63305410000000000800000000000000
+      internalID: 21300022
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grabbler_t_12
       rect:
         serializedVersion: 2
         x: 326
@@ -202,9 +457,21 @@ TextureImporter:
         width: 393
         height: 413
       alignment: 9
-      pivot: {x: .998135388, y: .749817312}
+      pivot: {x: 0.9981354, y: 0.7498173}
       border: {x: 0, y: 0, z: 0, w: 0}
-    - name: grabbler_t_13
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 83305410000000000800000000000000
+      internalID: 21300024
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grabbler_t_13
       rect:
         serializedVersion: 2
         x: 882
@@ -214,7 +481,19 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
-    - name: grabbler_t_14
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a3305410000000000800000000000000
+      internalID: 21300026
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grabbler_t_14
       rect:
         serializedVersion: 2
         x: 2330
@@ -222,9 +501,21 @@ TextureImporter:
         width: 316
         height: 187
       alignment: 9
-      pivot: {x: .0730359033, y: .825382352}
+      pivot: {x: 0.0730359, y: 0.82538235}
       border: {x: 0, y: 0, z: 0, w: 0}
-    - name: grabbler_t_15
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c3305410000000000800000000000000
+      internalID: 21300028
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grabbler_t_15
       rect:
         serializedVersion: 2
         x: 2825
@@ -234,7 +525,19 @@ TextureImporter:
       alignment: 8
       pivot: {x: 1, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
-    - name: grabbler_t_16
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e3305410000000000800000000000000
+      internalID: 21300030
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grabbler_t_16
       rect:
         serializedVersion: 2
         x: 3192
@@ -244,7 +547,19 @@ TextureImporter:
       alignment: 6
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
-    - name: grabbler_t_17
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 04305410000000000800000000000000
+      internalID: 21300032
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grabbler_t_17
       rect:
         serializedVersion: 2
         x: 1774
@@ -252,9 +567,21 @@ TextureImporter:
         width: 391
         height: 413
       alignment: 9
-      pivot: {x: .01961492, y: .749817491}
+      pivot: {x: 0.01961492, y: 0.7498175}
       border: {x: 0, y: 0, z: 0, w: 0}
-    - name: grabbler_t_18
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 24305410000000000800000000000000
+      internalID: 21300034
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grabbler_t_18
       rect:
         serializedVersion: 2
         x: 2434
@@ -262,9 +589,21 @@ TextureImporter:
         width: 177
         height: 107
       alignment: 9
-      pivot: {x: .0771705061, y: .902421892}
+      pivot: {x: 0.077170506, y: 0.9024219}
       border: {x: 0, y: 0, z: 0, w: 0}
-    - name: grabbler_t_19
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 44305410000000000800000000000000
+      internalID: 21300036
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grabbler_t_19
       rect:
         serializedVersion: 2
         x: 2776
@@ -272,9 +611,21 @@ TextureImporter:
         width: 288
         height: 231
       alignment: 9
-      pivot: {x: .999740601, y: .0615546815}
+      pivot: {x: 0.9997406, y: 0.06155468}
       border: {x: 0, y: 0, z: 0, w: 0}
-    - name: grabbler_t_20
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 64305410000000000800000000000000
+      internalID: 21300038
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grabbler_t_20
       rect:
         serializedVersion: 2
         x: 3192
@@ -282,9 +633,56 @@ TextureImporter:
         width: 276
         height: 244
       alignment: 9
-      pivot: {x: .014692666, y: .0535689481}
+      pivot: {x: 0.014692666, y: 0.053568948}
       border: {x: 0, y: 0, z: 0, w: 0}
-  spritePackingTag: 
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 84305410000000000800000000000000
+      internalID: 21300040
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      grabbler_t_0: 21300000
+      grabbler_t_1: 21300002
+      grabbler_t_10: 21300020
+      grabbler_t_11: 21300022
+      grabbler_t_12: 21300024
+      grabbler_t_13: 21300026
+      grabbler_t_14: 21300028
+      grabbler_t_15: 21300030
+      grabbler_t_16: 21300032
+      grabbler_t_17: 21300034
+      grabbler_t_18: 21300036
+      grabbler_t_19: 21300038
+      grabbler_t_2: 21300004
+      grabbler_t_20: 21300040
+      grabbler_t_3: 21300006
+      grabbler_t_4: 21300008
+      grabbler_t_5: 21300010
+      grabbler_t_6: 21300012
+      grabbler_t_7: 21300014
+      grabbler_t_8: 21300016
+      grabbler_t_9: 21300018
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
   userData: 
   assetBundleName: 
   assetBundleVariant: 

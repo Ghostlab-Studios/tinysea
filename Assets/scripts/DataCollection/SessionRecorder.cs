@@ -86,7 +86,7 @@ public class SessionRecorder : MonoBehaviour
 
 	private IEnumerator DoWWW(string url, string form)
 	{
-		using (var data = UnityWebRequest.Post(url, form))
+		using (var data = UnityWebRequest.PostWwwForm(url, form))
 		{
 			yield return data.SendWebRequest();
 			// Debug.Log(url + " : Web response code: " + data.downloadHandler.text);

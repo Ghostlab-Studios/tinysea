@@ -1381,8 +1381,7 @@ MonoBehaviour:
     m_KeySerializationHelper: []
     m_ValueSerializationHelper: []
   m_PreviewAnimator: {fileID: 0}
-  m_AnimatorController: {fileID: 9100000, guid: b33e9c7f03ecad246ae406d1fc5e5063,
-    type: 2}
+  m_AnimatorController: {fileID: 0}
   m_BreadCrumbs: []
   stateMachineGraph: {fileID: 0}
   stateMachineGraphGUI: {fileID: 0}
@@ -1462,7 +1461,7 @@ MonoBehaviour:
     scrollPos: {x: 0, y: 429.33334}
     m_SelectedIDs: f0230100
     m_LastClickedID: 74736
-    m_ExpandedIDs: 0000000036cd000038cd00003acd00003ccd00003ecd000040cd000042cd0000
+    m_ExpandedIDs: 00000000d87e0000da7e0000dc7e0000de7e0000e07e0000e27e0000e47e0000e67e0000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -1491,7 +1490,7 @@ MonoBehaviour:
     scrollPos: {x: 0, y: 0}
     m_SelectedIDs: 
     m_LastClickedID: 0
-    m_ExpandedIDs: 0000000036cd000038cd00003acd00003ccd00003ecd000040cd000042cd0000
+    m_ExpandedIDs: 00000000d87e0000da7e0000dc7e0000de7e0000e07e0000e27e0000e47e0000e67e0000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 

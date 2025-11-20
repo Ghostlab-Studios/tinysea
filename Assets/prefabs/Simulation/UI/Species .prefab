@@ -86,6 +86,7 @@ GameObject:
   - component: {fileID: 4520627912742325094}
   - component: {fileID: 5094649115375259785}
   - component: {fileID: 7254012442343799274}
+  - component: {fileID: 4708127091925700976}
   m_Layer: 5
   m_Name: 'Species '
   m_TagString: Untagged
@@ -157,6 +158,22 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &4708127091925700976
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3547282294939161548}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3555e4efe10539c409b2c4e573244474, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpeciesUIController
+  speciesDatabase: {fileID: 11400000, guid: be0823a57129c854eb7f6fff08e7b75d, type: 2}
+  speciesName: 1
+  speciesVariant: 1
+  thermalGraphUI: {fileID: 7249607495956835251}
 --- !u!1 &4807050949247729029
 GameObject:
   m_ObjectHideFlags: 0
@@ -960,12 +977,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 99caa4c83ce108444a8e27847928572f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ThermalGraphUI
-  optimalTemp: 295.15
-  arrhenBreadth: 4258
-  arrhenLower: 7457
-  arrhenUpper: 19664
-  lowerBound: 286
-  upperBound: 298
+  optimalTemp: 293.15
+  arrhenBreadth: 4564
+  arrhenLower: 8088
+  arrhenUpper: 21554
+  lowerBound: 283.15
+  upperBound: 303.15
   textureWidth: 256
   textureHeight: 128
   curveColor: {r: 0, g: 1, b: 0, a: 1}

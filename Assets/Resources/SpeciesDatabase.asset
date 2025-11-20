@@ -15,8 +15,9 @@ MonoBehaviour:
   speciesList:
   - index: 0
     speciesName: 3
-    variant: 0
+    variant: 2
     icon: {fileID: 21300000, guid: cc38ddbdb02da6747bc7697cb69e3458, type: 3}
+    count: 2
     tier: 1
     eatingAmount: 0
     reproductionMultiplier: 2
@@ -31,7 +32,7 @@ MonoBehaviour:
     thermalBreadthStars: 2
     temperatureThresholdText: Narrow
     reproductionRateText: Fast
-    description: Cyplo - Arctic variant
+    description: Sheplik - Arctic variant
     optimalTempK: 283.15
     arrhenBreadth: 3564
     arrhenLower: 7088
@@ -40,8 +41,9 @@ MonoBehaviour:
     upperBoundK: 288.15
   - index: 1
     speciesName: 3
-    variant: 2
+    variant: 1
     icon: {fileID: 21300000, guid: 6a4b52089df8bd0498453509201ec913, type: 3}
+    count: 2
     tier: 1
     eatingAmount: 0
     reproductionMultiplier: 2
@@ -56,7 +58,7 @@ MonoBehaviour:
     thermalBreadthStars: 2
     temperatureThresholdText: Narrow
     reproductionRateText: Fast
-    description: Cyplo - Tropical variant
+    description: Sheplik - Tropical variant
     optimalTempK: 303.15
     arrhenBreadth: 3564
     arrhenLower: 7088
@@ -65,8 +67,9 @@ MonoBehaviour:
     upperBoundK: 308.15
   - index: 2
     speciesName: 3
-    variant: 1
+    variant: 0
     icon: {fileID: 21300000, guid: 8ab2db50f00f92142abc4c674c239a1c, type: 3}
+    count: 2
     tier: 1
     eatingAmount: 0
     reproductionMultiplier: 1.5
@@ -81,7 +84,7 @@ MonoBehaviour:
     thermalBreadthStars: 4
     temperatureThresholdText: Broad
     reproductionRateText: Medium
-    description: Cyplo - Common variant
+    description: Sheplik - Common variant
     optimalTempK: 293.15
     arrhenBreadth: 4564
     arrhenLower: 8088
@@ -89,10 +92,11 @@ MonoBehaviour:
     lowerBoundK: 283.15
     upperBoundK: 303.15
   - index: 3
-    speciesName: 1
-    variant: 0
+    speciesName: 0
+    variant: 2
     icon: {fileID: 21300000, guid: b18c89991d6433d47a3003fba57fad95, type: 3}
-    tier: 1
+    count: 2
+    tier: 0
     eatingAmount: 0
     reproductionMultiplier: 1.5
     deathThreshold: 0.3
@@ -114,10 +118,11 @@ MonoBehaviour:
     lowerBoundK: 278.15
     upperBoundK: 288.15
   - index: 4
-    speciesName: 1
-    variant: 2
+    speciesName: 0
+    variant: 1
     icon: {fileID: 21300000, guid: 485589c1ae6b14a4f825d236b41fef64, type: 3}
-    tier: 1
+    count: 2
+    tier: 0
     eatingAmount: 0
     reproductionMultiplier: 1.5
     deathThreshold: 0.3
@@ -139,10 +144,11 @@ MonoBehaviour:
     lowerBoundK: 298.15
     upperBoundK: 308.15
   - index: 5
-    speciesName: 1
-    variant: 1
+    speciesName: 0
+    variant: 0
     icon: {fileID: 21300000, guid: f89c1a59fafaa3e41aa5e9f94d051ee9, type: 3}
-    tier: 1
+    count: 2
+    tier: 0
     eatingAmount: 0
     reproductionMultiplier: 1
     deathThreshold: 0.3

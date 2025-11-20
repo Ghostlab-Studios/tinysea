@@ -45,8 +45,9 @@ public class ThermalGraphUI : MonoBehaviour
         }
     }
 
-    void OnValidate()
+    public void OnValidate()
     {
+#if UNITY_EDITOR
         // Only update in editor when values change
         if (!Application.isPlaying)
         {
@@ -72,6 +73,7 @@ public class ThermalGraphUI : MonoBehaviour
             if (rawImage != null)
                 UpdateGraph();
         }
+#endif
     }
 
     void CreateTexture()

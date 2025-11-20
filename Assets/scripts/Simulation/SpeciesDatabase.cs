@@ -7,22 +7,23 @@ using UnityEditor;
 // Enum for all species names (unique identifiers)
 public enum SpeciesName
 {
-    Cyplo,
+
     Hexapod,
+    Gelgi,
     Yelloa,
     Sheplik,
     Grabbler,
-    Gelgi,
-    Sploof,
+    Cyplo,
     Rooda,
-    SiluSilu
+    Sploof,
+    Silu
 }
 
 public enum SpeciesVariant
 {
-    Arctic,
     Common,
-    Tropical
+    Tropical,
+    Arctic
 }
 
 [System.Serializable]
@@ -33,6 +34,7 @@ public class SpeciesData
     public SpeciesName speciesName;
     public SpeciesVariant variant;
     public Sprite icon;
+    public int count;
 
     [Header("Gameplay Stats")]
     public int tier;
@@ -69,6 +71,8 @@ public class SpeciesDatabase : ScriptableObject
 {
     public List<SpeciesData> speciesList = new List<SpeciesData>();
 
+    private int defaultSpeciesCount = 2;
+
     // Quick lookup by enum
     public SpeciesData GetSpecies(SpeciesName name, SpeciesVariant variant)
     {
@@ -97,27 +101,27 @@ public class SpeciesDatabase : ScriptableObject
         // Note: Icons need to be assigned manually after population
 
         // Row 0: Cyplo Arctic
-        AddSpecies(0, SpeciesName.Sheplik, SpeciesVariant.Arctic, 1, 0, 2, 0.3f, 0.02f, 1, 30,
+        AddSpecies(0, SpeciesName.Sheplik, SpeciesVariant.Arctic, 1, defaultSpeciesCount, 0, 2, 0.3f, 0.02f, 1, 30,
                   0, 5, 2, 3, 2, "Narrow", "Fast", 283.15f, 3564, 7088, 17554, 278.15f, 288.15f);
 
         // Row 1: Cyplo Tropical  
-        AddSpecies(1, SpeciesName.Sheplik, SpeciesVariant.Tropical, 1, 0, 2, 0.3f, 0.02f, 1, 30,
+        AddSpecies(1, SpeciesName.Sheplik, SpeciesVariant.Tropical, 1, defaultSpeciesCount, 0, 2, 0.3f, 0.02f, 1, 30,
                   0, 5, 2, 3, 2, "Narrow", "Fast", 303.15f, 3564, 7088, 17554, 298.15f, 308.15f);
 
         // Row 2: Cyplo Common
-        AddSpecies(2, SpeciesName.Sheplik, SpeciesVariant.Common, 1, 0, 1.5f, 0.3f, 0.02f, 1, 20,
+        AddSpecies(2, SpeciesName.Sheplik, SpeciesVariant.Common, 1, defaultSpeciesCount, 0, 1.5f, 0.3f, 0.02f, 1, 20,
                   0, 3, 2, 3, 4, "Broad", "Medium", 293.15f, 4564, 8088, 21554, 283.15f, 303.15f);
 
         // Row 3: Hexapod Arctic
-        AddSpecies(3, SpeciesName.Hexapod, SpeciesVariant.Arctic, 1, 0, 1.5f, 0.3f, 0.02f, 1, 20,
+        AddSpecies(3, SpeciesName.Hexapod, SpeciesVariant.Arctic, 0, defaultSpeciesCount, 0, 1.5f, 0.3f, 0.02f, 1, 20,
                   0, 3, 2, 3, 2, "Narrow", "Medium", 283.15f, 3564, 7088, 17554, 278.15f, 288.15f);
 
         // Row 4: Hexapod Tropical
-        AddSpecies(4, SpeciesName.Hexapod, SpeciesVariant.Tropical, 1, 0, 1.5f, 0.3f, 0.02f, 1, 20,
+        AddSpecies(4, SpeciesName.Hexapod, SpeciesVariant.Tropical, 0, defaultSpeciesCount, 0, 1.5f, 0.3f, 0.02f, 1, 20,
                   0, 3, 2, 3, 2, "Narrow", "Medium", 303.15f, 3564, 7088, 17554, 298.15f, 308.15f);
 
         // Row 5: Hexapod Common
-        AddSpecies(5, SpeciesName.Hexapod, SpeciesVariant.Common, 1, 0, 1, 0.3f, 0.02f, 1, 15,
+        AddSpecies(5, SpeciesName.Hexapod, SpeciesVariant.Common, 0, defaultSpeciesCount, 0, 1, 0.3f, 0.02f, 1, 15,
                   0, 1, 2, 3, 4, "Broad", "Slow", 293.15f, 4564, 8088, 21554, 283.15f, 303.15f);
 
         EditorUtility.SetDirty(this);
@@ -126,7 +130,7 @@ public class SpeciesDatabase : ScriptableObject
         Debug.Log($"Populated {speciesList.Count} species entries from CSV data");
     }
 
-    private void AddSpecies(int index, SpeciesName name, SpeciesVariant variant, int tier,
+    private void AddSpecies(int index, SpeciesName name, SpeciesVariant variant, int tier, int count,
                            float eating, float repro, float deathThresh, float deathRate,
                            float minDeaths, float reproThresh, int eatStars, int reproStars,
                            int deathThreshStars, int deathRateStars, int thermalStars,
@@ -139,6 +143,7 @@ public class SpeciesDatabase : ScriptableObject
             speciesName = name,
             variant = variant,
             tier = tier,
+            count = count,
             eatingAmount = eating,
             reproductionMultiplier = repro,
             deathThreshold = deathThresh,

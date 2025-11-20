@@ -1,0 +1,165 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9e5914ecd9801f409731e2074fbcb1f, type: 3}
+  m_Name: SpeciesDatabase
+  m_EditorClassIdentifier: Assembly-CSharp::SpeciesDatabase
+  speciesList:
+  - index: 0
+    speciesName: 3
+    variant: 0
+    icon: {fileID: 21300000, guid: cc38ddbdb02da6747bc7697cb69e3458, type: 3}
+    tier: 1
+    eatingAmount: 0
+    reproductionMultiplier: 2
+    deathThreshold: 0.3
+    deathRate: 0.02
+    minimumDeaths: 1
+    reproThreshold: 30
+    eatingStars: 0
+    reproductionStars: 5
+    deathThresholdStars: 2
+    deathRateStars: 3
+    thermalBreadthStars: 2
+    temperatureThresholdText: Narrow
+    reproductionRateText: Fast
+    description: Cyplo - Arctic variant
+    optimalTempK: 283.15
+    arrhenBreadth: 3564
+    arrhenLower: 7088
+    arrhenUpper: 17554
+    lowerBoundK: 278.15
+    upperBoundK: 288.15
+  - index: 1
+    speciesName: 3
+    variant: 2
+    icon: {fileID: 21300000, guid: 6a4b52089df8bd0498453509201ec913, type: 3}
+    tier: 1
+    eatingAmount: 0
+    reproductionMultiplier: 2
+    deathThreshold: 0.3
+    deathRate: 0.02
+    minimumDeaths: 1
+    reproThreshold: 30
+    eatingStars: 0
+    reproductionStars: 5
+    deathThresholdStars: 2
+    deathRateStars: 3
+    thermalBreadthStars: 2
+    temperatureThresholdText: Narrow
+    reproductionRateText: Fast
+    description: Cyplo - Tropical variant
+    optimalTempK: 303.15
+    arrhenBreadth: 3564
+    arrhenLower: 7088
+    arrhenUpper: 17554
+    lowerBoundK: 298.15
+    upperBoundK: 308.15
+  - index: 2
+    speciesName: 3
+    variant: 1
+    icon: {fileID: 21300000, guid: 8ab2db50f00f92142abc4c674c239a1c, type: 3}
+    tier: 1
+    eatingAmount: 0
+    reproductionMultiplier: 1.5
+    deathThreshold: 0.3
+    deathRate: 0.02
+    minimumDeaths: 1
+    reproThreshold: 20
+    eatingStars: 0
+    reproductionStars: 3
+    deathThresholdStars: 2
+    deathRateStars: 3
+    thermalBreadthStars: 4
+    temperatureThresholdText: Broad
+    reproductionRateText: Medium
+    description: Cyplo - Common variant
+    optimalTempK: 293.15
+    arrhenBreadth: 4564
+    arrhenLower: 8088
+    arrhenUpper: 21554
+    lowerBoundK: 283.15
+    upperBoundK: 303.15
+  - index: 3
+    speciesName: 1
+    variant: 0
+    icon: {fileID: 21300000, guid: b18c89991d6433d47a3003fba57fad95, type: 3}
+    tier: 1
+    eatingAmount: 0
+    reproductionMultiplier: 1.5
+    deathThreshold: 0.3
+    deathRate: 0.02
+    minimumDeaths: 1
+    reproThreshold: 20
+    eatingStars: 0
+    reproductionStars: 3
+    deathThresholdStars: 2
+    deathRateStars: 3
+    thermalBreadthStars: 2
+    temperatureThresholdText: Narrow
+    reproductionRateText: Medium
+    description: Hexapod - Arctic variant
+    optimalTempK: 283.15
+    arrhenBreadth: 3564
+    arrhenLower: 7088
+    arrhenUpper: 17554
+    lowerBoundK: 278.15
+    upperBoundK: 288.15
+  - index: 4
+    speciesName: 1
+    variant: 2
+    icon: {fileID: 21300000, guid: 485589c1ae6b14a4f825d236b41fef64, type: 3}
+    tier: 1
+    eatingAmount: 0
+    reproductionMultiplier: 1.5
+    deathThreshold: 0.3
+    deathRate: 0.02
+    minimumDeaths: 1
+    reproThreshold: 20
+    eatingStars: 0
+    reproductionStars: 3
+    deathThresholdStars: 2
+    deathRateStars: 3
+    thermalBreadthStars: 2
+    temperatureThresholdText: Narrow
+    reproductionRateText: Medium
+    description: Hexapod - Tropical variant
+    optimalTempK: 303.15
+    arrhenBreadth: 3564
+    arrhenLower: 7088
+    arrhenUpper: 17554
+    lowerBoundK: 298.15
+    upperBoundK: 308.15
+  - index: 5
+    speciesName: 1
+    variant: 1
+    icon: {fileID: 21300000, guid: f89c1a59fafaa3e41aa5e9f94d051ee9, type: 3}
+    tier: 1
+    eatingAmount: 0
+    reproductionMultiplier: 1
+    deathThreshold: 0.3
+    deathRate: 0.02
+    minimumDeaths: 1
+    reproThreshold: 15
+    eatingStars: 0
+    reproductionStars: 1
+    deathThresholdStars: 2
+    deathRateStars: 3
+    thermalBreadthStars: 4
+    temperatureThresholdText: Broad
+    reproductionRateText: Slow
+    description: Hexapod - Common variant
+    optimalTempK: 293.15
+    arrhenBreadth: 4564
+    arrhenLower: 8088
+    arrhenUpper: 21554
+    lowerBoundK: 283.15
+    upperBoundK: 303.15

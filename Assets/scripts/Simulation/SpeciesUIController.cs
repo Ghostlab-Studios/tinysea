@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
 
 [ExecuteAlways]
 public class SpeciesUIController : MonoBehaviour
@@ -10,8 +12,15 @@ public class SpeciesUIController : MonoBehaviour
     [SerializeField] private SpeciesName speciesName = SpeciesName.Cyplo;
     [SerializeField] private SpeciesVariant speciesVariant = SpeciesVariant.Common;
 
-    [Header("UI Reference")]
+    [Header("Graph UI")]
     [SerializeField] private ThermalGraphUI thermalGraphUI;
+
+    [Header("Display UI References")]
+    [SerializeField] private Image iconImage;
+    [SerializeField] private TextMeshProUGUI nameText;
+    [SerializeField] private TextMeshProUGUI typeText;
+    [SerializeField] private TextMeshProUGUI countText;
+    [SerializeField] private Button editButton;
 
     private SpeciesData currentSpeciesData;
     private SpeciesName lastSpeciesName;
@@ -61,6 +70,9 @@ public class SpeciesUIController : MonoBehaviour
 
         // Apply thermal values to the graph
         ApplyThermalValues();
+
+        // Update UI display elements
+        UpdateUIDisplay();
     }
 
     /// <summary>
@@ -91,6 +103,41 @@ public class SpeciesUIController : MonoBehaviour
         }
 
         Debug.Log($"Applied thermal values for {speciesName} - {speciesVariant}");
+    }
+
+    /// <summary>
+    /// Update UI display elements (icon, name, type, count)
+    /// </summary>
+    private void UpdateUIDisplay()
+    {
+        if (currentSpeciesData == null)
+            return;
+
+        // Update icon
+        if (iconImage != null && currentSpeciesData.icon != null)
+        {
+            iconImage.sprite = currentSpeciesData.icon;
+        }
+
+        // Update name with type (e.g., "Hexapod Tropical")
+        if (nameText != null)
+        {
+            nameText.text = $"{speciesName} {speciesVariant}";
+        }
+
+        // Update type text
+        if (typeText != null)
+        {
+            typeText.text = speciesVariant.ToString();
+        }
+
+        // Update count (assuming count exists in SpeciesData)
+        if (countText != null)
+        {
+            // Assuming you added a count field to SpeciesData
+            // If it's a different field name, adjust accordingly
+            countText.text = currentSpeciesData.count.ToString();
+        }
     }
 
     /// <summary>

@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 14df9442ee781fb4d8e8a6d67c8ba0b4, type: 3}
+  m_Name: SimulationConfig
+  m_EditorClassIdentifier: Assembly-CSharp::SimulationConfig
+  BaseTemperature: 20
+  SeasonalAmplitude: 10
+  ClimateTrend: 1
+  InterannualVariation: 1
+  WarmBias: 1
+  variabilityMagnitude: 1
+  warmingBias: 1
+  Autocorrelated: 1
+  RandomRangeMin: -5
+  RandomRangeMax: 5
+  randomnessGrowthRate: 0.5
+  TempratureBoundsMin: -5
+  TempratureBoundsMax: 50
+  Database: {fileID: 11400000, guid: be0823a57129c854eb7f6fff08e7b75d, type: 2}
+  RunsPerScenario: 10

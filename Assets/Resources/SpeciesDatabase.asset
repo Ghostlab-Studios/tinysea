@@ -17,7 +17,7 @@ MonoBehaviour:
     speciesName: 3
     variant: 2
     icon: {fileID: 21300000, guid: cc38ddbdb02da6747bc7697cb69e3458, type: 3}
-    count: 2
+    count: 1
     tier: 1
     eatingAmount: 0
     reproductionMultiplier: 2
@@ -43,7 +43,7 @@ MonoBehaviour:
     speciesName: 3
     variant: 1
     icon: {fileID: 21300000, guid: 6a4b52089df8bd0498453509201ec913, type: 3}
-    count: 2
+    count: 1
     tier: 1
     eatingAmount: 0
     reproductionMultiplier: 2
@@ -69,7 +69,7 @@ MonoBehaviour:
     speciesName: 3
     variant: 0
     icon: {fileID: 21300000, guid: 8ab2db50f00f92142abc4c674c239a1c, type: 3}
-    count: 2
+    count: 1
     tier: 1
     eatingAmount: 0
     reproductionMultiplier: 1.5
@@ -95,7 +95,7 @@ MonoBehaviour:
     speciesName: 0
     variant: 2
     icon: {fileID: 21300000, guid: b18c89991d6433d47a3003fba57fad95, type: 3}
-    count: 2
+    count: 4
     tier: 0
     eatingAmount: 0
     reproductionMultiplier: 1.5
@@ -121,7 +121,7 @@ MonoBehaviour:
     speciesName: 0
     variant: 1
     icon: {fileID: 21300000, guid: 485589c1ae6b14a4f825d236b41fef64, type: 3}
-    count: 2
+    count: 4
     tier: 0
     eatingAmount: 0
     reproductionMultiplier: 1.5
@@ -147,7 +147,7 @@ MonoBehaviour:
     speciesName: 0
     variant: 0
     icon: {fileID: 21300000, guid: f89c1a59fafaa3e41aa5e9f94d051ee9, type: 3}
-    count: 2
+    count: 4
     tier: 0
     eatingAmount: 0
     reproductionMultiplier: 1

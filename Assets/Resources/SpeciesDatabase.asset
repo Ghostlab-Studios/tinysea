@@ -19,7 +19,7 @@ MonoBehaviour:
     icon: {fileID: 21300000, guid: cc38ddbdb02da6747bc7697cb69e3458, type: 3}
     count: 1
     tier: 1
-    eatingAmount: 0
+    eatingAmount: 1.5
     reproductionMultiplier: 2
     deathThreshold: 0.3
     deathRate: 0.02
@@ -45,7 +45,7 @@ MonoBehaviour:
     icon: {fileID: 21300000, guid: 6a4b52089df8bd0498453509201ec913, type: 3}
     count: 1
     tier: 1
-    eatingAmount: 0
+    eatingAmount: 1.5
     reproductionMultiplier: 2
     deathThreshold: 0.3
     deathRate: 0.02
@@ -71,7 +71,7 @@ MonoBehaviour:
     icon: {fileID: 21300000, guid: 8ab2db50f00f92142abc4c674c239a1c, type: 3}
     count: 1
     tier: 1
-    eatingAmount: 0
+    eatingAmount: 1.5
     reproductionMultiplier: 1.5
     deathThreshold: 0.3
     deathRate: 0.02

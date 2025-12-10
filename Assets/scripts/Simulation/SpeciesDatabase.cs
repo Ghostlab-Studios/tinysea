@@ -7,7 +7,6 @@ using UnityEditor;
 // Enum for all species names (unique identifiers)
 public enum SpeciesName
 {
-
     Hexapod,
     Gelgi,
     Yelloa,
@@ -72,7 +71,7 @@ public class SpeciesDatabase : ScriptableObject
     public List<SpeciesData> speciesList = new List<SpeciesData>();
 
     private int defaultT1SpeciesCount = 4;
-    private int defaultT2SpeciesCount = 1;
+    private int defaultT2SpeciesCount = 2;
 
     // Quick lookup by enum
     public SpeciesData GetSpecies(SpeciesName name, SpeciesVariant variant)
@@ -98,37 +97,186 @@ public class SpeciesDatabase : ScriptableObject
     {
         speciesList.Clear();
 
-        // Populate all 6 species from CSV data
-        // Note: Icons need to be assigned manually after population
+        // ===== HEXAPOD (Tier 1 - Prey) =====
+        // From CSV: Tier=1, EatingAmount=N/A(0), ReproMult=0.45, DeathThresh=0.3, DeathRate=0.6, MinDeaths=1, ReproThresh=0.25
+        // Thermal: ArrhenBreadth=5273.15, ArrhenLower=10273.15, ArrhenUpper=21273.15
+        
+        // Hexapod Common - OptimalK=293.15, LowerK=285.15, UpperK=295.15
+        AddSpecies(
+            index: 0,
+            name: SpeciesName.Hexapod,
+            variant: SpeciesVariant.Common,
+            tier: 0,  // 0 = Tier 1
+            count: defaultT1SpeciesCount,
+            eating: 0f,
+            repro: 0.45f,
+            deathThresh: 0.3f,
+            deathRate: 0.6f,
+            minDeaths: 1f,
+            reproThresh: 0.25f,
+            eatStars: 0,
+            reproStars: 4,
+            deathThreshStars: 3,
+            deathRateStars: 2,
+            thermalStars: 5,
+            tempText: "High",
+            reproText: "Low",
+            optimalK: 293.15f,
+            breadth: 5273.15f,
+            lower: 10273.15f,
+            upper: 21273.15f,
+            lowerBound: 285.15f,
+            upperBound: 295.15f
+        );
 
-        // Row 0: Cyplo Arctic
-        AddSpecies(0, SpeciesName.Sheplik, SpeciesVariant.Arctic, 1, defaultT2SpeciesCount, 1.5f, 2, 0.3f, 0.02f, 1, 30,
-                  0, 5, 2, 3, 2, "Narrow", "Fast", 283.15f, 3564, 7088, 17554, 278.15f, 288.15f);
+        // Hexapod Tropical - OptimalK=308.65, LowerK=300.15, UpperK=310.15
+        AddSpecies(
+            index: 1,
+            name: SpeciesName.Hexapod,
+            variant: SpeciesVariant.Tropical,
+            tier: 0,
+            count: defaultT1SpeciesCount,
+            eating: 0f,
+            repro: 0.45f,
+            deathThresh: 0.3f,
+            deathRate: 0.6f,
+            minDeaths: 1f,
+            reproThresh: 0.25f,
+            eatStars: 0,
+            reproStars: 4,
+            deathThreshStars: 3,
+            deathRateStars: 2,
+            thermalStars: 5,
+            tempText: "High",
+            reproText: "Low",
+            optimalK: 308.65f,
+            breadth: 5273.15f,
+            lower: 10273.15f,
+            upper: 21273.15f,
+            lowerBound: 300.15f,
+            upperBound: 310.15f
+        );
 
-        // Row 1: Cyplo Tropical  
-        AddSpecies(1, SpeciesName.Sheplik, SpeciesVariant.Tropical, 1, defaultT2SpeciesCount, 1.5f, 2, 0.3f, 0.02f, 1, 30,
-                  0, 5, 2, 3, 2, "Narrow", "Fast", 303.15f, 3564, 7088, 17554, 298.15f, 308.15f);
+        // Hexapod Arctic - OptimalK=278.15, LowerK=270.15, UpperK=280.15
+        AddSpecies(
+            index: 2,
+            name: SpeciesName.Hexapod,
+            variant: SpeciesVariant.Arctic,
+            tier: 0,
+            count: defaultT1SpeciesCount,
+            eating: 0f,
+            repro: 0.45f,
+            deathThresh: 0.3f,
+            deathRate: 0.6f,
+            minDeaths: 1f,
+            reproThresh: 0.25f,
+            eatStars: 0,
+            reproStars: 4,
+            deathThreshStars: 3,
+            deathRateStars: 2,
+            thermalStars: 5,
+            tempText: "High",
+            reproText: "Low",
+            optimalK: 278.15f,
+            breadth: 5273.15f,
+            lower: 10273.15f,
+            upper: 21273.15f,
+            lowerBound: 270.15f,
+            upperBound: 280.15f
+        );
 
-        // Row 2: Cyplo Common
-        AddSpecies(2, SpeciesName.Sheplik, SpeciesVariant.Common, 1, defaultT2SpeciesCount, 1.5f, 1.5f, 0.3f, 0.02f, 1, 20,
-                  0, 3, 2, 3, 4, "Broad", "Medium", 293.15f, 4564, 8088, 21554, 283.15f, 303.15f);
+        // ===== SHELPIK (Tier 2 - Predator) =====
+        // From CSV: Tier=2, EatingAmount=1.5, ReproMult=0.1, DeathThresh=0.3, DeathRate=0.3, MinDeaths=1, ReproThresh=0.25
+        // Thermal: ArrhenBreadth=5273.15, ArrhenLower=10273.15, ArrhenUpper=21273.15
 
-        // Row 3: Hexapod Arctic
-        AddSpecies(3, SpeciesName.Hexapod, SpeciesVariant.Arctic, 0, defaultT1SpeciesCount, 0, 1.5f, 0.3f, 0.02f, 1, 20,
-                  0, 3, 2, 3, 2, "Narrow", "Medium", 283.15f, 3564, 7088, 17554, 278.15f, 288.15f);
+        // Shelpik Common - OptimalK=293.15, LowerK=285.15, UpperK=295.15
+        AddSpecies(
+            index: 3,
+            name: SpeciesName.Sheplik,
+            variant: SpeciesVariant.Common,
+            tier: 1,  // 1 = Tier 2
+            count: defaultT2SpeciesCount,
+            eating: 1.5f,
+            repro: 0.1f,
+            deathThresh: 0.3f,
+            deathRate: 0.3f,
+            minDeaths: 1f,
+            reproThresh: 0.25f,
+            eatStars: 4,
+            reproStars: 2,
+            deathThreshStars: 4,
+            deathRateStars: 4,
+            thermalStars: 5,
+            tempText: "High",
+            reproText: "Low",
+            optimalK: 293.15f,
+            breadth: 5273.15f,
+            lower: 10273.15f,
+            upper: 21273.15f,
+            lowerBound: 285.15f,
+            upperBound: 295.15f
+        );
 
-        // Row 4: Hexapod Tropical
-        AddSpecies(4, SpeciesName.Hexapod, SpeciesVariant.Tropical, 0, defaultT1SpeciesCount, 0, 1.5f, 0.3f, 0.02f, 1, 20,
-                  0, 3, 2, 3, 2, "Narrow", "Medium", 303.15f, 3564, 7088, 17554, 298.15f, 308.15f);
+        // Shelpik Tropical - OptimalK=308.65, LowerK=300.15, UpperK=310.15
+        AddSpecies(
+            index: 4,
+            name: SpeciesName.Sheplik,
+            variant: SpeciesVariant.Tropical,
+            tier: 1,
+            count: defaultT2SpeciesCount,
+            eating: 1.5f,
+            repro: 0.1f,
+            deathThresh: 0.3f,
+            deathRate: 0.3f,
+            minDeaths: 1f,
+            reproThresh: 0.25f,
+            eatStars: 4,
+            reproStars: 2,
+            deathThreshStars: 4,
+            deathRateStars: 4,
+            thermalStars: 3,
+            tempText: "High",
+            reproText: "Low",
+            optimalK: 308.65f,
+            breadth: 5273.15f,
+            lower: 10273.15f,
+            upper: 21273.15f,
+            lowerBound: 300.15f,
+            upperBound: 310.15f
+        );
 
-        // Row 5: Hexapod Common
-        AddSpecies(5, SpeciesName.Hexapod, SpeciesVariant.Common, 0, defaultT1SpeciesCount, 0, 1, 0.3f, 0.02f, 1, 15,
-                  0, 1, 2, 3, 4, "Broad", "Slow", 293.15f, 4564, 8088, 21554, 283.15f, 303.15f);
+        // Shelpik Arctic - OptimalK=278.15, LowerK=270.15, UpperK=280.15
+        AddSpecies(
+            index: 5,
+            name: SpeciesName.Sheplik,
+            variant: SpeciesVariant.Arctic,
+            tier: 1,
+            count: defaultT2SpeciesCount,
+            eating: 1.5f,
+            repro: 0.1f,
+            deathThresh: 0.3f,
+            deathRate: 0.3f,
+            minDeaths: 1f,
+            reproThresh: 0.25f,
+            eatStars: 4,
+            reproStars: 2,
+            deathThreshStars: 4,
+            deathRateStars: 4,
+            thermalStars: 3,
+            tempText: "High",
+            reproText: "Low",
+            optimalK: 278.15f,
+            breadth: 5273.15f,
+            lower: 10273.15f,
+            upper: 21273.15f,
+            lowerBound: 270.15f,
+            upperBound: 280.15f
+        );
 
         EditorUtility.SetDirty(this);
         AssetDatabase.SaveAssets();
 
-        Debug.Log($"Populated {speciesList.Count} species entries from CSV data");
+        Debug.Log($"Populated {speciesList.Count} species entries (Hexapod + Shelpik, 3 variants each)");
     }
 
     private void AddSpecies(int index, SpeciesName name, SpeciesVariant variant, int tier, int count,

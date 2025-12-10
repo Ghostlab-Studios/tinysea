@@ -4,16 +4,12 @@ using System.Diagnostics;
 
 /// <summary>
 /// Unity MonoBehaviour to run TinySea simulation.
+/// Reads configuration from SimulationConfig ScriptableObject.
 /// </summary>
 public class SimulationController : MonoBehaviour
 {
     [Header("Configuration")]
     [SerializeField] private SimulationConfig config;
-
-    [Header("Simulation Settings")]
-    [SerializeField] private int maxYears = 1;
-    [SerializeField] private int daysPerBiologyStep = 5;
-    [SerializeField] private int randomSeed = 12345;
 
     [Header("Output")]
     [SerializeField] private string outputFolderName = "TinySeaResults";
@@ -23,6 +19,9 @@ public class SimulationController : MonoBehaviour
     [SerializeField] private string lastOutputPath = "";
     [SerializeField] private bool lastRunCrashed = false;
     [SerializeField] private int lastCrashDay = -1;
+    [SerializeField] private int lastCrashTier = -1;
+    [SerializeField] private float lastFinalTier1Pop = 0f;
+    [SerializeField] private float lastFinalTier2Pop = 0f;
 
     // Cached output directory
     private string OutputDirectory => Path.Combine(Application.persistentDataPath, outputFolderName);
@@ -43,69 +42,111 @@ public class SimulationController : MonoBehaviour
         UnityEngine.Debug.Log($"Using config: {config.name}");
         UnityEngine.Debug.Log($"Output will be saved to: {OutputDirectory}");
 
-        // Create runner
-        var runner = new SimulationRunner(randomSeed);
-        runner.MaxYears = maxYears;
-        runner.DaysPerBiologyStep = daysPerBiologyStep;
+        // Create runner with seed from config
+        var runner = new SimulationRunner(config.RandomSeed);
 
-        // Apply ALL values from SimulationConfig
+        // Apply simulation parameters from config
+        runner.MaxYears = config.MaxYears;
+        runner.BiologyStep = config.BiologyStep;
+
+        // Apply temperature parameters
         runner.TempCalc.BaseTemperature = config.BaseTemperature;
         runner.TempCalc.SeasonalAmplitude = config.SeasonalAmplitude;
         runner.TempCalc.ClimateTrendPerYear = config.ClimateTrend;
-        runner.TempCalc.VariabilityMagnitude = config.variabilityMagnitude;
-        runner.TempCalc.WarmingBias = config.warmingBias;
-        runner.TempCalc.BaseRandomness = Mathf.Abs(config.RandomRangeMax - config.RandomRangeMin) / 2f;
-        runner.TempCalc.RandomnessGrowthRate = config.randomnessGrowthRate;
+        runner.TempCalc.VariabilityMagnitude = config.VariabilityMagnitude;
+        runner.TempCalc.WarmingBias = config.WarmingBias;
+        runner.TempCalc.BaseRandomness = config.DailyVariationRange;
+        runner.TempCalc.RandomnessGrowthRate = config.RandomnessGrowthRate;
         runner.TempCalc.UseAutocorrelation = config.Autocorrelated;
-        runner.TempCalc.MinTemp = config.TempratureBoundsMin;
-        runner.TempCalc.MaxTemp = config.TempratureBoundsMax;
+        runner.TempCalc.MinTemp = config.TemperatureBoundsMin;
+        runner.TempCalc.MaxTemp = config.TemperatureBoundsMax;
 
         // Pass species database from config
         runner.SpeciesDB = config.Database;
 
+        // Apply population control settings
+        runner.Ecosystem.UseCarryingCapacity = config.UseCarryingCapacity;
+        runner.Ecosystem.CarryingCapacityPerTier = config.CarryingCapacityPerTier;
+        runner.Ecosystem.UseDensityDeath = config.UseDensityDeath;
+        runner.Ecosystem.DensityDeathThreshold = config.DensityDeathThreshold;
+        runner.Ecosystem.MaxDensityDeathRate = config.MaxDensityDeathRate;
+
         // Log config values being used
-        UnityEngine.Debug.Log($"Config values: BaseTemp={config.BaseTemperature}, Seasonal={config.SeasonalAmplitude}, " +
-                              $"Trend={config.ClimateTrend}, Bounds=[{config.TempratureBoundsMin}, {config.TempratureBoundsMax}]");
-        
+        UnityEngine.Debug.Log($"Config: BiologyStep={config.BiologyStep}, MaxYears={config.MaxYears}");
+        UnityEngine.Debug.Log($"Temperature: Base={config.BaseTemperature}°C, Seasonal=±{config.SeasonalAmplitude}°C, " +
+                              $"Trend={config.ClimateTrend}°C/year, Bounds=[{config.TemperatureBoundsMin}, {config.TemperatureBoundsMax}]");
+        UnityEngine.Debug.Log($"Population Control: CarryingCapacity={config.UseCarryingCapacity} ({config.CarryingCapacityPerTier}), " +
+                              $"DensityDeath={config.UseDensityDeath} (threshold={config.DensityDeathThreshold}, maxRate={config.MaxDensityDeathRate:P0})");
+
         if (config.Database != null)
         {
             UnityEngine.Debug.Log($"Using SpeciesDatabase: {config.Database.name} with {config.Database.speciesList.Count} species");
         }
         else
         {
-            UnityEngine.Debug.LogWarning("No SpeciesDatabase assigned in config!");
+            UnityEngine.Debug.LogWarning("No SpeciesDatabase assigned in config - using defaults!");
         }
 
-        // Run
+        // Run simulation
         runner.Run();
 
-        // Save
+        // Save results
         lastOutputPath = runner.SaveToFile(OutputDirectory);
 
         // Update status
         lastRunCrashed = runner.HasCrashed;
         lastCrashDay = runner.CrashDay;
+        lastCrashTier = runner.CrashTier;
+
+        // Get summary
+        var summary = runner.GetSummary();
+        if (summary != null)
+        {
+            lastFinalTier1Pop = summary.FinalTier1Pop;
+            lastFinalTier2Pop = summary.FinalTier2Pop;
+        }
 
         // Log results
         var records = runner.GetRecords();
         UnityEngine.Debug.Log($"=== Simulation Complete ===");
         UnityEngine.Debug.Log($"Days recorded: {records.Count}");
-        UnityEngine.Debug.Log($"Crashed: {lastRunCrashed} (Day: {lastCrashDay})");
+        UnityEngine.Debug.Log($"Biology cycles: {summary?.TotalBiologyCycles ?? 0}");
+        UnityEngine.Debug.Log($"Crashed: {lastRunCrashed} (Day: {lastCrashDay}, Tier: {lastCrashTier})");
+        UnityEngine.Debug.Log($"Final populations: Tier1={lastFinalTier1Pop:F2}, Tier2={lastFinalTier2Pop:F2}");
         UnityEngine.Debug.Log($"File: {lastOutputPath}");
 
-        // Print first 10 records
-        UnityEngine.Debug.Log("=== First 10 days ===");
-        for (int i = 0; i < Mathf.Min(10, records.Count); i++)
-        {
-            var r = records[i];
-            string bio = r.BiologyStepRan ? " [BIO]" : "";
-            UnityEngine.Debug.Log($"Day {r.Day}: Temp={r.Temperature:F1}C, T1={r.Tier1Pop:F1}, T2={r.Tier2Pop:F1}{bio}");
-        }
+        // Print first and last few records
+        PrintRecordSamples(records);
 
-        // Open file
+        // Open file if requested
         if (openFileOnComplete && !string.IsNullOrEmpty(lastOutputPath))
         {
             OpenFile(lastOutputPath);
+        }
+    }
+
+    private void PrintRecordSamples(System.Collections.Generic.List<StepRecord> records)
+    {
+        if (records.Count == 0) return;
+
+        UnityEngine.Debug.Log("=== First 5 days ===");
+        for (int i = 0; i < Mathf.Min(5, records.Count); i++)
+        {
+            var r = records[i];
+            string bio = r.BiologyCycle > 0 ? $" [Cycle {r.BiologyCycle}]" : "";
+            UnityEngine.Debug.Log($"Day {r.Day}: Temp={r.Temperature:F1}°C, T1={r.Tier1Pop:F2}, T2={r.Tier2Pop:F2}{bio}");
+        }
+
+        if (records.Count > 10)
+        {
+            UnityEngine.Debug.Log("...");
+            UnityEngine.Debug.Log("=== Last 5 days ===");
+            for (int i = records.Count - 5; i < records.Count; i++)
+            {
+                var r = records[i];
+                string bio = r.BiologyCycle > 0 ? $" [Cycle {r.BiologyCycle}]" : "";
+                UnityEngine.Debug.Log($"Day {r.Day}: Temp={r.Temperature:F1}°C, T1={r.Tier1Pop:F2}, T2={r.Tier2Pop:F2}{bio}");
+            }
         }
     }
 
@@ -127,11 +168,10 @@ public class SimulationController : MonoBehaviour
         {
             Directory.CreateDirectory(OutputDirectory);
         }
-        
+
         UnityEngine.Debug.Log($"Opening folder: {OutputDirectory}");
-        
+
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
-        // Windows: Use explorer with the full path
         Process.Start("explorer.exe", OutputDirectory.Replace("/", "\\"));
 #elif UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX
         Process.Start("open", OutputDirectory);
@@ -150,14 +190,14 @@ public class SimulationController : MonoBehaviour
     private void OpenFile(string path)
     {
         UnityEngine.Debug.Log($"Opening file: {path}");
-        
+
         try
         {
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
-            Process.Start(new ProcessStartInfo 
-            { 
-                FileName = path.Replace("/", "\\"), 
-                UseShellExecute = true 
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = path.Replace("/", "\\"),
+                UseShellExecute = true
             });
 #elif UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX
             Process.Start("open", path);

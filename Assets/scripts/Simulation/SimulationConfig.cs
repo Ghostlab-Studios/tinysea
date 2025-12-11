@@ -1,31 +1,12 @@
 using UnityEngine;
 
 /// <summary>
-/// ScriptableObject configuration for TinySea simulation.
+/// ScriptableObject configuration for TinySea simulation v5.
 /// All simulation parameters in one place for easy modification.
 /// 
-/// POPULATION CONTROL FEATURES:
-/// Without population limits, Tier 1 grows exponentially because:
-/// - Reproduction scales with population (more creatures = more births)
-/// - Predation only scales with predator count (much smaller)
-/// - No resource competition or disease mechanics
-/// 
-/// Two mechanisms are provided to create realistic population dynamics:
-/// 
-/// 1. CARRYING CAPACITY (Logistic Growth Model)
-///    - Reduces birth rate as population approaches environmental limit
-///    - Formula: births = rawBirths × (1 - tierPop/carryingCapacity)
-///    - At 50% capacity → 50% birth rate
-///    - At 100% capacity → 0% birth rate
-///    - Simulates: limited food, limited space, intra-species competition
-/// 
-/// 2. DENSITY-DEPENDENT MORTALITY
-///    - Adds extra deaths when population exceeds comfortable threshold
-///    - Applies even to thermally-healthy species
-///    - Death rate scales with how far over threshold
-///    - Simulates: disease spread, overcrowding stress, resource depletion
-/// 
-/// Both can be enabled independently or together for maximum realism.
+/// v5 CHANGES:
+/// - Removed Carrying Capacity (replaced by natural death + performance scaling)
+/// - Removed Density Death (replaced by natural death accumulators)
 /// </summary>
 [CreateAssetMenu(fileName = "SimulationConfig", menuName = "TinySea/Simulation Config")]
 public class SimulationConfig : ScriptableObject
@@ -39,46 +20,21 @@ public class SimulationConfig : ScriptableObject
     [Range(1, 500)]
     public int MaxYears = 1;
 
-    // ==================== POPULATION CONTROL SETTINGS ====================
-    // These settings prevent unrealistic infinite population growth.
+    // ==================== CARRYING CAPACITY (Soft Limit) ====================
 
-    [Header("=== CARRYING CAPACITY (Logistic Growth) ===")]
-    [Tooltip("Enable carrying capacity to limit population growth.\n\n" +
-             "Based on the logistic growth model where birth rate decreases " +
-             "as population approaches environmental limits.\n\n" +
-             "Simulates: limited food, space, and intra-species competition.\n\n" +
-             "Without this, populations grow to infinity.")]
+    [Header("=== CARRYING CAPACITY (Soft Limit) ===")]
+    [Tooltip("Enable carrying capacity to slow population growth.\n\n" +
+             "This is a SOFT LIMIT - it reduces birth rate as population approaches the limit.\n" +
+             "It does NOT kill creatures, only slows reproduction.\n\n" +
+             "Formula: births = rawBirths × (1 - tierPop/capacity)\n" +
+             "At 50% capacity → 50% birth rate\n" +
+             "At 100% capacity → 0% birth rate")]
     public bool UseCarryingCapacity = true;
 
-    [Tooltip("Maximum sustainable population PER TIER (all variants combined).\n\n" +
-             "• At 0% of capacity: 100% birth rate (no reduction)\n" +
-             "• At 50% of capacity: 50% birth rate\n" +
-             "• At 100% of capacity: 0% birth rate (no new births)\n\n" +
+    [Tooltip("Maximum sustainable population PER TIER.\n\n" +
              "Recommended: 1000-10000 depending on desired ecosystem size.")]
     [Range(100, 100000)]
     public float CarryingCapacityPerTier = 5000f;
-
-    [Header("=== DENSITY-DEPENDENT MORTALITY ===")]
-    [Tooltip("Enable extra deaths when population exceeds comfortable threshold.\n\n" +
-             "Applies even to thermally-healthy species.\n\n" +
-             "Simulates: disease spread, overcrowding stress, resource depletion.\n\n" +
-             "This is separate from thermal death - it's purely population-based.")]
-    public bool UseDensityDeath = true;
-
-    [Tooltip("Population threshold (per tier) above which density deaths begin.\n\n" +
-             "Below this threshold, no density deaths occur.\n" +
-             "Above this threshold, deaths increase proportionally.\n\n" +
-             "Recommended: 50-80% of CarryingCapacity for smooth transition.")]
-    [Range(100, 100000)]
-    public float DensityDeathThreshold = 4000f;
-
-    [Tooltip("Maximum daily death rate from overcrowding (0.0 to 1.0).\n\n" +
-             "Death rate scales linearly from 0 at threshold to this value.\n" +
-             "• At 1× threshold: 0% density death rate\n" +
-             "• At 2× threshold: this value (e.g., 10%)\n\n" +
-             "Recommended: 0.05-0.15 (5-15% per day at extreme density).")]
-    [Range(0f, 0.5f)]
-    public float MaxDensityDeathRate = 0.1f;
 
     // ==================== TEMPERATURE SETTINGS ====================
 

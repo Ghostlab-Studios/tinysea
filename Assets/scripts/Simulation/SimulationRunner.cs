@@ -5,66 +5,113 @@ using System.IO;
 using UnityEngine;
 
 /// <summary>
-/// Data recorded each day of simulation.
-/// All population and tracking values are FLOAT for research precision.
+/// Data recorded each biology step.
+/// 
+/// CSV COLUMNS:
+/// - Day, Year, Temperature, BiologyCycle
+/// - StartPop, EndPop: Total population (T1+T2)
+/// - Tier1Pop, Tier2Pop, Tier1Arctic...Tier2Tropical: Populations by tier/variant
+/// - EatenT1: Prey eaten (Tier 1 deaths from predation)
+/// - TempDeathsT1, TempDeathsT2: Thermal deaths
+/// - NaturalDeathsT1, NaturalDeathsT2: Natural mortality deaths
+/// - TotalDeaths: All deaths combined
+/// - BirthsT1, BirthsT2: New offspring
+/// - FedRateT2, AvgHuntingEff: Feeding metrics
+/// - BirthAccumT1, BirthAccumT2: Birth accumulator totals
+/// - NaturalDeathAccumT1, NaturalDeathAccumT2: Natural death accumulator totals
+/// - PredationAccumT1: Predation accumulator total for Tier 1
+/// 
+/// NOTE: Population fields use 'long' to prevent integer overflow with large populations.
 /// </summary>
 public class StepRecord
 {
     // Time
-    public int Day;                 // Day number (1-365 for year 1)
-    public int Year;                // Year number (1, 2, 3...)
+    public int Day;
+    public int Year;
 
     // Environment
-    public float Temperature;       // Temperature in °C
+    public float Temperature;
 
     // Biology tracking
-    public int BiologyCycle;        // Cumulative biology step counter (0 if no biology this day)
+    public int BiologyCycle;
 
-    // Population (FLOAT values for precision)
-    public float Tier1Pop;
-    public float Tier2Pop;
-    public float Tier1Arctic;
-    public float Tier1Common;
-    public float Tier1Tropical;
-    public float Tier2Arctic;
-    public float Tier2Common;
-    public float Tier2Tropical;
+    // Start/End population (TOTAL = T1 + T2) - using long to prevent overflow
+    public long StartPop;
+    public long EndPop;
 
-    // Biology step tracking (FLOAT, only valid when BiologyCycle > 0 for this day)
-    public float Eaten;
-    public float Deaths;
-    public float Births;
-    public float FedRate;
+    // Population by tier (using long to prevent overflow)
+    public long Tier1Pop;
+    public long Tier2Pop;
+    public long Tier1Arctic;
+    public long Tier1Common;
+    public long Tier1Tropical;
+    public long Tier2Arctic;
+    public long Tier2Common;
+    public long Tier2Tropical;
+
+    // Death tracking (using long to prevent overflow)
+    public long EatenT1;           // Prey eaten = T1 deaths from predation
+    public long TempDeathsT1;      // Temperature deaths T1
+    public long TempDeathsT2;      // Temperature deaths T2
+    public long NaturalDeathsT1;   // Natural deaths T1
+    public long NaturalDeathsT2;   // Natural deaths T2
+    public long TotalDeaths;       // ALL deaths combined
+
+    // Birth tracking (using long to prevent overflow)
+    public long BirthsT1;
+    public long BirthsT2;
+
+    // Feeding tracking
+    public float FedRateT2;
+    public float AvgHuntingEff;
+
+    // Accumulator tracking (float values for transparency)
+    public float BirthAccumT1;
+    public float BirthAccumT2;
+    public float NaturalDeathAccumT1;
+    public float NaturalDeathAccumT2;
+    public float PredationAccumT1;
 
     public string ToCsvLine()
     {
         return $"{Day},{Year},{Temperature:F2},{BiologyCycle}," +
-               $"{Tier1Pop:F2},{Tier2Pop:F2}," +
-               $"{Tier1Arctic:F2},{Tier1Common:F2},{Tier1Tropical:F2}," +
-               $"{Tier2Arctic:F2},{Tier2Common:F2},{Tier2Tropical:F2}," +
-               $"{Eaten:F2},{Deaths:F2},{Births:F2},{FedRate:F2}";
+               $"{StartPop},{EndPop}," +
+               $"{Tier1Pop},{Tier2Pop}," +
+               $"{Tier1Arctic},{Tier1Common},{Tier1Tropical}," +
+               $"{Tier2Arctic},{Tier2Common},{Tier2Tropical}," +
+               $"{EatenT1},{TempDeathsT1},{TempDeathsT2}," +
+               $"{NaturalDeathsT1},{NaturalDeathsT2}," +
+               $"{TotalDeaths}," +
+               $"{BirthsT1},{BirthsT2}," +
+               $"{FedRateT2:F3},{AvgHuntingEff:F3}," +
+               $"{BirthAccumT1:F3},{BirthAccumT2:F3}," +
+               $"{NaturalDeathAccumT1:F3},{NaturalDeathAccumT2:F3}," +
+               $"{PredationAccumT1:F3}";
     }
 
     public static string CsvHeader()
     {
         return "Day,Year,Temperature,BiologyCycle," +
+               "StartPop,EndPop," +
                "Tier1Pop,Tier2Pop," +
                "Tier1Arctic,Tier1Common,Tier1Tropical," +
                "Tier2Arctic,Tier2Common,Tier2Tropical," +
-               "Eaten,Deaths,Births,FedRate";
+               "EatenT1,TempDeathsT1,TempDeathsT2," +
+               "NaturalDeathsT1,NaturalDeathsT2," +
+               "TotalDeaths," +
+               "BirthsT1,BirthsT2," +
+               "FedRateT2,AvgHuntingEff," +
+               "BirthAccumT1,BirthAccumT2," +
+               "NaturalDeathAccumT1,NaturalDeathAccumT2," +
+               "PredationAccumT1";
     }
 }
 
 /// <summary>
 /// Main simulation runner.
 /// 
-/// Design:
-/// - Temperature calculated EVERY day
-/// - Biology runs every BiologyStep days (default: 1 = daily)
-/// - Day numbering starts at 1 (Day 1-365 for Year 1)
-/// - All populations are FLOAT for precision
-/// - Species extinct when population < 1.0
-/// - Modular design for easy multi-year extension
+/// Runs simulation for MaxYears with biology every BiologyStep days.
+/// Tracks all deaths, births, and accumulator states for CSV output.
 /// </summary>
 public class SimulationRunner
 {
@@ -74,9 +121,9 @@ public class SimulationRunner
 
     // Settings
     public int MaxYears = 1;
-    public int BiologyStep = 1;  // Default: daily biology
+    public int BiologyStep = 1;
 
-    // Database reference (set before Run)
+    // Database reference
     public SpeciesDatabase SpeciesDB { get; set; }
 
     // Results
@@ -91,7 +138,7 @@ public class SimulationRunner
     public SimulationRunner(int seed = -1)
     {
         TempCalc = new TemperatureCalculator(seed);
-        Ecosystem = new EcosystemSimulator();
+        Ecosystem = new EcosystemSimulator(seed);
     }
 
     /// <summary>
@@ -105,10 +152,8 @@ public class SimulationRunner
         CrashDay = -1;
         CrashTier = -1;
 
-        // Apply BiologyStep to ecosystem
         Ecosystem.BiologyStep = BiologyStep;
 
-        // Initialize species from database if provided
         if (SpeciesDB != null)
         {
             Ecosystem.InitializeFromDatabase(SpeciesDB);
@@ -123,17 +168,13 @@ public class SimulationRunner
 
         Debug.Log($"=== Starting Simulation: {MaxYears} year(s), {totalDays} days, BiologyStep={BiologyStep} ===");
 
-        // Run day by day (0-indexed internally, but recorded as 1-indexed)
         for (int dayIndex = 0; dayIndex < totalDays; dayIndex++)
         {
-            int displayDay = dayIndex + 1;  // Day 1-365
+            int displayDay = dayIndex + 1;
             int year = (dayIndex / TemperatureCalculator.DAYS_PER_YEAR) + 1;
 
-            // Get temperature for this day
             float temp = TempCalc.GetTemperature(dayIndex);
 
-            // Check if biology runs today
-            // Day 1 runs biology, then every BiologyStep days after
             bool runBiology = (displayDay == 1) || (displayDay % BiologyStep == 0);
 
             if (runBiology)
@@ -142,10 +183,8 @@ public class SimulationRunner
                 Ecosystem.ProcessBiologyStep(temp);
             }
 
-            // Record this day
             RecordStep(displayDay, year, temp, runBiology);
 
-            // Check for crash after biology step
             if (runBiology && Ecosystem.HasCrashed())
             {
                 HasCrashed = true;
@@ -156,7 +195,6 @@ public class SimulationRunner
             }
         }
 
-        // Log summary
         var lastRecord = _records.Count > 0 ? _records[_records.Count - 1] : null;
         Debug.Log($"=== Simulation Complete ===");
         Debug.Log($"Days simulated: {_records.Count}");
@@ -164,7 +202,7 @@ public class SimulationRunner
         Debug.Log($"Crashed: {HasCrashed} (Day: {CrashDay}, Tier: {CrashTier})");
         if (lastRecord != null)
         {
-            Debug.Log($"Final populations: Tier1={lastRecord.Tier1Pop:F2}, Tier2={lastRecord.Tier2Pop:F2}");
+            Debug.Log($"Final populations: Tier1={lastRecord.Tier1Pop}, Tier2={lastRecord.Tier2Pop}");
         }
     }
 
@@ -173,6 +211,17 @@ public class SimulationRunner
     /// </summary>
     private void RecordStep(int day, int year, float temperature, bool biologyRan)
     {
+        // Get death components
+        float eatenT1 = biologyRan ? Ecosystem.LastEatenT1 : 0f;
+        float tempDeathsT1 = biologyRan ? Ecosystem.LastTempDeathsT1 : 0f;
+        float tempDeathsT2 = biologyRan ? Ecosystem.LastTempDeathsT2 : 0f;
+        float naturalDeathsT1 = biologyRan ? Ecosystem.LastNaturalDeathsT1 : 0f;
+        float naturalDeathsT2 = biologyRan ? Ecosystem.LastNaturalDeathsT2 : 0f;
+
+        // TotalDeaths = all death sources combined
+        float totalDeaths = eatenT1 + tempDeathsT1 + tempDeathsT2 +
+                           naturalDeathsT1 + naturalDeathsT2;
+
         var record = new StepRecord
         {
             Day = day,
@@ -180,53 +229,60 @@ public class SimulationRunner
             Temperature = temperature,
             BiologyCycle = biologyRan ? _biologyCycleCounter : 0,
 
-            // Population values (FLOAT)
-            Tier1Pop = Ecosystem.GetTier1Population(),
-            Tier2Pop = Ecosystem.GetTier2Population(),
-            Tier1Arctic = Ecosystem.GetVariantPopulation(1, ThermalVariant.Arctic),
-            Tier1Common = Ecosystem.GetVariantPopulation(1, ThermalVariant.Common),
-            Tier1Tropical = Ecosystem.GetVariantPopulation(1, ThermalVariant.Tropical),
-            Tier2Arctic = Ecosystem.GetVariantPopulation(2, ThermalVariant.Arctic),
-            Tier2Common = Ecosystem.GetVariantPopulation(2, ThermalVariant.Common),
-            Tier2Tropical = Ecosystem.GetVariantPopulation(2, ThermalVariant.Tropical),
+            // Start/End population (T1 + T2 combined) - using long to prevent overflow
+            StartPop = biologyRan ? (long)Math.Round(Ecosystem.StartPopT1 + Ecosystem.StartPopT2) : 0,
+            EndPop = (long)Math.Round(Ecosystem.GetTier1Population() + Ecosystem.GetTier2Population()),
 
-            // Tracking values (only meaningful when biologyRan = true)
-            Eaten = biologyRan ? Ecosystem.LastTotalEaten : 0f,
-            Deaths = biologyRan ? Ecosystem.LastTotalDeaths : 0f,
-            Births = biologyRan ? Ecosystem.LastTotalBirths : 0f,
-            FedRate = biologyRan ? Ecosystem.LastFedRate : 0f
+            // Population by tier - using long to prevent overflow
+            Tier1Pop = (long)Math.Round(Ecosystem.GetTier1Population()),
+            Tier2Pop = (long)Math.Round(Ecosystem.GetTier2Population()),
+            Tier1Arctic = (long)Math.Round(Ecosystem.GetVariantPopulation(1, ThermalVariant.Arctic)),
+            Tier1Common = (long)Math.Round(Ecosystem.GetVariantPopulation(1, ThermalVariant.Common)),
+            Tier1Tropical = (long)Math.Round(Ecosystem.GetVariantPopulation(1, ThermalVariant.Tropical)),
+            Tier2Arctic = (long)Math.Round(Ecosystem.GetVariantPopulation(2, ThermalVariant.Arctic)),
+            Tier2Common = (long)Math.Round(Ecosystem.GetVariantPopulation(2, ThermalVariant.Common)),
+            Tier2Tropical = (long)Math.Round(Ecosystem.GetVariantPopulation(2, ThermalVariant.Tropical)),
+
+            // Death tracking - using long to prevent overflow
+            EatenT1 = (long)Math.Round(eatenT1),
+            TempDeathsT1 = (long)Math.Round(tempDeathsT1),
+            TempDeathsT2 = (long)Math.Round(tempDeathsT2),
+            NaturalDeathsT1 = (long)Math.Round(naturalDeathsT1),
+            NaturalDeathsT2 = (long)Math.Round(naturalDeathsT2),
+            TotalDeaths = (long)Math.Round(totalDeaths),
+
+            // Birth tracking - using long to prevent overflow
+            BirthsT1 = biologyRan ? (long)Math.Round(Ecosystem.LastBirthsT1) : 0,
+            BirthsT2 = biologyRan ? (long)Math.Round(Ecosystem.LastBirthsT2) : 0,
+
+            // Feeding tracking
+            FedRateT2 = biologyRan ? Ecosystem.LastFedRateT2 : 0f,
+            AvgHuntingEff = biologyRan ? Ecosystem.LastAvgHuntingEfficiency : 0f,
+
+            // Accumulator tracking
+            BirthAccumT1 = Ecosystem.BirthAccumT1,
+            BirthAccumT2 = Ecosystem.BirthAccumT2,
+            NaturalDeathAccumT1 = Ecosystem.NaturalDeathAccumT1,
+            NaturalDeathAccumT2 = Ecosystem.NaturalDeathAccumT2,
+            PredationAccumT1 = Ecosystem.PredationAccumT1
         };
 
         _records.Add(record);
     }
 
-    /// <summary>
-    /// Get all records.
-    /// </summary>
-    public List<StepRecord> GetRecords()
-    {
-        return new List<StepRecord>(_records);
-    }
+    public List<StepRecord> GetRecords() => new List<StepRecord>(_records);
 
-    /// <summary>
-    /// Generate CSV string.
-    /// </summary>
     public string ToCsv()
     {
         var sb = new StringBuilder();
         sb.AppendLine(StepRecord.CsvHeader());
-
         foreach (var record in _records)
         {
             sb.AppendLine(record.ToCsvLine());
         }
-
         return sb.ToString();
     }
 
-    /// <summary>
-    /// Save to file with timestamp.
-    /// </summary>
     public string SaveToFile(string directory)
     {
         if (!Directory.Exists(directory))
@@ -236,17 +292,13 @@ public class SimulationRunner
 
         string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
         string crashSuffix = HasCrashed ? $"_crash_day{CrashDay}" : "";
-        string filename = $"tinysea_{timestamp}{crashSuffix}.csv";
+        string filename = $"tinysea_v5_{timestamp}{crashSuffix}.csv";
         string path = Path.Combine(directory, filename);
 
         File.WriteAllText(path, ToCsv());
-
         return path;
     }
 
-    /// <summary>
-    /// Get summary statistics for the simulation.
-    /// </summary>
     public SimulationSummary GetSummary()
     {
         if (_records.Count == 0) return null;
@@ -260,28 +312,27 @@ public class SimulationRunner
             CrashTier = CrashTier
         };
 
-        // Calculate statistics
         var lastRecord = _records[_records.Count - 1];
         summary.FinalTier1Pop = lastRecord.Tier1Pop;
         summary.FinalTier2Pop = lastRecord.Tier2Pop;
 
-        float maxT1 = 0, minT1 = float.MaxValue;
-        float maxT2 = 0, minT2 = float.MaxValue;
+        long maxT1 = 0, minT1 = long.MaxValue;
+        long maxT2 = 0, minT2 = long.MaxValue;
         float tempSum = 0;
 
         foreach (var r in _records)
         {
             tempSum += r.Temperature;
             if (r.Tier1Pop > maxT1) maxT1 = r.Tier1Pop;
-            if (r.Tier1Pop < minT1 && r.Tier1Pop >= 1f) minT1 = r.Tier1Pop;
+            if (r.Tier1Pop < minT1 && r.Tier1Pop >= 1) minT1 = r.Tier1Pop;
             if (r.Tier2Pop > maxT2) maxT2 = r.Tier2Pop;
-            if (r.Tier2Pop < minT2 && r.Tier2Pop >= 1f) minT2 = r.Tier2Pop;
+            if (r.Tier2Pop < minT2 && r.Tier2Pop >= 1) minT2 = r.Tier2Pop;
         }
 
         summary.MaxTier1Pop = maxT1;
-        summary.MinTier1Pop = minT1 == float.MaxValue ? 0 : minT1;
+        summary.MinTier1Pop = minT1 == long.MaxValue ? 0 : minT1;
         summary.MaxTier2Pop = maxT2;
-        summary.MinTier2Pop = minT2 == float.MaxValue ? 0 : minT2;
+        summary.MinTier2Pop = minT2 == long.MaxValue ? 0 : minT2;
         summary.AvgTemperature = tempSum / _records.Count;
 
         return summary;
@@ -298,20 +349,19 @@ public class SimulationSummary
     public bool Crashed;
     public int CrashDay;
     public int CrashTier;
-    public float FinalTier1Pop;
-    public float FinalTier2Pop;
-    public float MaxTier1Pop;
-    public float MinTier1Pop;
-    public float MaxTier2Pop;
-    public float MinTier2Pop;
+    public long FinalTier1Pop;
+    public long FinalTier2Pop;
+    public long MaxTier1Pop;
+    public long MinTier1Pop;
+    public long MaxTier2Pop;
+    public long MinTier2Pop;
     public float AvgTemperature;
 
     public override string ToString()
     {
         return $"Days: {TotalDays}, Cycles: {TotalBiologyCycles}, " +
                $"Crashed: {Crashed} (Day {CrashDay}, Tier {CrashTier}), " +
-               $"Final T1: {FinalTier1Pop:F2}, Final T2: {FinalTier2Pop:F2}, " +
-               $"Max T1: {MaxTier1Pop:F2}, Max T2: {MaxTier2Pop:F2}, " +
+               $"Final T1: {FinalTier1Pop}, Final T2: {FinalTier2Pop}, " +
                $"Avg Temp: {AvgTemperature:F1}°C";
     }
 }

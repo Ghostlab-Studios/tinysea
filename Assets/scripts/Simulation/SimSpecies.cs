@@ -5,29 +5,40 @@ public enum ThermalVariant { Arctic, Common, Tropical }
 /// <summary>
 /// Species data class for simulation.
 /// Population is stored as FLOAT for calculation precision.
-/// This allows fractional accumulation (e.g., 2.196 → 2.411 → 2.647 → 3.191).
-/// Species is considered extinct when Population < 1.0.
+/// Species is considered extinct when Population == 0 (after rounding).
 /// </summary>
 [Serializable]
 public class SimSpecies
 {
-    // Identity
+    // ==================== IDENTITY ====================
     public string Name;
     public ThermalVariant Variant;
-    public int Tier;  // 1 = Hexapod (producer), 2 = Sheplik (predator), 3+ = future
+    public int Tier;  // 1 = Hexapod (prey), 2 = Sheplik (predator)
 
-    // Current population (FLOAT for precision)
+    // ==================== POPULATION ====================
     public float Population;
 
-    // Biological parameters (from SpeciesDatabase)
-    public float EatingAmount;          // Prey demand per creature per step (Tier 1 = 0)
-    public float ReproductionMultiplier;
-    public float DeathThreshold;        // FinalPerf below this = death (default 0.3)
-    public float DeathRate;             // Fraction dying per step when below threshold
-    public float MinimumDeaths;         // Minimum deaths when dying (default 1)
-    public float ReproThreshold;        // FinalPerf required to reproduce (default 0.25)
+    // ==================== BIOLOGICAL PARAMETERS ====================
+    public float EatingAmount;              // Prey consumed per creature per step (Tier 1 = 0)
+    public float ReproductionMultiplier;    // Birth rate multiplier
+    public float DeathThreshold;            // FinalPerf below this triggers thermal death (default 0.3)
+    public float DeathRate;                 // Fraction dying when thermal death triggers
+    public float MinimumDeaths;             // Minimum deaths when thermal death triggers (default 1)
+    public float ReproThreshold;            // FinalPerf required to reproduce (default 0.25)
 
-    // Thermal curve parameters (Kelvin)
+    // ==================== NATURAL MORTALITY ====================
+    public float NaturalDeathRate = 0.02f;      // Base natural death rate (Tier 1: 2%, Tier 2: 3%)
+    public float NaturalDeathVariance = 0.01f;  // Random variance range (±1%)
+
+    // ==================== HUNTING EFFICIENCY (Tier 2 only) ====================
+    public float HuntingEfficiency = 0.75f;     // Base hunting success rate (75%)
+    public float HuntingVariance = 0.15f;       // Random variance range (±15%)
+
+    // ==================== CONSTANTS ====================
+    public const float NO_PREDATOR_PENALTY = 0.85f;           // 15% birth reduction when no predators
+    public const float MIN_FINAL_PERF_FOR_NATURAL_DEATH = 0.1f; // Floor to prevent division by zero
+
+    // ==================== THERMAL CURVE PARAMETERS (Kelvin) ====================
     public float OptimalTempK;
     public float ArrhenBreadth;
     public float ArrhenLower;
@@ -35,10 +46,11 @@ public class SimSpecies
     public float LowerBoundK;
     public float UpperBoundK;
 
-    // Runtime values (calculated each biology step)
-    public float ThermalPerformance;    // From Arrhenius formula (0-1)
-    public float FedRate = 1f;          // Feeding satisfaction (0-1), Tier 1 always 1.0
-    public float FinalPerformance;      // ThermalPerf × FedRate
+    // ==================== RUNTIME VALUES (calculated each step) ====================
+    public float ThermalPerformance;        // From Arrhenius formula (0-1)
+    public float FedRate = 1f;              // Feeding satisfaction (0-1), Tier 1 always 1.0
+    public float FinalPerformance;          // ThermalPerf × FedRate
+    public float CurrentHuntingSuccess;     // This step's hunting success (for tracking)
 
     /// <summary>
     /// Full name for display (e.g., "Hexapod_Arctic")
@@ -70,10 +82,10 @@ public class SimSpecies
         return (float)Math.Max(0.0, Math.Min(1.0, perf));
     }
 
-    // ========== FACTORY METHODS (for fallback/testing) ==========
+    // ==================== FACTORY METHODS (for fallback/testing) ====================
 
     /// <summary>
-    /// Create a Hexapod (Tier 1 producer) with default parameters
+    /// Create a Hexapod (Tier 1 prey) with default parameters
     /// </summary>
     public static SimSpecies CreateHexapod(ThermalVariant variant, float initialPopulation)
     {
@@ -89,6 +101,10 @@ public class SimSpecies
             DeathRate = 0.6f,
             MinimumDeaths = 1f,
             ReproThreshold = 0.25f,
+            NaturalDeathRate = 0.02f,       // 2% base
+            NaturalDeathVariance = 0.01f,   // ±1%
+            HuntingEfficiency = 1.0f,       // Ignored for Tier 1
+            HuntingVariance = 0f,
             ArrhenBreadth = 5273.15f,
             ArrhenLower = 10273.15f,
             ArrhenUpper = 21273.15f
@@ -134,6 +150,10 @@ public class SimSpecies
             DeathRate = 0.3f,               // Lower death rate than Tier 1
             MinimumDeaths = 1f,
             ReproThreshold = 0.25f,
+            NaturalDeathRate = 0.03f,       // 3% base
+            NaturalDeathVariance = 0.015f,  // ±1.5%
+            HuntingEfficiency = 0.75f,      // 75% base success
+            HuntingVariance = 0.15f,        // ±15% variance
             ArrhenBreadth = 5273.15f,
             ArrhenLower = 10273.15f,
             ArrhenUpper = 21273.15f

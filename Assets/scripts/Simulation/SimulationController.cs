@@ -3,8 +3,12 @@ using System.IO;
 using System.Diagnostics;
 
 /// <summary>
-/// Unity MonoBehaviour to run TinySea simulation.
+/// Unity MonoBehaviour to run TinySea simulation v5.
 /// Reads configuration from SimulationConfig ScriptableObject.
+/// 
+/// v5 CHANGES:
+/// - Removed Carrying Capacity settings
+/// - Removed Density Death settings
 /// </summary>
 public class SimulationController : MonoBehaviour
 {
@@ -38,7 +42,7 @@ public class SimulationController : MonoBehaviour
             return;
         }
 
-        UnityEngine.Debug.Log("=== TinySea Simulation Starting ===");
+        UnityEngine.Debug.Log("=== TinySea Simulation v5 Starting ===");
         UnityEngine.Debug.Log($"Using config: {config.name}");
         UnityEngine.Debug.Log($"Output will be saved to: {OutputDirectory}");
 
@@ -64,19 +68,15 @@ public class SimulationController : MonoBehaviour
         // Pass species database from config
         runner.SpeciesDB = config.Database;
 
-        // Apply population control settings
+        // Apply carrying capacity settings
         runner.Ecosystem.UseCarryingCapacity = config.UseCarryingCapacity;
         runner.Ecosystem.CarryingCapacityPerTier = config.CarryingCapacityPerTier;
-        runner.Ecosystem.UseDensityDeath = config.UseDensityDeath;
-        runner.Ecosystem.DensityDeathThreshold = config.DensityDeathThreshold;
-        runner.Ecosystem.MaxDensityDeathRate = config.MaxDensityDeathRate;
 
         // Log config values being used
         UnityEngine.Debug.Log($"Config: BiologyStep={config.BiologyStep}, MaxYears={config.MaxYears}");
+        UnityEngine.Debug.Log($"Carrying Capacity: {config.UseCarryingCapacity} (limit={config.CarryingCapacityPerTier})");
         UnityEngine.Debug.Log($"Temperature: Base={config.BaseTemperature}°C, Seasonal=±{config.SeasonalAmplitude}°C, " +
                               $"Trend={config.ClimateTrend}°C/year, Bounds=[{config.TemperatureBoundsMin}, {config.TemperatureBoundsMax}]");
-        UnityEngine.Debug.Log($"Population Control: CarryingCapacity={config.UseCarryingCapacity} ({config.CarryingCapacityPerTier}), " +
-                              $"DensityDeath={config.UseDensityDeath} (threshold={config.DensityDeathThreshold}, maxRate={config.MaxDensityDeathRate:P0})");
 
         if (config.Database != null)
         {
@@ -134,7 +134,7 @@ public class SimulationController : MonoBehaviour
         {
             var r = records[i];
             string bio = r.BiologyCycle > 0 ? $" [Cycle {r.BiologyCycle}]" : "";
-            UnityEngine.Debug.Log($"Day {r.Day}: Temp={r.Temperature:F1}°C, T1={r.Tier1Pop:F2}, T2={r.Tier2Pop:F2}{bio}");
+            UnityEngine.Debug.Log($"Day {r.Day}: Temp={r.Temperature:F1}°C, T1={r.Tier1Pop}, T2={r.Tier2Pop}{bio}");
         }
 
         if (records.Count > 10)
@@ -145,7 +145,7 @@ public class SimulationController : MonoBehaviour
             {
                 var r = records[i];
                 string bio = r.BiologyCycle > 0 ? $" [Cycle {r.BiologyCycle}]" : "";
-                UnityEngine.Debug.Log($"Day {r.Day}: Temp={r.Temperature:F1}°C, T1={r.Tier1Pop:F2}, T2={r.Tier2Pop:F2}{bio}");
+                UnityEngine.Debug.Log($"Day {r.Day}: Temp={r.Temperature:F1}°C, T1={r.Tier1Pop}, T2={r.Tier2Pop}{bio}");
             }
         }
     }

@@ -9,7 +9,30 @@ TinySea is a marine ecosystem simulation modeling a 2-tier food web with thermal
 - 3 accumulator systems (birth, predation, natural death)
 - Performance-scaled natural death
 - Carrying capacity (soft limit on reproduction)
+- Prey-ratio hunting efficiency scaling
+- Prey scarcity FedRate penalty
 - No density death (removed in v5)
+
+---
+
+## Version 5 Changes
+
+### Added
+- **Predation Accumulator** - Fractional prey deaths carry over between steps
+- **Natural Death Accumulator** - Fractional natural deaths carry over between steps
+- **Performance-Scaled Natural Death** - Poor FinalPerf increases natural death rate (1/FinalPerf scaling)
+- **Prey-Ratio Hunting Bonus** - Hunting efficiency scales with prey:predator ratio (-55% to +15%)
+- **Prey Scarcity Multiplier** - FedRate penalty when prey per predator is low (down to 0.20)
+- **Division by Zero Safeguard** - `max(0.1, FinalPerformance)` floor for natural death calculation
+- **Long data type** - Population fields use `long` to prevent integer overflow
+
+### Removed
+- Density-dependent death (replaced by prey scarcity penalty)
+
+### Kept
+- Birth Accumulator
+- Carrying Capacity (soft limit on reproduction)
+- All original species parameters (reproduction multipliers, thermal curves, etc.)
 
 ---
 
@@ -152,7 +175,7 @@ Hunting efficiency is affected by:
 preyRatio = TotalTier1Population / TotalTier2Population
 huntingBonus = CalculateHuntingBonus(preyRatio)
 huntingSuccess = BaseHuntingEfficiency + random(-Variance, +Variance) + huntingBonus
-huntingSuccess = clamp(huntingSuccess, 0.1, 1.0)
+huntingSuccess = clamp(huntingSuccess, 0.05, 1.0)
 ```
 
 **Prey-Ratio Hunting Bonus:**
@@ -428,6 +451,8 @@ population = round(population)
 
 ## CSV Output Columns
 
+**Note:** Population fields use `long` data type to prevent integer overflow with large populations.
+
 ### Core Columns
 | Column | Type | Description |
 |--------|------|-------------|
@@ -435,18 +460,18 @@ population = round(population)
 | Year | int | Simulation year |
 | Temperature | float | Current temperature in °C |
 | BiologyCycle | int | Biology step number |
-| StartPop | int | Total population at start of step |
-| Tier1Pop, Tier2Pop | int | Population by tier |
-| Tier1Arctic, Tier1Common, Tier1Tropical | int | Tier 1 variants |
-| Tier2Arctic, Tier2Common, Tier2Tropical | int | Tier 2 variants |
-| EatenT1 | int | Prey eaten (= Tier 1 deaths from predation) |
-| TempDeathsT1, TempDeathsT2 | int | Thermal deaths |
-| NaturalDeathsT1, NaturalDeathsT2 | int | Natural mortality deaths |
-| TotalDeaths | int | Sum of all deaths |
-| BirthsT1, BirthsT2 | int | New offspring |
-| FedRateT2 | float | Tier 2 feeding satisfaction |
-| AvgHuntingEff | float | Average hunting efficiency |
-| EndPop | int | Total population at end of step |
+| StartPop | long | Total population at start of step |
+| EndPop | long | Total population at end of step |
+| Tier1Pop, Tier2Pop | long | Population by tier |
+| Tier1Arctic, Tier1Common, Tier1Tropical | long | Tier 1 variants |
+| Tier2Arctic, Tier2Common, Tier2Tropical | long | Tier 2 variants |
+| EatenT1 | long | Prey eaten (= Tier 1 deaths from predation) |
+| TempDeathsT1, TempDeathsT2 | long | Thermal deaths |
+| NaturalDeathsT1, NaturalDeathsT2 | long | Natural mortality deaths |
+| TotalDeaths | long | Sum of all deaths |
+| BirthsT1, BirthsT2 | long | New offspring |
+| FedRateT2 | float | Tier 2 feeding satisfaction (0-1) |
+| AvgHuntingEff | float | Average hunting efficiency (0-1) |
 
 ### Accumulator Columns
 | Column | Type | Description |
@@ -482,6 +507,84 @@ population = round(population)
 
 ---
 
+## Negative Feedback Loops
+
+The simulation achieves stable predator-prey oscillations through multiple negative feedback mechanisms:
+
+### 1. Carrying Capacity Feedback (Tier 1)
+```
+Prey population grows
+    ↓
+Approaches carrying capacity
+    ↓
+Birth rate decreases (growth factor drops)
+    ↓
+Population growth slows/stops
+    ↓
+Predation reduces population
+    ↓
+Below capacity → growth resumes
+```
+
+### 2. Hunting Efficiency Feedback (Tier 2)
+```
+Predators grow → prey:predator ratio drops
+    ↓
+Hunting bonus becomes penalty (-15% to -55%)
+    ↓
+Less prey caught per predator
+    ↓
+Lower food intake
+    ↓
+Lower FedRate → Lower FinalPerf
+    ↓
+Higher natural death rate + fewer births
+    ↓
+Predator population declines
+```
+
+### 3. Prey Scarcity Feedback (Tier 2)
+```
+Predators overpopulate → prey per predator drops
+    ↓
+Scarcity multiplier kicks in (0.20 to 0.85)
+    ↓
+FedRate drops dramatically
+    ↓
+FinalPerf = ThermalPerf × low FedRate
+    ↓
+Natural death rate spikes (up to 10× base)
+    ↓
+Massive predator die-off
+    ↓
+Prey recovers
+```
+
+### 4. Performance-Scaled Natural Death
+```
+Poor conditions (bad temperature OR low food)
+    ↓
+Low FinalPerformance
+    ↓
+Natural death rate increases (1/FinalPerf scaling)
+    ↓
+Weak creatures die faster
+    ↓
+Population adapts to conditions
+```
+
+### Combined Effect
+These feedback loops work together to create realistic Lotka-Volterra style oscillations:
+1. Prey grows to near carrying capacity
+2. Predators feast and reproduce
+3. Prey declines from predation
+4. Predators face scarcity penalties
+5. Predators die off from hunger
+6. Prey recovers with fewer predators
+7. Cycle repeats
+
+---
+
 ## Expected Behavior
 
 1. **Early simulation:** All variants start, Arctic/Tropical struggle at 20°C
@@ -490,3 +593,70 @@ population = round(population)
 4. **Common dominates:** Tier 1 and Tier 2 Common thrive at optimal temperature
 5. **Predator-prey cycles:** Tier 2 grows, eats Tier 1, Tier 1 declines, Tier 2 starves, etc.
 6. **Seasonal shifts:** As temperature changes seasonally, different variants may become dominant
+
+---
+
+## Configuration Parameters
+
+### SimulationConfig (ScriptableObject)
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| BiologyStep | 1 | Days between biology calculations |
+| MaxYears | 1 | Simulation duration in years |
+| UseCarryingCapacity | true | Enable soft birth limit |
+| CarryingCapacityPerTier | 5000 | Maximum sustainable population per tier |
+| BaseTemperature | 20°C | Starting temperature |
+| SeasonalAmplitude | 10°C | Summer/winter swing |
+| ClimateTrend | 1°C/year | Long-term warming rate |
+| TemperatureBoundsMin | -5°C | Hard minimum temperature |
+| TemperatureBoundsMax | 50°C | Hard maximum temperature |
+| RandomSeed | 12345 | Seed for reproducibility (-1 for random) |
+
+### Constants (SimSpecies.cs)
+
+| Constant | Value | Description |
+|----------|-------|-------------|
+| NO_PREDATOR_PENALTY | 0.85 | Tier 1 birth multiplier when Tier 2 extinct |
+| MIN_FINAL_PERF_FOR_NATURAL_DEATH | 0.1 | Floor to prevent division by zero |
+
+---
+
+## Implementation Files
+
+| File | Description |
+|------|-------------|
+| `SimSpecies.cs` | Species data class with thermal performance calculation |
+| `SpeciesDatabase.cs` | ScriptableObject for species configuration |
+| `EcosystemSimulator.cs` | Main simulation logic (7-step biology sequence) |
+| `SimulationRunner.cs` | CSV output and simulation runner |
+| `SimulationConfig.cs` | ScriptableObject for simulation settings |
+| `SimulationController.cs` | Unity MonoBehaviour to run simulation |
+| `TemperatureCalculator.cs` | Temperature calculation with seasonal/climate components |
+
+---
+
+## Troubleshooting
+
+### Population grows too fast
+- Check that `UseCarryingCapacity = true`
+- Lower `CarryingCapacityPerTier` value
+
+### Predators crash (go extinct)
+- This is expected if prey is depleted
+- Predators face strong negative feedback when prey is scarce
+- They should recover if prey recovers first
+
+### Prey crashes (goes extinct)
+- Predators were too efficient
+- Check hunting efficiency values
+- Ensure prey scarcity penalties are working
+
+### No oscillations (flat populations)
+- Check that predators are eating (`EatenT1 > 0`)
+- Check that reproduction is happening (`BirthsT1, BirthsT2 > 0`)
+- Verify temperature is in reasonable range for Common variant
+
+### Integer overflow in CSV
+- Ensure `SimulationRunner.cs` uses `long` type for population fields
+- This was fixed in v5 to handle populations over 2 billion

@@ -12,18 +12,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 14df9442ee781fb4d8e8a6d67c8ba0b4, type: 3}
   m_Name: SimulationConfig
   m_EditorClassIdentifier: Assembly-CSharp::SimulationConfig
+  BiologyStep: 1
+  MaxYears: 1
+  UseCarryingCapacity: 1
+  CarryingCapacityPerTier: 5000
   BaseTemperature: 20
   SeasonalAmplitude: 10
   ClimateTrend: 1
   InterannualVariation: 1
-  WarmBias: 1
-  variabilityMagnitude: 1
-  warmingBias: 1
+  VariabilityMagnitude: 2
+  WarmingBias: 1.5
   Autocorrelated: 1
-  RandomRangeMin: -5
-  RandomRangeMax: 5
-  randomnessGrowthRate: 0.5
-  TempratureBoundsMin: -5
-  TempratureBoundsMax: 50
+  DailyVariationRange: 5
+  RandomnessGrowthRate: 0.5
+  TemperatureBoundsMin: -5
+  TemperatureBoundsMax: 50
   Database: {fileID: 11400000, guid: be0823a57129c854eb7f6fff08e7b75d, type: 2}
   RunsPerScenario: 10
+  RandomSeed: 12345

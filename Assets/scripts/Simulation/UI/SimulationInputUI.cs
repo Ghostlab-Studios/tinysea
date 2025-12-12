@@ -8,6 +8,8 @@ public class SimulationInputUI : MonoBehaviour
     [Header("Configuration")]
     [SerializeField] private SimulationConfig config;
 
+    public SimulationController simulationController;
+
     [Header("=== TEMPERATURE: BASE ===")]
     public TMP_InputField BaseTemperatureInput;
 
@@ -34,6 +36,7 @@ public class SimulationInputUI : MonoBehaviour
     [Header("=== RUN SIMULATION ===")]
     public TMP_InputField MaxYears;
     public Button RunSimulationButton;
+
 
     private static readonly Color InvalidColor = new Color(1f, 0.80f, 0.80f, 1f);
     private static readonly Color ValidColor = Color.white;
@@ -143,8 +146,8 @@ public class SimulationInputUI : MonoBehaviour
 #if UNITY_EDITOR
         UnityEditor.EditorUtility.SetDirty(config);
 #endif
+        simulationController.RunSimulation();
 
-        // Later you can call your simulation start method here, after the config is updated.
     }
 
 

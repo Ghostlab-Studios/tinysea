@@ -91,7 +91,19 @@ public class SimulationController : MonoBehaviour
         runner.Run();
 
         // Save results
+        string timestamp = System.DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
+        string crashSuffix = runner.HasCrashed ? "_crash_day" + runner.CrashDay : "";
+        string filename = "tinysea_v5_" + timestamp + crashSuffix + ".csv";
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+// WebGL: trigger browser download instead of writing to persistentDataPath
+string csv = runner.ToCsv();
+WebGLDownload.DownloadCsv(filename, csv);
+lastOutputPath = filename; // just store the name for UI/status
+#else
+        // Desktop: keep your current behavior
         lastOutputPath = runner.SaveToFile(OutputDirectory);
+#endif
 
         // Update status
         lastRunCrashed = runner.HasCrashed;

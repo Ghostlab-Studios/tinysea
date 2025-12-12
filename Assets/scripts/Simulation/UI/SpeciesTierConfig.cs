@@ -100,6 +100,13 @@ public class SpeciesTierConfig : MonoBehaviour
         GameObject entry = Instantiate(speciesEntryPrefab, contentParent);
         entry.SetActive(true);
 
+        // Position just above the button row
+        if (plusButton != null)
+        {
+            int buttonParentIndex = plusButton.transform.parent.GetSiblingIndex();
+            entry.transform.SetSiblingIndex(buttonParentIndex);
+        }
+
         // Configure the SpeciesUIController
         var uiController = entry.GetComponent<SpeciesUIController>();
         if (uiController != null)

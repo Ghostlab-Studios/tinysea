@@ -506,14 +506,12 @@ public class EcosystemSimulator
             }
         }
 
-        // Carrying capacity (soft limit) - reduces birth rate as population approaches limit
-        if (UseCarryingCapacity)
+        // Carrying capacity (soft limit) - ONLY for Tier 1
+        if (UseCarryingCapacity && sp.Tier == 1)
         {
-            float tierPop = GetTierPopulation(sp.Tier);
+            float tierPop = GetTierPopulation(1);
             float growthFactor = Math.Max(0f, 1f - (tierPop / CarryingCapacityPerTier));
-            float oldBirths = births;
             births *= growthFactor;
-            Debug.Log($"  {sp.FullName}: Carrying capacity - tierPop={tierPop:F0}, factor={growthFactor:F3}, births {oldBirths:F2} → {births:F2}");
         }
 
         // BIRTH ACCUMULATOR

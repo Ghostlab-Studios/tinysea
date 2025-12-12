@@ -9,6 +9,7 @@ public class SpeciesUIController : MonoBehaviour
     [SerializeField] private SpeciesDatabase speciesDatabase;
 
     [Header("Species Selection")]
+    [SerializeField] private string displayNameOverride = "";
     [SerializeField] private SpeciesName speciesName = SpeciesName.Cyplo;
     [SerializeField] private SpeciesVariant speciesVariant = SpeciesVariant.Common;
 
@@ -16,10 +17,11 @@ public class SpeciesUIController : MonoBehaviour
     [SerializeField] private ThermalGraphUI thermalGraphUI;
 
     [Header("Display UI References")]
+    [SerializeField] private TextMeshProUGUI index;
     [SerializeField] private Image iconImage;
     [SerializeField] private TextMeshProUGUI nameText;
     [SerializeField] private TextMeshProUGUI typeText;
-    [SerializeField] private TextMeshProUGUI countText;
+    [SerializeField] private TMP_InputField countText;
     [SerializeField] private Button editButton;
 
     private SpeciesData currentSpeciesData;
@@ -43,6 +45,50 @@ public class SpeciesUIController : MonoBehaviour
     }
 
     /// <summary>
+    /// Initialize this UI controller with a specific species.
+    /// Called by SpeciesTierConfig when instantiating entries.
+    /// </summary>
+    /// <param name="name">The species name (e.g., Hexapod, Sheplik)</param>
+    /// <param name="variant">The variant (Common, Arctic, Tropical)</param>
+    public void Initialize(int index, SpeciesName name, SpeciesVariant variant)
+    {
+        this.index.text = $"#{index}";
+        speciesName = name;
+        speciesVariant = variant;
+        displayNameOverride = ""; // Clear any override
+
+        lastSpeciesName = name;
+        lastSpeciesVariant = variant;
+
+        UpdateSpeciesData();
+    }
+
+    /// <summary>
+    /// Initialize with a specific SpeciesData directly.
+    /// Useful when you already have the data and want to avoid a database lookup.
+    /// </summary>
+    /// <param name="data">The species data to display</param>
+    public void Initialize(SpeciesData data)
+    {
+        if (data == null)
+        {
+            Debug.LogWarning("SpeciesUIController.Initialize: Null data provided!");
+            return;
+        }
+
+        speciesName = data.speciesName;
+        speciesVariant = data.variant;
+        displayNameOverride = "";
+
+        lastSpeciesName = data.speciesName;
+        lastSpeciesVariant = data.variant;
+
+        currentSpeciesData = data;
+        ApplyThermalValues();
+        UpdateUIDisplay();
+    }
+
+    /// <summary>
     /// Update the species data and apply to thermal graph
     /// </summary>
     private void UpdateSpeciesData()
@@ -60,7 +106,7 @@ public class SpeciesUIController : MonoBehaviour
         }
 
         // Fetch the species data from database
-        currentSpeciesData = speciesDatabase.GetSpecies(speciesName, speciesVariant);
+        currentSpeciesData = GetSpecies();
 
         if (currentSpeciesData == null)
         {
@@ -73,6 +119,14 @@ public class SpeciesUIController : MonoBehaviour
 
         // Update UI display elements
         UpdateUIDisplay();
+    }
+
+    private SpeciesData GetSpecies()
+    {
+        if (!string.IsNullOrEmpty(displayNameOverride))
+            return speciesDatabase.GetSpeciesByName(displayNameOverride) ?? speciesDatabase.GetSpecies(speciesName, speciesVariant);
+        else
+            return speciesDatabase.GetSpecies(speciesName, speciesVariant);
     }
 
     /// <summary>
@@ -134,8 +188,6 @@ public class SpeciesUIController : MonoBehaviour
         // Update count (assuming count exists in SpeciesData)
         if (countText != null)
         {
-            // Assuming you added a count field to SpeciesData
-            // If it's a different field name, adjust accordingly
             countText.text = currentSpeciesData.count.ToString();
         }
     }
@@ -146,6 +198,22 @@ public class SpeciesUIController : MonoBehaviour
     public SpeciesData GetCurrentSpeciesData()
     {
         return currentSpeciesData;
+    }
+
+    /// <summary>
+    /// Get the current species name
+    /// </summary>
+    public SpeciesName GetSpeciesName()
+    {
+        return speciesName;
+    }
+
+    /// <summary>
+    /// Get the current species variant
+    /// </summary>
+    public SpeciesVariant GetSpeciesVariant()
+    {
+        return speciesVariant;
     }
 
     /// <summary>

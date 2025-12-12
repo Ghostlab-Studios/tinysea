@@ -14,14 +14,16 @@ public enum SpeciesName
     Cyplo,
     Rooda,
     Sploof,
-    Silu
+    Silu,
+    Custom
 }
 
 public enum SpeciesVariant
 {
     Common,
     Tropical,
-    Arctic
+    Arctic,
+    Custom
 }
 
 [System.Serializable]
@@ -31,6 +33,7 @@ public class SpeciesData
     public int index;
     public SpeciesName speciesName;
     public SpeciesVariant variant;
+    public string displayName;
     public Sprite icon;
     public int count;
 
@@ -89,6 +92,11 @@ public class SpeciesDatabase : ScriptableObject
     public SpeciesData GetSpecies(SpeciesName name, SpeciesVariant variant)
     {
         return speciesList.Find(s => s.speciesName == name && s.variant == variant);
+    }
+
+    public SpeciesData GetSpeciesByName(string displayName)
+    {
+        return speciesList.Find(s => s.displayName == displayName);
     }
 
     // Get all species of a specific tier
@@ -263,6 +271,7 @@ public class SpeciesDatabase : ScriptableObject
             index = index,
             speciesName = name,
             variant = variant,
+            displayName = name.ToString(),
             tier = tier,
             count = count,
             eatingAmount = eating,
@@ -295,5 +304,51 @@ public class SpeciesDatabase : ScriptableObject
 
         speciesList.Add(data);
     }
+
+    private void AddSpecies(int index, string displayname, int tier, int count,
+                           float eating, float repro, float deathThresh, float deathRate,
+                           float minDeaths, float reproThresh,
+                           float naturalDeathRate, float naturalDeathVariance,
+                           float huntingEfficiency, float huntingVariance,
+                           float optimalK, float lowerBound, float upperBound)
+    {
+        var data = new SpeciesData
+        {
+            index = index,
+            speciesName = SpeciesName.Custom,
+            variant = SpeciesVariant.Custom,
+            displayName = displayname,
+            tier = tier,
+            count = count,
+            eatingAmount = eating,
+            reproductionMultiplier = repro,
+            deathThreshold = deathThresh,
+            deathRate = deathRate,
+            minimumDeaths = minDeaths,
+            reproThreshold = reproThresh,
+            naturalDeathRate = naturalDeathRate,
+            naturalDeathVariance = naturalDeathVariance,
+            huntingEfficiency = huntingEfficiency,
+            huntingVariance = huntingVariance,
+            // Thermal parameters
+            optimalTempK = optimalK,
+            arrhenBreadth = 5273.15f,
+            arrhenLower = 10273.15f,
+            arrhenUpper = 21273.15f,
+            lowerBoundK = lowerBound,
+            upperBoundK = upperBound,
+            // UI defaults
+            eatingStars = tier == 0 ? 0 : 4,
+            reproductionStars = tier == 0 ? 4 : 2,
+            deathThresholdStars = 3,
+            deathRateStars = tier == 0 ? 2 : 4,
+            thermalBreadthStars = 5,
+            temperatureThresholdText = "High",
+            reproductionRateText = "Low",
+            description = $"{name} - {SpeciesVariant.Custom} variant"
+        };
+    }
+
 #endif
 }
+

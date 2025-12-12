@@ -146,7 +146,7 @@ public class SimulationInputUI : MonoBehaviour
 #if UNITY_EDITOR
         UnityEditor.EditorUtility.SetDirty(config);
 #endif
-        simulationController.RunSimulation();
+        simulationController.StartSimulation();
 
     }
 

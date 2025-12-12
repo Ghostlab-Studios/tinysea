@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.IO;
 using System.Diagnostics;
+using System.Collections;
 
 /// <summary>
 /// Unity MonoBehaviour to run TinySea simulation v5.
@@ -14,6 +15,9 @@ public class SimulationController : MonoBehaviour
 {
     [Header("Configuration")]
     [SerializeField] private SimulationConfig config;
+
+    [Header("Loading Screen")]
+    [SerializeField] private GameObject loadingScreen;
 
     [Header("Output")]
     [SerializeField] private string outputFolderName = "TinySeaResults";
@@ -31,16 +35,43 @@ public class SimulationController : MonoBehaviour
     private string OutputDirectory => Path.Combine(Application.persistentDataPath, outputFolderName);
 
     /// <summary>
-    /// Run simulation using SimulationConfig values
+    /// Public method to start simulation - call this from UI buttons.
+    /// Uses coroutine to allow loading screen to render.
+    /// </summary>
+    public void StartSimulation()
+    {
+        StartCoroutine(RunSimulationCoroutine());
+    }
+
+    /// <summary>
+    /// Run simulation using SimulationConfig values (coroutine version)
     /// </summary>
     [ContextMenu("Run Simulation")]
     public void RunSimulation()
     {
+        // For Editor/ContextMenu use - starts the coroutine
+        StartCoroutine(RunSimulationCoroutine());
+    }
+
+    /// <summary>
+    /// Coroutine that runs simulation with loading screen support
+    /// </summary>
+    private IEnumerator RunSimulationCoroutine()
+    {
         if (config == null)
         {
             UnityEngine.Debug.LogError("SimulationConfig not assigned! Please assign it in the Inspector.");
-            return;
+            yield break;
         }
+
+        // Show loading screen
+        if (loadingScreen != null)
+        {
+            loadingScreen.SetActive(true);
+        }
+
+        // Wait one frame so the loading screen actually renders
+        yield return null;
 
         UnityEngine.Debug.Log("=== TinySea Simulation v5 Starting ===");
         UnityEngine.Debug.Log($"Using config: {config.name}");
@@ -89,6 +120,12 @@ public class SimulationController : MonoBehaviour
 
         // Run simulation
         runner.Run();
+
+        // Hide loading screen before file save/download
+        if (loadingScreen != null)
+        {
+            loadingScreen.SetActive(false);
+        }
 
         // Save results
         string timestamp = System.DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");

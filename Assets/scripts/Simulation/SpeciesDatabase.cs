@@ -81,8 +81,9 @@ public class SpeciesDatabase : ScriptableObject
 {
     public List<SpeciesData> speciesList = new List<SpeciesData>();
 
-    private const int DEFAULT_T1_COUNT = 4;
-    private const int DEFAULT_T2_COUNT = 2;
+    private const int DEFAULT_T1_COUNT = 20;
+    private const int DEFAULT_T2_COUNT = 4;
+    private const int DEFAULT_T3_COUNT = 2;
 
     // Quick lookup by enum
     public SpeciesData GetSpecies(SpeciesName name, SpeciesVariant variant)

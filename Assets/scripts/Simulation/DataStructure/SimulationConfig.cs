@@ -37,7 +37,7 @@ public class SimulationConfig : ScriptableObject
              "Represents the resource limit of the environment.\n" +
              "Recommended: 1000-10000 depending on desired ecosystem size.")]
     [Range(100, 100000)]
-    public float CarryingCapacityPerTier = 5000f;
+    public float CarryingCapacityTier1 = 5000f;
 
     // ==================== TEMPERATURE SETTINGS ====================
 

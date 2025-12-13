@@ -34,9 +34,15 @@ public class SimulationInputUI : MonoBehaviour
     public TMP_InputField TemperatureBoundsMax;
 
     [Header("=== RUN SIMULATION ===")]
+
+    [Tooltip("Maximum sustainable population for Tier 1.\n\n" +
+         "Represents the resource limit of the environment.\n" +
+         "Recommended: 1000-10000 depending on desired ecosystem size.")]
+    public TMP_InputField CarryingCapacityTier1;
+
+
     public TMP_InputField MaxYears;
     public Button RunSimulationButton;
-
 
     private static readonly Color InvalidColor = new Color(1f, 0.80f, 0.80f, 1f);
     private static readonly Color ValidColor = Color.white;
@@ -82,7 +88,10 @@ public class SimulationInputUI : MonoBehaviour
         SetFloat(TemperatureBoundsMin, config.TemperatureBoundsMin);
         SetFloat(TemperatureBoundsMax, config.TemperatureBoundsMax);
 
+        SetFloat(CarryingCapacityTier1, config.CarryingCapacityTier1);
         SetInt(MaxYears, config.MaxYears);
+
+
     }
 
     private void OnRunSimulationClicked()
@@ -116,6 +125,7 @@ public class SimulationInputUI : MonoBehaviour
 
         allValid &= TryReadFloat(TemperatureBoundsMin, out boundsMin);
         allValid &= TryReadFloat(TemperatureBoundsMax, out boundsMax);
+        allValid &= TryReadFloat(CarryingCapacityTier1, out float carryingCapacity);
 
         allValid &= TryReadInt(MaxYears, out maxYears);
 
@@ -228,10 +238,9 @@ public class SimulationInputUI : MonoBehaviour
 
         SetFieldColor(DailyVariationRange, ValidColor);
         SetFieldColor(RandomnessGrowthRate, ValidColor);
-
         SetFieldColor(TemperatureBoundsMin, ValidColor);
         SetFieldColor(TemperatureBoundsMax, ValidColor);
-
+        SetFieldColor(CarryingCapacityTier1, ValidColor);
         SetFieldColor(MaxYears, ValidColor);
     }
 

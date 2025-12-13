@@ -100,11 +100,11 @@ public class SimulationController : MonoBehaviour
 
         // Apply carrying capacity settings
         runner.Ecosystem.UseCarryingCapacity = config.UseCarryingCapacity;
-        runner.Ecosystem.CarryingCapacityPerTier = config.CarryingCapacityPerTier;
+        runner.Ecosystem.CarryingCapacityPerTier = config.CarryingCapacityTier1;
 
         // Log config values being used
         UnityEngine.Debug.Log($"Config: BiologyStep={config.BiologyStep}, MaxYears={config.MaxYears}");
-        UnityEngine.Debug.Log($"Carrying Capacity (Tier 1 only): {config.UseCarryingCapacity} (limit={config.CarryingCapacityPerTier})");
+        UnityEngine.Debug.Log($"Carrying Capacity (Tier 1 only): {config.UseCarryingCapacity} (limit={config.CarryingCapacityTier1})");
         UnityEngine.Debug.Log($"Temperature: Base={config.BaseTemperature}°C, Seasonal=±{config.SeasonalAmplitude}°C, " +
                               $"Trend={config.ClimateTrend}°C/year, Bounds=[{config.TemperatureBoundsMin}, {config.TemperatureBoundsMax}]");
 

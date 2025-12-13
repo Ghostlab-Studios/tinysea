@@ -17,7 +17,7 @@ public class SpeciesUIController : MonoBehaviour
     [SerializeField] private ThermalGraphUI thermalGraphUI;
 
     [Header("Display UI References")]
-    [SerializeField] private TextMeshProUGUI index;
+    [SerializeField] private TextMeshProUGUI index;  // Visual display index (#01, #02, etc.) - just for UI
     [SerializeField] private Image iconImage;
     [SerializeField] private TextMeshProUGUI nameText;
     [SerializeField] private TextMeshProUGUI typeText;
@@ -28,9 +28,30 @@ public class SpeciesUIController : MonoBehaviour
     private SpeciesName lastSpeciesName;
     private SpeciesVariant lastSpeciesVariant;
 
+    /// <summary>
+    /// The actual index of this species in the RunSpeciesList.
+    /// This is what we send to the edit panel - NOT the visual display index.
+    /// </summary>
+    private int runSpeciesListIndex = -1;
+
     void Start()
     {
         UpdateSpeciesData();
+
+        // Wire up edit button to fire event
+        if (editButton != null)
+        {
+            editButton.onClick.AddListener(OnEditButtonClicked);
+        }
+    }
+
+    void OnDestroy()
+    {
+        // Clean up listener
+        if (editButton != null)
+        {
+            editButton.onClick.RemoveListener(OnEditButtonClicked);
+        }
     }
 
     void OnValidate()
@@ -45,14 +66,38 @@ public class SpeciesUIController : MonoBehaviour
     }
 
     /// <summary>
+    /// Called when the edit button is clicked.
+    /// Fires the edit event with the ACTUAL species list index (not visual index).
+    /// </summary>
+    private void OnEditButtonClicked()
+    {
+        if (runSpeciesListIndex < 0)
+        {
+            Debug.LogWarning($"SpeciesUIController: Cannot edit - runSpeciesListIndex not set for {speciesName} {speciesVariant}");
+            return;
+        }
+
+        Debug.Log($"SpeciesUIController: Edit button clicked for runSpeciesListIndex={runSpeciesListIndex} ({speciesName} {speciesVariant})");
+
+        // Fire the event - EditSpeciesUI will receive this
+        SpeciesEditEvents.RequestEdit(runSpeciesListIndex);
+    }
+
+    /// <summary>
     /// Initialize this UI controller with a specific species.
     /// Called by SpeciesTierConfig when instantiating entries.
     /// </summary>
+    /// <param name="visualIndex">Display index for UI (e.g., 1 shows as #01) - just for visual</param>
     /// <param name="name">The species name (e.g., Hexapod, Sheplik)</param>
     /// <param name="variant">The variant (Common, Arctic, Tropical)</param>
-    public void Initialize(int index, SpeciesName name, SpeciesVariant variant)
+    public void Initialize(int visualIndex, SpeciesName name, SpeciesVariant variant)
     {
-        this.index.text = $"#{index}";
+        // Set visual display index (just for UI display, not used for data lookup)
+        if (index != null)
+        {
+            index.text = $"#{visualIndex:D2}";
+        }
+
         speciesName = name;
         speciesVariant = variant;
         displayNameOverride = ""; // Clear any override
@@ -86,6 +131,37 @@ public class SpeciesUIController : MonoBehaviour
         currentSpeciesData = data;
         ApplyThermalValues();
         UpdateUIDisplay();
+    }
+
+    /// <summary>
+    /// Set the actual index in RunSpeciesList.
+    /// This is used for edit events - must be set separately from visual index.
+    /// </summary>
+    /// <param name="listIndex">The index in RunSpeciesList.speciesList</param>
+    public void SetRunSpeciesListIndex(int listIndex)
+    {
+        this.runSpeciesListIndex = listIndex;
+        Debug.Log($"SpeciesUIController: Set runSpeciesListIndex={listIndex} for {speciesName} {speciesVariant}");
+    }
+
+    /// <summary>
+    /// Get the actual index in RunSpeciesList.
+    /// </summary>
+    public int GetRunSpeciesListIndex()
+    {
+        return runSpeciesListIndex;
+    }
+
+    /// <summary>
+    /// Set just the visual display index (the #01, #02 text).
+    /// This is separate from the RunSpeciesList index.
+    /// </summary>
+    public void SetVisualIndex(int visualIndex)
+    {
+        if (index != null)
+        {
+            index.text = $"#{visualIndex:D2}";
+        }
     }
 
     /// <summary>
@@ -189,6 +265,19 @@ public class SpeciesUIController : MonoBehaviour
         if (countText != null)
         {
             countText.text = currentSpeciesData.count.ToString();
+        }
+    }
+
+    /// <summary>
+    /// Refresh display from current species data.
+    /// Call this after data has been modified externally (e.g., after edit panel saves).
+    /// </summary>
+    public void RefreshDisplay()
+    {
+        if (currentSpeciesData != null)
+        {
+            UpdateUIDisplay();
+            ApplyThermalValues();
         }
     }
 

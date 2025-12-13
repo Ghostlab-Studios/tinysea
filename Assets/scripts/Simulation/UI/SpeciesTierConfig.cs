@@ -68,11 +68,14 @@ public class SpeciesTierConfig : MonoBehaviour
         }
 
         // Find all species in RunSpeciesList that match this tier
-        foreach (var speciesData in runSpeciesList.speciesList)
+        // We need to track the ACTUAL index in runSpeciesList.speciesList (not just the visual count)
+        for (int i = 0; i < runSpeciesList.speciesList.Count; i++)
         {
+            var speciesData = runSpeciesList.speciesList[i];
             if (speciesData.tier == tier && instantiatedEntries.Count < maxSpeciesPerTier)
             {
-                InstantiateSpeciesEntry(speciesData.speciesName, speciesData.variant);
+                // Pass both the visual index (for display) and the actual runSpeciesList index (for editing)
+                InstantiateSpeciesEntry(speciesData.speciesName, speciesData.variant, i);
             }
         }
 
@@ -82,7 +85,10 @@ public class SpeciesTierConfig : MonoBehaviour
     /// <summary>
     /// Instantiate a species entry prefab and configure it
     /// </summary>
-    private GameObject InstantiateSpeciesEntry(SpeciesName speciesName, SpeciesVariant variant)
+    /// <param name="speciesName">The species name</param>
+    /// <param name="variant">The variant</param>
+    /// <param name="runSpeciesListIndex">The actual index in RunSpeciesList.speciesList (for edit events)</param>
+    private GameObject InstantiateSpeciesEntry(SpeciesName speciesName, SpeciesVariant variant, int runSpeciesListIndex)
     {
         if (speciesEntryPrefab == null)
         {
@@ -111,7 +117,12 @@ public class SpeciesTierConfig : MonoBehaviour
         var uiController = entry.GetComponent<SpeciesUIController>();
         if (uiController != null)
         {
-            uiController.Initialize(instantiatedEntries.Count+1, speciesName, variant);
+            // Visual index is just for display (#01, #02, etc.) - 1-based
+            int visualIndex = instantiatedEntries.Count + 1;
+            uiController.Initialize(visualIndex, speciesName, variant);
+
+            // Set the ACTUAL index in RunSpeciesList - this is used for edit events
+            uiController.SetRunSpeciesListIndex(runSpeciesListIndex);
         }
         else
         {
@@ -148,13 +159,17 @@ public class SpeciesTierConfig : MonoBehaviour
         // Add cloned data to RunSpeciesList
         AddToRunSpeciesList(templateData);
 
-        // Instantiate UI entry
-        InstantiateSpeciesEntry(speciesName, nextVariant);
+        // The new species was added at the END of runSpeciesList.speciesList
+        // So its index is Count - 1
+        int newRunSpeciesListIndex = runSpeciesList.speciesList.Count - 1;
+
+        // Instantiate UI entry with the correct runSpeciesListIndex
+        InstantiateSpeciesEntry(speciesName, nextVariant, newRunSpeciesListIndex);
 
         // Update button visibility
         UpdateButtonVisibility();
 
-        Debug.Log($"SpeciesTierConfig (Tier {tier}): Added {speciesName} {nextVariant}");
+        Debug.Log($"SpeciesTierConfig (Tier {tier}): Added {speciesName} {nextVariant} at runSpeciesListIndex={newRunSpeciesListIndex}");
     }
 
     /// <summary>
@@ -311,9 +326,9 @@ public class SpeciesTierConfig : MonoBehaviour
         if (plusButton != null)
             plusButton.transform.parent.gameObject.SetActive(instantiatedEntries.Count < maxSpeciesPerTier);
 
-/*        // Hide minus when empty
-        if (minusButton != null)
-            minusButton.gameObject.SetActive(instantiatedEntries.Count > 0);*/
+        /*        // Hide minus when empty
+                if (minusButton != null)
+                    minusButton.gameObject.SetActive(instantiatedEntries.Count > 0);*/
     }
 
     /// <summary>

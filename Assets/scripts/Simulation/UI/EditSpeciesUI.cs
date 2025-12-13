@@ -23,10 +23,18 @@ public class EditSpeciesUI : MonoBehaviour
     [Header("Panel Reference")]
     [SerializeField] private GameObject editPanel; // The panel to show/hide (can be this gameObject or a child)
 
-    [Header("UI Fields (to be mapped later)")]
+    [Header("Thermal Graph")]
+    [SerializeField] private ThermalGraphUI thermalGraphUI; // Graph display for thermal performance curve
+
+    [Header("UI Fields - Header")]
+    [SerializeField] private TextMeshProUGUI tierField; // Shows "Tier 1" or "Tier 2"
+
+    [Header("UI Fields - Basic Info")]
     [SerializeField] private TMP_InputField nameField;
     [SerializeField] private TMP_Dropdown variantDropdown;
     [SerializeField] private TMP_InputField countField;
+
+    [Header("UI Fields - Gameplay Stats")]
     [SerializeField] private TMP_InputField eatingAmountField;
     [SerializeField] private TMP_InputField reproThresholdField;
     [SerializeField] private TMP_InputField reproMultiplierField;
@@ -34,6 +42,11 @@ public class EditSpeciesUI : MonoBehaviour
     [SerializeField] private TMP_InputField tempDeathRateField;
     [SerializeField] private TMP_InputField naturalDeathVarianceField;
     [SerializeField] private TMP_InputField naturalDeathRateField;
+
+    [Header("UI Fields - Hunting (Tier 2+ only)")]
+    [SerializeField] private GameObject huntingSection; // Parent object to show/hide for Tier 2+
+    [SerializeField] private TMP_InputField huntingEfficiencyField;
+    [SerializeField] private TMP_InputField huntingVarianceField;
 
     [Header("Buttons (assign in inspector or wire via OnClick)")]
     [SerializeField] private Button closeButton;
@@ -92,7 +105,7 @@ public class EditSpeciesUI : MonoBehaviour
             currentEditingData = runSpeciesList.speciesList[speciesIndex];
             Debug.Log($"EditSpeciesUI: Editing {currentEditingData.speciesName} - {currentEditingData.variant}");
 
-            // TODO: Populate UI fields with currentEditingData
+            // Populate UI fields with currentEditingData
             PopulateFields();
         }
         else
@@ -113,18 +126,123 @@ public class EditSpeciesUI : MonoBehaviour
     {
         if (currentEditingData == null) return;
 
-        // TODO: Map all fields once UI is fully set up
-        // For now, just log what we would populate
         Debug.Log($"PopulateFields: Name={currentEditingData.speciesName}, " +
                   $"Variant={currentEditingData.variant}, " +
-                  $"Count={currentEditingData.count}, " +
-                  $"EatingAmount={currentEditingData.eatingAmount}");
+                  $"Tier={currentEditingData.tier}, " +
+                  $"Count={currentEditingData.count}");
 
-        // Example field population (uncomment when fields are assigned):
-        // if (nameField != null) nameField.text = currentEditingData.displayName;
-        // if (countField != null) countField.text = currentEditingData.count.ToString();
-        // if (eatingAmountField != null) eatingAmountField.text = currentEditingData.eatingAmount.ToString();
-        // etc.
+        // === TIER DISPLAY ===
+        // tier in SpeciesData is 0-based (0 = Tier 1, 1 = Tier 2)
+        if (tierField != null)
+        {
+            int displayTier = currentEditingData.tier + 1; // Convert to 1-based for display
+            tierField.text = $"Tier {displayTier}";
+        }
+
+        // === BASIC INFO ===
+        if (nameField != null)
+        {
+            nameField.text = currentEditingData.speciesName.ToString();
+        }
+
+        if (variantDropdown != null)
+        {
+            // Set dropdown to current variant
+            // Assumes dropdown options are in order: Common=0, Tropical=1, Arctic=2
+            variantDropdown.value = (int)currentEditingData.variant;
+        }
+
+        if (countField != null)
+        {
+            countField.text = currentEditingData.count.ToString();
+        }
+
+        // === GAMEPLAY STATS ===
+        if (eatingAmountField != null)
+        {
+            eatingAmountField.text = currentEditingData.eatingAmount.ToString("F2");
+        }
+
+        if (reproThresholdField != null)
+        {
+            reproThresholdField.text = currentEditingData.reproThreshold.ToString("F2");
+        }
+
+        if (reproMultiplierField != null)
+        {
+            reproMultiplierField.text = currentEditingData.reproductionMultiplier.ToString("F2");
+        }
+
+        if (tempDeathThresholdField != null)
+        {
+            tempDeathThresholdField.text = currentEditingData.deathThreshold.ToString("F2");
+        }
+
+        if (tempDeathRateField != null)
+        {
+            tempDeathRateField.text = currentEditingData.deathRate.ToString("F2");
+        }
+
+        if (naturalDeathVarianceField != null)
+        {
+            naturalDeathVarianceField.text = currentEditingData.naturalDeathVariance.ToString("F3");
+        }
+
+        if (naturalDeathRateField != null)
+        {
+            naturalDeathRateField.text = currentEditingData.naturalDeathRate.ToString("F3");
+        }
+
+        // === HUNTING SECTION (Tier 2+ only) ===
+        // Show hunting fields only for Tier 2 and above (tier >= 1 in 0-based)
+        bool showHunting = currentEditingData.tier >= 1;
+
+        if (huntingSection != null)
+        {
+            huntingSection.SetActive(showHunting);
+        }
+
+        if (showHunting)
+        {
+            if (huntingEfficiencyField != null)
+            {
+                huntingEfficiencyField.text = currentEditingData.huntingEfficiency.ToString("F2");
+            }
+
+            if (huntingVarianceField != null)
+            {
+                huntingVarianceField.text = currentEditingData.huntingVariance.ToString("F3");
+            }
+        }
+
+        // === THERMAL GRAPH ===
+        ApplyThermalValuesToGraph();
+    }
+
+    /// <summary>
+    /// Apply thermal parameters to the ThermalGraphUI to display the performance curve.
+    /// </summary>
+    private void ApplyThermalValuesToGraph()
+    {
+        if (currentEditingData == null || thermalGraphUI == null)
+        {
+            Debug.LogWarning("EditSpeciesUI: Cannot update thermal graph - data or graph reference missing");
+            return;
+        }
+
+        // Set thermal parameters
+        thermalGraphUI.optimalTemp = currentEditingData.optimalTempK;
+        thermalGraphUI.arrhenBreadth = currentEditingData.arrhenBreadth;
+        thermalGraphUI.arrhenLower = currentEditingData.arrhenLower;
+        thermalGraphUI.arrhenUpper = currentEditingData.arrhenUpper;
+        thermalGraphUI.lowerBound = currentEditingData.lowerBoundK;
+        thermalGraphUI.upperBound = currentEditingData.upperBoundK;
+
+        // Force graph to update
+        thermalGraphUI.OnValidate();
+
+        Debug.Log($"EditSpeciesUI: Applied thermal values - OptimalTemp={currentEditingData.optimalTempK}K, " +
+                  $"LowerBound={currentEditingData.lowerBoundK}K, UpperBound={currentEditingData.upperBoundK}K");
     }
 
     /// <summary>
@@ -192,11 +310,75 @@ public class EditSpeciesUI : MonoBehaviour
             return;
         }
 
-        // TODO: Read values from UI fields and update currentEditingData
-        // Example:
-        // if (countField != null && int.TryParse(countField.text, out int count))
-        //     currentEditingData.count = count;
-        // etc.
+        // Read values from UI fields and update currentEditingData
+
+        // Count
+        if (countField != null && int.TryParse(countField.text, out int count))
+        {
+            currentEditingData.count = count;
+        }
+
+        // Eating Amount
+        if (eatingAmountField != null && float.TryParse(eatingAmountField.text, out float eating))
+        {
+            currentEditingData.eatingAmount = eating;
+        }
+
+        // Repro Threshold
+        if (reproThresholdField != null && float.TryParse(reproThresholdField.text, out float reproThresh))
+        {
+            currentEditingData.reproThreshold = reproThresh;
+        }
+
+        // Reproduction Multiplier
+        if (reproMultiplierField != null && float.TryParse(reproMultiplierField.text, out float reproMult))
+        {
+            currentEditingData.reproductionMultiplier = reproMult;
+        }
+
+        // Temperature Death Threshold
+        if (tempDeathThresholdField != null && float.TryParse(tempDeathThresholdField.text, out float tempDeathThresh))
+        {
+            currentEditingData.deathThreshold = tempDeathThresh;
+        }
+
+        // Temperature Death Rate
+        if (tempDeathRateField != null && float.TryParse(tempDeathRateField.text, out float tempDeathRate))
+        {
+            currentEditingData.deathRate = tempDeathRate;
+        }
+
+        // Natural Death Variance
+        if (naturalDeathVarianceField != null && float.TryParse(naturalDeathVarianceField.text, out float natDeathVar))
+        {
+            currentEditingData.naturalDeathVariance = natDeathVar;
+        }
+
+        // Natural Death Rate
+        if (naturalDeathRateField != null && float.TryParse(naturalDeathRateField.text, out float natDeathRate))
+        {
+            currentEditingData.naturalDeathRate = natDeathRate;
+        }
+
+        // Hunting fields (only for Tier 2+)
+        if (currentEditingData.tier >= 1)
+        {
+            if (huntingEfficiencyField != null && float.TryParse(huntingEfficiencyField.text, out float huntEff))
+            {
+                currentEditingData.huntingEfficiency = huntEff;
+            }
+
+            if (huntingVarianceField != null && float.TryParse(huntingVarianceField.text, out float huntVar))
+            {
+                currentEditingData.huntingVariance = huntVar;
+            }
+        }
+
+        // Variant (from dropdown)
+        if (variantDropdown != null)
+        {
+            currentEditingData.variant = (SpeciesVariant)variantDropdown.value;
+        }
 
         // The data is already a reference to the item in runSpeciesList.speciesList,
         // so changes are automatically reflected. But we should mark it dirty for saving.
@@ -275,16 +457,18 @@ public class EditSpeciesUI : MonoBehaviour
         }
 
         // Copy values from original to current
-        // TODO: Copy all relevant fields
         currentEditingData.count = originalData.count;
         currentEditingData.eatingAmount = originalData.eatingAmount;
         currentEditingData.reproductionMultiplier = originalData.reproductionMultiplier;
+        currentEditingData.reproThreshold = originalData.reproThreshold;
         currentEditingData.deathThreshold = originalData.deathThreshold;
         currentEditingData.deathRate = originalData.deathRate;
+        currentEditingData.minimumDeaths = originalData.minimumDeaths;
         currentEditingData.naturalDeathRate = originalData.naturalDeathRate;
         currentEditingData.naturalDeathVariance = originalData.naturalDeathVariance;
         currentEditingData.huntingEfficiency = originalData.huntingEfficiency;
         currentEditingData.huntingVariance = originalData.huntingVariance;
+
         // Thermal parameters
         currentEditingData.optimalTempK = originalData.optimalTempK;
         currentEditingData.arrhenBreadth = originalData.arrhenBreadth;
@@ -295,7 +479,7 @@ public class EditSpeciesUI : MonoBehaviour
 
         Debug.Log($"EditSpeciesUI: Reset {currentEditingData.speciesName} to original values");
 
-        // Refresh UI fields
+        // Refresh UI fields to show reset values
         PopulateFields();
     }
 

@@ -6,7 +6,8 @@ using TMPro;
 public class SpeciesUIController : MonoBehaviour
 {
     [Header("Database")]
-    [SerializeField] private SpeciesDatabase speciesDatabase;
+    [SerializeField] private SpeciesDatabase speciesDatabase; // Used for defaults/fallback only
+    [SerializeField] private RunSpeciesList runSpeciesList;   // Runtime data source
 
     [Header("Species Selection")]
     [SerializeField] private string displayNameOverride = "";
@@ -27,6 +28,7 @@ public class SpeciesUIController : MonoBehaviour
     private SpeciesData currentSpeciesData;
     private SpeciesName lastSpeciesName;
     private SpeciesVariant lastSpeciesVariant;
+    private string lastSpeciesDisplayNameOverride;
 
     /// <summary>
     /// The actual index of this species in the RunSpeciesList.
@@ -45,6 +47,18 @@ public class SpeciesUIController : MonoBehaviour
         }
     }
 
+    void OnEnable()
+    {
+        // Subscribe to save events to auto-refresh when data changes
+        SpeciesEditEvents.OnSpeciesSaved += HandleSpeciesSaved;
+    }
+
+    void OnDisable()
+    {
+        // Unsubscribe to prevent memory leaks
+        SpeciesEditEvents.OnSpeciesSaved -= HandleSpeciesSaved;
+    }
+
     void OnDestroy()
     {
         // Clean up listener
@@ -56,13 +70,66 @@ public class SpeciesUIController : MonoBehaviour
 
     void OnValidate()
     {
-        // Check if selection changed
+        // Check if selection changed (editor only)
         if (speciesName != lastSpeciesName || speciesVariant != lastSpeciesVariant)
         {
             UpdateSpeciesData();
             lastSpeciesName = speciesName;
             lastSpeciesVariant = speciesVariant;
+            lastSpeciesDisplayNameOverride = displayNameOverride;
         }
+    }
+
+    /// <summary>
+    /// Called when any species data is saved via EditSpeciesUI.
+    /// Checks if this controller's species was the one edited and refreshes if so.
+    /// </summary>
+    private void HandleSpeciesSaved(int savedIndex)
+    {
+        // Check if this is the species that was saved
+        if (savedIndex == runSpeciesListIndex && runSpeciesListIndex >= 0)
+        {
+            Debug.Log($"SpeciesUIController: Refreshing display for index {runSpeciesListIndex} after save");
+
+            // Re-fetch the data from RunSpeciesList (it may have changed)
+            RefreshFromRunSpeciesList();
+        }
+    }
+
+    /// <summary>
+    /// Refresh data from RunSpeciesList using the stored index.
+    /// Call this after data has been modified externally.
+    /// </summary>
+    public void RefreshFromRunSpeciesList()
+    {
+        if (runSpeciesList == null || runSpeciesList.speciesList == null)
+        {
+            Debug.LogWarning("SpeciesUIController: Cannot refresh - RunSpeciesList not assigned");
+            return;
+        }
+
+        if (runSpeciesListIndex < 0 || runSpeciesListIndex >= runSpeciesList.speciesList.Count)
+        {
+            Debug.LogWarning($"SpeciesUIController: Cannot refresh - invalid index {runSpeciesListIndex}");
+            return;
+        }
+
+        // Get fresh data from RunSpeciesList
+        currentSpeciesData = runSpeciesList.speciesList[runSpeciesListIndex];
+
+        // Update local tracking vars to match
+        speciesName = currentSpeciesData.speciesName;
+        speciesVariant = currentSpeciesData.variant;
+        displayNameOverride = currentSpeciesData.displayName;
+        lastSpeciesName = speciesName;
+        lastSpeciesVariant = speciesVariant;
+        lastSpeciesDisplayNameOverride = displayNameOverride;
+
+        // Refresh the UI
+        ApplyThermalValues();
+        UpdateUIDisplay();
+
+        Debug.Log($"SpeciesUIController: Refreshed from RunSpeciesList - {speciesName} {speciesVariant}, Count={currentSpeciesData.count}");
     }
 
     /// <summary>
@@ -84,8 +151,43 @@ public class SpeciesUIController : MonoBehaviour
     }
 
     /// <summary>
+    /// Initialize this UI controller with a specific species from RunSpeciesList.
+    /// Called by SpeciesTierConfig when instantiating entries.
+    /// </summary>
+    /// <param name="visualIndex">Display index for UI (e.g., 1 shows as #01) - just for visual</param>
+    /// <param name="listIndex">The actual index in RunSpeciesList.speciesList</param>
+    /// <param name="speciesData">Direct reference to the SpeciesData from RunSpeciesList</param>
+    public void Initialize(int visualIndex, int listIndex, SpeciesData speciesData)
+    {
+        // Set visual display index (just for UI display)
+        if (index != null)
+        {
+            index.text = $"#{visualIndex:D2}";
+        }
+
+        // Store the RunSpeciesList index for edit events and refresh
+        this.runSpeciesListIndex = listIndex;
+
+        // Store direct reference to the data
+        this.currentSpeciesData = speciesData;
+        this.speciesName = speciesData.speciesName;
+        this.speciesVariant = speciesData.variant;
+        this.displayNameOverride = speciesData.displayName;
+
+        this.lastSpeciesName = speciesName;
+        this.lastSpeciesVariant = speciesVariant;
+
+        // Update UI with the data
+        ApplyThermalValues();
+        UpdateUIDisplay();
+
+        Debug.Log($"SpeciesUIController: Initialized with RunSpeciesList data - index={listIndex}, {speciesName} {speciesVariant}");
+    }
+
+    /// <summary>
     /// Initialize this UI controller with a specific species.
     /// Called by SpeciesTierConfig when instantiating entries.
+    /// This overload fetches data from SpeciesDatabase (for backwards compatibility).
     /// </summary>
     /// <param name="visualIndex">Display index for UI (e.g., 1 shows as #01) - just for visual</param>
     /// <param name="name">The species name (e.g., Hexapod, Sheplik)</param>
@@ -104,6 +206,7 @@ public class SpeciesUIController : MonoBehaviour
 
         lastSpeciesName = name;
         lastSpeciesVariant = variant;
+        lastSpeciesDisplayNameOverride = "";
 
         UpdateSpeciesData();
     }
@@ -123,11 +226,10 @@ public class SpeciesUIController : MonoBehaviour
 
         speciesName = data.speciesName;
         speciesVariant = data.variant;
-        displayNameOverride = "";
-
+        displayNameOverride = data.displayName;
         lastSpeciesName = data.speciesName;
         lastSpeciesVariant = data.variant;
-
+        lastSpeciesDisplayNameOverride = data.displayName;
         currentSpeciesData = data;
         ApplyThermalValues();
         UpdateUIDisplay();
@@ -142,6 +244,15 @@ public class SpeciesUIController : MonoBehaviour
     {
         this.runSpeciesListIndex = listIndex;
         Debug.Log($"SpeciesUIController: Set runSpeciesListIndex={listIndex} for {speciesName} {speciesVariant}");
+    }
+
+    /// <summary>
+    /// Set the RunSpeciesList reference.
+    /// Needed for refreshing data after edits.
+    /// </summary>
+    public void SetRunSpeciesList(RunSpeciesList list)
+    {
+        this.runSpeciesList = list;
     }
 
     /// <summary>
@@ -165,7 +276,7 @@ public class SpeciesUIController : MonoBehaviour
     }
 
     /// <summary>
-    /// Update the species data and apply to thermal graph
+    /// Update the species data from SpeciesDatabase (legacy fallback)
     /// </summary>
     private void UpdateSpeciesData()
     {
@@ -220,8 +331,12 @@ public class SpeciesUIController : MonoBehaviour
         thermalGraphUI.lowerBound = currentSpeciesData.lowerBoundK;
         thermalGraphUI.upperBound = currentSpeciesData.upperBoundK;
 
-        // Force graph update if in editor
-        if (!Application.isPlaying && thermalGraphUI != null)
+        // Force graph update
+        if (Application.isPlaying)
+        {
+            thermalGraphUI.OnValidate();
+        }
+        else
         {
 #if UNITY_EDITOR
             UnityEditor.EditorApplication.delayCall += () =>
@@ -231,8 +346,6 @@ public class SpeciesUIController : MonoBehaviour
             };
 #endif
         }
-
-        Debug.Log($"Applied thermal values for {speciesName} - {speciesVariant}");
     }
 
     /// <summary>
@@ -252,20 +365,27 @@ public class SpeciesUIController : MonoBehaviour
         // Update name with type (e.g., "Hexapod Tropical")
         if (nameText != null)
         {
-            nameText.text = $"{speciesName} {speciesVariant}";
+            nameText.text = getName();
         }
 
         // Update type text
         if (typeText != null)
         {
-            typeText.text = speciesVariant.ToString();
+            typeText.text = currentSpeciesData.variant.ToString();
         }
 
-        // Update count (assuming count exists in SpeciesData)
+        // Update count
         if (countText != null)
         {
             countText.text = currentSpeciesData.count.ToString();
         }
+    }
+
+    private string getName()
+    {
+       return string.IsNullOrEmpty(currentSpeciesData.displayName) 
+            ? $"{currentSpeciesData.speciesName} {currentSpeciesData.variant}" 
+            : currentSpeciesData.displayName;
     }
 
     /// <summary>
@@ -311,6 +431,15 @@ public class SpeciesUIController : MonoBehaviour
     [ContextMenu("Refresh Species Data")]
     public void RefreshSpeciesData()
     {
-        UpdateSpeciesData();
+        // If we have a valid RunSpeciesList index, refresh from there
+        if (runSpeciesListIndex >= 0 && runSpeciesList != null)
+        {
+            RefreshFromRunSpeciesList();
+        }
+        else
+        {
+            // Fallback to database
+            UpdateSpeciesData();
+        }
     }
 }

@@ -67,6 +67,9 @@ public class SpeciesTierConfig : MonoBehaviour
             return;
         }
 
+        // Track visual index separately (per-tier count)
+        int visualIndex = 1;
+
         // Find all species in RunSpeciesList that match this tier
         // We need to track the ACTUAL index in runSpeciesList.speciesList (not just the visual count)
         for (int i = 0; i < runSpeciesList.speciesList.Count; i++)
@@ -74,8 +77,9 @@ public class SpeciesTierConfig : MonoBehaviour
             var speciesData = runSpeciesList.speciesList[i];
             if (speciesData.tier == tier && instantiatedEntries.Count < maxSpeciesPerTier)
             {
-                // Pass both the visual index (for display) and the actual runSpeciesList index (for editing)
-                InstantiateSpeciesEntry(speciesData.speciesName, speciesData.variant, i);
+                // Pass visual index, actual RunSpeciesList index, and the data reference
+                InstantiateSpeciesEntry(visualIndex, i, speciesData);
+                visualIndex++;
             }
         }
 
@@ -85,10 +89,10 @@ public class SpeciesTierConfig : MonoBehaviour
     /// <summary>
     /// Instantiate a species entry prefab and configure it
     /// </summary>
-    /// <param name="speciesName">The species name</param>
-    /// <param name="variant">The variant</param>
+    /// <param name="visualIndex">Display index for UI (#01, #02, etc.)</param>
     /// <param name="runSpeciesListIndex">The actual index in RunSpeciesList.speciesList (for edit events)</param>
-    private GameObject InstantiateSpeciesEntry(SpeciesName speciesName, SpeciesVariant variant, int runSpeciesListIndex)
+    /// <param name="speciesData">Direct reference to the SpeciesData from RunSpeciesList</param>
+    private GameObject InstantiateSpeciesEntry(int visualIndex, int runSpeciesListIndex, SpeciesData speciesData)
     {
         if (speciesEntryPrefab == null)
         {
@@ -117,12 +121,11 @@ public class SpeciesTierConfig : MonoBehaviour
         var uiController = entry.GetComponent<SpeciesUIController>();
         if (uiController != null)
         {
-            // Visual index is just for display (#01, #02, etc.) - 1-based
-            int visualIndex = instantiatedEntries.Count + 1;
-            uiController.Initialize(visualIndex, speciesName, variant);
+            // Pass the RunSpeciesList reference so it can refresh after edits
+            uiController.SetRunSpeciesList(runSpeciesList);
 
-            // Set the ACTUAL index in RunSpeciesList - this is used for edit events
-            uiController.SetRunSpeciesListIndex(runSpeciesListIndex);
+            // Use the new Initialize overload that takes the actual data reference
+            uiController.Initialize(visualIndex, runSpeciesListIndex, speciesData);
         }
         else
         {
@@ -157,14 +160,17 @@ public class SpeciesTierConfig : MonoBehaviour
         }
 
         // Add cloned data to RunSpeciesList
-        AddToRunSpeciesList(templateData);
+        SpeciesData newSpeciesData = AddToRunSpeciesList(templateData);
 
         // The new species was added at the END of runSpeciesList.speciesList
         // So its index is Count - 1
         int newRunSpeciesListIndex = runSpeciesList.speciesList.Count - 1;
 
-        // Instantiate UI entry with the correct runSpeciesListIndex
-        InstantiateSpeciesEntry(speciesName, nextVariant, newRunSpeciesListIndex);
+        // Visual index is based on how many entries this tier has
+        int visualIndex = instantiatedEntries.Count + 1;
+
+        // Instantiate UI entry with the correct data reference
+        InstantiateSpeciesEntry(visualIndex, newRunSpeciesListIndex, newSpeciesData);
 
         // Update button visibility
         UpdateButtonVisibility();
@@ -225,11 +231,12 @@ public class SpeciesTierConfig : MonoBehaviour
 
     /// <summary>
     /// Clone species data and add to RunSpeciesList
+    /// Returns the newly added SpeciesData reference
     /// </summary>
-    private void AddToRunSpeciesList(SpeciesData templateData)
+    private SpeciesData AddToRunSpeciesList(SpeciesData templateData)
     {
         if (runSpeciesList == null)
-            return;
+            return null;
 
         // Clone the data so we don't modify the master database
         SpeciesData clonedData = CloneSpeciesData(templateData);
@@ -238,6 +245,8 @@ public class SpeciesTierConfig : MonoBehaviour
 #if UNITY_EDITOR
         UnityEditor.EditorUtility.SetDirty(runSpeciesList);
 #endif
+
+        return clonedData;
     }
 
     /// <summary>

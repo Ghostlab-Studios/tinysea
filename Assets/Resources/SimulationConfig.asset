@@ -27,6 +27,6 @@ MonoBehaviour:
   RandomnessGrowthRate: 0.5
   TemperatureBoundsMin: -5
   TemperatureBoundsMax: 50
-  Database: {fileID: 11400000, guid: be0823a57129c854eb7f6fff08e7b75d, type: 2}
+  RunSpecies: {fileID: 11400000, guid: cd179f552d2ff62439d8a6b811b28584, type: 2}
   RunsPerScenario: 10
   RandomSeed: 12345

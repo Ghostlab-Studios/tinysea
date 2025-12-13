@@ -5,8 +5,9 @@ using UnityEngine;
 /// All simulation parameters in one place for easy modification.
 /// 
 /// v5 CHANGES:
-/// - Removed Carrying Capacity (replaced by natural death + performance scaling)
-/// - Removed Density Death (replaced by natural death accumulators)
+/// - Now uses RunSpeciesList instead of SpeciesDatabase
+/// - RunSpeciesList is the runtime list that will actually be used for simulation
+/// - SpeciesDatabase is only used for gathering defaults
 /// </summary>
 [CreateAssetMenu(fileName = "SimulationConfig", menuName = "TinySea/Simulation Config")]
 public class SimulationConfig : ScriptableObject
@@ -22,16 +23,18 @@ public class SimulationConfig : ScriptableObject
 
     // ==================== CARRYING CAPACITY (Soft Limit) ====================
 
-    [Header("=== CARRYING CAPACITY (Soft Limit) ===")]
-    [Tooltip("Enable carrying capacity to slow population growth.\n\n" +
+    [Header("=== CARRYING CAPACITY (Soft Limit - Tier 1 Only) ===")]
+    [Tooltip("Enable carrying capacity to slow Tier 1 population growth.\n\n" +
              "This is a SOFT LIMIT - it reduces birth rate as population approaches the limit.\n" +
-             "It does NOT kill creatures, only slows reproduction.\n\n" +
+             "It does NOT kill creatures, only slows reproduction.\n" +
+             "ONLY applies to Tier 1 (prey).\n\n" +
              "Formula: births = rawBirths × (1 - tierPop/capacity)\n" +
              "At 50% capacity → 50% birth rate\n" +
              "At 100% capacity → 0% birth rate")]
     public bool UseCarryingCapacity = true;
 
-    [Tooltip("Maximum sustainable population PER TIER.\n\n" +
+    [Tooltip("Maximum sustainable population for Tier 1.\n\n" +
+             "Represents the resource limit of the environment.\n" +
              "Recommended: 1000-10000 depending on desired ecosystem size.")]
     [Range(100, 100000)]
     public float CarryingCapacityPerTier = 5000f;
@@ -77,11 +80,15 @@ public class SimulationConfig : ScriptableObject
     [Tooltip("Maximum possible temperature")]
     public float TemperatureBoundsMax = 50f;
 
-    // ==================== DATA SETTINGS ====================
+    // ==================== SPECIES DATA ====================
 
     [Header("=== SPECIES DATA ===")]
-    [Tooltip("Reference to species database ScriptableObject")]
-    public SpeciesDatabase Database;
+    [Tooltip("Runtime species list for simulation.\n\n" +
+             "This is the actual list of species that will be used in the simulation.\n" +
+             "Use this instead of SpeciesDatabase for runtime configuration.")]
+    public RunSpeciesList RunSpecies;
+
+    // ==================== BATCH SIMULATION ====================
 
     [Header("=== BATCH SIMULATION ===")]
     [Tooltip("Number of runs per scenario (for batch simulations)")]

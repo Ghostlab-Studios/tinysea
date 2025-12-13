@@ -112,6 +112,9 @@ public class StepRecord
 /// 
 /// Runs simulation for MaxYears with biology every BiologyStep days.
 /// Tracks all deaths, births, and accumulator states for CSV output.
+/// 
+/// v5 CHANGES:
+/// - Now uses RunSpeciesList instead of SpeciesDatabase
 /// </summary>
 public class SimulationRunner
 {
@@ -123,8 +126,8 @@ public class SimulationRunner
     public int MaxYears = 1;
     public int BiologyStep = 1;
 
-    // Database reference
-    public SpeciesDatabase SpeciesDB { get; set; }
+    // Species list reference (changed from SpeciesDatabase to RunSpeciesList)
+    public RunSpeciesList RunSpecies { get; set; }
 
     // Results
     private List<StepRecord> _records = new List<StepRecord>();
@@ -154,13 +157,14 @@ public class SimulationRunner
 
         Ecosystem.BiologyStep = BiologyStep;
 
-        if (SpeciesDB != null)
+        // Initialize from RunSpeciesList (primary) or fall back to defaults
+        if (RunSpecies != null && RunSpecies.speciesList != null && RunSpecies.speciesList.Count > 0)
         {
-            Ecosystem.InitializeFromDatabase(SpeciesDB);
+            Ecosystem.InitializeFromRunSpeciesList(RunSpecies);
         }
         else
         {
-            Debug.LogWarning("No SpeciesDatabase provided, using hardcoded defaults!");
+            Debug.LogWarning("No RunSpeciesList provided or empty, using hardcoded defaults!");
             Ecosystem.InitializeDefaultSpecies();
         }
 

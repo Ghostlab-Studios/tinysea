@@ -20,8 +20,13 @@ using UnityEngine;
 /// - Predation: Fractional prey deaths carry over (rare variants eventually eaten)
 /// - Natural Death: Fractional deaths carry over (small populations eventually die)
 /// 
-/// NO DENSITY DEATH - Removed in v5
-/// NO CARRYING CAPACITY - Removed in v5
+/// CARRYING CAPACITY:
+/// - Soft limit applied ONLY to Tier 1
+/// - Slows reproduction as population approaches limit
+/// 
+/// v5 CHANGES:
+/// - Now uses RunSpeciesList instead of SpeciesDatabase
+/// - Carrying capacity only applies to Tier 1
 /// </summary>
 public class EcosystemSimulator
 {
@@ -68,7 +73,7 @@ public class EcosystemSimulator
     public float NaturalDeathAccumT2 { get; private set; } = 0f;
     public float PredationAccumT1 { get; private set; } = 0f;
 
-    // ==================== CARRYING CAPACITY (Soft Limit) ====================
+    // ==================== CARRYING CAPACITY (Soft Limit - Tier 1 Only) ====================
     public bool UseCarryingCapacity { get; set; } = true;
     public float CarryingCapacityPerTier { get; set; } = 5000f;
 
@@ -90,7 +95,60 @@ public class EcosystemSimulator
     }
 
     /// <summary>
-    /// Initialize species from SpeciesDatabase
+    /// Initialize species from RunSpeciesList (PRIMARY method)
+    /// This is the runtime list that will be used for simulation.
+    /// </summary>
+    public void InitializeFromRunSpeciesList(RunSpeciesList runSpecies)
+    {
+        Species.Clear();
+        ClearAccumulators();
+
+        if (runSpecies == null || runSpecies.speciesList == null || runSpecies.speciesList.Count == 0)
+        {
+            Debug.LogError("RunSpeciesList is null or empty!");
+            return;
+        }
+
+        Debug.Log($"Initializing from RunSpeciesList: {runSpecies.name}");
+
+        foreach (var data in runSpecies.speciesList)
+        {
+            var simSpecies = new SimSpecies
+            {
+                Name = data.speciesName.ToString(),
+                Variant = ConvertVariant(data.variant),
+                Tier = data.tier + 1,  // Database uses 0-based, we use 1-based
+                Population = data.count,
+                EatingAmount = data.eatingAmount,
+                ReproductionMultiplier = data.reproductionMultiplier,
+                DeathThreshold = data.deathThreshold,
+                DeathRate = data.deathRate,
+                MinimumDeaths = data.minimumDeaths,
+                ReproThreshold = data.reproThreshold,
+                NaturalDeathRate = data.naturalDeathRate,
+                NaturalDeathVariance = data.naturalDeathVariance,
+                HuntingEfficiency = data.huntingEfficiency,
+                HuntingVariance = data.huntingVariance,
+                OptimalTempK = data.optimalTempK,
+                ArrhenBreadth = data.arrhenBreadth,
+                ArrhenLower = data.arrhenLower,
+                ArrhenUpper = data.arrhenUpper,
+                LowerBoundK = data.lowerBoundK,
+                UpperBoundK = data.upperBoundK
+            };
+
+            Species.Add(simSpecies);
+            InitializeAccumulators(simSpecies.FullName);
+
+            Debug.Log($"Loaded: {simSpecies.FullName} (Tier {simSpecies.Tier}) - Pop: {simSpecies.Population}");
+        }
+
+        Debug.Log($"Total species loaded from RunSpeciesList: {Species.Count}");
+    }
+
+    /// <summary>
+    /// Initialize species from SpeciesDatabase (LEGACY - for backwards compatibility)
+    /// Prefer InitializeFromRunSpeciesList for new code.
     /// </summary>
     public void InitializeFromDatabase(SpeciesDatabase database)
     {
@@ -102,6 +160,8 @@ public class EcosystemSimulator
             Debug.LogError("SpeciesDatabase is null or empty!");
             return;
         }
+
+        Debug.Log($"Initializing from SpeciesDatabase (legacy): {database.name}");
 
         foreach (var data in database.speciesList)
         {
@@ -358,7 +418,7 @@ public class EcosystemSimulator
         float preyPerPredator = totalPredators > 0 ? availablePrey / totalPredators : 0f;
         float scarcityMultiplier = CalculateScarcityMultiplier(preyPerPredator);
         fedRate *= scarcityMultiplier;
-        
+
         Debug.Log($"  Prey per predator: {preyPerPredator:F1}, Scarcity multiplier: {scarcityMultiplier:F2}");
 
         LastFedRateT2 = fedRate;
@@ -415,7 +475,7 @@ public class EcosystemSimulator
         if (preyRatio >= 100f) return 0.10f;  // Very abundant: +10%
         if (preyRatio >= 50f) return 0.05f;   // Abundant: +5%
         if (preyRatio >= 20f) return 0f;      // Baseline: balanced ecosystem
-        
+
         // Scarce prey = MUCH harder hunting (strong negative feedback)
         if (preyRatio >= 10f) return -0.15f;  // Getting crowded: -15%
         if (preyRatio >= 5f) return -0.30f;   // Competitive: -30%
@@ -477,6 +537,7 @@ public class EcosystemSimulator
 
     /// <summary>
     /// Apply reproduction with BIRTH ACCUMULATOR, Tier 1 penalty, and carrying capacity.
+    /// CARRYING CAPACITY ONLY APPLIES TO TIER 1.
     /// </summary>
     private void ApplyReproduction(SimSpecies sp)
     {
@@ -507,11 +568,14 @@ public class EcosystemSimulator
         }
 
         // Carrying capacity (soft limit) - ONLY for Tier 1
+        // This represents the resource limit of the environment
         if (UseCarryingCapacity && sp.Tier == 1)
         {
             float tierPop = GetTierPopulation(1);
             float growthFactor = Math.Max(0f, 1f - (tierPop / CarryingCapacityPerTier));
+            float oldBirths = births;
             births *= growthFactor;
+            Debug.Log($"  {sp.FullName}: Carrying capacity - tierPop={tierPop:F0}, factor={growthFactor:F3}, births {oldBirths:F2} → {births:F2}");
         }
 
         // BIRTH ACCUMULATOR

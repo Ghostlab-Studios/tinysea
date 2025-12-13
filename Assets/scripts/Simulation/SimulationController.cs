@@ -8,8 +8,7 @@ using System.Collections;
 /// Reads configuration from SimulationConfig ScriptableObject.
 /// 
 /// v5 CHANGES:
-/// - Removed Carrying Capacity settings
-/// - Removed Density Death settings
+/// - Now uses RunSpeciesList instead of SpeciesDatabase
 /// </summary>
 public class SimulationController : MonoBehaviour
 {
@@ -96,8 +95,8 @@ public class SimulationController : MonoBehaviour
         runner.TempCalc.MinTemp = config.TemperatureBoundsMin;
         runner.TempCalc.MaxTemp = config.TemperatureBoundsMax;
 
-        // Pass species database from config
-        runner.SpeciesDB = config.Database;
+        // Pass RunSpeciesList from config (changed from Database)
+        runner.RunSpecies = config.RunSpecies;
 
         // Apply carrying capacity settings
         runner.Ecosystem.UseCarryingCapacity = config.UseCarryingCapacity;
@@ -105,17 +104,17 @@ public class SimulationController : MonoBehaviour
 
         // Log config values being used
         UnityEngine.Debug.Log($"Config: BiologyStep={config.BiologyStep}, MaxYears={config.MaxYears}");
-        UnityEngine.Debug.Log($"Carrying Capacity: {config.UseCarryingCapacity} (limit={config.CarryingCapacityPerTier})");
+        UnityEngine.Debug.Log($"Carrying Capacity (Tier 1 only): {config.UseCarryingCapacity} (limit={config.CarryingCapacityPerTier})");
         UnityEngine.Debug.Log($"Temperature: Base={config.BaseTemperature}°C, Seasonal=±{config.SeasonalAmplitude}°C, " +
                               $"Trend={config.ClimateTrend}°C/year, Bounds=[{config.TemperatureBoundsMin}, {config.TemperatureBoundsMax}]");
 
-        if (config.Database != null)
+        if (config.RunSpecies != null)
         {
-            UnityEngine.Debug.Log($"Using SpeciesDatabase: {config.Database.name} with {config.Database.speciesList.Count} species");
+            UnityEngine.Debug.Log($"Using RunSpeciesList: {config.RunSpecies.name} with {config.RunSpecies.speciesList.Count} species");
         }
         else
         {
-            UnityEngine.Debug.LogWarning("No SpeciesDatabase assigned in config - using defaults!");
+            UnityEngine.Debug.LogWarning("No RunSpeciesList assigned in config - using defaults!");
         }
 
         // Run simulation
@@ -133,10 +132,10 @@ public class SimulationController : MonoBehaviour
         string filename = "tinysea_v5_" + timestamp + crashSuffix + ".csv";
 
 #if UNITY_WEBGL && !UNITY_EDITOR
-// WebGL: trigger browser download instead of writing to persistentDataPath
-string csv = runner.ToCsv();
-WebGLDownload.DownloadCsv(filename, csv);
-lastOutputPath = filename; // just store the name for UI/status
+        // WebGL: trigger browser download instead of writing to persistentDataPath
+        string csv = runner.ToCsv();
+        WebGLDownload.DownloadCsv(filename, csv);
+        lastOutputPath = filename; // just store the name for UI/status
 #else
         // Desktop: keep your current behavior
         lastOutputPath = runner.SaveToFile(OutputDirectory);

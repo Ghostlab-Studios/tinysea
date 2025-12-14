@@ -15,7 +15,7 @@ MonoBehaviour:
   BiologyStep: 1
   MaxYears: 1
   UseCarryingCapacity: 1
-  CarryingCapacityPerTier: 5000
+  CarryingCapacityTier1: 5000
   BaseTemperature: 20
   SeasonalAmplitude: 10
   ClimateTrend: 1

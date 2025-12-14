@@ -40,12 +40,85 @@ public class SimulationInputUI : MonoBehaviour
          "Recommended: 1000-10000 depending on desired ecosystem size.")]
     public TMP_InputField CarryingCapacityTier1;
 
-
     public TMP_InputField MaxYears;
     public Button RunSimulationButton;
 
+    [Header("=== RESET ===")]
+    public Button ResetButton;
+
     private static readonly Color InvalidColor = new Color(1f, 0.80f, 0.80f, 1f);
     private static readonly Color ValidColor = Color.white;
+
+    // Default values stored when script initializes
+    private SimulationConfigDefaults defaults;
+    private bool defaultsStored = false;
+
+    /// <summary>
+    /// Stores default values for reset functionality.
+    /// </summary>
+    private class SimulationConfigDefaults
+    {
+        public float BaseTemperature;
+        public float SeasonalAmplitude;
+        public float ClimateTrend;
+        public bool InterannualVariation;
+        public float VariabilityMagnitude;
+        public float WarmingBias;
+        public bool Autocorrelated;
+        public float DailyVariationRange;
+        public float RandomnessGrowthRate;
+        public float TemperatureBoundsMin;
+        public float TemperatureBoundsMax;
+        public float CarryingCapacityTier1;
+        public int MaxYears;
+
+        public static SimulationConfigDefaults CreateFrom(SimulationConfig config)
+        {
+            if (config == null) return null;
+
+            return new SimulationConfigDefaults
+            {
+                BaseTemperature = config.BaseTemperature,
+                SeasonalAmplitude = config.SeasonalAmplitude,
+                ClimateTrend = config.ClimateTrend,
+                InterannualVariation = config.InterannualVariation,
+                VariabilityMagnitude = config.VariabilityMagnitude,
+                WarmingBias = config.WarmingBias,
+                Autocorrelated = config.Autocorrelated,
+                DailyVariationRange = config.DailyVariationRange,
+                RandomnessGrowthRate = config.RandomnessGrowthRate,
+                TemperatureBoundsMin = config.TemperatureBoundsMin,
+                TemperatureBoundsMax = config.TemperatureBoundsMax,
+                CarryingCapacityTier1 = config.CarryingCapacityTier1,
+                MaxYears = config.MaxYears
+            };
+        }
+
+        public void ApplyTo(SimulationConfig config)
+        {
+            if (config == null) return;
+
+            config.BaseTemperature = BaseTemperature;
+            config.SeasonalAmplitude = SeasonalAmplitude;
+            config.ClimateTrend = ClimateTrend;
+            config.InterannualVariation = InterannualVariation;
+            config.VariabilityMagnitude = VariabilityMagnitude;
+            config.WarmingBias = WarmingBias;
+            config.Autocorrelated = Autocorrelated;
+            config.DailyVariationRange = DailyVariationRange;
+            config.RandomnessGrowthRate = RandomnessGrowthRate;
+            config.TemperatureBoundsMin = TemperatureBoundsMin;
+            config.TemperatureBoundsMax = TemperatureBoundsMax;
+            config.CarryingCapacityTier1 = CarryingCapacityTier1;
+            config.MaxYears = MaxYears;
+        }
+    }
+
+    private void Awake()
+    {
+        // Store defaults on Awake (before any changes)
+        StoreDefaults();
+    }
 
     private void OnEnable()
     {
@@ -53,6 +126,18 @@ public class SimulationInputUI : MonoBehaviour
         {
             RunSimulationButton.onClick.RemoveListener(OnRunSimulationClicked);
             RunSimulationButton.onClick.AddListener(OnRunSimulationClicked);
+        }
+
+        if (ResetButton != null)
+        {
+            ResetButton.onClick.RemoveListener(OnResetClicked);
+            ResetButton.onClick.AddListener(OnResetClicked);
+        }
+
+        // Store defaults if not already stored
+        if (!defaultsStored)
+        {
+            StoreDefaults();
         }
 
         PopulateUIFromConfig();
@@ -65,6 +150,53 @@ public class SimulationInputUI : MonoBehaviour
         {
             RunSimulationButton.onClick.RemoveListener(OnRunSimulationClicked);
         }
+
+        if (ResetButton != null)
+        {
+            ResetButton.onClick.RemoveListener(OnResetClicked);
+        }
+    }
+
+    /// <summary>
+    /// Store the current config values as defaults.
+    /// Called once when the script first initializes.
+    /// </summary>
+    private void StoreDefaults()
+    {
+        if (config == null) return;
+
+        defaults = SimulationConfigDefaults.CreateFrom(config);
+        defaultsStored = true;
+
+        Debug.Log("SimulationInputUI: Default values stored");
+    }
+
+    /// <summary>
+    /// Reset all values to defaults.
+    /// Only affects SimulationConfig, not RunSpeciesList.
+    /// </summary>
+    private void OnResetClicked()
+    {
+        if (config == null || defaults == null)
+        {
+            Debug.LogWarning("SimulationInputUI: Cannot reset - config or defaults not available");
+            return;
+        }
+
+        // Apply defaults to config
+        defaults.ApplyTo(config);
+
+        // Update UI to show reset values
+        PopulateUIFromConfig();
+
+        // Clear any validation errors
+        ClearAllValidationColors();
+
+#if UNITY_EDITOR
+        UnityEditor.EditorUtility.SetDirty(config);
+#endif
+
+        Debug.Log("SimulationInputUI: Reset to default values");
     }
 
     public void PopulateUIFromConfig()
@@ -90,8 +222,6 @@ public class SimulationInputUI : MonoBehaviour
 
         SetFloat(CarryingCapacityTier1, config.CarryingCapacityTier1);
         SetInt(MaxYears, config.MaxYears);
-
-
     }
 
     private void OnRunSimulationClicked()
@@ -151,15 +281,14 @@ public class SimulationInputUI : MonoBehaviour
         config.TemperatureBoundsMin = boundsMin;
         config.TemperatureBoundsMax = boundsMax;
 
+        config.CarryingCapacityTier1 = carryingCapacity;
         config.MaxYears = maxYears;
 
 #if UNITY_EDITOR
         UnityEditor.EditorUtility.SetDirty(config);
 #endif
         simulationController.StartSimulation();
-
     }
-
 
     private static void SetToggleNoNotify(Toggle t, bool value)
     {

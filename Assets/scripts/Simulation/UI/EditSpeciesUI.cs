@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Globalization;
 
 /// <summary>
 /// Controls the Edit Species UI panel.
@@ -10,7 +11,7 @@ using TMPro;
 /// Buttons:
 /// - Close (X): Close without saving
 /// - Cancel: Close without saving (same as Close)
-/// - Save Data: Save changes and close
+/// - Save Data: Save changes and close (only if validation passes)
 /// - Delete: Delete species and close
 /// - Reset: Reset to values when panel was opened (backup)
 /// </summary>
@@ -59,6 +60,10 @@ public class EditSpeciesUI : MonoBehaviour
     [Header("Debug")]
     [SerializeField] private int currentEditingIndex = -1;
 
+    // Validation colors
+    private static readonly Color InvalidColor = new Color(1f, 0.80f, 0.80f, 1f);
+    private static readonly Color ValidColor = Color.white;
+
     // Current data being edited (reference to the actual data in RunSpeciesList)
     private SpeciesData currentEditingData;
 
@@ -74,6 +79,8 @@ public class EditSpeciesUI : MonoBehaviour
         // Basic
         public int count;
         public SpeciesVariant variant;
+        public string displayName;
+        public SpeciesName speciesName;
 
         // Gameplay
         public float eatingAmount;
@@ -108,6 +115,8 @@ public class EditSpeciesUI : MonoBehaviour
             {
                 count = data.count,
                 variant = data.variant,
+                displayName = data.displayName,
+                speciesName = data.speciesName,
                 eatingAmount = data.eatingAmount,
                 reproThreshold = data.reproThreshold,
                 reproductionMultiplier = data.reproductionMultiplier,
@@ -136,6 +145,8 @@ public class EditSpeciesUI : MonoBehaviour
 
             data.count = count;
             data.variant = variant;
+            data.displayName = displayName;
+            data.speciesName = speciesName;
             data.eatingAmount = eatingAmount;
             data.reproThreshold = reproThreshold;
             data.reproductionMultiplier = reproductionMultiplier;
@@ -195,12 +206,13 @@ public class EditSpeciesUI : MonoBehaviour
         {
             currentEditingData = runSpeciesList.speciesList[speciesIndex];
 
-            // *** CREATE BACKUP when opening ***
+            // CREATE BACKUP when opening
             backupData = SpeciesDataBackup.CreateFrom(currentEditingData);
 
             Debug.Log($"EditSpeciesUI: Editing {currentEditingData.speciesName} - {currentEditingData.variant} (backup created)");
 
             PopulateFields();
+            ClearAllValidationColors();
         }
         else
         {
@@ -229,8 +241,14 @@ public class EditSpeciesUI : MonoBehaviour
         }
 
         // === BASIC INFO ===
+        // Name field shows displayName if set, otherwise falls back to speciesName
         if (nameField != null)
-            nameField.text = currentEditingData.speciesName.ToString();
+        {
+            string displayText = !string.IsNullOrEmpty(currentEditingData.displayName)
+                ? currentEditingData.displayName
+                : currentEditingData.speciesName.ToString();
+            nameField.text = displayText;
+        }
 
         if (variantDropdown != null)
             variantDropdown.value = (int)currentEditingData.variant;
@@ -240,25 +258,25 @@ public class EditSpeciesUI : MonoBehaviour
 
         // === GAMEPLAY STATS ===
         if (eatingAmountField != null)
-            eatingAmountField.text = currentEditingData.eatingAmount.ToString("F2");
+            eatingAmountField.text = currentEditingData.eatingAmount.ToString("F2", CultureInfo.InvariantCulture);
 
         if (reproThresholdField != null)
-            reproThresholdField.text = currentEditingData.reproThreshold.ToString("F2");
+            reproThresholdField.text = currentEditingData.reproThreshold.ToString("F2", CultureInfo.InvariantCulture);
 
         if (reproMultiplierField != null)
-            reproMultiplierField.text = currentEditingData.reproductionMultiplier.ToString("F2");
+            reproMultiplierField.text = currentEditingData.reproductionMultiplier.ToString("F2", CultureInfo.InvariantCulture);
 
         if (tempDeathThresholdField != null)
-            tempDeathThresholdField.text = currentEditingData.deathThreshold.ToString("F2");
+            tempDeathThresholdField.text = currentEditingData.deathThreshold.ToString("F2", CultureInfo.InvariantCulture);
 
         if (tempDeathRateField != null)
-            tempDeathRateField.text = currentEditingData.deathRate.ToString("F2");
+            tempDeathRateField.text = currentEditingData.deathRate.ToString("F2", CultureInfo.InvariantCulture);
 
         if (naturalDeathVarianceField != null)
-            naturalDeathVarianceField.text = currentEditingData.naturalDeathVariance.ToString("F3");
+            naturalDeathVarianceField.text = currentEditingData.naturalDeathVariance.ToString("F3", CultureInfo.InvariantCulture);
 
         if (naturalDeathRateField != null)
-            naturalDeathRateField.text = currentEditingData.naturalDeathRate.ToString("F3");
+            naturalDeathRateField.text = currentEditingData.naturalDeathRate.ToString("F3", CultureInfo.InvariantCulture);
 
         // === HUNTING SECTION (Tier 2+ only) ===
         bool showHunting = currentEditingData.tier >= 1;
@@ -269,10 +287,10 @@ public class EditSpeciesUI : MonoBehaviour
         if (showHunting)
         {
             if (huntingEfficiencyField != null)
-                huntingEfficiencyField.text = currentEditingData.huntingEfficiency.ToString("F2");
+                huntingEfficiencyField.text = currentEditingData.huntingEfficiency.ToString("F2", CultureInfo.InvariantCulture);
 
             if (huntingVarianceField != null)
-                huntingVarianceField.text = currentEditingData.huntingVariance.ToString("F3");
+                huntingVarianceField.text = currentEditingData.huntingVariance.ToString("F3", CultureInfo.InvariantCulture);
         }
 
         // === THERMAL PARAMETERS (via Controller) ===
@@ -296,8 +314,6 @@ public class EditSpeciesUI : MonoBehaviour
             return;
         }
 
-        // Load all thermal values into the controller
-        // The controller will update all sliders and the graph
         thermalController.LoadFromSpeciesData(currentEditingData);
 
         Debug.Log($"EditSpeciesUI: Loaded thermal parameters into controller - " +
@@ -321,8 +337,7 @@ public class EditSpeciesUI : MonoBehaviour
     }
 
     /// <summary>
-    /// Close without saving. 
-    /// Note: Changes to sliders don't affect actual data until Save is pressed.
+    /// Close without saving.
     /// </summary>
     public void Close()
     {
@@ -335,6 +350,9 @@ public class EditSpeciesUI : MonoBehaviour
         // Clear the graph highlight
         if (thermalController != null)
             thermalController.ClearActiveHighlight();
+
+        // Clear validation colors
+        ClearAllValidationColors();
 
         if (editPanel != null)
             editPanel.SetActive(false);
@@ -355,10 +373,11 @@ public class EditSpeciesUI : MonoBehaviour
 
     /// <summary>
     /// Save all edited data back to the SpeciesData in RunSpeciesList.
+    /// Only saves if all validation passes.
     /// </summary>
     public void SaveData()
     {
-        Debug.Log($"EditSpeciesUI: Saving data for index {currentEditingIndex}");
+        Debug.Log($"EditSpeciesUI: Attempting to save data for index {currentEditingIndex}");
 
         if (currentEditingIndex < 0 || currentEditingData == null)
         {
@@ -366,55 +385,94 @@ public class EditSpeciesUI : MonoBehaviour
             return;
         }
 
-        // === READ VALUES FROM UI FIELDS ===
+        // Clear previous validation colors
+        ClearAllValidationColors();
 
-        // Count
-        if (countField != null && int.TryParse(countField.text, out int count))
-            currentEditingData.count = count;
+        // === VALIDATE ALL FIELDS ===
+        bool allValid = true;
 
-        // Variant
+        // Temporary variables to hold parsed values
+        int count = 0;
+        float eatingAmount = 0f;
+        float reproThreshold = 0f;
+        float reproMultiplier = 0f;
+        float tempDeathThreshold = 0f;
+        float tempDeathRate = 0f;
+        float naturalDeathVariance = 0f;
+        float naturalDeathRate = 0f;
+        float huntingEfficiency = 0f;
+        float huntingVariance = 0f;
+
+        // Validate name field (must not be empty)
+        if (nameField != null)
+        {
+            string nameText = nameField.text?.Trim();
+            if (string.IsNullOrEmpty(nameText))
+            {
+                SetFieldColor(nameField, InvalidColor);
+                allValid = false;
+                Debug.LogWarning("EditSpeciesUI: Name field is empty");
+            }
+        }
+
+        // Validate count (integer)
+        allValid &= TryReadInt(countField, out count);
+
+        // Validate gameplay stats (floats)
+        allValid &= TryReadFloat(eatingAmountField, out eatingAmount);
+        allValid &= TryReadFloat(reproThresholdField, out reproThreshold);
+        allValid &= TryReadFloat(reproMultiplierField, out reproMultiplier);
+        allValid &= TryReadFloat(tempDeathThresholdField, out tempDeathThreshold);
+        allValid &= TryReadFloat(tempDeathRateField, out tempDeathRate);
+        allValid &= TryReadFloat(naturalDeathVarianceField, out naturalDeathVariance);
+        allValid &= TryReadFloat(naturalDeathRateField, out naturalDeathRate);
+
+        // Validate hunting fields only for Tier 2+
+        if (currentEditingData.tier >= 1)
+        {
+            allValid &= TryReadFloat(huntingEfficiencyField, out huntingEfficiency);
+            allValid &= TryReadFloat(huntingVarianceField, out huntingVariance);
+        }
+
+        // If any validation failed, stop here and don't save
+        if (!allValid)
+        {
+            Debug.LogWarning("EditSpeciesUI: Validation failed - not saving. Please fix highlighted fields.");
+            return;
+        }
+
+        // === ALL VALID - SAVE DATA ===
+
+        // Save display name
+        if (nameField != null)
+        {
+            string newDisplayName = nameField.text.Trim();
+            currentEditingData.displayName = newDisplayName;
+            Debug.Log($"EditSpeciesUI: Display name set to '{newDisplayName}'");
+        }
+
+        // Save variant
         if (variantDropdown != null)
             currentEditingData.variant = (SpeciesVariant)variantDropdown.value;
 
-        // Eating Amount
-        if (eatingAmountField != null && float.TryParse(eatingAmountField.text, out float eating))
-            currentEditingData.eatingAmount = eating;
+        // Save validated values
+        currentEditingData.count = count;
+        currentEditingData.eatingAmount = eatingAmount;
+        currentEditingData.reproThreshold = reproThreshold;
+        currentEditingData.reproductionMultiplier = reproMultiplier;
+        currentEditingData.deathThreshold = tempDeathThreshold;
+        currentEditingData.deathRate = tempDeathRate;
+        currentEditingData.naturalDeathVariance = naturalDeathVariance;
+        currentEditingData.naturalDeathRate = naturalDeathRate;
 
-        // Repro Threshold
-        if (reproThresholdField != null && float.TryParse(reproThresholdField.text, out float reproThresh))
-            currentEditingData.reproThreshold = reproThresh;
-
-        // Reproduction Multiplier
-        if (reproMultiplierField != null && float.TryParse(reproMultiplierField.text, out float reproMult))
-            currentEditingData.reproductionMultiplier = reproMult;
-
-        // Temperature Death Threshold
-        if (tempDeathThresholdField != null && float.TryParse(tempDeathThresholdField.text, out float tempDeathThresh))
-            currentEditingData.deathThreshold = tempDeathThresh;
-
-        // Temperature Death Rate
-        if (tempDeathRateField != null && float.TryParse(tempDeathRateField.text, out float tempDeathRate))
-            currentEditingData.deathRate = tempDeathRate;
-
-        // Natural Death Variance
-        if (naturalDeathVarianceField != null && float.TryParse(naturalDeathVarianceField.text, out float natDeathVar))
-            currentEditingData.naturalDeathVariance = natDeathVar;
-
-        // Natural Death Rate
-        if (naturalDeathRateField != null && float.TryParse(naturalDeathRateField.text, out float natDeathRate))
-            currentEditingData.naturalDeathRate = natDeathRate;
-
-        // Hunting fields (Tier 2+ only)
+        // Save hunting fields (Tier 2+ only)
         if (currentEditingData.tier >= 1)
         {
-            if (huntingEfficiencyField != null && float.TryParse(huntingEfficiencyField.text, out float huntEff))
-                currentEditingData.huntingEfficiency = huntEff;
-
-            if (huntingVarianceField != null && float.TryParse(huntingVarianceField.text, out float huntVar))
-                currentEditingData.huntingVariance = huntVar;
+            currentEditingData.huntingEfficiency = huntingEfficiency;
+            currentEditingData.huntingVariance = huntingVariance;
         }
 
-        // === SAVE THERMAL PARAMETERS FROM CONTROLLER ===
+        // Save thermal parameters from controller
         if (thermalController != null)
         {
             thermalController.SaveToSpeciesData(currentEditingData);
@@ -430,7 +488,7 @@ public class EditSpeciesUI : MonoBehaviour
         // Notify listeners
         SpeciesEditEvents.NotifySpeciesSaved(currentEditingIndex);
 
-        Debug.Log($"EditSpeciesUI: Data saved for {currentEditingData.speciesName} - {currentEditingData.variant}");
+        Debug.Log($"EditSpeciesUI: Data saved for {currentEditingData.displayName} ({currentEditingData.speciesName} - {currentEditingData.variant})");
 
         Close();
     }
@@ -452,7 +510,8 @@ public class EditSpeciesUI : MonoBehaviour
 
         if (currentEditingIndex < runSpeciesList.speciesList.Count)
         {
-            string deletedName = currentEditingData?.speciesName.ToString() ?? "Unknown";
+            string deletedName = currentEditingData?.displayName ??
+                                 currentEditingData?.speciesName.ToString() ?? "Unknown";
             runSpeciesList.speciesList.RemoveAt(currentEditingIndex);
             Debug.Log($"EditSpeciesUI: Deleted {deletedName} at index {deletedIndex}");
 
@@ -467,7 +526,6 @@ public class EditSpeciesUI : MonoBehaviour
 
     /// <summary>
     /// Reset to the values that were present when the panel was opened.
-    /// Uses the backup created in HandleEditRequested.
     /// </summary>
     public void Reset()
     {
@@ -484,13 +542,13 @@ public class EditSpeciesUI : MonoBehaviour
 
         Debug.Log($"EditSpeciesUI: Reset {currentEditingData.speciesName} to values from when panel was opened");
 
-        // Refresh all UI fields to show restored values
+        // Refresh all UI fields and clear validation
         PopulateFields();
+        ClearAllValidationColors();
     }
 
     /// <summary>
     /// Reset to original values from SpeciesDatabase (factory reset).
-    /// Call this if you want to reset to the original database values instead of backup.
     /// </summary>
     public void ResetToOriginalDatabase()
     {
@@ -515,6 +573,7 @@ public class EditSpeciesUI : MonoBehaviour
 
         // Copy all values from original database
         currentEditingData.count = originalData.count;
+        currentEditingData.displayName = originalData.displayName;
         currentEditingData.eatingAmount = originalData.eatingAmount;
         currentEditingData.reproductionMultiplier = originalData.reproductionMultiplier;
         currentEditingData.reproThreshold = originalData.reproThreshold;
@@ -534,10 +593,105 @@ public class EditSpeciesUI : MonoBehaviour
 
         Debug.Log($"EditSpeciesUI: Factory reset {currentEditingData.speciesName} to original database values");
 
-        // Also update the backup so Reset goes to factory values
+        // Also update the backup
         backupData = SpeciesDataBackup.CreateFrom(currentEditingData);
 
         PopulateFields();
+        ClearAllValidationColors();
+    }
+
+    // ==================== Validation Methods ====================
+
+    /// <summary>
+    /// Try to read a float from an input field. Highlights red if invalid.
+    /// </summary>
+    private bool TryReadFloat(TMP_InputField field, out float value)
+    {
+        value = 0f;
+
+        if (field == null)
+            return true; // Null field is considered valid (optional field)
+
+        string text = field.text;
+        if (string.IsNullOrEmpty(text))
+            text = "";
+        text = text.Trim();
+
+        bool valid = float.TryParse(
+            text,
+            NumberStyles.Float,
+            CultureInfo.InvariantCulture,
+            out value
+        );
+
+        SetFieldColor(field, valid ? ValidColor : InvalidColor);
+        return valid;
+    }
+
+    /// <summary>
+    /// Try to read an integer from an input field. Highlights red if invalid.
+    /// </summary>
+    private bool TryReadInt(TMP_InputField field, out int value)
+    {
+        value = 0;
+
+        if (field == null)
+            return true; // Null field is considered valid (optional field)
+
+        string text = field.text;
+        if (string.IsNullOrEmpty(text))
+            text = "";
+        text = text.Trim();
+
+        bool valid = int.TryParse(
+            text,
+            NumberStyles.Integer,
+            CultureInfo.InvariantCulture,
+            out value
+        );
+
+        SetFieldColor(field, valid ? ValidColor : InvalidColor);
+        return valid;
+    }
+
+    /// <summary>
+    /// Set the background color of an input field.
+    /// </summary>
+    private static void SetFieldColor(TMP_InputField field, Color color)
+    {
+        if (field == null) return;
+
+        // Try to get the Image component (usually the background)
+        Image img = field.GetComponent<Image>();
+        if (img != null)
+        {
+            img.color = color;
+            return;
+        }
+
+        // Fallback to targetGraphic
+        if (field.targetGraphic != null)
+        {
+            field.targetGraphic.color = color;
+        }
+    }
+
+    /// <summary>
+    /// Clear all validation colors back to white.
+    /// </summary>
+    private void ClearAllValidationColors()
+    {
+        SetFieldColor(nameField, ValidColor);
+        SetFieldColor(countField, ValidColor);
+        SetFieldColor(eatingAmountField, ValidColor);
+        SetFieldColor(reproThresholdField, ValidColor);
+        SetFieldColor(reproMultiplierField, ValidColor);
+        SetFieldColor(tempDeathThresholdField, ValidColor);
+        SetFieldColor(tempDeathRateField, ValidColor);
+        SetFieldColor(naturalDeathVarianceField, ValidColor);
+        SetFieldColor(naturalDeathRateField, ValidColor);
+        SetFieldColor(huntingEfficiencyField, ValidColor);
+        SetFieldColor(huntingVarianceField, ValidColor);
     }
 
     // ==================== Public Getters ====================
@@ -555,6 +709,7 @@ public class EditSpeciesUI : MonoBehaviour
         // Compare key fields
         if (currentEditingData.count != backupData.count) return true;
         if (currentEditingData.variant != backupData.variant) return true;
+        if (currentEditingData.displayName != backupData.displayName) return true;
 
         // Check thermal parameters from controller
         if (thermalController != null)

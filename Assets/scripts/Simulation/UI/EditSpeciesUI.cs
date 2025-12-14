@@ -12,22 +12,23 @@ using TMPro;
 /// - Cancel: Close without saving (same as Close)
 /// - Save Data: Save changes and close
 /// - Delete: Delete species and close
-/// - Reset: Reset to original database values
+/// - Reset: Reset to values when panel was opened (backup)
 /// </summary>
 public class EditSpeciesUI : MonoBehaviour
 {
     [Header("Data Source")]
     [SerializeField] private RunSpeciesList runSpeciesList;
-    [SerializeField] private SpeciesDatabase originalDatabase; // For reset functionality
+    [SerializeField] private SpeciesDatabase originalDatabase; // For factory reset
 
     [Header("Panel Reference")]
-    [SerializeField] private GameObject editPanel; // The panel to show/hide (can be this gameObject or a child)
+    [SerializeField] private GameObject editPanel;
 
-    [Header("Thermal Graph")]
-    [SerializeField] private ThermalGraphUI thermalGraphUI; // Graph display for thermal performance curve
+    [Header("Thermal Editor")]
+    [Tooltip("The controller that manages all thermal parameter sliders and the graph")]
+    [SerializeField] private ThermalParameterController thermalController;
 
     [Header("UI Fields - Header")]
-    [SerializeField] private TextMeshProUGUI tierField; // Shows "Tier 1" or "Tier 2"
+    [SerializeField] private TextMeshProUGUI tierField;
 
     [Header("UI Fields - Basic Info")]
     [SerializeField] private TMP_InputField nameField;
@@ -44,11 +45,11 @@ public class EditSpeciesUI : MonoBehaviour
     [SerializeField] private TMP_InputField naturalDeathRateField;
 
     [Header("UI Fields - Hunting (Tier 2+ only)")]
-    [SerializeField] private GameObject huntingSection; // Parent object to show/hide for Tier 2+
+    [SerializeField] private GameObject huntingSection;
     [SerializeField] private TMP_InputField huntingEfficiencyField;
     [SerializeField] private TMP_InputField huntingVarianceField;
 
-    [Header("Buttons (assign in inspector or wire via OnClick)")]
+    [Header("Buttons")]
     [SerializeField] private Button closeButton;
     [SerializeField] private Button cancelButton;
     [SerializeField] private Button saveButton;
@@ -58,23 +59,115 @@ public class EditSpeciesUI : MonoBehaviour
     [Header("Debug")]
     [SerializeField] private int currentEditingIndex = -1;
 
+    // Current data being edited (reference to the actual data in RunSpeciesList)
     private SpeciesData currentEditingData;
+
+    // Backup of the data when panel was opened (for Reset functionality)
+    private SpeciesDataBackup backupData;
+
+    /// <summary>
+    /// Stores a snapshot of species data for reset functionality.
+    /// This is a value copy, not a reference.
+    /// </summary>
+    private class SpeciesDataBackup
+    {
+        // Basic
+        public int count;
+        public SpeciesVariant variant;
+
+        // Gameplay
+        public float eatingAmount;
+        public float reproThreshold;
+        public float reproductionMultiplier;
+        public float deathThreshold;
+        public float deathRate;
+        public float minimumDeaths;
+        public float naturalDeathRate;
+        public float naturalDeathVariance;
+
+        // Hunting
+        public float huntingEfficiency;
+        public float huntingVariance;
+
+        // Thermal
+        public float optimalTempK;
+        public float arrhenBreadth;
+        public float arrhenLower;
+        public float arrhenUpper;
+        public float lowerBoundK;
+        public float upperBoundK;
+
+        /// <summary>
+        /// Create a backup from SpeciesData
+        /// </summary>
+        public static SpeciesDataBackup CreateFrom(SpeciesData data)
+        {
+            if (data == null) return null;
+
+            return new SpeciesDataBackup
+            {
+                count = data.count,
+                variant = data.variant,
+                eatingAmount = data.eatingAmount,
+                reproThreshold = data.reproThreshold,
+                reproductionMultiplier = data.reproductionMultiplier,
+                deathThreshold = data.deathThreshold,
+                deathRate = data.deathRate,
+                minimumDeaths = data.minimumDeaths,
+                naturalDeathRate = data.naturalDeathRate,
+                naturalDeathVariance = data.naturalDeathVariance,
+                huntingEfficiency = data.huntingEfficiency,
+                huntingVariance = data.huntingVariance,
+                optimalTempK = data.optimalTempK,
+                arrhenBreadth = data.arrhenBreadth,
+                arrhenLower = data.arrhenLower,
+                arrhenUpper = data.arrhenUpper,
+                lowerBoundK = data.lowerBoundK,
+                upperBoundK = data.upperBoundK
+            };
+        }
+
+        /// <summary>
+        /// Restore backup values to SpeciesData
+        /// </summary>
+        public void RestoreTo(SpeciesData data)
+        {
+            if (data == null) return;
+
+            data.count = count;
+            data.variant = variant;
+            data.eatingAmount = eatingAmount;
+            data.reproThreshold = reproThreshold;
+            data.reproductionMultiplier = reproductionMultiplier;
+            data.deathThreshold = deathThreshold;
+            data.deathRate = deathRate;
+            data.minimumDeaths = minimumDeaths;
+            data.naturalDeathRate = naturalDeathRate;
+            data.naturalDeathVariance = naturalDeathVariance;
+            data.huntingEfficiency = huntingEfficiency;
+            data.huntingVariance = huntingVariance;
+            data.optimalTempK = optimalTempK;
+            data.arrhenBreadth = arrhenBreadth;
+            data.arrhenLower = arrhenLower;
+            data.arrhenUpper = arrhenUpper;
+            data.lowerBoundK = lowerBoundK;
+            data.upperBoundK = upperBoundK;
+        }
+    }
 
     private void OnEnable()
     {
-        // Subscribe to edit request events
         SpeciesEditEvents.OnEditRequested += HandleEditRequested;
     }
 
     private void OnDisable()
     {
-        // Unsubscribe to prevent memory leaks
         SpeciesEditEvents.OnEditRequested -= HandleEditRequested;
     }
 
     private void Start()
     {
-        // Wire up button listeners if assigned
+        // Wire up button listeners
         if (closeButton != null) closeButton.onClick.AddListener(Close);
         if (cancelButton != null) cancelButton.onClick.AddListener(Cancel);
         if (saveButton != null) saveButton.onClick.AddListener(SaveData);
@@ -88,7 +181,6 @@ public class EditSpeciesUI : MonoBehaviour
 
     /// <summary>
     /// Called when SpeciesEditEvents.RequestEdit is invoked.
-    /// Opens the edit panel for the specified species index.
     /// </summary>
     private void HandleEditRequested(int speciesIndex)
     {
@@ -96,157 +188,124 @@ public class EditSpeciesUI : MonoBehaviour
 
         currentEditingIndex = speciesIndex;
 
-        // Get the species data from RunSpeciesList
         if (runSpeciesList != null &&
             runSpeciesList.speciesList != null &&
             speciesIndex >= 0 &&
             speciesIndex < runSpeciesList.speciesList.Count)
         {
             currentEditingData = runSpeciesList.speciesList[speciesIndex];
-            Debug.Log($"EditSpeciesUI: Editing {currentEditingData.speciesName} - {currentEditingData.variant}");
 
-            // Populate UI fields with currentEditingData
+            // *** CREATE BACKUP when opening ***
+            backupData = SpeciesDataBackup.CreateFrom(currentEditingData);
+
+            Debug.Log($"EditSpeciesUI: Editing {currentEditingData.speciesName} - {currentEditingData.variant} (backup created)");
+
             PopulateFields();
         }
         else
         {
-            Debug.LogWarning($"EditSpeciesUI: Invalid species index {speciesIndex} or RunSpeciesList not assigned");
+            Debug.LogWarning($"EditSpeciesUI: Invalid species index {speciesIndex}");
             currentEditingData = null;
+            backupData = null;
         }
 
-        // Show the edit panel
         Open();
     }
 
     /// <summary>
-    /// Populate UI fields with current species data.
-    /// Called when opening the edit panel.
+    /// Populate all UI fields with current species data.
     /// </summary>
     private void PopulateFields()
     {
         if (currentEditingData == null) return;
 
-        Debug.Log($"PopulateFields: Name={currentEditingData.speciesName}, " +
-                  $"Variant={currentEditingData.variant}, " +
-                  $"Tier={currentEditingData.tier}, " +
-                  $"Count={currentEditingData.count}");
+        Debug.Log($"PopulateFields: {currentEditingData.speciesName}, Variant={currentEditingData.variant}, Tier={currentEditingData.tier}");
 
         // === TIER DISPLAY ===
-        // tier in SpeciesData is 0-based (0 = Tier 1, 1 = Tier 2)
         if (tierField != null)
         {
-            int displayTier = currentEditingData.tier + 1; // Convert to 1-based for display
+            int displayTier = currentEditingData.tier + 1;
             tierField.text = $"Tier {displayTier}";
         }
 
         // === BASIC INFO ===
         if (nameField != null)
-        {
             nameField.text = currentEditingData.speciesName.ToString();
-        }
 
         if (variantDropdown != null)
-        {
-            // Set dropdown to current variant
-            // Assumes dropdown options are in order: Common=0, Tropical=1, Arctic=2
             variantDropdown.value = (int)currentEditingData.variant;
-        }
 
         if (countField != null)
-        {
             countField.text = currentEditingData.count.ToString();
-        }
 
         // === GAMEPLAY STATS ===
         if (eatingAmountField != null)
-        {
             eatingAmountField.text = currentEditingData.eatingAmount.ToString("F2");
-        }
 
         if (reproThresholdField != null)
-        {
             reproThresholdField.text = currentEditingData.reproThreshold.ToString("F2");
-        }
 
         if (reproMultiplierField != null)
-        {
             reproMultiplierField.text = currentEditingData.reproductionMultiplier.ToString("F2");
-        }
 
         if (tempDeathThresholdField != null)
-        {
             tempDeathThresholdField.text = currentEditingData.deathThreshold.ToString("F2");
-        }
 
         if (tempDeathRateField != null)
-        {
             tempDeathRateField.text = currentEditingData.deathRate.ToString("F2");
-        }
 
         if (naturalDeathVarianceField != null)
-        {
             naturalDeathVarianceField.text = currentEditingData.naturalDeathVariance.ToString("F3");
-        }
 
         if (naturalDeathRateField != null)
-        {
             naturalDeathRateField.text = currentEditingData.naturalDeathRate.ToString("F3");
-        }
 
         // === HUNTING SECTION (Tier 2+ only) ===
-        // Show hunting fields only for Tier 2 and above (tier >= 1 in 0-based)
         bool showHunting = currentEditingData.tier >= 1;
 
         if (huntingSection != null)
-        {
             huntingSection.SetActive(showHunting);
-        }
 
         if (showHunting)
         {
             if (huntingEfficiencyField != null)
-            {
                 huntingEfficiencyField.text = currentEditingData.huntingEfficiency.ToString("F2");
-            }
 
             if (huntingVarianceField != null)
-            {
                 huntingVarianceField.text = currentEditingData.huntingVariance.ToString("F3");
-            }
         }
 
-        // === THERMAL GRAPH ===
-        ApplyThermalValuesToGraph();
+        // === THERMAL PARAMETERS (via Controller) ===
+        LoadThermalParameters();
     }
 
     /// <summary>
-    /// Apply thermal parameters to the ThermalGraphUI to display the performance curve.
+    /// Load thermal parameters into the ThermalParameterController.
     /// </summary>
-    private void ApplyThermalValuesToGraph()
+    private void LoadThermalParameters()
     {
-        if (currentEditingData == null || thermalGraphUI == null)
+        if (thermalController == null)
         {
-            Debug.LogWarning("EditSpeciesUI: Cannot update thermal graph - data or graph reference missing");
+            Debug.LogWarning("EditSpeciesUI: ThermalParameterController not assigned");
             return;
         }
 
-        // Set thermal parameters
-        thermalGraphUI.optimalTemp = currentEditingData.optimalTempK;
-        thermalGraphUI.arrhenBreadth = currentEditingData.arrhenBreadth;
-        thermalGraphUI.arrhenLower = currentEditingData.arrhenLower;
-        thermalGraphUI.arrhenUpper = currentEditingData.arrhenUpper;
-        thermalGraphUI.lowerBound = currentEditingData.lowerBoundK;
-        thermalGraphUI.upperBound = currentEditingData.upperBoundK;
+        if (currentEditingData == null)
+        {
+            Debug.LogWarning("EditSpeciesUI: No species data to load thermal parameters from");
+            return;
+        }
 
-        // Force graph to update
-        thermalGraphUI.OnValidate();
+        // Load all thermal values into the controller
+        // The controller will update all sliders and the graph
+        thermalController.LoadFromSpeciesData(currentEditingData);
 
-        Debug.Log($"EditSpeciesUI: Applied thermal values - OptimalTemp={currentEditingData.optimalTempK}K, " +
-                  $"LowerBound={currentEditingData.lowerBoundK}K, UpperBound={currentEditingData.upperBoundK}K");
+        Debug.Log($"EditSpeciesUI: Loaded thermal parameters into controller - " +
+                  $"OptimalTemp={currentEditingData.optimalTempK}K");
     }
 
     /// <summary>
-    /// Open/show the edit panel.
+    /// Open the edit panel.
     /// </summary>
     public void Open()
     {
@@ -257,39 +316,36 @@ public class EditSpeciesUI : MonoBehaviour
         }
         else
         {
-            // If no separate panel assigned, assume this gameObject is the panel
             gameObject.SetActive(true);
-            Debug.Log("EditSpeciesUI: GameObject activated");
         }
     }
 
     /// <summary>
-    /// Close the edit panel without saving.
-    /// Can be called from Close button (X) or Cancel button.
+    /// Close without saving. 
+    /// Note: Changes to sliders don't affect actual data until Save is pressed.
     /// </summary>
     public void Close()
     {
-        Debug.Log("EditSpeciesUI: Closing panel");
+        Debug.Log("EditSpeciesUI: Closing panel (no save)");
 
         currentEditingIndex = -1;
         currentEditingData = null;
+        backupData = null;
+
+        // Clear the graph highlight
+        if (thermalController != null)
+            thermalController.ClearActiveHighlight();
 
         if (editPanel != null)
-        {
             editPanel.SetActive(false);
-        }
         else
-        {
             gameObject.SetActive(false);
-        }
 
-        // Notify listeners that edit panel closed
         SpeciesEditEvents.NotifyEditClosed();
     }
 
     /// <summary>
-    /// Cancel editing and close. Same as Close for now.
-    /// Could show confirmation dialog in the future.
+    /// Cancel editing. Same as Close.
     /// </summary>
     public void Cancel()
     {
@@ -298,7 +354,7 @@ public class EditSpeciesUI : MonoBehaviour
     }
 
     /// <summary>
-    /// Save the edited data back to RunSpeciesList.
+    /// Save all edited data back to the SpeciesData in RunSpeciesList.
     /// </summary>
     public void SaveData()
     {
@@ -310,90 +366,72 @@ public class EditSpeciesUI : MonoBehaviour
             return;
         }
 
-        // Read values from UI fields and update currentEditingData
+        // === READ VALUES FROM UI FIELDS ===
 
         // Count
         if (countField != null && int.TryParse(countField.text, out int count))
-        {
             currentEditingData.count = count;
-        }
+
+        // Variant
+        if (variantDropdown != null)
+            currentEditingData.variant = (SpeciesVariant)variantDropdown.value;
 
         // Eating Amount
         if (eatingAmountField != null && float.TryParse(eatingAmountField.text, out float eating))
-        {
             currentEditingData.eatingAmount = eating;
-        }
 
         // Repro Threshold
         if (reproThresholdField != null && float.TryParse(reproThresholdField.text, out float reproThresh))
-        {
             currentEditingData.reproThreshold = reproThresh;
-        }
 
         // Reproduction Multiplier
         if (reproMultiplierField != null && float.TryParse(reproMultiplierField.text, out float reproMult))
-        {
             currentEditingData.reproductionMultiplier = reproMult;
-        }
 
         // Temperature Death Threshold
         if (tempDeathThresholdField != null && float.TryParse(tempDeathThresholdField.text, out float tempDeathThresh))
-        {
             currentEditingData.deathThreshold = tempDeathThresh;
-        }
 
         // Temperature Death Rate
         if (tempDeathRateField != null && float.TryParse(tempDeathRateField.text, out float tempDeathRate))
-        {
             currentEditingData.deathRate = tempDeathRate;
-        }
 
         // Natural Death Variance
         if (naturalDeathVarianceField != null && float.TryParse(naturalDeathVarianceField.text, out float natDeathVar))
-        {
             currentEditingData.naturalDeathVariance = natDeathVar;
-        }
 
         // Natural Death Rate
         if (naturalDeathRateField != null && float.TryParse(naturalDeathRateField.text, out float natDeathRate))
-        {
             currentEditingData.naturalDeathRate = natDeathRate;
-        }
 
-        // Hunting fields (only for Tier 2+)
+        // Hunting fields (Tier 2+ only)
         if (currentEditingData.tier >= 1)
         {
             if (huntingEfficiencyField != null && float.TryParse(huntingEfficiencyField.text, out float huntEff))
-            {
                 currentEditingData.huntingEfficiency = huntEff;
-            }
 
             if (huntingVarianceField != null && float.TryParse(huntingVarianceField.text, out float huntVar))
-            {
                 currentEditingData.huntingVariance = huntVar;
-            }
         }
 
-        // Variant (from dropdown)
-        if (variantDropdown != null)
+        // === SAVE THERMAL PARAMETERS FROM CONTROLLER ===
+        if (thermalController != null)
         {
-            currentEditingData.variant = (SpeciesVariant)variantDropdown.value;
+            thermalController.SaveToSpeciesData(currentEditingData);
+            Debug.Log($"EditSpeciesUI: Saved thermal parameters - OptimalTemp={currentEditingData.optimalTempK}K");
         }
 
-        // The data is already a reference to the item in runSpeciesList.speciesList,
-        // so changes are automatically reflected. But we should mark it dirty for saving.
-
+        // Mark scriptable object as dirty for Unity to save
 #if UNITY_EDITOR
         if (runSpeciesList != null)
-        {
             UnityEditor.EditorUtility.SetDirty(runSpeciesList);
-        }
 #endif
 
-        // Notify listeners that data was saved
+        // Notify listeners
         SpeciesEditEvents.NotifySpeciesSaved(currentEditingIndex);
 
-        Debug.Log("EditSpeciesUI: Data saved");
+        Debug.Log($"EditSpeciesUI: Data saved for {currentEditingData.speciesName} - {currentEditingData.variant}");
+
         Close();
     }
 
@@ -410,41 +448,60 @@ public class EditSpeciesUI : MonoBehaviour
             return;
         }
 
-        // TODO: Add confirmation dialog before deleting
-
         int deletedIndex = currentEditingIndex;
 
-        // Remove from list
         if (currentEditingIndex < runSpeciesList.speciesList.Count)
         {
+            string deletedName = currentEditingData?.speciesName.ToString() ?? "Unknown";
             runSpeciesList.speciesList.RemoveAt(currentEditingIndex);
-            Debug.Log($"EditSpeciesUI: Deleted species at index {deletedIndex}");
+            Debug.Log($"EditSpeciesUI: Deleted {deletedName} at index {deletedIndex}");
 
 #if UNITY_EDITOR
             UnityEditor.EditorUtility.SetDirty(runSpeciesList);
 #endif
         }
 
-        // Notify listeners
         SpeciesEditEvents.NotifySpeciesDeleted(deletedIndex);
-
         Close();
     }
 
     /// <summary>
-    /// Reset current species to original values from SpeciesDatabase.
+    /// Reset to the values that were present when the panel was opened.
+    /// Uses the backup created in HandleEditRequested.
     /// </summary>
     public void Reset()
     {
         Debug.Log($"EditSpeciesUI: Reset pressed for index {currentEditingIndex}");
 
-        if (currentEditingData == null || originalDatabase == null)
+        if (currentEditingData == null || backupData == null)
         {
-            Debug.LogWarning("EditSpeciesUI: Cannot reset - no data or original database not assigned");
+            Debug.LogWarning("EditSpeciesUI: Cannot reset - no data or backup available");
             return;
         }
 
-        // Find original data in SpeciesDatabase
+        // Restore values from backup
+        backupData.RestoreTo(currentEditingData);
+
+        Debug.Log($"EditSpeciesUI: Reset {currentEditingData.speciesName} to values from when panel was opened");
+
+        // Refresh all UI fields to show restored values
+        PopulateFields();
+    }
+
+    /// <summary>
+    /// Reset to original values from SpeciesDatabase (factory reset).
+    /// Call this if you want to reset to the original database values instead of backup.
+    /// </summary>
+    public void ResetToOriginalDatabase()
+    {
+        Debug.Log($"EditSpeciesUI: Factory reset for index {currentEditingIndex}");
+
+        if (currentEditingData == null || originalDatabase == null)
+        {
+            Debug.LogWarning("EditSpeciesUI: Cannot factory reset - no data or database");
+            return;
+        }
+
         SpeciesData originalData = originalDatabase.GetSpecies(
             currentEditingData.speciesName,
             currentEditingData.variant
@@ -452,11 +509,11 @@ public class EditSpeciesUI : MonoBehaviour
 
         if (originalData == null)
         {
-            Debug.LogWarning($"EditSpeciesUI: Original data not found for {currentEditingData.speciesName} - {currentEditingData.variant}");
+            Debug.LogWarning($"EditSpeciesUI: Original data not found in database");
             return;
         }
 
-        // Copy values from original to current
+        // Copy all values from original database
         currentEditingData.count = originalData.count;
         currentEditingData.eatingAmount = originalData.eatingAmount;
         currentEditingData.reproductionMultiplier = originalData.reproductionMultiplier;
@@ -468,8 +525,6 @@ public class EditSpeciesUI : MonoBehaviour
         currentEditingData.naturalDeathVariance = originalData.naturalDeathVariance;
         currentEditingData.huntingEfficiency = originalData.huntingEfficiency;
         currentEditingData.huntingVariance = originalData.huntingVariance;
-
-        // Thermal parameters
         currentEditingData.optimalTempK = originalData.optimalTempK;
         currentEditingData.arrhenBreadth = originalData.arrhenBreadth;
         currentEditingData.arrhenLower = originalData.arrhenLower;
@@ -477,27 +532,42 @@ public class EditSpeciesUI : MonoBehaviour
         currentEditingData.lowerBoundK = originalData.lowerBoundK;
         currentEditingData.upperBoundK = originalData.upperBoundK;
 
-        Debug.Log($"EditSpeciesUI: Reset {currentEditingData.speciesName} to original values");
+        Debug.Log($"EditSpeciesUI: Factory reset {currentEditingData.speciesName} to original database values");
 
-        // Refresh UI fields to show reset values
+        // Also update the backup so Reset goes to factory values
+        backupData = SpeciesDataBackup.CreateFrom(currentEditingData);
+
         PopulateFields();
     }
 
-    /// <summary>
-    /// Get the currently editing species index.
-    /// Returns -1 if not editing.
-    /// </summary>
-    public int GetCurrentEditingIndex()
-    {
-        return currentEditingIndex;
-    }
+    // ==================== Public Getters ====================
+
+    public int GetCurrentEditingIndex() => currentEditingIndex;
+    public SpeciesData GetCurrentEditingData() => currentEditingData;
 
     /// <summary>
-    /// Get the currently editing species data.
-    /// Returns null if not editing.
+    /// Check if there are unsaved changes by comparing current values to backup.
     /// </summary>
-    public SpeciesData GetCurrentEditingData()
+    public bool HasUnsavedChanges()
     {
-        return currentEditingData;
+        if (currentEditingData == null || backupData == null) return false;
+
+        // Compare key fields
+        if (currentEditingData.count != backupData.count) return true;
+        if (currentEditingData.variant != backupData.variant) return true;
+
+        // Check thermal parameters from controller
+        if (thermalController != null)
+        {
+            var currentThermal = thermalController.GetCurrentValues();
+            if (!Mathf.Approximately(currentThermal.optimalTempK, backupData.optimalTempK)) return true;
+            if (!Mathf.Approximately(currentThermal.lowerBoundK, backupData.lowerBoundK)) return true;
+            if (!Mathf.Approximately(currentThermal.upperBoundK, backupData.upperBoundK)) return true;
+            if (!Mathf.Approximately(currentThermal.arrhenBreadth, backupData.arrhenBreadth)) return true;
+            if (!Mathf.Approximately(currentThermal.arrhenLower, backupData.arrhenLower)) return true;
+            if (!Mathf.Approximately(currentThermal.arrhenUpper, backupData.arrhenUpper)) return true;
+        }
+
+        return false;
     }
 }

@@ -7,6 +7,10 @@ using UnityEngine.UI;
 /// <summary>
 /// Manages a single tier panel in the Species Count UI.
 /// Handles adding/removing species entries and syncing with RunSpeciesList.
+/// 
+/// Subscribes to SpeciesEditEvents to handle:
+/// - OnSpeciesDeleted: Remove the UI entry when species is deleted via EditSpeciesUI
+/// - OnSpeciesSaved: (handled by SpeciesUIController directly)
 /// </summary>
 public class SpeciesTierConfig : MonoBehaviour
 {
@@ -24,8 +28,9 @@ public class SpeciesTierConfig : MonoBehaviour
     [SerializeField] private Button plusButton;
     //[SerializeField] private Button minusButton;
 
-    // Track instantiated UI entries (in order of addition)
+    // Track instantiated UI entries and their RunSpeciesList indices
     private List<GameObject> instantiatedEntries = new List<GameObject>();
+    private List<int> entryRunSpeciesListIndices = new List<int>(); // Parallel list tracking indices
 
     // Variant sequence for cycling when adding
     private readonly SpeciesVariant[] variantSequence =
@@ -47,6 +52,18 @@ public class SpeciesTierConfig : MonoBehaviour
         UpdateButtonVisibility();
     }
 
+    void OnEnable()
+    {
+        // Subscribe to delete events
+        SpeciesEditEvents.OnSpeciesDeleted += HandleSpeciesDeleted;
+    }
+
+    void OnDisable()
+    {
+        // Unsubscribe to prevent memory leaks
+        SpeciesEditEvents.OnSpeciesDeleted -= HandleSpeciesDeleted;
+    }
+
     private void SetupButtonListeners()
     {
         if (plusButton != null)
@@ -54,6 +71,89 @@ public class SpeciesTierConfig : MonoBehaviour
 
         /*if (minusButton != null)
             minusButton.onClick.AddListener(OnMinusClicked);*/
+    }
+
+    /// <summary>
+    /// Called when a species is deleted via EditSpeciesUI.
+    /// Finds and removes the corresponding UI entry if it belongs to this tier.
+    /// </summary>
+    private void HandleSpeciesDeleted(int deletedIndex)
+    {
+        Debug.Log($"SpeciesTierConfig (Tier {tier}): Received delete event for index {deletedIndex}");
+
+        // Find if we have an entry with this index
+        int entryIndex = entryRunSpeciesListIndices.IndexOf(deletedIndex);
+
+        if (entryIndex >= 0)
+        {
+            // This tier has the deleted species - remove its UI
+            GameObject entryToRemove = instantiatedEntries[entryIndex];
+
+            instantiatedEntries.RemoveAt(entryIndex);
+            entryRunSpeciesListIndices.RemoveAt(entryIndex);
+
+            Destroy(entryToRemove);
+
+            Debug.Log($"SpeciesTierConfig (Tier {tier}): Removed UI entry at position {entryIndex}");
+
+            // Update indices for remaining entries (they shifted down by 1 in RunSpeciesList)
+            UpdateIndicesAfterDelete(deletedIndex);
+
+            // Update visual indices (#01, #02, etc.)
+            UpdateVisualIndices();
+
+            // Update button visibility
+            UpdateButtonVisibility();
+        }
+        else
+        {
+            // The deleted species wasn't in this tier, but indices may have shifted
+            // Update any indices that were greater than the deleted index
+            UpdateIndicesAfterDelete(deletedIndex);
+        }
+    }
+
+    /// <summary>
+    /// After a delete, all RunSpeciesList indices greater than the deleted index
+    /// need to be decremented by 1.
+    /// </summary>
+    private void UpdateIndicesAfterDelete(int deletedIndex)
+    {
+        for (int i = 0; i < entryRunSpeciesListIndices.Count; i++)
+        {
+            if (entryRunSpeciesListIndices[i] > deletedIndex)
+            {
+                int oldIndex = entryRunSpeciesListIndices[i];
+                entryRunSpeciesListIndices[i] = oldIndex - 1;
+
+                // Also update the SpeciesUIController's stored index
+                if (i < instantiatedEntries.Count)
+                {
+                    var uiController = instantiatedEntries[i].GetComponent<SpeciesUIController>();
+                    if (uiController != null)
+                    {
+                        uiController.SetRunSpeciesListIndex(entryRunSpeciesListIndices[i]);
+                    }
+                }
+
+                Debug.Log($"SpeciesTierConfig (Tier {tier}): Updated entry {i} index from {oldIndex} to {entryRunSpeciesListIndices[i]}");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Update visual indices (#01, #02, etc.) for all entries in this tier.
+    /// </summary>
+    private void UpdateVisualIndices()
+    {
+        for (int i = 0; i < instantiatedEntries.Count; i++)
+        {
+            var uiController = instantiatedEntries[i].GetComponent<SpeciesUIController>();
+            if (uiController != null)
+            {
+                uiController.SetVisualIndex(i + 1); // 1-based visual index
+            }
+        }
     }
 
     /// <summary>
@@ -132,7 +232,10 @@ public class SpeciesTierConfig : MonoBehaviour
             Debug.LogWarning("SpeciesTierConfig: Prefab missing SpeciesUIController component!");
         }
 
+        // Track both the entry and its RunSpeciesList index
         instantiatedEntries.Add(entry);
+        entryRunSpeciesListIndices.Add(runSpeciesListIndex);
+
         return entry;
     }
 
@@ -192,13 +295,18 @@ public class SpeciesTierConfig : MonoBehaviour
         // Get last entry
         int lastIndex = instantiatedEntries.Count - 1;
         GameObject lastEntry = instantiatedEntries[lastIndex];
+        int lastRunSpeciesListIndex = entryRunSpeciesListIndices[lastIndex];
 
-        // Remove from RunSpeciesList (last species of this tier)
-        RemoveLastFromRunSpeciesList();
+        // Remove from RunSpeciesList
+        RemoveFromRunSpeciesListAtIndex(lastRunSpeciesListIndex);
 
-        // Remove from tracking list and destroy GameObject
+        // Remove from tracking lists and destroy GameObject
         instantiatedEntries.RemoveAt(lastIndex);
+        entryRunSpeciesListIndices.RemoveAt(lastIndex);
         Destroy(lastEntry);
+
+        // Update indices for entries in OTHER tiers that had higher indices
+        // (This is handled by the delete event in a more complete system)
 
         // Update button visibility
         UpdateButtonVisibility();
@@ -250,7 +358,25 @@ public class SpeciesTierConfig : MonoBehaviour
     }
 
     /// <summary>
-    /// Remove the last species of this tier from RunSpeciesList
+    /// Remove species at specific index from RunSpeciesList
+    /// </summary>
+    private void RemoveFromRunSpeciesListAtIndex(int index)
+    {
+        if (runSpeciesList == null || runSpeciesList.speciesList == null)
+            return;
+
+        if (index >= 0 && index < runSpeciesList.speciesList.Count)
+        {
+            runSpeciesList.speciesList.RemoveAt(index);
+        }
+
+#if UNITY_EDITOR
+        UnityEditor.EditorUtility.SetDirty(runSpeciesList);
+#endif
+    }
+
+    /// <summary>
+    /// Remove the last species of this tier from RunSpeciesList (legacy method)
     /// </summary>
     private void RemoveLastFromRunSpeciesList()
     {

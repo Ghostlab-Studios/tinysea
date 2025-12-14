@@ -70,9 +70,40 @@ MonoBehaviour:
     temperatureThresholdText: High
     reproductionRateText: Low
     description: Hexapod - Common variant
-    optimalTempK: 293.15
+    optimalTempK: 288.0333
+    arrhenBreadth: 6820.4316
+    arrhenLower: 25000
+    arrhenUpper: 30591.914
+    lowerBoundK: 286.15518
+    upperBoundK: 288.60065
+  - index: 2
+    speciesName: 0
+    variant: 2
+    displayName: 
+    icon: {fileID: 21300000, guid: b18c89991d6433d47a3003fba57fad95, type: 3}
+    count: 20
+    tier: 0
+    eatingAmount: 0
+    reproductionMultiplier: 0.45
+    deathThreshold: 0.3
+    deathRate: 0.6
+    minimumDeaths: 1
+    reproThreshold: 0.25
+    naturalDeathRate: 0.02
+    naturalDeathVariance: 0.01
+    huntingEfficiency: 0.75
+    huntingVariance: 0.15
+    eatingStars: 0
+    reproductionStars: 4
+    deathThresholdStars: 3
+    deathRateStars: 2
+    thermalBreadthStars: 5
+    temperatureThresholdText: High
+    reproductionRateText: Low
+    description: Hexapod - Arctic variant
+    optimalTempK: 278.15
     arrhenBreadth: 5273.15
     arrhenLower: 10273.15
     arrhenUpper: 21273.15
-    lowerBoundK: 285.15
-    upperBoundK: 295.15
+    lowerBoundK: 270.15
+    upperBoundK: 280.15

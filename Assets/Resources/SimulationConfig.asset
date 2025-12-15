@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: SimulationConfig
   m_EditorClassIdentifier: Assembly-CSharp::SimulationConfig
   BiologyStep: 1
-  MaxYears: 1
+  DaysPerScenario: 365
+  NumberOfScenarios: 5
   UseCarryingCapacity: 1
   CarryingCapacityTier1: 5000
   BaseTemperature: 20
@@ -28,5 +29,4 @@ MonoBehaviour:
   TemperatureBoundsMin: -5
   TemperatureBoundsMax: 50
   RunSpecies: {fileID: 11400000, guid: cd179f552d2ff62439d8a6b811b28584, type: 2}
-  RunsPerScenario: 10
   RandomSeed: 12345

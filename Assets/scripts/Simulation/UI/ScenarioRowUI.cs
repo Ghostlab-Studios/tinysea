@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using Unity.VectorGraphics;
 
 /// <summary>
 /// Controller for individual scenario row in the results list.
@@ -9,7 +8,7 @@ using Unity.VectorGraphics;
 /// 
 /// PREFAB STRUCTURE:
 /// ScenarioRow (this script attached here)
-/// ├── StatusIcon (Image - for your SVG checkmark/X)
+/// ├── StatusIcon (Image or SVGImage - for checkmark/X)
 /// ├── SummaryText (TMP - "Scenario 1: T1=2,450, T2=34")
 /// └── DownloadButton (Button)
 /// 
@@ -21,7 +20,8 @@ using Unity.VectorGraphics;
 public class ScenarioRowUI : MonoBehaviour
 {
     [Header("UI References")]
-    [SerializeField] private SVGImage statusIcon;
+    [Tooltip("Can be regular Image or SVGImage - both work via Graphic base class")]
+    [SerializeField] private Graphic statusIcon;  // Graphic works for both Image and SVGImage
     [SerializeField] private TextMeshProUGUI summaryText;
     [SerializeField] private Button downloadButton;
     
@@ -29,8 +29,8 @@ public class ScenarioRowUI : MonoBehaviour
     [SerializeField] private Color survivedColor = new Color(0.298f, 0.686f, 0.314f); // #4CAF50 green
     [SerializeField] private Color crashedColor = new Color(0.957f, 0.263f, 0.212f);  // #F44336 red
     
-    [Header("Optional: Status Sprites")]
-    [Tooltip("If you have separate SVG sprites for checkmark and X, assign them here")]
+    [Header("Optional: Status Sprites (for regular Image only)")]
+    [Tooltip("If using regular Image and have separate sprites for checkmark and X")]
     [SerializeField] private Sprite survivedSprite;
     [SerializeField] private Sprite crashedSprite;
     
@@ -48,20 +48,23 @@ public class ScenarioRowUI : MonoBehaviour
         _scenarioIndex = scenario.ScenarioIndex;
         _onDownloadClicked = onDownloadClicked;
         
-        // Set status icon
+        // Set status icon color
         if (statusIcon != null)
         {
-            // Set color based on outcome
             statusIcon.color = scenario.Crashed ? crashedColor : survivedColor;
             
-            // If you have separate sprites, swap them
-            if (scenario.Crashed && crashedSprite != null)
+            // If using regular Image and have separate sprites, swap them
+            var imageComponent = statusIcon as Image;
+            if (imageComponent != null)
             {
-                statusIcon.sprite = crashedSprite;
-            }
-            else if (!scenario.Crashed && survivedSprite != null)
-            {
-                statusIcon.sprite = survivedSprite;
+                if (scenario.Crashed && crashedSprite != null)
+                {
+                    imageComponent.sprite = crashedSprite;
+                }
+                else if (!scenario.Crashed && survivedSprite != null)
+                {
+                    imageComponent.sprite = survivedSprite;
+                }
             }
         }
         
@@ -69,9 +72,6 @@ public class ScenarioRowUI : MonoBehaviour
         if (summaryText != null)
         {
             summaryText.text = scenario.GetSummaryLine();
-            
-            // Optionally color the text too
-            // summaryText.color = scenario.Crashed ? crashedColor : Color.black;
         }
         
         // Wire up download button
@@ -94,10 +94,14 @@ public class ScenarioRowUI : MonoBehaviour
         {
             statusIcon.color = crashed ? crashedColor : survivedColor;
             
-            if (crashed && crashedSprite != null)
-                statusIcon.sprite = crashedSprite;
-            else if (!crashed && survivedSprite != null)
-                statusIcon.sprite = survivedSprite;
+            var imageComponent = statusIcon as Image;
+            if (imageComponent != null)
+            {
+                if (crashed && crashedSprite != null)
+                    imageComponent.sprite = crashedSprite;
+                else if (!crashed && survivedSprite != null)
+                    imageComponent.sprite = survivedSprite;
+            }
         }
         
         if (summaryText != null)

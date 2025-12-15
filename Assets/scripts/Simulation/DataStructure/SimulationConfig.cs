@@ -1,13 +1,12 @@
 using UnityEngine;
 
 /// <summary>
-/// ScriptableObject configuration for TinySea simulation v5.
+/// ScriptableObject configuration for TinySea simulation v6.
 /// All simulation parameters in one place for easy modification.
 /// 
-/// v5 CHANGES:
-/// - Now uses RunSpeciesList instead of SpeciesDatabase
-/// - RunSpeciesList is the runtime list that will actually be used for simulation
-/// - SpeciesDatabase is only used for gathering defaults
+/// v6 CHANGES:
+/// - Replaced MaxYears with DaysPerScenario (direct day control)
+/// - Clarified NumberOfScenarios (how many times to run the same scenario)
 /// </summary>
 [CreateAssetMenu(fileName = "SimulationConfig", menuName = "TinySea/Simulation Config")]
 public class SimulationConfig : ScriptableObject
@@ -17,9 +16,20 @@ public class SimulationConfig : ScriptableObject
     [Range(1, 5)]
     public int BiologyStep = 1;
 
-    [Tooltip("Number of years to simulate")]
-    [Range(1, 500)]
-    public int MaxYears = 1;
+    [Tooltip("Number of days per scenario.\n\n" +
+             "Examples:\n" +
+             "- 35 days for quick tests\n" +
+             "- 365 days for 1 year\n" +
+             "- 3650 days for 10 years")]
+    [Range(1, 182500)]  // Max ~500 years
+    public int DaysPerScenario = 365;
+
+    [Tooltip("Number of times to run the scenario.\n\n" +
+             "Since the simulation has randomness (temperature variation, hunting efficiency, etc.),\n" +
+             "running multiple scenarios allows for statistical analysis.\n\n" +
+             "Each scenario runs for DaysPerScenario days with a different random seed.")]
+    [Range(1, 100)]
+    public int NumberOfScenarios = 1;
 
     // ==================== CARRYING CAPACITY (Soft Limit) ====================
 
@@ -88,12 +98,41 @@ public class SimulationConfig : ScriptableObject
              "Use this instead of SpeciesDatabase for runtime configuration.")]
     public RunSpeciesList RunSpecies;
 
-    // ==================== BATCH SIMULATION ====================
+    // ==================== RANDOM SEED ====================
 
-    [Header("=== BATCH SIMULATION ===")]
-    [Tooltip("Number of runs per scenario (for batch simulations)")]
-    public int RunsPerScenario = 10;
-
-    [Tooltip("Random seed for reproducibility (-1 for random)")]
+    [Header("=== RANDOMNESS ===")]
+    [Tooltip("Base random seed for reproducibility.\n" +
+             "-1 = use system time (different each run)\n" +
+             "Any other value = reproducible results\n\n" +
+             "Each scenario will use: BaseSeed + ScenarioIndex")]
     public int RandomSeed = 12345;
+
+    // ==================== VALIDATION ====================
+
+    /// <summary>
+    /// Validate configuration values
+    /// </summary>
+    public bool IsValid(out string errorMessage)
+    {
+        if (DaysPerScenario < 1)
+        {
+            errorMessage = "Days per scenario must be at least 1";
+            return false;
+        }
+
+        if (NumberOfScenarios < 1)
+        {
+            errorMessage = "Number of scenarios must be at least 1";
+            return false;
+        }
+
+        if (RunSpecies == null || RunSpecies.speciesList == null || RunSpecies.speciesList.Count == 0)
+        {
+            errorMessage = "No species configured. Please add species to RunSpeciesList.";
+            return false;
+        }
+
+        errorMessage = null;
+        return true;
+    }
 }

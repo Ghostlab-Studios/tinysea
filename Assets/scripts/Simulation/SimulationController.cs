@@ -1,86 +1,233 @@
 using UnityEngine;
 using System.IO;
-using System.Diagnostics;
 using System.Collections;
+using System.Collections.Generic;
 
 /// <summary>
-/// Unity MonoBehaviour to run TinySea simulation v5.
+/// Unity MonoBehaviour to run TinySea simulation v6.
 /// Reads configuration from SimulationConfig ScriptableObject.
 /// 
-/// v5 CHANGES:
-/// - Now uses RunSpeciesList instead of SpeciesDatabase
+/// v6 CHANGES:
+/// - Runs multiple scenarios based on NumberOfScenarios
+/// - Uses DaysPerScenario instead of MaxYears
+/// - Connects to ResultsScreenUI for progress and results display
+/// - Builds AggregateResults for statistical analysis
+/// - Populates ALL config fields for export
 /// </summary>
 public class SimulationController : MonoBehaviour
 {
     [Header("Configuration")]
     [SerializeField] private SimulationConfig config;
 
-    [Header("Loading Screen")]
-    [SerializeField] private GameObject loadingScreen;
+    [Header("Results Screen")]
+    [SerializeField] private ResultsScreenUI resultsScreen;
 
-    [Header("Output")]
+    [Header("Output (Editor Only)")]
     [SerializeField] private string outputFolderName = "TinySeaResults";
-    [SerializeField] private bool openFileOnComplete = true;
 
-    [Header("Status (Read Only)")]
-    [SerializeField] private string lastOutputPath = "";
-    [SerializeField] private bool lastRunCrashed = false;
-    [SerializeField] private int lastCrashDay = -1;
-    [SerializeField] private int lastCrashTier = -1;
-    [SerializeField] private float lastFinalTier1Pop = 0f;
-    [SerializeField] private float lastFinalTier2Pop = 0f;
+    // State tracking
+    private bool _isRunning = false;
+    private bool _cancelRequested = false;
+    private AggregateResults _currentResults;
 
-    // Cached output directory
+    // Cached output directory (Editor only)
     private string OutputDirectory => Path.Combine(Application.persistentDataPath, outputFolderName);
 
     /// <summary>
-    /// Public method to start simulation - call this from UI buttons.
-    /// Uses coroutine to allow loading screen to render.
+    /// Get the current SimulationConfig (for config export before simulation)
     /// </summary>
-    public void StartSimulation()
+    public SimulationConfig Config => config;
+
+    private void Awake()
     {
-        StartCoroutine(RunSimulationCoroutine());
+        // Subscribe to results screen events
+        if (resultsScreen != null)
+        {
+            resultsScreen.OnCancelRequested += OnCancelRequested;
+            resultsScreen.OnCloseRequested += OnResultsClosed;
+        }
+    }
+
+    private void OnDestroy()
+    {
+        // Unsubscribe from events
+        if (resultsScreen != null)
+        {
+            resultsScreen.OnCancelRequested -= OnCancelRequested;
+            resultsScreen.OnCloseRequested -= OnResultsClosed;
+        }
     }
 
     /// <summary>
-    /// Run simulation using SimulationConfig values (coroutine version)
+    /// Public method to start simulation - call this from UI buttons.
+    /// </summary>
+    public void StartSimulation()
+    {
+        if (_isRunning)
+        {
+            Debug.LogWarning("Simulation already running!");
+            return;
+        }
+
+        // Validate config
+        if (config == null)
+        {
+            Debug.LogError("SimulationConfig not assigned! Please assign it in the Inspector.");
+            return;
+        }
+
+        string errorMessage;
+        if (!config.IsValid(out errorMessage))
+        {
+            Debug.LogError($"Invalid configuration: {errorMessage}");
+            return;
+        }
+
+        StartCoroutine(RunAllScenariosCoroutine());
+    }
+
+    /// <summary>
+    /// Context menu for Editor testing
     /// </summary>
     [ContextMenu("Run Simulation")]
     public void RunSimulation()
     {
-        // For Editor/ContextMenu use - starts the coroutine
-        StartCoroutine(RunSimulationCoroutine());
+        StartSimulation();
     }
 
     /// <summary>
-    /// Coroutine that runs simulation with loading screen support
+    /// Main coroutine that runs all scenarios
     /// </summary>
-    private IEnumerator RunSimulationCoroutine()
+    private IEnumerator RunAllScenariosCoroutine()
     {
-        if (config == null)
+        _isRunning = true;
+        _cancelRequested = false;
+
+        // Show results screen in progress mode
+        if (resultsScreen != null)
         {
-            UnityEngine.Debug.LogError("SimulationConfig not assigned! Please assign it in the Inspector.");
-            yield break;
+            resultsScreen.Show();
         }
 
-        // Show loading screen
-        if (loadingScreen != null)
-        {
-            loadingScreen.SetActive(true);
-        }
-
-        // Wait one frame so the loading screen actually renders
+        // Wait one frame so the UI renders
         yield return null;
 
-        UnityEngine.Debug.Log("=== TinySea Simulation v5 Starting ===");
-        UnityEngine.Debug.Log($"Using config: {config.name}");
-        UnityEngine.Debug.Log($"Output will be saved to: {OutputDirectory}");
+        Debug.Log("=== TinySea Simulation v6 Starting ===");
+        Debug.Log($"Config: {config.DaysPerScenario} days x {config.NumberOfScenarios} scenarios");
+        Debug.Log($"BiologyStep: {config.BiologyStep}");
 
-        // Create runner with seed from config
-        var runner = new SimulationRunner(config.RandomSeed);
+        // Initialize aggregate results with ALL config parameters
+        _currentResults = new AggregateResults
+        {
+            // Simulation timing
+            TotalScenarios = config.NumberOfScenarios,
+            DaysPerScenario = config.DaysPerScenario,
+            BiologyStep = config.BiologyStep,
+            RandomSeed = config.RandomSeed,
 
-        // Apply simulation parameters from config
-        runner.MaxYears = config.MaxYears;
+            // Carrying capacity
+            UseCarryingCapacity = config.UseCarryingCapacity,
+            CarryingCapacity = config.CarryingCapacityTier1,
+
+            // Temperature - Base
+            BaseTemperature = config.BaseTemperature,
+            SeasonalAmplitude = config.SeasonalAmplitude,
+
+            // Temperature - Climate Trend
+            ClimateTrend = config.ClimateTrend,
+            InterannualVariation = config.InterannualVariation,
+            VariabilityMagnitude = config.VariabilityMagnitude,
+            WarmingBias = config.WarmingBias,
+
+            // Temperature - Daily Variation
+            Autocorrelated = config.Autocorrelated,
+            DailyVariationRange = config.DailyVariationRange,
+            RandomnessGrowthRate = config.RandomnessGrowthRate,
+
+            // Temperature - Bounds
+            TemperatureBoundsMin = config.TemperatureBoundsMin,
+            TemperatureBoundsMax = config.TemperatureBoundsMax,
+
+            // Species reference
+            RunSpecies = config.RunSpecies,
+
+            // Initialize scenarios list
+            Scenarios = new List<ScenarioResult>()
+        };
+
+        // Run each scenario
+        for (int i = 0; i < config.NumberOfScenarios; i++)
+        {
+            // Check for cancel
+            if (_cancelRequested)
+            {
+                Debug.Log($"Simulation cancelled after {i} scenarios");
+                break;
+            }
+
+            int scenarioIndex = i + 1;  // 1-based for display
+
+            // Update progress
+            if (resultsScreen != null)
+            {
+                resultsScreen.UpdateProgress(scenarioIndex, config.NumberOfScenarios);
+            }
+
+            Debug.Log($"--- Running Scenario {scenarioIndex} of {config.NumberOfScenarios} ---");
+
+            // Calculate seed for this scenario
+            // Each scenario gets a DIFFERENT seed: baseSeed + scenarioIndex
+            int scenarioSeed = config.RandomSeed < 0
+                ? -1  // Random each time (truly random)
+                : config.RandomSeed + i;  // Deterministic but different per scenario
+
+            // Run single scenario
+            var result = RunSingleScenario(scenarioIndex, scenarioSeed);
+            _currentResults.Scenarios.Add(result);
+
+            // Notify results screen (for real-time updates if desired)
+            if (resultsScreen != null)
+            {
+                resultsScreen.OnScenarioCompleted(result);
+            }
+
+            // Yield to allow UI to update
+            yield return null;
+        }
+
+        // Calculate aggregates
+        _currentResults.CompletedAt = System.DateTime.Now;
+        _currentResults.CalculateAggregates();
+
+        // Show results
+        if (resultsScreen != null)
+        {
+            resultsScreen.DisplayResults(_currentResults);
+        }
+
+        // Log summary
+        Debug.Log("=== All Scenarios Complete ===");
+        Debug.Log($"Completed: {_currentResults.CompletedScenarios} scenarios");
+        Debug.Log($"Survived: {_currentResults.SurvivedScenarios}, Crashed: {_currentResults.CrashedScenarios}");
+        Debug.Log($"Crash Rate: {_currentResults.CrashRate:P1}");
+        if (_currentResults.SurvivedScenarios > 0)
+        {
+            Debug.Log($"Avg Final T1: {_currentResults.AvgFinalTier1Pop:N0}, T2: {_currentResults.AvgFinalTier2Pop:N0}");
+        }
+
+        _isRunning = false;
+    }
+
+    /// <summary>
+    /// Run a single scenario and return results
+    /// </summary>
+    private ScenarioResult RunSingleScenario(int scenarioIndex, int seed)
+    {
+        // Create runner with seed
+        var runner = new SimulationRunner(seed);
+
+        // Apply simulation parameters
+        runner.TotalDays = config.DaysPerScenario;
         runner.BiologyStep = config.BiologyStep;
 
         // Apply temperature parameters
@@ -95,167 +242,122 @@ public class SimulationController : MonoBehaviour
         runner.TempCalc.MinTemp = config.TemperatureBoundsMin;
         runner.TempCalc.MaxTemp = config.TemperatureBoundsMax;
 
-        // Pass RunSpeciesList from config (changed from Database)
+        // Pass species list
         runner.RunSpecies = config.RunSpecies;
 
         // Apply carrying capacity settings
         runner.Ecosystem.UseCarryingCapacity = config.UseCarryingCapacity;
         runner.Ecosystem.CarryingCapacityPerTier = config.CarryingCapacityTier1;
 
-        // Log config values being used
-        UnityEngine.Debug.Log($"Config: BiologyStep={config.BiologyStep}, MaxYears={config.MaxYears}");
-        UnityEngine.Debug.Log($"Carrying Capacity (Tier 1 only): {config.UseCarryingCapacity} (limit={config.CarryingCapacityTier1})");
-        UnityEngine.Debug.Log($"Temperature: Base={config.BaseTemperature}°C, Seasonal=±{config.SeasonalAmplitude}°C, " +
-                              $"Trend={config.ClimateTrend}°C/year, Bounds=[{config.TemperatureBoundsMin}, {config.TemperatureBoundsMax}]");
-
-        if (config.RunSpecies != null)
-        {
-            UnityEngine.Debug.Log($"Using RunSpeciesList: {config.RunSpecies.name} with {config.RunSpecies.speciesList.Count} species");
-        }
-        else
-        {
-            UnityEngine.Debug.LogWarning("No RunSpeciesList assigned in config - using defaults!");
-        }
-
-        // Run simulation
+        // Run the simulation
         runner.Run();
 
-        // Hide loading screen before file save/download
-        if (loadingScreen != null)
-        {
-            loadingScreen.SetActive(false);
-        }
-
-        // Save results
-        string timestamp = System.DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
-        string crashSuffix = runner.HasCrashed ? "_crash_day" + runner.CrashDay : "";
-        string filename = "tinysea_v5_" + timestamp + crashSuffix + ".csv";
-
-#if UNITY_WEBGL && !UNITY_EDITOR
-        // WebGL: trigger browser download instead of writing to persistentDataPath
-        string csv = runner.ToCsv();
-        WebGLDownload.DownloadCsv(filename, csv);
-        lastOutputPath = filename; // just store the name for UI/status
-#else
-        // Desktop: keep your current behavior
-        lastOutputPath = runner.SaveToFile(OutputDirectory);
-#endif
-
-        // Update status
-        lastRunCrashed = runner.HasCrashed;
-        lastCrashDay = runner.CrashDay;
-        lastCrashTier = runner.CrashTier;
-
-        // Get summary
-        var summary = runner.GetSummary();
-        if (summary != null)
-        {
-            lastFinalTier1Pop = summary.FinalTier1Pop;
-            lastFinalTier2Pop = summary.FinalTier2Pop;
-        }
-
-        // Log results
-        var records = runner.GetRecords();
-        UnityEngine.Debug.Log($"=== Simulation Complete ===");
-        UnityEngine.Debug.Log($"Days recorded: {records.Count}");
-        UnityEngine.Debug.Log($"Biology cycles: {summary?.TotalBiologyCycles ?? 0}");
-        UnityEngine.Debug.Log($"Crashed: {lastRunCrashed} (Day: {lastCrashDay}, Tier: {lastCrashTier})");
-        UnityEngine.Debug.Log($"Final populations: Tier1={lastFinalTier1Pop:F2}, Tier2={lastFinalTier2Pop:F2}");
-        UnityEngine.Debug.Log($"File: {lastOutputPath}");
-
-        // Print first and last few records
-        PrintRecordSamples(records);
-
-        // Open file if requested
-        if (openFileOnComplete && !string.IsNullOrEmpty(lastOutputPath))
-        {
-            OpenFile(lastOutputPath);
-        }
+        // Convert to ScenarioResult
+        return runner.ToScenarioResult(scenarioIndex);
     }
 
-    private void PrintRecordSamples(System.Collections.Generic.List<StepRecord> records)
+    /// <summary>
+    /// Handle cancel request from results screen
+    /// </summary>
+    private void OnCancelRequested()
     {
-        if (records.Count == 0) return;
-
-        UnityEngine.Debug.Log("=== First 5 days ===");
-        for (int i = 0; i < Mathf.Min(5, records.Count); i++)
-        {
-            var r = records[i];
-            string bio = r.BiologyCycle > 0 ? $" [Cycle {r.BiologyCycle}]" : "";
-            UnityEngine.Debug.Log($"Day {r.Day}: Temp={r.Temperature:F1}°C, T1={r.Tier1Pop}, T2={r.Tier2Pop}{bio}");
-        }
-
-        if (records.Count > 10)
-        {
-            UnityEngine.Debug.Log("...");
-            UnityEngine.Debug.Log("=== Last 5 days ===");
-            for (int i = records.Count - 5; i < records.Count; i++)
-            {
-                var r = records[i];
-                string bio = r.BiologyCycle > 0 ? $" [Cycle {r.BiologyCycle}]" : "";
-                UnityEngine.Debug.Log($"Day {r.Day}: Temp={r.Temperature:F1}°C, T1={r.Tier1Pop}, T2={r.Tier2Pop}{bio}");
-            }
-        }
+        _cancelRequested = true;
+        Debug.Log("Cancel requested");
     }
 
-    [ContextMenu("Open Last Results")]
-    public void OpenLastResults()
+    /// <summary>
+    /// Handle results screen close
+    /// </summary>
+    private void OnResultsClosed()
     {
-        if (string.IsNullOrEmpty(lastOutputPath) || !File.Exists(lastOutputPath))
-        {
-            UnityEngine.Debug.LogWarning("No results file found. Run simulation first.");
-            return;
-        }
-        OpenFile(lastOutputPath);
+        // Clear results to free memory
+        _currentResults = null;
+        Debug.Log("Results screen closed, data cleared");
     }
+
+    /// <summary>
+    /// Check if simulation is currently running
+    /// </summary>
+    public bool IsRunning => _isRunning;
+
+    /// <summary>
+    /// Get current aggregate results (null if not available)
+    /// </summary>
+    public AggregateResults GetCurrentResults() => _currentResults;
+
+    // ==================== EDITOR UTILITIES ====================
 
     [ContextMenu("Open Output Folder")]
     public void OpenOutputFolder()
     {
+#if UNITY_EDITOR
         if (!Directory.Exists(OutputDirectory))
         {
             Directory.CreateDirectory(OutputDirectory);
         }
 
-        UnityEngine.Debug.Log($"Opening folder: {OutputDirectory}");
+        Debug.Log($"Opening folder: {OutputDirectory}");
 
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
-        Process.Start("explorer.exe", OutputDirectory.Replace("/", "\\"));
-#elif UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX
-        Process.Start("open", OutputDirectory);
-#else
-        UnityEngine.Debug.Log($"Folder path: {OutputDirectory}");
+#if UNITY_EDITOR_WIN
+        System.Diagnostics.Process.Start("explorer.exe", OutputDirectory.Replace("/", "\\"));
+#elif UNITY_EDITOR_OSX
+        System.Diagnostics.Process.Start("open", OutputDirectory);
+#endif
 #endif
     }
 
-    [ContextMenu("Log Output Path")]
-    public void LogOutputPath()
+    [ContextMenu("Log Config")]
+    public void LogConfig()
     {
-        UnityEngine.Debug.Log($"Application.persistentDataPath: {Application.persistentDataPath}");
-        UnityEngine.Debug.Log($"Output directory: {OutputDirectory}");
+        if (config == null)
+        {
+            Debug.Log("No config assigned");
+            return;
+        }
+
+        Debug.Log($"=== SimulationConfig: {config.name} ===");
+        Debug.Log($"Days per Scenario: {config.DaysPerScenario}");
+        Debug.Log($"Number of Scenarios: {config.NumberOfScenarios}");
+        Debug.Log($"Biology Step: {config.BiologyStep}");
+        Debug.Log($"Base Temperature: {config.BaseTemperature}C");
+        Debug.Log($"Climate Trend: {config.ClimateTrend}C/year");
+        Debug.Log($"Carrying Capacity: {config.UseCarryingCapacity} ({config.CarryingCapacityTier1})");
+        Debug.Log($"Random Seed: {config.RandomSeed}");
+
+        if (config.RunSpecies != null)
+        {
+            Debug.Log($"Species: {config.RunSpecies.speciesList?.Count ?? 0} configured");
+        }
+        else
+        {
+            Debug.Log("Species: None assigned!");
+        }
     }
 
-    private void OpenFile(string path)
+    [ContextMenu("Export Config JSON")]
+    public void ExportConfigJson()
     {
-        UnityEngine.Debug.Log($"Opening file: {path}");
+        if (config == null)
+        {
+            Debug.LogError("No config assigned");
+            return;
+        }
 
-        try
+        string json = ConfigExporter.ToJson(config);
+        string filename = $"tinysea_config_{System.DateTime.Now:yyyy-MM-dd_HH-mm-ss}.json";
+        string path = Path.Combine(Application.persistentDataPath, filename);
+
+        File.WriteAllText(path, json);
+        Debug.Log($"Config exported to: {path}");
+
+#if UNITY_EDITOR_WIN
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
         {
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = path.Replace("/", "\\"),
-                UseShellExecute = true
-            });
-#elif UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX
-            Process.Start("open", path);
-#else
-            UnityEngine.Debug.Log($"File path: {path}");
+            FileName = path.Replace("/", "\\"),
+            UseShellExecute = true
+        });
+#elif UNITY_EDITOR_OSX
+        System.Diagnostics.Process.Start("open", path);
 #endif
-        }
-        catch (System.Exception e)
-        {
-            UnityEngine.Debug.LogError($"Failed to open file: {e.Message}");
-        }
     }
 }

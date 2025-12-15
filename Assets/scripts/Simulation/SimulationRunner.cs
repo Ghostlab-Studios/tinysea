@@ -110,11 +110,9 @@ public class StepRecord
 /// <summary>
 /// Main simulation runner.
 /// 
-/// Runs simulation for MaxYears with biology every BiologyStep days.
-/// Tracks all deaths, births, and accumulator states for CSV output.
-/// 
-/// v5 CHANGES:
-/// - Now uses RunSpeciesList instead of SpeciesDatabase
+/// v6 CHANGES:
+/// - Now uses TotalDays instead of MaxYears
+/// - Direct day control for flexible scenario lengths
 /// </summary>
 public class SimulationRunner
 {
@@ -123,10 +121,10 @@ public class SimulationRunner
     public EcosystemSimulator Ecosystem { get; private set; }
 
     // Settings
-    public int MaxYears = 1;
+    public int TotalDays = 365;  // Changed from MaxYears
     public int BiologyStep = 1;
 
-    // Species list reference (changed from SpeciesDatabase to RunSpeciesList)
+    // Species list reference
     public RunSpeciesList RunSpecies { get; set; }
 
     // Results
@@ -138,14 +136,18 @@ public class SimulationRunner
     public int CrashDay { get; private set; } = -1;
     public int CrashTier { get; private set; } = -1;
 
+    // Seed tracking (for results)
+    public int UsedSeed { get; private set; } = -1;
+
     public SimulationRunner(int seed = -1)
     {
+        UsedSeed = seed;
         TempCalc = new TemperatureCalculator(seed);
         Ecosystem = new EcosystemSimulator(seed);
     }
 
     /// <summary>
-    /// Run the simulation for MaxYears.
+    /// Run the simulation for TotalDays.
     /// </summary>
     public void Run()
     {
@@ -168,11 +170,9 @@ public class SimulationRunner
             Ecosystem.InitializeDefaultSpecies();
         }
 
-        int totalDays = MaxYears * TemperatureCalculator.DAYS_PER_YEAR;
+        Debug.Log($"=== Starting Simulation: {TotalDays} days, BiologyStep={BiologyStep} ===");
 
-        Debug.Log($"=== Starting Simulation: {MaxYears} year(s), {totalDays} days, BiologyStep={BiologyStep} ===");
-
-        for (int dayIndex = 0; dayIndex < totalDays; dayIndex++)
+        for (int dayIndex = 0; dayIndex < TotalDays; dayIndex++)
         {
             int displayDay = dayIndex + 1;
             int year = (dayIndex / TemperatureCalculator.DAYS_PER_YEAR) + 1;
@@ -296,13 +296,16 @@ public class SimulationRunner
 
         string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
         string crashSuffix = HasCrashed ? $"_crash_day{CrashDay}" : "";
-        string filename = $"tinysea_v5_{timestamp}{crashSuffix}.csv";
+        string filename = $"tinysea_v6_{timestamp}{crashSuffix}.csv";
         string path = Path.Combine(directory, filename);
 
         File.WriteAllText(path, ToCsv());
         return path;
     }
 
+    /// <summary>
+    /// Get summary statistics for this run
+    /// </summary>
     public SimulationSummary GetSummary()
     {
         if (_records.Count == 0) return null;
@@ -319,14 +322,24 @@ public class SimulationRunner
         var lastRecord = _records[_records.Count - 1];
         summary.FinalTier1Pop = lastRecord.Tier1Pop;
         summary.FinalTier2Pop = lastRecord.Tier2Pop;
+        summary.FinalTier1Arctic = lastRecord.Tier1Arctic;
+        summary.FinalTier1Common = lastRecord.Tier1Common;
+        summary.FinalTier1Tropical = lastRecord.Tier1Tropical;
+        summary.FinalTier2Arctic = lastRecord.Tier2Arctic;
+        summary.FinalTier2Common = lastRecord.Tier2Common;
+        summary.FinalTier2Tropical = lastRecord.Tier2Tropical;
 
         long maxT1 = 0, minT1 = long.MaxValue;
         long maxT2 = 0, minT2 = long.MaxValue;
         float tempSum = 0;
+        float minTemp = float.MaxValue;
+        float maxTemp = float.MinValue;
 
         foreach (var r in _records)
         {
             tempSum += r.Temperature;
+            if (r.Temperature < minTemp) minTemp = r.Temperature;
+            if (r.Temperature > maxTemp) maxTemp = r.Temperature;
             if (r.Tier1Pop > maxT1) maxT1 = r.Tier1Pop;
             if (r.Tier1Pop < minT1 && r.Tier1Pop >= 1) minT1 = r.Tier1Pop;
             if (r.Tier2Pop > maxT2) maxT2 = r.Tier2Pop;
@@ -338,8 +351,45 @@ public class SimulationRunner
         summary.MaxTier2Pop = maxT2;
         summary.MinTier2Pop = minT2 == long.MaxValue ? 0 : minT2;
         summary.AvgTemperature = tempSum / _records.Count;
+        summary.MinTemperature = minTemp;
+        summary.MaxTemperature = maxTemp;
 
         return summary;
+    }
+
+    /// <summary>
+    /// Convert this run's results to a ScenarioResult for the results screen
+    /// </summary>
+    public ScenarioResult ToScenarioResult(int scenarioIndex)
+    {
+        var summary = GetSummary();
+        
+        return new ScenarioResult
+        {
+            ScenarioIndex = scenarioIndex,
+            RandomSeed = UsedSeed,
+            TotalDays = summary?.TotalDays ?? 0,
+            BiologyCycles = summary?.TotalBiologyCycles ?? 0,
+            Crashed = HasCrashed,
+            CrashDay = CrashDay,
+            CrashTier = CrashTier,
+            FinalTier1Pop = summary?.FinalTier1Pop ?? 0,
+            FinalTier2Pop = summary?.FinalTier2Pop ?? 0,
+            FinalTier1Arctic = summary?.FinalTier1Arctic ?? 0,
+            FinalTier1Common = summary?.FinalTier1Common ?? 0,
+            FinalTier1Tropical = summary?.FinalTier1Tropical ?? 0,
+            FinalTier2Arctic = summary?.FinalTier2Arctic ?? 0,
+            FinalTier2Common = summary?.FinalTier2Common ?? 0,
+            FinalTier2Tropical = summary?.FinalTier2Tropical ?? 0,
+            MaxTier1Pop = summary?.MaxTier1Pop ?? 0,
+            MinTier1Pop = summary?.MinTier1Pop ?? 0,
+            MaxTier2Pop = summary?.MaxTier2Pop ?? 0,
+            MinTier2Pop = summary?.MinTier2Pop ?? 0,
+            AvgTemperature = summary?.AvgTemperature ?? 0,
+            MinTemperature = summary?.MinTemperature ?? 0,
+            MaxTemperature = summary?.MaxTemperature ?? 0,
+            CsvData = ToCsv()
+        };
     }
 }
 
@@ -355,11 +405,19 @@ public class SimulationSummary
     public int CrashTier;
     public long FinalTier1Pop;
     public long FinalTier2Pop;
+    public long FinalTier1Arctic;
+    public long FinalTier1Common;
+    public long FinalTier1Tropical;
+    public long FinalTier2Arctic;
+    public long FinalTier2Common;
+    public long FinalTier2Tropical;
     public long MaxTier1Pop;
     public long MinTier1Pop;
     public long MaxTier2Pop;
     public long MinTier2Pop;
     public float AvgTemperature;
+    public float MinTemperature;
+    public float MaxTemperature;
 
     public override string ToString()
     {

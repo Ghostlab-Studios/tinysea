@@ -40,7 +40,12 @@ public class SimulationInputUI : MonoBehaviour
          "Recommended: 1000-10000 depending on desired ecosystem size.")]
     public TMP_InputField CarryingCapacityTier1;
 
-    public TMP_InputField MaxYears;
+    [Tooltip("Number of days per scenario (e.g., 365 for 1 year, 3650 for 10 years)")]
+    public TMP_InputField DaysPerScenarioInput;
+
+    [Tooltip("Number of times to run the scenario for statistical analysis")]
+    public TMP_InputField NumberOfScenariosInput;
+
     public Button RunSimulationButton;
 
     [Header("=== RESET ===")]
@@ -70,7 +75,8 @@ public class SimulationInputUI : MonoBehaviour
         public float TemperatureBoundsMin;
         public float TemperatureBoundsMax;
         public float CarryingCapacityTier1;
-        public int MaxYears;
+        public int DaysPerScenario;
+        public int NumberOfScenarios;
 
         public static SimulationConfigDefaults CreateFrom(SimulationConfig config)
         {
@@ -90,7 +96,8 @@ public class SimulationInputUI : MonoBehaviour
                 TemperatureBoundsMin = config.TemperatureBoundsMin,
                 TemperatureBoundsMax = config.TemperatureBoundsMax,
                 CarryingCapacityTier1 = config.CarryingCapacityTier1,
-                MaxYears = config.MaxYears
+                DaysPerScenario = config.DaysPerScenario,
+                NumberOfScenarios = config.NumberOfScenarios
             };
         }
 
@@ -110,7 +117,8 @@ public class SimulationInputUI : MonoBehaviour
             config.TemperatureBoundsMin = TemperatureBoundsMin;
             config.TemperatureBoundsMax = TemperatureBoundsMax;
             config.CarryingCapacityTier1 = CarryingCapacityTier1;
-            config.MaxYears = MaxYears;
+            config.DaysPerScenario = DaysPerScenario;
+            config.NumberOfScenarios = NumberOfScenarios;
         }
     }
 
@@ -221,7 +229,8 @@ public class SimulationInputUI : MonoBehaviour
         SetFloat(TemperatureBoundsMax, config.TemperatureBoundsMax);
 
         SetFloat(CarryingCapacityTier1, config.CarryingCapacityTier1);
-        SetInt(MaxYears, config.MaxYears);
+        SetInt(DaysPerScenarioInput, config.DaysPerScenario);
+        SetInt(NumberOfScenariosInput, config.NumberOfScenarios);
     }
 
     private void OnRunSimulationClicked()
@@ -241,7 +250,9 @@ public class SimulationInputUI : MonoBehaviour
         float randGrowth = 0f;
         float boundsMin = 0f;
         float boundsMax = 0f;
-        int maxYears = 0;
+        float carryingCapacity = 0f;
+        int daysPerScenario = 0;
+        int numberOfScenarios = 0;
 
         allValid &= TryReadFloat(BaseTemperatureInput, out baseTemp);
         allValid &= TryReadFloat(SeasonalAmplitude, out seasonalAmp);
@@ -255,12 +266,14 @@ public class SimulationInputUI : MonoBehaviour
 
         allValid &= TryReadFloat(TemperatureBoundsMin, out boundsMin);
         allValid &= TryReadFloat(TemperatureBoundsMax, out boundsMax);
-        allValid &= TryReadFloat(CarryingCapacityTier1, out float carryingCapacity);
+        allValid &= TryReadFloat(CarryingCapacityTier1, out carryingCapacity);
 
-        allValid &= TryReadInt(MaxYears, out maxYears);
+        allValid &= TryReadInt(DaysPerScenarioInput, out daysPerScenario, minValue: 1, maxValue: 182500);
+        allValid &= TryReadInt(NumberOfScenariosInput, out numberOfScenarios, minValue: 1, maxValue: 100);
 
         if (!allValid)
         {
+            Debug.LogWarning("SimulationInputUI: Validation failed - check highlighted fields");
             return;
         }
 
@@ -282,7 +295,8 @@ public class SimulationInputUI : MonoBehaviour
         config.TemperatureBoundsMax = boundsMax;
 
         config.CarryingCapacityTier1 = carryingCapacity;
-        config.MaxYears = maxYears;
+        config.DaysPerScenario = daysPerScenario;
+        config.NumberOfScenarios = numberOfScenarios;
 
 #if UNITY_EDITOR
         UnityEditor.EditorUtility.SetDirty(config);
@@ -332,7 +346,7 @@ public class SimulationInputUI : MonoBehaviour
         return ok;
     }
 
-    private bool TryReadInt(TMP_InputField field, out int value)
+    private bool TryReadInt(TMP_InputField field, out int value, int minValue = int.MinValue, int maxValue = int.MaxValue)
     {
         value = 0;
 
@@ -352,6 +366,16 @@ public class SimulationInputUI : MonoBehaviour
             out value
         );
 
+        // Additional range validation
+        if (ok)
+        {
+            if (value < minValue || value > maxValue)
+            {
+                ok = false;
+                Debug.LogWarning($"SimulationInputUI: Value {value} out of range [{minValue}, {maxValue}]");
+            }
+        }
+
         SetFieldColor(field, ok ? ValidColor : InvalidColor);
         return ok;
     }
@@ -370,7 +394,8 @@ public class SimulationInputUI : MonoBehaviour
         SetFieldColor(TemperatureBoundsMin, ValidColor);
         SetFieldColor(TemperatureBoundsMax, ValidColor);
         SetFieldColor(CarryingCapacityTier1, ValidColor);
-        SetFieldColor(MaxYears, ValidColor);
+        SetFieldColor(DaysPerScenarioInput, ValidColor);
+        SetFieldColor(NumberOfScenariosInput, ValidColor);
     }
 
     private static void SetFieldColor(TMP_InputField field, Color color)

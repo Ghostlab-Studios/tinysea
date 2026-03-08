@@ -4,11 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-TinySea is a Unity 6 (6000.3.0f1) educational game/simulation built by Northeastern University GhostLab. Players manage a marine ecosystem by buying/selling organisms across a 3-tier food chain while temperature fluctuates seasonally and with climate change. The project has two modes: an interactive game and a headless ecosystem simulation for research.
+TinySea is a Unity 6 (6000.3.8f1) educational game/simulation built by Northeastern University GhostLab. Players manage a marine ecosystem by buying/selling organisms across a 3-tier food chain while temperature fluctuates seasonally and with climate change. The project has two modes: an interactive game and a headless ecosystem simulation for research.
 
 ## Build & Run
 
-This is a Unity project — open in Unity Editor 6000.3.0f1. There is no CLI build pipeline. The primary build target is WebGL (see `Builds/` folder). The project uses the standard Unity C# compilation (Assembly-CSharp).
+This is a Unity project — open in Unity Editor 6000.3.8f1. There is no CLI build pipeline. The primary build target is WebGL (see `Builds/` folder). The project uses the standard Unity C# compilation (Assembly-CSharp).
 
 Key packages: Newtonsoft JSON, TextMesh Pro, Unity UI (uGUI), Vector Graphics, AI Navigation. WebGL input handled by `Assets/WebGLSupport/`.
 

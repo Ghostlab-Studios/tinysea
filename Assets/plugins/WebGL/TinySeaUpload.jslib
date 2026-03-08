@@ -1,30 +1,40 @@
 mergeInto(LibraryManager.library, {
 
     TinySea_InitDragDrop: function() {
-        var canvas = document.querySelector('#unity-canvas') || document.querySelector('canvas');
-        if (!canvas) {
-            console.warn('[TinySea] Could not find canvas element for drag-drop.');
-            return;
-        }
+        var dragCounter = 0;
 
-        canvas.addEventListener('dragover', function(e) {
+        // Prevent the browser from opening dropped files — must be on document level
+        document.addEventListener('dragover', function(e) {
             e.preventDefault();
-            e.stopPropagation();
-            SendMessage('CSV Uploader', 'OnCsvDragOver');
+            e.dataTransfer.dropEffect = 'copy';
         });
 
-        canvas.addEventListener('dragleave', function(e) {
+        // Use dragenter/dragleave with a counter to handle nested elements correctly
+        document.addEventListener('dragenter', function(e) {
             e.preventDefault();
-            e.stopPropagation();
-            SendMessage('CSV Uploader', 'OnCsvDragLeave');
+            dragCounter++;
+            if (dragCounter === 1) {
+                SendMessage('CsvUploadHandler', 'OnCsvDragOver');
+            }
         });
 
-        canvas.addEventListener('drop', function(e) {
+        document.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            dragCounter--;
+            if (dragCounter <= 0) {
+                dragCounter = 0;
+                SendMessage('CsvUploadHandler', 'OnCsvDragLeave');
+            }
+        });
+
+        // Listen on document so the drop works anywhere on the page
+        document.addEventListener('drop', function(e) {
             e.preventDefault();
             e.stopPropagation();
+            dragCounter = 0;
 
             if (!e.dataTransfer || !e.dataTransfer.files || e.dataTransfer.files.length === 0) {
-                SendMessage('CSV Uploader', 'OnCsvDragLeave');
+                SendMessage('CsvUploadHandler', 'OnCsvDragLeave');
                 return;
             }
 
@@ -32,19 +42,21 @@ mergeInto(LibraryManager.library, {
             var name = file.name.toLowerCase();
 
             if (name.substring(name.length - 4) !== '.csv') {
-                SendMessage('CSV Uploader', 'OnCsvUploadError', 'Only CSV files are accepted. Please drop a .csv file.');
+                SendMessage('CsvUploadHandler', 'OnCsvUploadError', 'Only CSV files are accepted. Please drop a .csv file.');
                 return;
             }
 
             var reader = new FileReader();
             reader.onload = function() {
-                SendMessage('CSV Uploader', 'OnCsvFileReceived', reader.result);
+                SendMessage('CsvUploadHandler', 'OnCsvFileReceived', reader.result);
             };
             reader.onerror = function() {
-                SendMessage('CSV Uploader', 'OnCsvUploadError', 'Failed to read file.');
+                SendMessage('CsvUploadHandler', 'OnCsvUploadError', 'Failed to read file.');
             };
             reader.readAsText(file);
         });
+
+        console.log('[TinySea] Drag-and-drop initialized on document.');
     }
 
 });

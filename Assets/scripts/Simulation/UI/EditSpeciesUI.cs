@@ -169,22 +169,48 @@ public class EditSpeciesUI : MonoBehaviour
     private void OnEnable()
     {
         SpeciesEditEvents.OnEditRequested += HandleEditRequested;
+
+        // Wire up button listeners (RemoveListener first to prevent duplicates)
+        if (closeButton != null)
+        {
+            closeButton.onClick.RemoveListener(Close);
+            closeButton.onClick.AddListener(Close);
+        }
+        if (cancelButton != null)
+        {
+            cancelButton.onClick.RemoveListener(Cancel);
+            cancelButton.onClick.AddListener(Cancel);
+        }
+        if (saveButton != null)
+        {
+            saveButton.onClick.RemoveListener(SaveData);
+            saveButton.onClick.AddListener(SaveData);
+        }
+        if (deleteButton != null)
+        {
+            deleteButton.onClick.RemoveListener(Delete);
+            deleteButton.onClick.AddListener(Delete);
+        }
+        if (resetButton != null)
+        {
+            resetButton.onClick.RemoveListener(Reset);
+            resetButton.onClick.AddListener(Reset);
+        }
     }
 
     private void OnDisable()
     {
         SpeciesEditEvents.OnEditRequested -= HandleEditRequested;
+
+        if (closeButton != null) closeButton.onClick.RemoveListener(Close);
+        if (cancelButton != null) cancelButton.onClick.RemoveListener(Cancel);
+        if (saveButton != null) saveButton.onClick.RemoveListener(SaveData);
+        if (deleteButton != null) deleteButton.onClick.RemoveListener(Delete);
+        if (resetButton != null) resetButton.onClick.RemoveListener(Reset);
     }
 
     private void Start()
     {
-        // Wire up button listeners
-        if (closeButton != null) closeButton.onClick.AddListener(Close);
-        if (cancelButton != null) cancelButton.onClick.AddListener(Cancel);
-        if (saveButton != null) saveButton.onClick.AddListener(SaveData);
-        if (deleteButton != null) deleteButton.onClick.AddListener(Delete);
-        if (resetButton != null) resetButton.onClick.AddListener(Reset);
-
         // Start with panel hidden
         if (editPanel != null)
             editPanel.SetActive(false);

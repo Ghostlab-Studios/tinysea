@@ -27,14 +27,36 @@ public class CsvUploadHandler : MonoBehaviour
 
     void Start()
     {
-        #if UNITY_WEBGL && !UNITY_EDITOR
-        TinySea_InitDragDrop();
-        #endif
+        // Drag-drop is now handled by the website's index.php page-level JavaScript.
+        // The page JS calls unityInstance.SendMessage() directly on drop.
+        // No need for TinySea_InitDragDrop() — it registered duplicate listeners
+        // that produced "object not found" errors.
 
         SetIdleState();
+    }
 
-        goBackButton.onClick.AddListener(OnGoBackClicked);
-        runSimulationButton.onClick.AddListener(OnRunSimulationClicked);
+    void OnEnable()
+    {
+        if (goBackButton != null)
+        {
+            goBackButton.onClick.RemoveListener(OnGoBackClicked);
+            goBackButton.onClick.AddListener(OnGoBackClicked);
+        }
+
+        if (runSimulationButton != null)
+        {
+            runSimulationButton.onClick.RemoveListener(OnRunSimulationClicked);
+            runSimulationButton.onClick.AddListener(OnRunSimulationClicked);
+        }
+    }
+
+    void OnDisable()
+    {
+        if (goBackButton != null)
+            goBackButton.onClick.RemoveListener(OnGoBackClicked);
+
+        if (runSimulationButton != null)
+            runSimulationButton.onClick.RemoveListener(OnRunSimulationClicked);
     }
 
     private void SetIdleState()
@@ -179,6 +201,45 @@ public class CsvUploadHandler : MonoBehaviour
                 string content = System.IO.File.ReadAllText(path);
                 OnCsvFileReceived(content);
             }
+        }
+    }
+
+    void OnGUI()
+    {
+        Event e = Event.current;
+
+        if (e.type == EventType.DragUpdated)
+        {
+            if (UnityEditor.DragAndDrop.paths.Length > 0 &&
+                UnityEditor.DragAndDrop.paths[0].EndsWith(".csv", System.StringComparison.OrdinalIgnoreCase))
+            {
+                UnityEditor.DragAndDrop.visualMode = UnityEditor.DragAndDropVisualMode.Copy;
+                e.Use();
+                OnCsvDragOver();
+            }
+        }
+        else if (e.type == EventType.DragPerform)
+        {
+            UnityEditor.DragAndDrop.AcceptDrag();
+            e.Use();
+
+            if (UnityEditor.DragAndDrop.paths.Length > 0)
+            {
+                string path = UnityEditor.DragAndDrop.paths[0];
+                if (path.EndsWith(".csv", System.StringComparison.OrdinalIgnoreCase))
+                {
+                    string content = System.IO.File.ReadAllText(path);
+                    OnCsvFileReceived(content);
+                }
+                else
+                {
+                    OnCsvUploadError("Only CSV files are accepted. Please drop a .csv file.");
+                }
+            }
+        }
+        else if (e.type == EventType.DragExited)
+        {
+            OnCsvDragLeave();
         }
     }
 #endif

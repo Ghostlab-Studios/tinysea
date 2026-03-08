@@ -1,0 +1,9 @@
+<linker>
+  <!-- Preserve CsvUploadHandler methods called via SendMessage from JavaScript -->
+  <assembly fullname="Assembly-CSharp">
+    <type fullname="CsvUploadHandler" preserve="all"/>
+  </assembly>
+
+  <!-- Preserve Vector Graphics runtime (SVG rendering stripped by aggressive IL2CPP) -->
+  <assembly fullname="Unity.VectorGraphics" preserve="all"/>
+</linker>

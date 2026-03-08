@@ -253,7 +253,7 @@ public class SimulationController : MonoBehaviour
         runner.Run();
 
         // Convert to ScenarioResult
-        return runner.ToScenarioResult(scenarioIndex);
+        return runner.ToScenarioResult(scenarioIndex, config.NumberOfScenarios);
     }
 
     /// <summary>

@@ -306,19 +306,19 @@ public class ResultsScreenUI : MonoBehaviour
     /// </summary>
     private void OnDownloadConfigClicked()
     {
-        string json;
+        string csv;
         string timestamp;
 
         // Try to get config from current results first (if available)
         if (_currentResults != null)
         {
-            json = _currentResults.ToConfigJson();
+            csv = _currentResults.ToConfigCsv();
             timestamp = _currentResults.CompletedAt.ToString("yyyy-MM-dd_HH-mm-ss");
         }
         // Otherwise get directly from SimulationController's config
         else if (simulationController != null && simulationController.Config != null)
         {
-            json = ConfigExporter.ToJson(simulationController.Config);
+            csv = ConfigExporter.ToCsv(simulationController.Config);
             timestamp = System.DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
         }
         else
@@ -327,8 +327,8 @@ public class ResultsScreenUI : MonoBehaviour
             return;
         }
 
-        string filename = $"tinysea_config_{timestamp}.json";
-        TriggerDownload(filename, json);
+        string filename = $"tinysea_config_{timestamp}.csv";
+        TriggerDownload(filename, csv);
     }
 
     private void OnDownloadAggregateClicked()
@@ -465,10 +465,10 @@ public class ResultsScreenUI : MonoBehaviour
             _currentResults.ToAggregateCsv()
         ));
 
-        // Add config JSON (NO results)
+        // Add config CSV (NO results)
         files.Add((
-            "config.json",
-            _currentResults.ToConfigJson()
+            "config.csv",
+            _currentResults.ToConfigCsv()
         ));
 
         // Add individual scenario CSVs

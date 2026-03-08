@@ -219,11 +219,12 @@ public class AggregateResults
     {
         var sb = new System.Text.StringBuilder();
 
-        sb.AppendLine("# TinySea Aggregate Results");
-        sb.AppendLine($"# Generated: {CompletedAt:yyyy-MM-dd HH:mm:ss}");
-        sb.AppendLine($"# Configuration: {DaysPerScenario} days x {TotalScenarios} scenarios");
-        sb.AppendLine($"# Base Temp: {BaseTemperature}C, Climate Trend: {ClimateTrend}C/year");
-        sb.AppendLine($"# Carrying Capacity: {(UseCarryingCapacity ? CarryingCapacity.ToString() : "Disabled")}");
+        sb.AppendLine("=== TINYSEA AGGREGATE RESULTS ===");
+        sb.AppendLine($"# Generated,{CompletedAt:yyyy-MM-dd HH:mm:ss}");
+        sb.AppendLine($"# Configuration,{DaysPerScenario} days x {TotalScenarios} scenarios");
+        sb.AppendLine($"# Base Temp,{BaseTemperature}C");
+        sb.AppendLine($"# Climate Trend,{ClimateTrend}C/year");
+        sb.AppendLine($"# Carrying Capacity,{(UseCarryingCapacity ? CarryingCapacity.ToString() : "Disabled")}");
         sb.AppendLine();
 
         sb.AppendLine("=== SUMMARY ===");
@@ -276,6 +277,22 @@ public class AggregateResults
             RunSpecies
         );
     }
+
+    /// <summary>
+    /// Generate configuration CSV - NO RESULTS, only config and species
+    /// </summary>
+    public string ToConfigCsv()
+    {
+        return ConfigExporter.BuildConfigCsv(
+            DaysPerScenario, TotalScenarios, BiologyStep, RandomSeed,
+            UseCarryingCapacity, CarryingCapacity,
+            BaseTemperature, SeasonalAmplitude, ClimateTrend,
+            InterannualVariation, VariabilityMagnitude, WarmingBias,
+            Autocorrelated, DailyVariationRange, RandomnessGrowthRate,
+            TemperatureBoundsMin, TemperatureBoundsMax,
+            RunSpecies
+        );
+    }
 }
 
 /// <summary>
@@ -293,6 +310,24 @@ public static class ConfigExporter
         if (config == null) return "{ \"error\": \"No configuration available\" }";
 
         return BuildConfigJson(
+            config.DaysPerScenario, config.NumberOfScenarios, config.BiologyStep, config.RandomSeed,
+            config.UseCarryingCapacity, config.CarryingCapacityTier1,
+            config.BaseTemperature, config.SeasonalAmplitude, config.ClimateTrend,
+            config.InterannualVariation, config.VariabilityMagnitude, config.WarmingBias,
+            config.Autocorrelated, config.DailyVariationRange, config.RandomnessGrowthRate,
+            config.TemperatureBoundsMin, config.TemperatureBoundsMax,
+            config.RunSpecies
+        );
+    }
+
+    /// <summary>
+    /// Export SimulationConfig to CSV string.
+    /// </summary>
+    public static string ToCsv(SimulationConfig config)
+    {
+        if (config == null) return "# Error,No configuration available";
+
+        return BuildConfigCsv(
             config.DaysPerScenario, config.NumberOfScenarios, config.BiologyStep, config.RandomSeed,
             config.UseCarryingCapacity, config.CarryingCapacityTier1,
             config.BaseTemperature, config.SeasonalAmplitude, config.ClimateTrend,
@@ -397,6 +432,76 @@ public static class ConfigExporter
         }
         sb.AppendLine("  ]");
         sb.AppendLine("}");
+
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Build config CSV from parameters - NO RESULTS included.
+    /// </summary>
+    public static string BuildConfigCsv(
+        int daysPerScenario, int numberOfScenarios, int biologyStep, int randomSeed,
+        bool useCarryingCapacity, float carryingCapacity,
+        float baseTemperature, float seasonalAmplitude, float climateTrend,
+        bool interannualVariation, float variabilityMagnitude, float warmingBias,
+        bool autocorrelated, float dailyVariationRange, float randomnessGrowthRate,
+        float temperatureBoundsMin, float temperatureBoundsMax,
+        RunSpeciesList runSpecies)
+    {
+        var sb = new System.Text.StringBuilder();
+
+        sb.AppendLine("=== TINYSEA CONFIGURATION ===");
+        sb.AppendLine($"# Exported,{DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+        sb.AppendLine();
+
+        sb.AppendLine("=== SIMULATION ===");
+        sb.AppendLine($"Days Per Scenario,{daysPerScenario}");
+        sb.AppendLine($"Number Of Scenarios,{numberOfScenarios}");
+        sb.AppendLine($"Biology Step,{biologyStep}");
+        sb.AppendLine($"Random Seed,{randomSeed}");
+        sb.AppendLine();
+
+        sb.AppendLine("=== CARRYING CAPACITY ===");
+        sb.AppendLine($"Enabled,{useCarryingCapacity.ToString().ToLower()}");
+        sb.AppendLine($"Tier 1 Limit,{carryingCapacity}");
+        sb.AppendLine();
+
+        sb.AppendLine("=== TEMPERATURE ===");
+        sb.AppendLine($"Base Temperature,{baseTemperature}");
+        sb.AppendLine($"Seasonal Amplitude,{seasonalAmplitude}");
+        sb.AppendLine($"Climate Trend Per Year,{climateTrend}");
+        sb.AppendLine($"Interannual Variation,{interannualVariation.ToString().ToLower()}");
+        sb.AppendLine($"Variability Magnitude,{variabilityMagnitude}");
+        sb.AppendLine($"Warming Bias,{warmingBias}");
+        sb.AppendLine($"Autocorrelated,{autocorrelated.ToString().ToLower()}");
+        sb.AppendLine($"Daily Variation Range,{dailyVariationRange}");
+        sb.AppendLine($"Randomness Growth Rate,{randomnessGrowthRate}");
+        sb.AppendLine($"Bounds Min,{temperatureBoundsMin}");
+        sb.AppendLine($"Bounds Max,{temperatureBoundsMax}");
+        sb.AppendLine();
+
+        sb.AppendLine("=== SPECIES ===");
+        if (runSpecies != null && runSpecies.speciesList != null && runSpecies.speciesList.Count > 0)
+        {
+            sb.AppendLine("Name,Variant,Tier,InitialCount,EatingAmount,ReproductionMultiplier," +
+                "DeathThreshold,DeathRate,MinimumDeaths,ReproThreshold," +
+                "NaturalDeathRate,NaturalDeathVariance,HuntingEfficiency,HuntingVariance," +
+                "OptimalTempK,OptimalTempC,ArrhenBreadth,ArrhenLower,ArrhenUpper," +
+                "LowerBoundK,LowerBoundC,UpperBoundK,UpperBoundC");
+
+            foreach (var species in runSpecies.speciesList)
+            {
+                sb.AppendLine($"{species.speciesName},{species.variant},{species.tier},{species.count}," +
+                    $"{species.eatingAmount},{species.reproductionMultiplier}," +
+                    $"{species.deathThreshold},{species.deathRate},{species.minimumDeaths},{species.reproThreshold}," +
+                    $"{species.naturalDeathRate},{species.naturalDeathVariance}," +
+                    $"{species.huntingEfficiency},{species.huntingVariance}," +
+                    $"{species.optimalTempK},{species.optimalTempK - 273.15f:F2}," +
+                    $"{species.arrhenBreadth},{species.arrhenLower},{species.arrhenUpper}," +
+                    $"{species.lowerBoundK},{species.lowerBoundK - 273.15f:F2}," +
+                    $"{species.upperBoundK},{species.upperBoundK - 273.15f:F2}");
+            }
+        }
 
         return sb.ToString();
     }

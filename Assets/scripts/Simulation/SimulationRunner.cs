@@ -276,9 +276,52 @@ public class SimulationRunner
 
     public List<StepRecord> GetRecords() => new List<StepRecord>(_records);
 
-    public string ToCsv()
+    public string ToCsv(int scenarioIndex = 0, int numberOfScenarios = 1)
     {
         var sb = new StringBuilder();
+
+        // Embed configuration as comment lines (# is default comment char in R's read.csv)
+        sb.AppendLine($"#config:days_per_scenario,{TotalDays}");
+        sb.AppendLine($"#config:number_of_scenarios,{numberOfScenarios}");
+        sb.AppendLine($"#config:scenario_index,{scenarioIndex}");
+        sb.AppendLine($"#config:random_seed,{UsedSeed}");
+        sb.AppendLine($"#config:biology_step,{BiologyStep}");
+        sb.AppendLine($"#config:base_temperature,{TempCalc.BaseTemperature}");
+        sb.AppendLine($"#config:seasonal_amplitude,{TempCalc.SeasonalAmplitude}");
+        sb.AppendLine($"#config:climate_trend_per_year,{TempCalc.ClimateTrendPerYear}");
+        sb.AppendLine($"#config:variability_magnitude,{TempCalc.VariabilityMagnitude}");
+        sb.AppendLine($"#config:warming_bias,{TempCalc.WarmingBias}");
+        sb.AppendLine($"#config:daily_variation_range,{TempCalc.BaseRandomness}");
+        sb.AppendLine($"#config:randomness_growth_rate,{TempCalc.RandomnessGrowthRate}");
+        sb.AppendLine($"#config:autocorrelated,{TempCalc.UseAutocorrelation.ToString().ToLower()}");
+        sb.AppendLine($"#config:temperature_bounds_min,{TempCalc.MinTemp}");
+        sb.AppendLine($"#config:temperature_bounds_max,{TempCalc.MaxTemp}");
+        sb.AppendLine($"#config:use_carrying_capacity,{Ecosystem.UseCarryingCapacity.ToString().ToLower()}");
+        sb.AppendLine($"#config:carrying_capacity_tier1,{Ecosystem.CarryingCapacityPerTier}");
+
+        sb.AppendLine("#");
+        if (RunSpecies != null && RunSpecies.speciesList != null && RunSpecies.speciesList.Count > 0)
+        {
+            sb.AppendLine("#species:Name,Variant,Tier,InitialCount,EatingAmount,ReproductionMultiplier," +
+                "DeathThreshold,DeathRate,MinimumDeaths,ReproThreshold," +
+                "NaturalDeathRate,NaturalDeathVariance,HuntingEfficiency,HuntingVariance," +
+                "OptimalTempK,OptimalTempC,ArrhenBreadth,ArrhenLower,ArrhenUpper," +
+                "LowerBoundK,LowerBoundC,UpperBoundK,UpperBoundC");
+            foreach (var sp in RunSpecies.speciesList)
+            {
+                sb.AppendLine($"#species:{sp.speciesName},{sp.variant},{sp.tier},{sp.count}," +
+                    $"{sp.eatingAmount},{sp.reproductionMultiplier}," +
+                    $"{sp.deathThreshold},{sp.deathRate},{sp.minimumDeaths},{sp.reproThreshold}," +
+                    $"{sp.naturalDeathRate},{sp.naturalDeathVariance}," +
+                    $"{sp.huntingEfficiency},{sp.huntingVariance}," +
+                    $"{sp.optimalTempK},{sp.optimalTempK - 273.15f:F2}," +
+                    $"{sp.arrhenBreadth},{sp.arrhenLower},{sp.arrhenUpper}," +
+                    $"{sp.lowerBoundK},{sp.lowerBoundK - 273.15f:F2}," +
+                    $"{sp.upperBoundK},{sp.upperBoundK - 273.15f:F2}");
+            }
+        }
+        sb.AppendLine("#");
+
         sb.AppendLine(StepRecord.CsvHeader());
         foreach (var record in _records)
         {
@@ -360,10 +403,10 @@ public class SimulationRunner
     /// <summary>
     /// Convert this run's results to a ScenarioResult for the results screen
     /// </summary>
-    public ScenarioResult ToScenarioResult(int scenarioIndex)
+    public ScenarioResult ToScenarioResult(int scenarioIndex, int numberOfScenarios = 1)
     {
         var summary = GetSummary();
-        
+
         return new ScenarioResult
         {
             ScenarioIndex = scenarioIndex,
@@ -388,7 +431,7 @@ public class SimulationRunner
             AvgTemperature = summary?.AvgTemperature ?? 0,
             MinTemperature = summary?.MinTemperature ?? 0,
             MaxTemperature = summary?.MaxTemperature ?? 0,
-            CsvData = ToCsv()
+            CsvData = ToCsv(scenarioIndex, numberOfScenarios)
         };
     }
 }

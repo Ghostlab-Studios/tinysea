@@ -19,7 +19,7 @@ MonoBehaviour:
   CarryingCapacityTier1: 5000
   BaseTemperature: 20
   SeasonalAmplitude: 10
-  ClimateTrend: 1
+  ClimateTrend: 3
   InterannualVariation: 1
   VariabilityMagnitude: 2
   WarmingBias: 1.5

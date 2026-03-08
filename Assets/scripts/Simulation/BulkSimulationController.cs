@@ -134,7 +134,7 @@ public class BulkSimulationController : MonoBehaviour
             {
                 float progress = totalScenarios > 0 ? (float)completedScenarios / totalScenarios : 0f;
                 resultsScreen.UpdateBulkProgress(
-                    $"Batch {b + 1} of {batches.Count} ({batch.BatchName})\nScenario 0 of {batch.NumScenarios}...",
+                    $"Batch {b + 1} of {batches.Count} ({batch.BatchName}) \u2014 Scenario 0 of {batch.NumScenarios}...",
                     progress);
             }
             yield return null;
@@ -202,7 +202,7 @@ public class BulkSimulationController : MonoBehaviour
                 {
                     float progress = totalScenarios > 0 ? (float)completedScenarios / totalScenarios : 0f;
                     resultsScreen.UpdateBulkProgress(
-                        $"Batch {b + 1} of {batches.Count} ({batch.BatchName})\nScenario {scenarioIndex} of {batch.NumScenarios}...",
+                        $"Batch {b + 1} of {batches.Count} ({batch.BatchName}) \u2014 Scenario {scenarioIndex} of {batch.NumScenarios}...",
                         progress);
                 }
 

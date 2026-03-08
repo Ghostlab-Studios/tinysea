@@ -39,15 +39,15 @@ ScriptedImporter:
   useSVGPixelsPerUnit: 0
   spriteData:
     TessellationDetail: 0
-    SpriteName: 
-    SpritePivot: {x: 0, y: 0}
+    SpriteName: close-circle-svgrepo-comSprite
+    SpritePivot: {x: 0.5, y: 0.5}
     SpriteAlignment: 0
     SpriteBorder: {x: 0, y: 0, z: 0, w: 0}
     SpriteRect:
       serializedVersion: 2
       x: 0
       y: 0
-      width: 0
-      height: 0
+      width: 21
+      height: 21
     SpriteID: 496b75a8a69493e438258444ab33fb4f
     PhysicsOutlines: []

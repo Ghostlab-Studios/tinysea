@@ -55,6 +55,7 @@ public class ResultsScreenUI : MonoBehaviour
 
     // State
     private AggregateResults _currentResults;
+    private List<(string name, string content)> _bulkFiles;
     private bool _isRunning = false;
     private bool _cancelRequested = false;
     private List<GameObject> _scenarioRows = new List<GameObject>();
@@ -98,6 +99,7 @@ public class ResultsScreenUI : MonoBehaviour
         // Clear previous results
         ClearScenarioList();
         _currentResults = null;
+        _bulkFiles = null;
 
         // Reset progress
         UpdateProgress(0, 1, "Initializing...");
@@ -106,9 +108,16 @@ public class ResultsScreenUI : MonoBehaviour
         if (cancelButton != null)
             cancelButton.interactable = true;
 
-        // Config download is ALWAYS available (even during progress)
+        // Re-enable all download button GameObjects (bulk may have hidden some)
         if (downloadConfigButton != null)
+        {
+            downloadConfigButton.gameObject.SetActive(true);
             downloadConfigButton.interactable = true;
+        }
+        if (downloadAggregateButton != null)
+            downloadAggregateButton.gameObject.SetActive(true);
+        if (downloadAllZipButton != null)
+            downloadAllZipButton.gameObject.SetActive(true);
     }
 
     /// <summary>
@@ -120,6 +129,7 @@ public class ResultsScreenUI : MonoBehaviour
             resultsPanel.SetActive(false);
 
         _isRunning = false;
+        _bulkFiles = null;
     }
 
     /// <summary>
@@ -170,12 +180,73 @@ public class ResultsScreenUI : MonoBehaviour
     }
 
     /// <summary>
+    /// Update progress with custom text and explicit progress value (0-1).
+    /// Used by bulk simulation for multi-batch progress display.
+    /// </summary>
+    public void UpdateBulkProgress(string text, float progress01)
+    {
+        if (progressBar != null)
+        {
+            progressBar.maxValue = 1f;
+            progressBar.value = progress01;
+        }
+
+        if (progressText != null)
+            progressText.text = text;
+    }
+
+    /// <summary>
     /// Called when a single scenario completes (for real-time list updates if desired)
     /// </summary>
     public void OnScenarioCompleted(ScenarioResult result)
     {
         // Could add row immediately for real-time feedback
         // For now, we'll populate all at once when done
+    }
+
+    /// <summary>
+    /// Display bulk simulation completion state.
+    /// Shows resultsSection with only the "Download All (ZIP)" button.
+    /// Hides config download, aggregate download, and scenario rows.
+    /// ZIP is NOT auto-downloaded — user clicks the button.
+    /// </summary>
+    public void DisplayBulkResults(int totalBatches, int totalScenarios,
+        List<(string name, string content)> bulkFiles)
+    {
+        _isRunning = false;
+        _bulkFiles = bulkFiles;
+
+        // Switch to results mode
+        SetProgressMode(false);
+
+        // Update header
+        if (timestampText != null)
+            timestampText.text = $"Completed: {System.DateTime.Now:MMM dd, yyyy 'at' h:mm tt}";
+
+        if (configLabelText != null)
+            configLabelText.text = $"Bulk run \u2014 {totalBatches} batches, {totalScenarios} scenarios";
+
+        // Quick stats summary
+        if (quickStatsText != null)
+            quickStatsText.text = $"Bulk run complete: {totalBatches} batches, {totalScenarios} total scenarios";
+
+        // Hide config download (multiple configs in bulk — not applicable)
+        if (downloadConfigButton != null)
+            downloadConfigButton.gameObject.SetActive(false);
+
+        // Hide aggregate download (not applicable for bulk)
+        if (downloadAggregateButton != null)
+            downloadAggregateButton.gameObject.SetActive(false);
+
+        // SHOW Download All (ZIP) — this is the only download button for bulk
+        if (downloadAllZipButton != null)
+        {
+            downloadAllZipButton.gameObject.SetActive(true);
+            downloadAllZipButton.interactable = true;
+        }
+
+        // No individual scenario rows for bulk
+        ClearScenarioList();
     }
 
     /// <summary>
@@ -359,8 +430,15 @@ public class ResultsScreenUI : MonoBehaviour
 
     private void OnDownloadAllZipClicked()
     {
-        if (_currentResults == null) return;
+        // Bulk mode: download stored bulk files
+        if (_bulkFiles != null && _bulkFiles.Count > 0)
+        {
+            StartCoroutine(DownloadBulkAsZip());
+            return;
+        }
 
+        // Normal mode: build ZIP from current results
+        if (_currentResults == null) return;
         StartCoroutine(DownloadAllAsZip());
     }
 
@@ -498,6 +576,49 @@ public class ResultsScreenUI : MonoBehaviour
         foreach (var (name, content) in files)
         {
             string path = Path.Combine(folder, name);
+            File.WriteAllText(path, content);
+        }
+
+        Debug.Log($"All files saved to: {folder}");
+
+        if (openFilesAfterSave)
+        {
+            OpenFolder(folder);
+        }
+#endif
+
+        yield return null;
+    }
+
+    /// <summary>
+    /// Download bulk simulation files as a ZIP.
+    /// Same pattern as DownloadAllAsZip: WebGL triggers browser download,
+    /// Editor saves to folder and opens it.
+    /// </summary>
+    private IEnumerator DownloadBulkAsZip()
+    {
+        if (_bulkFiles == null || _bulkFiles.Count == 0) yield break;
+
+        Debug.Log($"Building bulk ZIP: {_bulkFiles.Count} files...");
+
+        string zipFilename = $"tinysea_bulk_{System.DateTime.Now:yyyy-MM-dd_HH-mm-ss}.zip";
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+        WebGLZipDownload.DownloadAsZip(zipFilename, _bulkFiles);
+        Debug.Log($"Bulk ZIP download triggered: {zipFilename} ({_bulkFiles.Count} files)");
+#else
+        string folder = Path.Combine(Application.persistentDataPath,
+            Path.GetFileNameWithoutExtension(zipFilename));
+
+        if (!Directory.Exists(folder))
+            Directory.CreateDirectory(folder);
+
+        foreach (var (name, content) in _bulkFiles)
+        {
+            string path = Path.Combine(folder, name);
+            string dir = Path.GetDirectoryName(path);
+            if (!Directory.Exists(dir))
+                Directory.CreateDirectory(dir);
             File.WriteAllText(path, content);
         }
 

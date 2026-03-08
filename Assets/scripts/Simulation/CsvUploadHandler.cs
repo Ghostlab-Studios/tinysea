@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 public class CsvUploadHandler : MonoBehaviour
@@ -17,10 +18,12 @@ public class CsvUploadHandler : MonoBehaviour
     private string receivedCsvContent;
     public string ReceivedCsvContent => receivedCsvContent;
 
+    private List<BulkBatchConfig> parsedBatches;
+
     private Coroutine hideCoroutine;
 
-    // Events for other scripts
-    public System.Action<string> OnRunBulkSimulation;
+    // Event fires with parsed batch configs (consumed by BulkSimulationController)
+    public System.Action<List<BulkBatchConfig>> OnRunBulkSimulation;
 
     void Start()
     {
@@ -41,6 +44,15 @@ public class CsvUploadHandler : MonoBehaviour
         goBackButton.gameObject.SetActive(false);
         runSimulationButton.gameObject.SetActive(false);
         receivedCsvContent = null;
+        parsedBatches = null;
+    }
+
+    /// <summary>
+    /// Public reset — hides overlay, clears state. Used by BulkSimulationController on close.
+    /// </summary>
+    public void ResetToIdle()
+    {
+        SetIdleState();
     }
 
     // Called from JS
@@ -101,30 +113,24 @@ public class CsvUploadHandler : MonoBehaviour
 
     private void ValidateCsv(string csvContent)
     {
-        if (string.IsNullOrWhiteSpace(csvContent))
+        List<BulkBatchConfig> batches;
+        List<string> errors;
+
+        if (CsvBatchParser.TryParse(csvContent, out batches, out errors))
         {
-            ShowError("CSV file is empty.");
-            return;
+            parsedBatches = batches;
+            ShowSuccess(batches.Count);
         }
-
-        string[] lines = csvContent.Split(new[] { '\n', '\r' },
-            System.StringSplitOptions.RemoveEmptyEntries);
-
-        if (lines.Length < 2)
+        else
         {
-            ShowError("CSV must have a header row and at least one data row.");
-            return;
+            parsedBatches = null;
+            // Show first 10 errors, indicate if there are more
+            int showCount = System.Math.Min(errors.Count, 10);
+            string errorMsg = string.Join("\n", errors.GetRange(0, showCount));
+            if (errors.Count > showCount)
+                errorMsg += $"\n\n... and {errors.Count - showCount} more errors.";
+            ShowError(errorMsg);
         }
-
-        string header = lines[0];
-        if (!header.Contains(","))
-        {
-            ShowError("First row does not appear to be a valid CSV header (no commas found).");
-            return;
-        }
-
-        int dataRows = lines.Length - 1;
-        ShowSuccess(dataRows);
     }
 
     private void ShowError(string message)
@@ -149,8 +155,16 @@ public class CsvUploadHandler : MonoBehaviour
 
     private void OnRunSimulationClicked()
     {
-        Debug.Log("Starting bulk simulation...");
-        OnRunBulkSimulation?.Invoke(receivedCsvContent);
+        if (parsedBatches == null || parsedBatches.Count == 0) return;
+
+        Debug.Log($"Starting bulk simulation with {parsedBatches.Count} batches...");
+
+        // Hide buttons, keep overlay visible for BulkSimulationController progress
+        goBackButton.gameObject.SetActive(false);
+        runSimulationButton.gameObject.SetActive(false);
+        statusText.text = "Starting simulation...";
+
+        OnRunBulkSimulation?.Invoke(parsedBatches);
     }
 
 #if UNITY_EDITOR

@@ -53,6 +53,9 @@ public static class WebGLZipDownload
         foreach (var (name, content) in files)
         {
             string path = System.IO.Path.Combine(folder, name);
+            string dir = System.IO.Path.GetDirectoryName(path);
+            if (!System.IO.Directory.Exists(dir))
+                System.IO.Directory.CreateDirectory(dir);
             System.IO.File.WriteAllText(path, content);
             Debug.Log($"Saved: {path}");
         }

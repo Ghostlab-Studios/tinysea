@@ -219,6 +219,15 @@ public class SimulationController : MonoBehaviour
     }
 
     /// <summary>
+    /// Public entry point for running a single scenario (used by BulkSimulationController).
+    /// Reads parameters from the current SimulationConfig SO.
+    /// </summary>
+    public ScenarioResult RunSingleScenarioPublic(int scenarioIndex, int seed)
+    {
+        return RunSingleScenario(scenarioIndex, seed);
+    }
+
+    /// <summary>
     /// Run a single scenario and return results
     /// </summary>
     private ScenarioResult RunSingleScenario(int scenarioIndex, int seed)

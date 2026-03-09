@@ -20,6 +20,11 @@ public class ThermalParameterController : MonoBehaviour
     [SerializeField] private ThermalParameterSlider arrhenLowerSlider;
     [SerializeField] private ThermalParameterSlider arrhenUpperSlider;
 
+    [Header("Peak Height & Lethal Limits")]
+    [SerializeField] private ThermalParameterSlider pmaxSlider;
+    [SerializeField] private ThermalParameterSlider ctMinSlider;
+    [SerializeField] private ThermalParameterSlider ctMaxSlider;
+
     [Header("Area Under Curve Slider")]
     [Tooltip("Optional slider for controlling AUC. Adjusting this scales other parameters proportionally.")]
     [SerializeField] private ThermalParameterSlider aucSlider;
@@ -28,6 +33,11 @@ public class ThermalParameterController : MonoBehaviour
     [SerializeField] private Vector2 optimalTempRange = new Vector2(-5f, 45f);
     [SerializeField] private Vector2 lowerBoundRange = new Vector2(-10f, 40f);
     [SerializeField] private Vector2 upperBoundRange = new Vector2(0f, 50f);
+
+    [Header("Slider Ranges - Peak & Lethal Limits")]
+    [SerializeField] private Vector2 pmaxRange = new Vector2(0f, 1f);
+    [SerializeField] private Vector2 ctMinRange = new Vector2(-20f, 30f);
+    [SerializeField] private Vector2 ctMaxRange = new Vector2(10f, 60f);
 
     [Header("Slider Ranges - Shape Coefficients")]
     [SerializeField] private Vector2 arrhenBreadthRange = new Vector2(1000f, 15000f);
@@ -56,6 +66,9 @@ public class ThermalParameterController : MonoBehaviour
     private float currentArrhenBreadth;
     private float currentArrhenLower;
     private float currentArrhenUpper;
+    private float currentPmax = 1.0f;
+    private float currentCTminC = -5.0f;
+    private float currentCTmaxC = 50.0f;
 
     // Cached AUC value
     private float currentAUC;
@@ -68,14 +81,30 @@ public class ThermalParameterController : MonoBehaviour
     private float baselineArrhenLower;
     private float baselineArrhenUpper;
     private float baselineAUC;
+    private float baselinePmax;
+    private float baselineCTminC;
+    private float baselineCTmaxC;
 
     // Flags to prevent feedback loops
     private bool isLoading = false;
     private bool isScalingFromAUC = false;
     private bool isUpdatingAUCSlider = false;
+    private bool initialized = false;
 
     private void Start()
     {
+        EnsureInitialized();
+    }
+
+    /// <summary>
+    /// Lazy initialization — runs exactly once, from Start() or from LoadFromSpeciesData()/LoadValues(),
+    /// whichever comes first. Prevents Start() from overwriting values already set via API.
+    /// </summary>
+    private void EnsureInitialized()
+    {
+        if (initialized) return;
+        initialized = true;
+
         InitializeSliders();
         SubscribeToSliders();
     }
@@ -110,6 +139,17 @@ public class ThermalParameterController : MonoBehaviour
         if (arrhenUpperSlider != null)
             arrhenUpperSlider.Initialize(arrhenUpperRange.x, arrhenUpperRange.y, 21273f, false, 0);
 
+        // Pmax slider (0-1, not a temperature)
+        if (pmaxSlider != null)
+            pmaxSlider.Initialize(pmaxRange.x, pmaxRange.y, 1.0f, false, 2);
+
+        // CTmin/CTmax sliders (Celsius, displayed as temperature)
+        if (ctMinSlider != null)
+            ctMinSlider.Initialize(ctMinRange.x, ctMinRange.y, -5f, false, 1);
+
+        if (ctMaxSlider != null)
+            ctMaxSlider.Initialize(ctMaxRange.x, ctMaxRange.y, 50f, false, 1);
+
         // AUC slider (isTemperature = false, it's a derived value)
         if (aucSlider != null)
             aucSlider.Initialize(aucRange.x, aucRange.y, 15f, false, 1);
@@ -138,6 +178,15 @@ public class ThermalParameterController : MonoBehaviour
         if (arrhenUpperSlider != null)
             arrhenUpperSlider.OnValueChanged.AddListener(OnArrhenUpperChanged);
 
+        if (pmaxSlider != null)
+            pmaxSlider.OnValueChanged.AddListener(OnPmaxChanged);
+
+        if (ctMinSlider != null)
+            ctMinSlider.OnValueChanged.AddListener(OnCTminChanged);
+
+        if (ctMaxSlider != null)
+            ctMaxSlider.OnValueChanged.AddListener(OnCTmaxChanged);
+
         if (aucSlider != null)
             aucSlider.OnValueChanged.AddListener(OnAUCSliderChanged);
     }
@@ -164,6 +213,15 @@ public class ThermalParameterController : MonoBehaviour
 
         if (arrhenUpperSlider != null)
             arrhenUpperSlider.OnValueChanged.RemoveListener(OnArrhenUpperChanged);
+
+        if (pmaxSlider != null)
+            pmaxSlider.OnValueChanged.RemoveListener(OnPmaxChanged);
+
+        if (ctMinSlider != null)
+            ctMinSlider.OnValueChanged.RemoveListener(OnCTminChanged);
+
+        if (ctMaxSlider != null)
+            ctMaxSlider.OnValueChanged.RemoveListener(OnCTmaxChanged);
 
         if (aucSlider != null)
             aucSlider.OnValueChanged.RemoveListener(OnAUCSliderChanged);
@@ -233,6 +291,30 @@ public class ThermalParameterController : MonoBehaviour
         StoreBaseline();
     }
 
+    private void OnPmaxChanged(float value)
+    {
+        if (isScalingFromAUC) return;
+        currentPmax = value;
+        UpdateGraphAndAUC();
+        StoreBaseline();
+    }
+
+    private void OnCTminChanged(float value)
+    {
+        if (isScalingFromAUC) return;
+        currentCTminC = value;
+        UpdateGraphAndAUC();
+        StoreBaseline();
+    }
+
+    private void OnCTmaxChanged(float value)
+    {
+        if (isScalingFromAUC) return;
+        currentCTmaxC = value;
+        UpdateGraphAndAUC();
+        StoreBaseline();
+    }
+
     // ==================== Baseline Management ====================
 
     /// <summary>
@@ -248,6 +330,9 @@ public class ThermalParameterController : MonoBehaviour
         baselineArrhenLower = currentArrhenLower;
         baselineArrhenUpper = currentArrhenUpper;
         baselineAUC = currentAUC;
+        baselinePmax = currentPmax;
+        baselineCTminC = currentCTminC;
+        baselineCTmaxC = currentCTmaxC;
     }
 
     // ==================== AUC Slider Handler ====================
@@ -365,6 +450,9 @@ public class ThermalParameterController : MonoBehaviour
         currentArrhenBreadth = 5000f;
         currentArrhenLower = 10000f;
         currentArrhenUpper = 20000f;
+        currentPmax = 1.0f;
+        currentCTminC = -5.0f;
+        currentCTmaxC = 50.0f;
 
         // Update all sliders
         if (optimalTempSlider != null)
@@ -444,6 +532,10 @@ public class ThermalParameterController : MonoBehaviour
     /// </summary>
     private float CalculatePerformanceAtTemp(float tempCelsius)
     {
+        // Lethal limits check
+        if (tempCelsius < currentCTminC || tempCelsius > currentCTmaxC)
+            return 0f;
+
         float T = tempCelsius + KELVIN_OFFSET;
         float OT = currentOptimalTemp;
         float B = currentArrhenBreadth;
@@ -468,7 +560,7 @@ public class ThermalParameterController : MonoBehaviour
 
         if (denominator == 0) return 0f;
 
-        return Mathf.Clamp01(numerator / denominator);
+        return Mathf.Clamp01(numerator / denominator) * currentPmax;
     }
 
     // ==================== Graph Updates ====================
@@ -491,7 +583,10 @@ public class ThermalParameterController : MonoBehaviour
                 currentArrhenLower,
                 currentArrhenUpper,
                 currentLowerBound,
-                currentUpperBound
+                currentUpperBound,
+                currentPmax,
+                currentCTminC,
+                currentCTmaxC
             );
         }
     }
@@ -552,6 +647,7 @@ public class ThermalParameterController : MonoBehaviour
             return;
         }
 
+        EnsureInitialized();
         isLoading = true;
 
         currentOptimalTemp = data.optimalTempK;
@@ -560,6 +656,9 @@ public class ThermalParameterController : MonoBehaviour
         currentArrhenBreadth = data.arrhenBreadth;
         currentArrhenLower = data.arrhenLower;
         currentArrhenUpper = data.arrhenUpper;
+        currentPmax = data.pmax;
+        currentCTminC = data.ctMinC;
+        currentCTmaxC = data.ctMaxC;
 
         if (optimalTempSlider != null)
             optimalTempSlider.SetValue(data.optimalTempK, isInternalUnits: true);
@@ -578,6 +677,15 @@ public class ThermalParameterController : MonoBehaviour
 
         if (arrhenUpperSlider != null)
             arrhenUpperSlider.SetValue(data.arrhenUpper, isInternalUnits: false);
+
+        if (pmaxSlider != null)
+            pmaxSlider.SetValue(data.pmax, isInternalUnits: false);
+
+        if (ctMinSlider != null)
+            ctMinSlider.SetValue(data.ctMinC, isInternalUnits: false);
+
+        if (ctMaxSlider != null)
+            ctMaxSlider.SetValue(data.ctMaxC, isInternalUnits: false);
 
         UpdateGraph();
 
@@ -602,6 +710,7 @@ public class ThermalParameterController : MonoBehaviour
     public void LoadValues(float optTempK, float lowerK, float upperK,
                            float breadth, float arrLower, float arrUpper)
     {
+        EnsureInitialized();
         isLoading = true;
 
         currentOptimalTemp = optTempK;
@@ -628,6 +737,15 @@ public class ThermalParameterController : MonoBehaviour
 
         if (arrhenUpperSlider != null)
             arrhenUpperSlider.SetValue(arrUpper, isInternalUnits: false);
+
+        if (pmaxSlider != null)
+            pmaxSlider.SetValue(currentPmax, isInternalUnits: false);
+
+        if (ctMinSlider != null)
+            ctMinSlider.SetValue(currentCTminC, isInternalUnits: false);
+
+        if (ctMaxSlider != null)
+            ctMaxSlider.SetValue(currentCTmaxC, isInternalUnits: false);
 
         UpdateGraph();
 
@@ -661,6 +779,9 @@ public class ThermalParameterController : MonoBehaviour
         data.arrhenBreadth = currentArrhenBreadth;
         data.arrhenLower = currentArrhenLower;
         data.arrhenUpper = currentArrhenUpper;
+        data.pmax = currentPmax;
+        data.ctMinC = currentCTminC;
+        data.ctMaxC = currentCTmaxC;
 
         Debug.Log($"ThermalParameterController: Saved - OptimalTemp={data.optimalTempK}K, AUC={currentAUC:F1}");
     }
@@ -677,7 +798,10 @@ public class ThermalParameterController : MonoBehaviour
             upperBoundK = currentUpperBound,
             arrhenBreadth = currentArrhenBreadth,
             arrhenLower = currentArrhenLower,
-            arrhenUpper = currentArrhenUpper
+            arrhenUpper = currentArrhenUpper,
+            pmax = currentPmax,
+            ctMinC = currentCTminC,
+            ctMaxC = currentCTmaxC
         };
     }
 
@@ -702,6 +826,9 @@ public class ThermalParameterController : MonoBehaviour
         arrhenBreadthSlider?.ResetToDefault();
         arrhenLowerSlider?.ResetToDefault();
         arrhenUpperSlider?.ResetToDefault();
+        pmaxSlider?.ResetToDefault();
+        ctMinSlider?.ResetToDefault();
+        ctMaxSlider?.ResetToDefault();
 
         currentAUC = CalculateAUC();
         StoreBaseline();
@@ -739,4 +866,7 @@ public struct ThermalParameters
     public float arrhenBreadth;
     public float arrhenLower;
     public float arrhenUpper;
+    public float pmax;
+    public float ctMinC;
+    public float ctMaxC;
 }

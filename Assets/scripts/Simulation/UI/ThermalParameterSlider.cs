@@ -42,6 +42,7 @@ public class ThermalParameterSlider : MonoBehaviour
     // Internal state
     private float currentDisplayValue; // What's shown in UI (Celsius or raw)
     private bool isUpdating = false;   // Prevents recursive updates
+    private bool hasBeenSet = false;   // True after SetDisplayValue() has been called at least once
 
     /// <summary>
     /// The current value in INTERNAL units (Kelvin for temperatures, raw for coefficients).
@@ -83,8 +84,9 @@ public class ThermalParameterSlider : MonoBehaviour
 
     private void Start()
     {
-        // Initialize to default value
-        SetDisplayValue(defaultValue);
+        // Initialize to default value only if no value was set before Start() ran
+        if (!hasBeenSet)
+            SetDisplayValue(defaultValue);
     }
 
     private void OnDestroy()
@@ -187,6 +189,7 @@ public class ThermalParameterSlider : MonoBehaviour
     {
         if (isUpdating) return;
         isUpdating = true;
+        hasBeenSet = true;
 
         // Clamp to bounds
         currentDisplayValue = Mathf.Clamp(displayValue, minValue, maxValue);

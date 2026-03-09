@@ -172,16 +172,19 @@ public class ThermalGraphUI : MonoBehaviour
         }
 
         // Draw min/max temperature labels at bottom corners
-        Color labelColor = new Color(0.6f, 0.6f, 0.6f, 1f);
+        Color coldColor = new Color(0.4f, 0.7f, 1.0f, 1f);
+        Color warmColor = new Color(1.0f, 0.7f, 0.3f, 1f);
 
         string minLabel = Mathf.RoundToInt(tempMinCelsius).ToString();
+        Color minColor = (tempMinCelsius < 0) ? coldColor : (tempMinCelsius > 0) ? warmColor : Color.white;
         PixelFont.DrawString(pixels, textureWidth, textureHeight,
-                             minLabel, 1, 1, labelColor);
+                             minLabel, 1, 1, minColor);
 
         string maxLabel = Mathf.RoundToInt(tempMaxCelsius).ToString();
         int maxLabelWidth = PixelFont.MeasureString(maxLabel);
+        Color maxColor = (tempMaxCelsius < 0) ? coldColor : (tempMaxCelsius > 0) ? warmColor : Color.white;
         PixelFont.DrawString(pixels, textureWidth, textureHeight,
-                             maxLabel, textureWidth - maxLabelWidth - 1, 1, labelColor);
+                             maxLabel, textureWidth - maxLabelWidth - 1, 1, maxColor);
 
         graphTexture.SetPixels(pixels);
         graphTexture.Apply();

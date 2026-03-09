@@ -36,7 +36,7 @@ public class ThermalGraphEditor : MonoBehaviour
     public Color highlightColor = new Color(1f, 0.8f, 0.2f, 1f);      // Yellow highlight
     public Color markerColor = new Color(1f, 0.4f, 0.4f, 1f);         // Red markers
     public Color boundLineColor = new Color(0.5f, 0.5f, 0.8f, 0.6f);  // Blue for bounds
-    public Color labelColor = new Color(0f, 0.81f, 0.82f, 1f);        // Light teal for axis labels
+    public Color labelColor = Color.white;
 
     [Header("Display Range")]
     public float tempMinCelsius = 0f;
@@ -227,24 +227,28 @@ public class ThermalGraphEditor : MonoBehaviour
     void DrawAxisLabels()
     {
         // --- X-axis tick marks and labels ---
+        Color coldColor = new Color(0.4f, 0.7f, 1.0f, 1f);
+        Color warmColor = new Color(1.0f, 0.7f, 0.3f, 1f);
+
         float[] xTicks = AxisHelper.ComputeNiceTicks(tempMinCelsius, tempMaxCelsius, 5);
         foreach (float tempC in xTicks)
         {
             int x = TempToX(tempC);
+            Color tickColor = (tempC < 0) ? coldColor : (tempC > 0) ? warmColor : Color.white;
 
             // Tick mark extending down from graph bottom edge
             for (int dy = 0; dy < 3; dy++)
-                SetPixelSafe(x, graphBottom - 1 - dy, labelColor);
+                SetPixelSafe(x, graphBottom - 1 - dy, tickColor);
 
             // Temperature value below tick
             string label = AxisHelper.FormatTemp(tempC);
             PixelFont.DrawStringCentered(pixels, textureWidth, textureHeight,
-                                          label, x, graphBottom - 5 - PixelFont.CharHeight, labelColor);
+                                          label, x, graphBottom - 5 - PixelFont.CharHeight, tickColor);
         }
 
         // X-axis title centered below tick values
         PixelFont.DrawStringCentered(pixels, textureWidth, textureHeight,
-                                      "Temp (C)", graphLeft + graphWidth / 2, 1, labelColor);
+                                      "Temp (C)", graphLeft + graphWidth / 2, 1, Color.white);
 
         // --- Y-axis tick marks and labels ---
         float[] perfLevels = { 0f, 0.25f, 0.5f, 0.75f, 1.0f };
@@ -254,23 +258,23 @@ public class ThermalGraphEditor : MonoBehaviour
 
             // Tick mark extending left from graph left edge
             for (int dx = 0; dx < 3; dx++)
-                SetPixelSafe(graphLeft - 1 - dx, y, labelColor);
+                SetPixelSafe(graphLeft - 1 - dx, y, Color.white);
 
             // Performance value to the left of tick
             string label = AxisHelper.FormatPerformance(perf);
             PixelFont.DrawStringRightAligned(pixels, textureWidth, textureHeight,
-                                              label, graphLeft - 5, y - PixelFont.CharHeight / 2, labelColor);
+                                              label, graphLeft - 5, y - PixelFont.CharHeight / 2, Color.white);
         }
 
         // Y-axis title drawn vertically
         PixelFont.DrawStringVertical(pixels, textureWidth, textureHeight,
-                                      "Perf", 1, graphBottom + graphHeight / 2, labelColor);
+                                      "Perf", 1, graphBottom + graphHeight / 2, Color.white);
 
         // --- Pmax indicator line ---
         if (pmax < 0.99f)
         {
             int pmaxY = PerformanceToY(pmax);
-            Color pmaxColor = new Color(labelColor.r, labelColor.g, labelColor.b, 0.4f);
+            Color pmaxColor = new Color(1f, 1f, 1f, 0.4f);
             for (int x = graphLeft; x < graphLeft + graphWidth; x++)
             {
                 if (x % 8 < 4)

@@ -139,6 +139,13 @@ public class BulkSimulationController : MonoBehaviour
             }
             yield return null;
 
+            // Re-check cancel after yield (catches clicks processed during yield frame)
+            if (_cancelRequested)
+            {
+                Debug.Log($"Bulk simulation cancelled before batch {b + 1} setup");
+                break;
+            }
+
             // Override SimulationConfig SO fields
             config.DaysPerScenario = batch.Days;
             config.NumberOfScenarios = batch.NumScenarios;
@@ -206,11 +213,22 @@ public class BulkSimulationController : MonoBehaviour
                         progress);
                 }
 
+                // Yield before the blocking scenario call so Unity can process
+                // pending UI events (cancel button clicks) from the previous frame
+                yield return null;
+
+                // Re-check cancel after yield — catches clicks queued during
+                // the previous scenario's synchronous execution
+                if (_cancelRequested)
+                {
+                    Debug.Log($"Bulk simulation cancelled during batch {b + 1}");
+                    break;
+                }
+
                 var result = simulationController.RunSingleScenarioPublic(scenarioIndex, seed);
                 batchResults.Scenarios.Add(result);
 
                 completedScenarios++;
-                yield return null;
             }
 
             // Save batch files (even if partially completed due to cancel)
@@ -265,7 +283,6 @@ public class BulkSimulationController : MonoBehaviour
 
     private void OnCancelRequested()
     {
-        if (!_isRunning) return;
         _cancelRequested = true;
         Debug.Log("Bulk simulation cancel requested");
     }

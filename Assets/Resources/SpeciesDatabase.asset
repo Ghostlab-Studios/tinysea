@@ -79,7 +79,7 @@ MonoBehaviour:
     lowerBoundK: 300.15
     upperBoundK: 310.15
     pmax: 1
-    ctMinC: -5
+    ctMinC: 10
     ctMaxC: 50
   - index: 2
     speciesName: 0
@@ -113,8 +113,8 @@ MonoBehaviour:
     lowerBoundK: 270.15
     upperBoundK: 280.15
     pmax: 1
-    ctMinC: -5
-    ctMaxC: 50
+    ctMinC: -10
+    ctMaxC: 20
   - index: 4
     speciesName: 3
     variant: 1
@@ -147,7 +147,7 @@ MonoBehaviour:
     lowerBoundK: 300.15
     upperBoundK: 310.15
     pmax: 1
-    ctMinC: -5
+    ctMinC: 10
     ctMaxC: 50
   - index: 5
     speciesName: 3
@@ -181,8 +181,8 @@ MonoBehaviour:
     lowerBoundK: 270.15
     upperBoundK: 280.15
     pmax: 1
-    ctMinC: -5
-    ctMaxC: 50
+    ctMinC: -10
+    ctMaxC: 20
   - index: 3
     speciesName: 3
     variant: 0

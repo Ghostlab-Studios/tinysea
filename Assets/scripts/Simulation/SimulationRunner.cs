@@ -309,7 +309,8 @@ public class SimulationRunner
                 "LowerBoundK,LowerBoundC,UpperBoundK,UpperBoundC");
             foreach (var sp in RunSpecies.speciesList)
             {
-                sb.AppendLine($"#species:{sp.speciesName},{sp.variant},{sp.tier},{sp.count}," +
+                string spName = !string.IsNullOrEmpty(sp.displayName) ? sp.displayName : sp.speciesName.ToString();
+                sb.AppendLine($"#species:{spName},{sp.variant},{sp.tier},{sp.count}," +
                     $"{sp.eatingAmount},{sp.reproductionMultiplier}," +
                     $"{sp.deathThreshold},{sp.deathRate},{sp.minimumDeaths},{sp.reproThreshold}," +
                     $"{sp.naturalDeathRate},{sp.naturalDeathVariance}," +

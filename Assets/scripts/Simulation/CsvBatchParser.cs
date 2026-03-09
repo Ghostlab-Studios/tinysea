@@ -7,8 +7,8 @@ using UnityEngine;
 /// <summary>
 /// Static utility to parse and validate a bulk-batch CSV into BulkBatchConfig objects.
 ///
-/// Expected CSV format: 55 columns total
-///   15 global columns + 20 per species × 2 species (sp1_, sp2_ prefixed)
+/// Expected CSV format: 16 global columns + 20 per species × N species (sp1_, sp2_, sp3_, ... prefixed)
+/// Species count is detected dynamically by scanning the header for sequential spN_ prefixes.
 ///
 /// Collects ALL errors before returning (does not stop at first error).
 /// Unknown columns generate a Debug.Log warning but do not fail.
@@ -74,10 +74,34 @@ public static class CsvBatchParser
                 columnIndex[col] = i;
         }
 
-        // Build required columns list
-        var requiredColumns = new List<string>(GLOBAL_COLUMNS);
-        foreach (var prefix in new[] { "sp1_", "sp2_" })
+        // Detect species count from header (sequential sp1_, sp2_, sp3_, ...)
+        int speciesCount = 0;
+        for (int i = 1; i <= 100; i++)
         {
+            string prefix = $"sp{i}_";
+            bool found = false;
+            foreach (var kv in columnIndex)
+            {
+                if (kv.Key.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                { found = true; break; }
+            }
+            if (found)
+                speciesCount = i;
+            else
+                break;
+        }
+
+        if (speciesCount == 0)
+        {
+            errors.Add("No species columns found. CSV must have at least sp1_name, sp1_variant, etc.");
+            return false;
+        }
+
+        // Build required columns list (global + per-species)
+        var requiredColumns = new List<string>(GLOBAL_COLUMNS);
+        for (int s = 1; s <= speciesCount; s++)
+        {
+            string prefix = $"sp{s}_";
             foreach (var col in SPECIES_COLUMNS)
                 requiredColumns.Add(prefix + col);
         }
@@ -117,8 +141,6 @@ public static class CsvBatchParser
             int rowNum = rowIdx + 1; // 1-based for error messages
 
             var batch = new BulkBatchConfig();
-            batch.Species1 = new BulkSpeciesConfig();
-            batch.Species2 = new BulkSpeciesConfig();
 
             // Parse global fields
             batch.BatchName = GetString(fields, columnIndex, "batch_name");
@@ -138,9 +160,13 @@ public static class CsvBatchParser
             batch.UseCarryingCap = GetBool(fields, columnIndex, "use_carrying_cap", rowNum, errors);
             batch.CarryingCapT1 = GetFloat(fields, columnIndex, "carrying_cap_t1", rowNum, errors);
 
-            // Parse species
-            ParseSpecies(fields, columnIndex, "sp1_", batch.Species1, rowNum, errors);
-            ParseSpecies(fields, columnIndex, "sp2_", batch.Species2, rowNum, errors);
+            // Parse species (dynamic N species)
+            for (int s = 1; s <= speciesCount; s++)
+            {
+                var sp = new BulkSpeciesConfig();
+                ParseSpecies(fields, columnIndex, $"sp{s}_", sp, rowNum, errors);
+                batch.Species.Add(sp);
+            }
 
             // Cross-field validation
             ValidateBatch(batch, rowNum, errors);
@@ -209,8 +235,8 @@ public static class CsvBatchParser
         if (batch.UseCarryingCap && batch.CarryingCapT1 <= 0)
             errors.Add($"Row {rowNum}: carrying_cap_t1 must be positive when use_carrying_cap is true.");
 
-        ValidateSpecies(batch.Species1, "sp1", rowNum, errors);
-        ValidateSpecies(batch.Species2, "sp2", rowNum, errors);
+        for (int s = 0; s < batch.Species.Count; s++)
+            ValidateSpecies(batch.Species[s], $"sp{s + 1}", rowNum, errors);
     }
 
     private static void ValidateSpecies(BulkSpeciesConfig sp, string prefix, int rowNum, List<string> errors)
@@ -226,8 +252,8 @@ public static class CsvBatchParser
         if (sp.Tier < 0 || sp.Tier > 1)
             errors.Add($"Row {rowNum}: {prefix}_tier must be 0 (prey) or 1 (predator).");
 
-        if (sp.Pop < 1)
-            errors.Add($"Row {rowNum}: {prefix}_pop must be at least 1.");
+        if (sp.Pop < 0)
+            errors.Add($"Row {rowNum}: {prefix}_pop must be non-negative.");
 
         if (sp.DeathThresh < 0 || sp.DeathThresh > 1)
             errors.Add($"Row {rowNum}: {prefix}_death_thresh must be between 0 and 1.");

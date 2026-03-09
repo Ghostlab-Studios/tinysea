@@ -1,5 +1,7 @@
+using System.Collections.Generic;
+
 /// <summary>
-/// Species configuration parsed from one CSV row (sp1_ or sp2_ prefix).
+/// Species configuration parsed from one CSV row (sp1_, sp2_, sp3_, ... prefix).
 /// All temperature values are in Celsius (converted to Kelvin when mapping to SpeciesData).
 /// </summary>
 public class BulkSpeciesConfig
@@ -28,7 +30,7 @@ public class BulkSpeciesConfig
 
 /// <summary>
 /// All parsed values for one CSV row (one batch configuration).
-/// Contains simulation parameters + 2 species definitions.
+/// Contains simulation parameters + N species definitions (sp1_, sp2_, sp3_, ...).
 /// </summary>
 public class BulkBatchConfig
 {
@@ -48,6 +50,5 @@ public class BulkBatchConfig
     public float TempMax;
     public bool UseCarryingCap;
     public float CarryingCapT1;
-    public BulkSpeciesConfig Species1;
-    public BulkSpeciesConfig Species2;
+    public List<BulkSpeciesConfig> Species = new List<BulkSpeciesConfig>();
 }

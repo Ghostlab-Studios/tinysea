@@ -158,8 +158,8 @@ public class BulkSimulationController : MonoBehaviour
 
             // Override RunSpeciesList SO
             runSpecies.speciesList.Clear();
-            runSpecies.speciesList.Add(ConvertSpecies(batch.Species1, 0));
-            runSpecies.speciesList.Add(ConvertSpecies(batch.Species2, 1));
+            for (int i = 0; i < batch.Species.Count; i++)
+                runSpecies.speciesList.Add(ConvertSpecies(batch.Species[i], i));
 
             // Build AggregateResults for this batch
             var batchResults = new AggregateResults

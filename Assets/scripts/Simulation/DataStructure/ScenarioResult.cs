@@ -491,7 +491,8 @@ public static class ConfigExporter
 
             foreach (var species in runSpecies.speciesList)
             {
-                sb.AppendLine($"{species.speciesName},{species.variant},{species.tier},{species.count}," +
+                string spName = !string.IsNullOrEmpty(species.displayName) ? species.displayName : species.speciesName.ToString();
+                sb.AppendLine($"{spName},{species.variant},{species.tier},{species.count}," +
                     $"{species.eatingAmount},{species.reproductionMultiplier}," +
                     $"{species.deathThreshold},{species.deathRate},{species.minimumDeaths},{species.reproThreshold}," +
                     $"{species.naturalDeathRate},{species.naturalDeathVariance}," +

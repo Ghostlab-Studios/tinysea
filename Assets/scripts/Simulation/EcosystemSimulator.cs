@@ -115,7 +115,7 @@ public class EcosystemSimulator
         {
             var simSpecies = new SimSpecies
             {
-                Name = data.speciesName.ToString(),
+                Name = !string.IsNullOrEmpty(data.displayName) ? data.displayName : data.speciesName.ToString(),
                 Variant = ConvertVariant(data.variant),
                 Tier = data.tier + 1,  // Database uses 0-based, we use 1-based
                 Population = data.count,
@@ -167,7 +167,7 @@ public class EcosystemSimulator
         {
             var simSpecies = new SimSpecies
             {
-                Name = data.speciesName.ToString(),
+                Name = !string.IsNullOrEmpty(data.displayName) ? data.displayName : data.speciesName.ToString(),
                 Variant = ConvertVariant(data.variant),
                 Tier = data.tier + 1,  // Database uses 0-based, we use 1-based
                 Population = data.count,

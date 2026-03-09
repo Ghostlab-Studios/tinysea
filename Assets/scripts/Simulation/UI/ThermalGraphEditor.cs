@@ -18,6 +18,12 @@ public class ThermalGraphEditor : MonoBehaviour
     public float lowerBound = 285.15f;
     public float upperBound = 295.15f;
 
+    [Header("Peak Height & Lethal Limits")]
+    [Range(0f, 1f)]
+    public float pmax = 1.0f;
+    public float ctMinC = -5.0f;
+    public float ctMaxC = 50.0f;
+
     [Header("Graph Settings")]
     public int textureWidth = 512;  // Higher resolution
     public int textureHeight = 256;
@@ -94,7 +100,8 @@ public class ThermalGraphEditor : MonoBehaviour
     /// <summary>
     /// Set all thermal parameters at once and refresh the graph.
     /// </summary>
-    public void SetParameters(float optTemp, float breadth, float lower, float upper, float lowerB, float upperB)
+    public void SetParameters(float optTemp, float breadth, float lower, float upper, float lowerB, float upperB,
+        float pmaxVal = 1.0f, float ctMinCVal = -5.0f, float ctMaxCVal = 50.0f)
     {
         optimalTemp = optTemp;
         arrhenBreadth = breadth;
@@ -102,6 +109,10 @@ public class ThermalGraphEditor : MonoBehaviour
         arrhenUpper = upper;
         lowerBound = lowerB;
         upperBound = upperB;
+        pmax = pmaxVal;
+        ctMinC = ctMinCVal;
+        ctMaxC = ctMaxCVal;
+        UpdateDisplayRange();
         UpdateGraph();
     }
 
@@ -146,6 +157,7 @@ public class ThermalGraphEditor : MonoBehaviour
                     if (this != null)
                     {
                         CreateTexture();
+                        UpdateDisplayRange();
                         UpdateGraph();
                     }
                 };
@@ -202,7 +214,7 @@ public class ThermalGraphEditor : MonoBehaviour
         }
 
         // Vertical grid lines (temperature every 10°C)
-        for (float tempC = 0; tempC <= tempMaxCelsius; tempC += 10f)
+        for (float tempC = Mathf.Ceil(tempMinCelsius / 10f) * 10f; tempC <= tempMaxCelsius; tempC += 10f)
         {
             int x = TempToX(tempC);
             for (int y = 0; y < textureHeight; y += 4)
@@ -227,6 +239,11 @@ public class ThermalGraphEditor : MonoBehaviour
 
     float CalculatePerformance(float tempKelvin)
     {
+        // Lethal limits check (convert Celsius to Kelvin)
+        float ctMinK = ctMinC + KELVIN_OFFSET;
+        float ctMaxK = ctMaxC + KELVIN_OFFSET;
+        if (tempKelvin < ctMinK || tempKelvin > ctMaxK) return 0f;
+
         float T = tempKelvin;
         float OT = optimalTemp;
         float B = arrhenBreadth;
@@ -245,7 +262,7 @@ public class ThermalGraphEditor : MonoBehaviour
 
         if (denominator == 0) return 0f;
 
-        return Mathf.Clamp01(numerator / denominator);
+        return Mathf.Clamp01(numerator / denominator) * pmax;
     }
 
     void DrawCurveWithGlow()
@@ -433,6 +450,28 @@ public class ThermalGraphEditor : MonoBehaviour
                 BlendPixelSafe(x, y + dy, new Color(highlightColor.r, highlightColor.g, highlightColor.b, 0.5f));
             }
         }
+    }
+
+    // ==================== Display Range ====================
+
+    void UpdateDisplayRange()
+    {
+        float padding = 5f;
+        float minWidth = 20f;
+
+        float rangeMin = ctMinC - padding;
+        float rangeMax = ctMaxC + padding;
+
+        float width = rangeMax - rangeMin;
+        if (width < minWidth)
+        {
+            float center = (rangeMin + rangeMax) / 2f;
+            rangeMin = center - minWidth / 2f;
+            rangeMax = center + minWidth / 2f;
+        }
+
+        tempMinCelsius = rangeMin;
+        tempMaxCelsius = rangeMax;
     }
 
     // ==================== Drawing Utilities ====================

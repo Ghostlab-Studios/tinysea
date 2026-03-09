@@ -12,6 +12,9 @@ public class ThermalGraphUI : MonoBehaviour
     public float arrhenUpper = 19664f;
     public float lowerBound = 286f;
     public float upperBound = 298f;
+    public float pmax = 1.0f;
+    public float ctMinC = -5.0f;
+    public float ctMaxC = 50.0f;
 
     [Header("Graph Settings")]
     public int textureWidth = 256;
@@ -20,6 +23,9 @@ public class ThermalGraphUI : MonoBehaviour
     public Color backgroundColor = Color.black;
     [Range(0.05f, 0.3f)]
     public float paddingPercent = 0.1f; // 10% padding top and bottom
+
+    private float tempMinCelsius = 0f;
+    private float tempMaxCelsius = 40f;
 
     private RawImage rawImage;
     private Texture2D graphTexture;
@@ -93,12 +99,23 @@ public class ThermalGraphUI : MonoBehaviour
         for (int i = 0; i < pixels.Length; i++)
             pixels[i] = backgroundColor;
 
+        // Auto-zoom to species range
+        UpdateDisplayRange();
+
         // Calculate performance values
+        float ctMinK = ctMinC + 273.15f;
+        float ctMaxK = ctMaxC + 273.15f;
         for (int x = 0; x < textureWidth; x++)
         {
             float t = x / (float)(textureWidth - 1);
-            float tempCelsius = Mathf.Lerp(0f, 40f, t);
+            float tempCelsius = Mathf.Lerp(tempMinCelsius, tempMaxCelsius, t);
             float tempKelvin = tempCelsius + 273.15f;
+
+            if (tempKelvin < ctMinK || tempKelvin > ctMaxK)
+            {
+                performanceValues[x] = 0f;
+                continue;
+            }
 
             float performance = (Mathf.Exp(arrhenBreadth / optimalTemp - arrhenBreadth / tempKelvin) *
                     (1 + Mathf.Exp(arrhenLower / optimalTemp - arrhenLower / lowerBound) +
@@ -106,7 +123,7 @@ public class ThermalGraphUI : MonoBehaviour
                     (1 + Mathf.Exp(arrhenLower / tempKelvin - arrhenLower / lowerBound) +
                         Mathf.Exp(arrhenUpper / upperBound - arrhenUpper / tempKelvin));
 
-            performanceValues[x] = Mathf.Clamp01(performance);
+            performanceValues[x] = Mathf.Clamp01(performance) * pmax;
         }
 
         // Draw curve
@@ -129,5 +146,25 @@ public class ThermalGraphUI : MonoBehaviour
 
         graphTexture.SetPixels(pixels);
         graphTexture.Apply();
+    }
+
+    void UpdateDisplayRange()
+    {
+        float padding = 5f;
+        float minWidth = 20f;
+
+        float rangeMin = ctMinC - padding;
+        float rangeMax = ctMaxC + padding;
+
+        float width = rangeMax - rangeMin;
+        if (width < minWidth)
+        {
+            float center = (rangeMin + rangeMax) / 2f;
+            rangeMin = center - minWidth / 2f;
+            rangeMax = center + minWidth / 2f;
+        }
+
+        tempMinCelsius = rangeMin;
+        tempMaxCelsius = rangeMax;
     }
 }

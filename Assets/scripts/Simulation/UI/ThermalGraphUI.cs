@@ -25,6 +25,7 @@ public class ThermalGraphUI : MonoBehaviour
     public float paddingPercent = 0.1f; // 10% padding top and bottom
 
     private const float LETHAL_TRANSITION_WIDTH = 2.0f; // Smooth fade width in degrees
+    private const int UIMarginBottom = 10;
 
     private float tempMinCelsius = 0f;
     private float tempMaxCelsius = 40f;
@@ -89,12 +90,19 @@ public class ThermalGraphUI : MonoBehaviour
         graphTexture = new Texture2D(textureWidth, textureHeight);
         graphTexture.filterMode = FilterMode.Bilinear;
         rawImage.texture = graphTexture;
-        performanceValues = new float[textureWidth];
+
+        int gWidth = textureWidth;
+        performanceValues = new float[gWidth];
     }
 
     void UpdateGraph()
     {
         if (graphTexture == null) return;
+
+        // Graph area with bottom margin for temperature labels
+        int gBottom = UIMarginBottom;
+        int gHeight = textureHeight - UIMarginBottom;
+        int gWidth = textureWidth;
 
         // Clear texture
         Color[] pixels = new Color[textureWidth * textureHeight];
@@ -110,9 +118,12 @@ public class ThermalGraphUI : MonoBehaviour
         float halfRange = (ctMaxK - ctMinK) / 2f;
         float tw = Mathf.Min(LETHAL_TRANSITION_WIDTH, halfRange);
 
-        for (int x = 0; x < textureWidth; x++)
+        if (performanceValues == null || performanceValues.Length != gWidth)
+            performanceValues = new float[gWidth];
+
+        for (int x = 0; x < gWidth; x++)
         {
-            float t = x / (float)(textureWidth - 1);
+            float t = x / (float)(gWidth - 1);
             float tempCelsius = Mathf.Lerp(tempMinCelsius, tempMaxCelsius, t);
             float tempKelvin = tempCelsius + 273.15f;
 
@@ -143,12 +154,11 @@ public class ThermalGraphUI : MonoBehaviour
             performanceValues[x] = Mathf.Clamp01(performance) * fadeFactor * pmax;
         }
 
-        // Draw curve
-        for (int x = 0; x < textureWidth; x++)
+        // Draw curve (within graph area above the margin)
+        for (int x = 0; x < gWidth; x++)
         {
-            // Apply padding - map performance [0,1] to padded range
-            float paddedHeight = textureHeight * (1f - 2f * paddingPercent);
-            float paddedBottom = textureHeight * paddingPercent;
+            float paddedHeight = gHeight * (1f - 2f * paddingPercent);
+            float paddedBottom = gBottom + gHeight * paddingPercent;
 
             int y = Mathf.RoundToInt(performanceValues[x] * paddedHeight + paddedBottom);
             y = Mathf.Clamp(y, 0, textureHeight - 1);
@@ -160,6 +170,18 @@ public class ThermalGraphUI : MonoBehaviour
                 pixels[py * textureWidth + x] = curveColor;
             }
         }
+
+        // Draw min/max temperature labels at bottom corners
+        Color labelColor = new Color(0.6f, 0.6f, 0.6f, 1f);
+
+        string minLabel = Mathf.RoundToInt(tempMinCelsius).ToString();
+        PixelFont.DrawString(pixels, textureWidth, textureHeight,
+                             minLabel, 1, 1, labelColor);
+
+        string maxLabel = Mathf.RoundToInt(tempMaxCelsius).ToString();
+        int maxLabelWidth = PixelFont.MeasureString(maxLabel);
+        PixelFont.DrawString(pixels, textureWidth, textureHeight,
+                             maxLabel, textureWidth - maxLabelWidth - 1, 1, labelColor);
 
         graphTexture.SetPixels(pixels);
         graphTexture.Apply();

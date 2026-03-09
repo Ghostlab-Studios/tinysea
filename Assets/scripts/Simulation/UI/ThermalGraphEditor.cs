@@ -36,6 +36,7 @@ public class ThermalGraphEditor : MonoBehaviour
     public Color highlightColor = new Color(1f, 0.8f, 0.2f, 1f);      // Yellow highlight
     public Color markerColor = new Color(1f, 0.4f, 0.4f, 1f);         // Red markers
     public Color boundLineColor = new Color(0.5f, 0.5f, 0.8f, 0.6f);  // Blue for bounds
+    public Color labelColor = new Color(0f, 0.81f, 0.82f, 1f);        // Light teal for axis labels
 
     [Header("Display Range")]
     public float tempMinCelsius = 0f;
@@ -59,6 +60,15 @@ public class ThermalGraphEditor : MonoBehaviour
     // Constants
     private const float KELVIN_OFFSET = 273.15f;
     private const float LETHAL_TRANSITION_WIDTH = 2.0f; // Smooth fade width in degrees
+
+    // Margin sizes (pixels) for axis labels
+    private const int MarginLeft = 38;
+    private const int MarginBottom = 22;
+    private const int MarginTop = 4;
+    private const int MarginRight = 4;
+
+    // Graph area (computed from margins)
+    private int graphLeft, graphBottom, graphWidth, graphHeight;
 
     // Internal
     private RawImage rawImage;
@@ -94,8 +104,17 @@ public class ThermalGraphEditor : MonoBehaviour
         graphTexture.filterMode = FilterMode.Bilinear;
         graphTexture.wrapMode = TextureWrapMode.Clamp;
         rawImage.texture = graphTexture;
-        performanceValues = new float[textureWidth];
+        ComputeGraphArea();
+        performanceValues = new float[graphWidth];
         pixels = new Color[textureWidth * textureHeight];
+    }
+
+    void ComputeGraphArea()
+    {
+        graphLeft = MarginLeft;
+        graphBottom = MarginBottom;
+        graphWidth = textureWidth - MarginLeft - MarginRight;
+        graphHeight = textureHeight - MarginBottom - MarginTop;
     }
 
     /// <summary>
@@ -176,9 +195,14 @@ public class ThermalGraphEditor : MonoBehaviour
     {
         if (graphTexture == null || pixels == null) return;
 
+        ComputeGraphArea();
+
         // Clear to background
         for (int i = 0; i < pixels.Length; i++)
             pixels[i] = backgroundColor;
+
+        // Draw axis labels and ticks (in margin area)
+        DrawAxisLabels();
 
         // Draw grid
         DrawGrid();
@@ -200,6 +224,61 @@ public class ThermalGraphEditor : MonoBehaviour
         graphTexture.Apply();
     }
 
+    void DrawAxisLabels()
+    {
+        // --- X-axis tick marks and labels ---
+        float[] xTicks = AxisHelper.ComputeNiceTicks(tempMinCelsius, tempMaxCelsius, 5);
+        foreach (float tempC in xTicks)
+        {
+            int x = TempToX(tempC);
+
+            // Tick mark extending down from graph bottom edge
+            for (int dy = 0; dy < 3; dy++)
+                SetPixelSafe(x, graphBottom - 1 - dy, labelColor);
+
+            // Temperature value below tick
+            string label = AxisHelper.FormatTemp(tempC);
+            PixelFont.DrawStringCentered(pixels, textureWidth, textureHeight,
+                                          label, x, graphBottom - 5 - PixelFont.CharHeight, labelColor);
+        }
+
+        // X-axis title centered below tick values
+        PixelFont.DrawStringCentered(pixels, textureWidth, textureHeight,
+                                      "Temp (C)", graphLeft + graphWidth / 2, 1, labelColor);
+
+        // --- Y-axis tick marks and labels ---
+        float[] perfLevels = { 0f, 0.25f, 0.5f, 0.75f, 1.0f };
+        foreach (float perf in perfLevels)
+        {
+            int y = PerformanceToY(perf);
+
+            // Tick mark extending left from graph left edge
+            for (int dx = 0; dx < 3; dx++)
+                SetPixelSafe(graphLeft - 1 - dx, y, labelColor);
+
+            // Performance value to the left of tick
+            string label = AxisHelper.FormatPerformance(perf);
+            PixelFont.DrawStringRightAligned(pixels, textureWidth, textureHeight,
+                                              label, graphLeft - 5, y - PixelFont.CharHeight / 2, labelColor);
+        }
+
+        // Y-axis title drawn vertically
+        PixelFont.DrawStringVertical(pixels, textureWidth, textureHeight,
+                                      "Perf", 1, graphBottom + graphHeight / 2, labelColor);
+
+        // --- Pmax indicator line ---
+        if (pmax < 0.99f)
+        {
+            int pmaxY = PerformanceToY(pmax);
+            Color pmaxColor = new Color(labelColor.r, labelColor.g, labelColor.b, 0.4f);
+            for (int x = graphLeft; x < graphLeft + graphWidth; x++)
+            {
+                if (x % 8 < 4)
+                    BlendPixelSafe(x, pmaxY, pmaxColor);
+            }
+        }
+    }
+
     void DrawGrid()
     {
         // Horizontal grid lines (performance levels)
@@ -207,7 +286,7 @@ public class ThermalGraphEditor : MonoBehaviour
         foreach (float perf in perfLevels)
         {
             int y = PerformanceToY(perf);
-            for (int x = 0; x < textureWidth; x += 4) // Dashed line
+            for (int x = graphLeft; x < graphLeft + graphWidth; x += 4)
             {
                 if (x % 8 < 4)
                     SetPixelSafe(x, y, gridColor);
@@ -218,7 +297,7 @@ public class ThermalGraphEditor : MonoBehaviour
         for (float tempC = Mathf.Ceil(tempMinCelsius / 10f) * 10f; tempC <= tempMaxCelsius; tempC += 10f)
         {
             int x = TempToX(tempC);
-            for (int y = 0; y < textureHeight; y += 4)
+            for (int y = graphBottom; y < graphBottom + graphHeight; y += 4)
             {
                 if (y % 8 < 4)
                     SetPixelSafe(x, y, gridColor);
@@ -228,13 +307,16 @@ public class ThermalGraphEditor : MonoBehaviour
 
     void CalculatePerformanceValues()
     {
-        for (int x = 0; x < textureWidth; x++)
+        if (performanceValues == null || performanceValues.Length != graphWidth)
+            performanceValues = new float[graphWidth];
+
+        for (int i = 0; i < graphWidth; i++)
         {
-            float t = x / (float)(textureWidth - 1);
+            float t = i / (float)(graphWidth - 1);
             float tempCelsius = Mathf.Lerp(tempMinCelsius, tempMaxCelsius, t);
             float tempKelvin = tempCelsius + KELVIN_OFFSET;
 
-            performanceValues[x] = CalculatePerformance(tempKelvin);
+            performanceValues[i] = CalculatePerformance(tempKelvin);
         }
     }
 
@@ -280,12 +362,22 @@ public class ThermalGraphEditor : MonoBehaviour
         return Mathf.Clamp01(numerator / denominator) * fadeFactor * pmax;
     }
 
+    /// <summary>
+    /// Get performance value at a pixel x-coordinate. Returns 0 if outside graph area.
+    /// </summary>
+    float GetPerformanceAtX(int pixelX)
+    {
+        int idx = pixelX - graphLeft;
+        if (idx < 0 || idx >= graphWidth) return 0f;
+        return performanceValues[idx];
+    }
+
     void DrawCurveWithGlow()
     {
         // Draw glow (thicker, semi-transparent)
-        for (int x = 0; x < textureWidth; x++)
+        for (int x = graphLeft; x < graphLeft + graphWidth; x++)
         {
-            int y = PerformanceToY(performanceValues[x]);
+            int y = PerformanceToY(GetPerformanceAtX(x));
 
             // Glow radius
             for (int dy = -4; dy <= 4; dy++)
@@ -305,9 +397,9 @@ public class ThermalGraphEditor : MonoBehaviour
         }
 
         // Draw main curve (solid, thicker)
-        for (int x = 0; x < textureWidth; x++)
+        for (int x = graphLeft; x < graphLeft + graphWidth; x++)
         {
-            int y = PerformanceToY(performanceValues[x]);
+            int y = PerformanceToY(GetPerformanceAtX(x));
 
             // Draw thick line (3 pixels)
             for (int dy = -1; dy <= 1; dy++)
@@ -316,9 +408,9 @@ public class ThermalGraphEditor : MonoBehaviour
             }
 
             // Connect to next point for smooth line
-            if (x < textureWidth - 1)
+            if (x < graphLeft + graphWidth - 1)
             {
-                int nextY = PerformanceToY(performanceValues[x + 1]);
+                int nextY = PerformanceToY(GetPerformanceAtX(x + 1));
                 DrawLineVertical(x, y, nextY, curveColor);
             }
         }
@@ -409,13 +501,13 @@ public class ThermalGraphEditor : MonoBehaviour
 
         // Find where curve crosses 50%
         int leftX = centerX, rightX = centerX;
-        for (int x = centerX; x >= 0; x--)
+        for (int x = centerX; x >= graphLeft; x--)
         {
-            if (performanceValues[x] < 0.5f) { leftX = x; break; }
+            if (GetPerformanceAtX(x) < 0.5f) { leftX = x; break; }
         }
-        for (int x = centerX; x < textureWidth; x++)
+        for (int x = centerX; x < graphLeft + graphWidth; x++)
         {
-            if (performanceValues[x] < 0.5f) { rightX = x; break; }
+            if (GetPerformanceAtX(x) < 0.5f) { rightX = x; break; }
         }
 
         // Draw horizontal line with arrows
@@ -441,9 +533,9 @@ public class ThermalGraphEditor : MonoBehaviour
         float lbCelsius = lowerBound - KELVIN_OFFSET;
         int boundX = TempToX(lbCelsius);
 
-        for (int x = 0; x < boundX && x < textureWidth; x++)
+        for (int x = graphLeft; x < boundX && x < graphLeft + graphWidth; x++)
         {
-            int y = PerformanceToY(performanceValues[x]);
+            int y = PerformanceToY(GetPerformanceAtX(x));
             for (int dy = -2; dy <= 2; dy++)
             {
                 BlendPixelSafe(x, y + dy, new Color(highlightColor.r, highlightColor.g, highlightColor.b, 0.5f));
@@ -457,9 +549,9 @@ public class ThermalGraphEditor : MonoBehaviour
         float ubCelsius = upperBound - KELVIN_OFFSET;
         int boundX = TempToX(ubCelsius);
 
-        for (int x = boundX; x < textureWidth; x++)
+        for (int x = boundX; x < graphLeft + graphWidth; x++)
         {
-            int y = PerformanceToY(performanceValues[x]);
+            int y = PerformanceToY(GetPerformanceAtX(x));
             for (int dy = -2; dy <= 2; dy++)
             {
                 BlendPixelSafe(x, y + dy, new Color(highlightColor.r, highlightColor.g, highlightColor.b, 0.5f));
@@ -494,14 +586,14 @@ public class ThermalGraphEditor : MonoBehaviour
     int TempToX(float tempCelsius)
     {
         float t = (tempCelsius - tempMinCelsius) / (tempMaxCelsius - tempMinCelsius);
-        return Mathf.Clamp(Mathf.RoundToInt(t * (textureWidth - 1)), 0, textureWidth - 1);
+        return Mathf.Clamp(Mathf.RoundToInt(graphLeft + t * (graphWidth - 1)), 0, textureWidth - 1);
     }
 
     int PerformanceToY(float performance)
     {
-        // 10% padding top and bottom
-        float paddedHeight = textureHeight * 0.8f;
-        float paddedBottom = textureHeight * 0.1f;
+        // 10% padding within the graph area
+        float paddedHeight = graphHeight * 0.8f;
+        float paddedBottom = graphBottom + graphHeight * 0.1f;
         return Mathf.Clamp(Mathf.RoundToInt(performance * paddedHeight + paddedBottom), 0, textureHeight - 1);
     }
 
@@ -525,7 +617,7 @@ public class ThermalGraphEditor : MonoBehaviour
 
     void DrawVerticalLine(int x, Color color, bool solid)
     {
-        for (int y = 0; y < textureHeight; y++)
+        for (int y = graphBottom; y < graphBottom + graphHeight; y++)
         {
             if (solid || y % 4 < 2)
             {
@@ -579,9 +671,9 @@ public class ThermalGraphEditor : MonoBehaviour
     public float CalculateAreaUnderCurve()
     {
         float area = 0f;
-        float step = (tempMaxCelsius - tempMinCelsius) / textureWidth;
+        float step = (tempMaxCelsius - tempMinCelsius) / graphWidth;
 
-        for (int i = 0; i < textureWidth - 1; i++)
+        for (int i = 0; i < graphWidth - 1; i++)
         {
             // Trapezoid rule
             area += step * (performanceValues[i] + performanceValues[i + 1]) / 2f;

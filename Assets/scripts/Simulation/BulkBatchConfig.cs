@@ -26,6 +26,9 @@ public class BulkSpeciesConfig
     public float ArrhenUpper;
     public float LowerBoundC;
     public float UpperBoundC;
+    public float Pmax = 1.0f;
+    public float CTminC = -5.0f;
+    public float CTmaxC = 50.0f;
 }
 
 /// <summary>

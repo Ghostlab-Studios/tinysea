@@ -38,6 +38,12 @@ public static class CsvBatchParser
         "lower_bound_c", "upper_bound_c"
     };
 
+    // Optional species columns with defaults (backward compatible)
+    private static readonly string[] OPTIONAL_SPECIES_COLUMNS =
+    {
+        "pmax", "ctmin", "ctmax"
+    };
+
     /// <summary>
     /// Parse CSV content into batch configs with full validation.
     /// Returns true if parsing succeeded with no errors.
@@ -214,6 +220,11 @@ public static class CsvBatchParser
         species.ArrhenUpper = GetFloat(fields, columnIndex, prefix + "arrhen_upper", rowNum, errors);
         species.LowerBoundC = GetFloat(fields, columnIndex, prefix + "lower_bound_c", rowNum, errors);
         species.UpperBoundC = GetFloat(fields, columnIndex, prefix + "upper_bound_c", rowNum, errors);
+
+        // Optional columns with defaults (backward compatible — missing columns use defaults)
+        species.Pmax = GetFloatOptional(fields, columnIndex, prefix + "pmax", 1.0f);
+        species.CTminC = GetFloatOptional(fields, columnIndex, prefix + "ctmin", -5.0f);
+        species.CTmaxC = GetFloatOptional(fields, columnIndex, prefix + "ctmax", 50.0f);
     }
 
     // ==================== VALIDATION ====================
@@ -323,6 +334,19 @@ public static class CsvBatchParser
             return result;
         errors.Add($"Row {rowNum}: '{column}' value '{val}' is not a valid number.");
         return 0f;
+    }
+
+    private static float GetFloatOptional(string[] fields, Dictionary<string, int> columnIndex,
+        string column, float defaultValue)
+    {
+        if (!columnIndex.TryGetValue(column, out int idx) || idx >= fields.Length)
+            return defaultValue;
+        string val = fields[idx].Trim();
+        if (string.IsNullOrEmpty(val))
+            return defaultValue;
+        if (float.TryParse(val, NumberStyles.Float, CultureInfo.InvariantCulture, out float result))
+            return result;
+        return defaultValue;
     }
 
     private static bool GetBool(string[] fields, Dictionary<string, int> columnIndex,

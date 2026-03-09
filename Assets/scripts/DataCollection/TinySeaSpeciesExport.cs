@@ -63,6 +63,7 @@ public static class TinySeaSpeciesExport
             "Description","TemperatureThresholdText","ReproductionRateText",
             "SpeciesAmount",
             "OptimalTempK","ArrhenBreadth","ArrhenLower","ArrhenUpper","LowerBoundK","UpperBoundK",
+            "Pmax","CTminC","CTmaxC",
             "IconFile"
         };
 
@@ -127,6 +128,10 @@ public static class TinySeaSpeciesExport
             row.Add(arrhenUpper.ToString(inv));
             row.Add(lowerK.ToString(inv));
             row.Add(upperK.ToString(inv));
+
+            row.Add(c.thermalcurve != null ? c.thermalcurve.pmax.ToString(inv) : Double.NaN.ToString(inv));
+            row.Add(c.thermalcurve != null ? c.thermalcurve.ctMinC.ToString(inv) : Double.NaN.ToString(inv));
+            row.Add(c.thermalcurve != null ? c.thermalcurve.ctMaxC.ToString(inv) : Double.NaN.ToString(inv));
 
             row.Add(Csv(iconFileRel));
 

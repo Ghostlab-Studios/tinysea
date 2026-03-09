@@ -134,7 +134,10 @@ public class EcosystemSimulator
                 ArrhenLower = data.arrhenLower,
                 ArrhenUpper = data.arrhenUpper,
                 LowerBoundK = data.lowerBoundK,
-                UpperBoundK = data.upperBoundK
+                UpperBoundK = data.upperBoundK,
+                Pmax = data.pmax,
+                CTminC = data.ctMinC,
+                CTmaxC = data.ctMaxC
             };
 
             Species.Add(simSpecies);
@@ -186,7 +189,10 @@ public class EcosystemSimulator
                 ArrhenLower = data.arrhenLower,
                 ArrhenUpper = data.arrhenUpper,
                 LowerBoundK = data.lowerBoundK,
-                UpperBoundK = data.upperBoundK
+                UpperBoundK = data.upperBoundK,
+                Pmax = data.pmax,
+                CTminC = data.ctMinC,
+                CTmaxC = data.ctMaxC
             };
 
             Species.Add(simSpecies);

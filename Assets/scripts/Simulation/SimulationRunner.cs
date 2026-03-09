@@ -306,7 +306,8 @@ public class SimulationRunner
                 "DeathThreshold,DeathRate,MinimumDeaths,ReproThreshold," +
                 "NaturalDeathRate,NaturalDeathVariance,HuntingEfficiency,HuntingVariance," +
                 "OptimalTempK,OptimalTempC,ArrhenBreadth,ArrhenLower,ArrhenUpper," +
-                "LowerBoundK,LowerBoundC,UpperBoundK,UpperBoundC");
+                "LowerBoundK,LowerBoundC,UpperBoundK,UpperBoundC," +
+                "Pmax,CTminC,CTmaxC");
             foreach (var sp in RunSpecies.speciesList)
             {
                 string spName = !string.IsNullOrEmpty(sp.displayName) ? sp.displayName : sp.speciesName.ToString();
@@ -318,7 +319,8 @@ public class SimulationRunner
                     $"{sp.optimalTempK},{sp.optimalTempK - 273.15f:F2}," +
                     $"{sp.arrhenBreadth},{sp.arrhenLower},{sp.arrhenUpper}," +
                     $"{sp.lowerBoundK},{sp.lowerBoundK - 273.15f:F2}," +
-                    $"{sp.upperBoundK},{sp.upperBoundK - 273.15f:F2}");
+                    $"{sp.upperBoundK},{sp.upperBoundK - 273.15f:F2}," +
+                    $"{sp.pmax:F2},{sp.ctMinC:F2},{sp.ctMaxC:F2}");
             }
         }
         sb.AppendLine("#");

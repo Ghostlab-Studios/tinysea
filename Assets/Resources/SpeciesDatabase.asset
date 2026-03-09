@@ -16,6 +16,7 @@ MonoBehaviour:
   - index: 0
     speciesName: 0
     variant: 0
+    displayName: 
     icon: {fileID: 21300000, guid: f89c1a59fafaa3e41aa5e9f94d051ee9, type: 3}
     count: 20
     tier: 0
@@ -43,9 +44,13 @@ MonoBehaviour:
     arrhenUpper: 21273.15
     lowerBoundK: 285.15
     upperBoundK: 295.15
+    pmax: 0.65
+    ctMinC: -5
+    ctMaxC: 50
   - index: 1
     speciesName: 0
     variant: 1
+    displayName: 
     icon: {fileID: 21300000, guid: 485589c1ae6b14a4f825d236b41fef64, type: 3}
     count: 20
     tier: 0
@@ -73,9 +78,13 @@ MonoBehaviour:
     arrhenUpper: 21273.15
     lowerBoundK: 300.15
     upperBoundK: 310.15
+    pmax: 1
+    ctMinC: -5
+    ctMaxC: 50
   - index: 2
     speciesName: 0
     variant: 2
+    displayName: 
     icon: {fileID: 21300000, guid: b18c89991d6433d47a3003fba57fad95, type: 3}
     count: 20
     tier: 0
@@ -103,9 +112,13 @@ MonoBehaviour:
     arrhenUpper: 21273.15
     lowerBoundK: 270.15
     upperBoundK: 280.15
+    pmax: 1
+    ctMinC: -5
+    ctMaxC: 50
   - index: 4
     speciesName: 3
     variant: 1
+    displayName: 
     icon: {fileID: 21300000, guid: 6a4b52089df8bd0498453509201ec913, type: 3}
     count: 2
     tier: 1
@@ -133,9 +146,13 @@ MonoBehaviour:
     arrhenUpper: 21273.15
     lowerBoundK: 300.15
     upperBoundK: 310.15
+    pmax: 1
+    ctMinC: -5
+    ctMaxC: 50
   - index: 5
     speciesName: 3
     variant: 2
+    displayName: 
     icon: {fileID: 21300000, guid: cc38ddbdb02da6747bc7697cb69e3458, type: 3}
     count: 2
     tier: 1
@@ -163,9 +180,13 @@ MonoBehaviour:
     arrhenUpper: 21273.15
     lowerBoundK: 270.15
     upperBoundK: 280.15
+    pmax: 1
+    ctMinC: -5
+    ctMaxC: 50
   - index: 3
     speciesName: 3
     variant: 0
+    displayName: 
     icon: {fileID: 21300000, guid: 8ab2db50f00f92142abc4c674c239a1c, type: 3}
     count: 2
     tier: 1
@@ -193,3 +214,6 @@ MonoBehaviour:
     arrhenUpper: 21273.15
     lowerBoundK: 285.15
     upperBoundK: 295.15
+    pmax: 0.65
+    ctMinC: -5
+    ctMaxC: 50

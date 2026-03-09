@@ -337,7 +337,10 @@ public class BulkSimulationController : MonoBehaviour
             arrhenLower = sp.ArrhenLower,
             arrhenUpper = sp.ArrhenUpper,
             lowerBoundK = sp.LowerBoundC + 273.15f,
-            upperBoundK = sp.UpperBoundC + 273.15f
+            upperBoundK = sp.UpperBoundC + 273.15f,
+            pmax = sp.Pmax,
+            ctMinC = sp.CTminC,
+            ctMaxC = sp.CTmaxC
         };
     }
 }

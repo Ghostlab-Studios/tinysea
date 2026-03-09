@@ -77,6 +77,15 @@ public class SpeciesData
     public float arrhenUpper = 21273.15f;
     public float lowerBoundK = 285.15f;     // 12°C default
     public float upperBoundK = 295.15f;     // 22°C default
+
+    [Header("Thermal Curve - Peak & Lethal Limits")]
+    [Tooltip("Maximum performance at optimal temperature (0-1). Scales the curve output.")]
+    [Range(0f, 1f)]
+    public float pmax = 1.0f;
+    [Tooltip("Critical thermal minimum in Celsius. Below this, performance = 0.")]
+    public float ctMinC = -5.0f;
+    [Tooltip("Critical thermal maximum in Celsius. Above this, performance = 0.")]
+    public float ctMaxC = 50.0f;
 }
 
 [CreateAssetMenu(fileName = "SpeciesDatabase", menuName = "TinySea/Species Database")]
@@ -139,7 +148,10 @@ public class SpeciesDatabase : ScriptableObject
             huntingVariance: 0f,
             optimalK: 293.15f,      // 20°C
             lowerBound: 285.15f,    // 12°C
-            upperBound: 295.15f     // 22°C
+            upperBound: 295.15f,    // 22°C
+            pmax: 0.65f,
+            ctMinC: -5f,
+            ctMaxC: 40f
         );
 
         AddSpecies(
@@ -160,7 +172,10 @@ public class SpeciesDatabase : ScriptableObject
             huntingVariance: 0f,
             optimalK: 308.65f,      // 35.5°C
             lowerBound: 300.15f,    // 27°C
-            upperBound: 310.15f     // 37°C
+            upperBound: 310.15f,    // 37°C
+            pmax: 1.0f,
+            ctMinC: 10f,
+            ctMaxC: 50f
         );
 
         AddSpecies(
@@ -181,7 +196,10 @@ public class SpeciesDatabase : ScriptableObject
             huntingVariance: 0f,
             optimalK: 278.15f,      // 5°C
             lowerBound: 270.15f,    // -3°C
-            upperBound: 280.15f     // 7°C
+            upperBound: 280.15f,    // 7°C
+            pmax: 1.0f,
+            ctMinC: -10f,
+            ctMaxC: 20f
         );
 
         // ===== SHEPLIK (Tier 2 - Predator) =====
@@ -206,7 +224,10 @@ public class SpeciesDatabase : ScriptableObject
             huntingVariance: 0.15f,
             optimalK: 293.15f,      // 20°C
             lowerBound: 285.15f,    // 12°C
-            upperBound: 295.15f     // 22°C
+            upperBound: 295.15f,    // 22°C
+            pmax: 0.65f,
+            ctMinC: -5f,
+            ctMaxC: 40f
         );
 
         AddSpecies(
@@ -227,7 +248,10 @@ public class SpeciesDatabase : ScriptableObject
             huntingVariance: 0.15f,
             optimalK: 308.65f,      // 35.5°C
             lowerBound: 300.15f,    // 27°C
-            upperBound: 310.15f     // 37°C
+            upperBound: 310.15f,    // 37°C
+            pmax: 1.0f,
+            ctMinC: 10f,
+            ctMaxC: 50f
         );
 
         AddSpecies(
@@ -248,7 +272,10 @@ public class SpeciesDatabase : ScriptableObject
             huntingVariance: 0.15f,
             optimalK: 278.15f,      // 5°C
             lowerBound: 270.15f,    // -3°C
-            upperBound: 280.15f     // 7°C
+            upperBound: 280.15f,    // 7°C
+            pmax: 1.0f,
+            ctMinC: -10f,
+            ctMaxC: 20f
         );
 
         EditorUtility.SetDirty(this);
@@ -264,7 +291,8 @@ public class SpeciesDatabase : ScriptableObject
                            float minDeaths, float reproThresh,
                            float naturalDeathRate, float naturalDeathVariance,
                            float huntingEfficiency, float huntingVariance,
-                           float optimalK, float lowerBound, float upperBound)
+                           float optimalK, float lowerBound, float upperBound,
+                           float pmax, float ctMinC, float ctMaxC)
     {
         var data = new SpeciesData
         {
@@ -291,6 +319,10 @@ public class SpeciesDatabase : ScriptableObject
             arrhenUpper = 21273.15f,
             lowerBoundK = lowerBound,
             upperBoundK = upperBound,
+            // Peak & lethal limits
+            pmax = pmax,
+            ctMinC = ctMinC,
+            ctMaxC = ctMaxC,
             // UI defaults
             eatingStars = tier == 0 ? 0 : 4,
             reproductionStars = tier == 0 ? 4 : 2,
@@ -337,6 +369,10 @@ public class SpeciesDatabase : ScriptableObject
             arrhenUpper = 21273.15f,
             lowerBoundK = lowerBound,
             upperBoundK = upperBound,
+            // Peak & lethal limits (defaults)
+            pmax = 1.0f,
+            ctMinC = -5.0f,
+            ctMaxC = 50.0f,
             // UI defaults
             eatingStars = tier == 0 ? 0 : 4,
             reproductionStars = tier == 0 ? 4 : 2,
@@ -345,7 +381,7 @@ public class SpeciesDatabase : ScriptableObject
             thermalBreadthStars = 5,
             temperatureThresholdText = "High",
             reproductionRateText = "Low",
-            description = $"{name} - {SpeciesVariant.Custom} variant"
+            description = $"{displayname} - {SpeciesVariant.Custom} variant"
         };
     }
 

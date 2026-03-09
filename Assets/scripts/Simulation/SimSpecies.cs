@@ -46,6 +46,11 @@ public class SimSpecies
     public float LowerBoundK;
     public float UpperBoundK;
 
+    // ==================== PEAK HEIGHT & LETHAL LIMITS ====================
+    public float Pmax = 1.0f;          // Maximum performance at optimal temperature (0-1)
+    public float CTminC = -5.0f;       // Critical thermal minimum (Celsius) — below this, performance = 0
+    public float CTmaxC = 50.0f;       // Critical thermal maximum (Celsius) — above this, performance = 0
+
     // ==================== RUNTIME VALUES (calculated each step) ====================
     public float ThermalPerformance;        // From Arrhenius formula (0-1)
     public float FedRate = 1f;              // Feeding satisfaction (0-1), Tier 1 always 1.0
@@ -63,6 +68,10 @@ public class SimSpecies
     /// </summary>
     public float CalculatePerformance(float temperatureCelsius)
     {
+        // Lethal limits — hard cutoff before any calculation
+        if (temperatureCelsius < CTminC || temperatureCelsius > CTmaxC)
+            return 0f;
+
         float T = temperatureCelsius + 273.15f;  // Convert to Kelvin
         float OT = OptimalTempK;
         float B = ArrhenBreadth;
@@ -78,8 +87,8 @@ public class SimSpecies
 
         double perf = numerator / denominator;
 
-        // Clamp to [0, 1]
-        return (float)Math.Max(0.0, Math.Min(1.0, perf));
+        // Clamp to [0, 1] then apply Pmax
+        return (float)Math.Max(0.0, Math.Min(1.0, perf)) * Pmax;
     }
 
     // ==================== FACTORY METHODS (for fallback/testing) ====================
@@ -110,23 +119,32 @@ public class SimSpecies
             ArrhenUpper = 21273.15f
         };
 
-        // Set temperature ranges based on variant
+        // Set temperature ranges and thermal limits based on variant
         switch (variant)
         {
             case ThermalVariant.Arctic:
                 species.OptimalTempK = 278.15f;   // 5°C optimal
                 species.LowerBoundK = 270.15f;    // -3°C
                 species.UpperBoundK = 280.15f;    // 7°C
+                species.Pmax = 1.0f;
+                species.CTminC = -10f;
+                species.CTmaxC = 20f;
                 break;
             case ThermalVariant.Common:
                 species.OptimalTempK = 293.15f;   // 20°C optimal
                 species.LowerBoundK = 285.15f;    // 12°C
                 species.UpperBoundK = 295.15f;    // 22°C
+                species.Pmax = 0.65f;
+                species.CTminC = -5f;
+                species.CTmaxC = 40f;
                 break;
             case ThermalVariant.Tropical:
                 species.OptimalTempK = 308.65f;   // 35.5°C optimal
                 species.LowerBoundK = 300.15f;    // 27°C
                 species.UpperBoundK = 310.15f;    // 37°C
+                species.Pmax = 1.0f;
+                species.CTminC = 10f;
+                species.CTmaxC = 50f;
                 break;
         }
 
@@ -165,16 +183,25 @@ public class SimSpecies
                 species.OptimalTempK = 278.15f;
                 species.LowerBoundK = 270.15f;
                 species.UpperBoundK = 280.15f;
+                species.Pmax = 1.0f;
+                species.CTminC = -10f;
+                species.CTmaxC = 20f;
                 break;
             case ThermalVariant.Common:
                 species.OptimalTempK = 293.15f;
                 species.LowerBoundK = 285.15f;
                 species.UpperBoundK = 295.15f;
+                species.Pmax = 0.65f;
+                species.CTminC = -5f;
+                species.CTmaxC = 40f;
                 break;
             case ThermalVariant.Tropical:
                 species.OptimalTempK = 308.65f;
                 species.LowerBoundK = 300.15f;
                 species.UpperBoundK = 310.15f;
+                species.Pmax = 1.0f;
+                species.CTminC = 10f;
+                species.CTmaxC = 50f;
                 break;
         }
 

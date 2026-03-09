@@ -425,7 +425,10 @@ public static class ConfigExporter
                 sb.AppendLine($"        \"lowerBoundK\": {species.lowerBoundK},");
                 sb.AppendLine($"        \"lowerBoundC\": {species.lowerBoundK - 273.15f:F2},");
                 sb.AppendLine($"        \"upperBoundK\": {species.upperBoundK},");
-                sb.AppendLine($"        \"upperBoundC\": {species.upperBoundK - 273.15f:F2}");
+                sb.AppendLine($"        \"upperBoundC\": {species.upperBoundK - 273.15f:F2},");
+                sb.AppendLine($"        \"pmax\": {species.pmax},");
+                sb.AppendLine($"        \"ctMinC\": {species.ctMinC},");
+                sb.AppendLine($"        \"ctMaxC\": {species.ctMaxC}");
                 sb.AppendLine("      }");
                 sb.AppendLine($"    }}{(isLast ? "" : ",")}");
             }
@@ -487,7 +490,8 @@ public static class ConfigExporter
                 "DeathThreshold,DeathRate,MinimumDeaths,ReproThreshold," +
                 "NaturalDeathRate,NaturalDeathVariance,HuntingEfficiency,HuntingVariance," +
                 "OptimalTempK,OptimalTempC,ArrhenBreadth,ArrhenLower,ArrhenUpper," +
-                "LowerBoundK,LowerBoundC,UpperBoundK,UpperBoundC");
+                "LowerBoundK,LowerBoundC,UpperBoundK,UpperBoundC," +
+                "Pmax,CTminC,CTmaxC");
 
             foreach (var species in runSpecies.speciesList)
             {
@@ -500,7 +504,8 @@ public static class ConfigExporter
                     $"{species.optimalTempK},{species.optimalTempK - 273.15f:F2}," +
                     $"{species.arrhenBreadth},{species.arrhenLower},{species.arrhenUpper}," +
                     $"{species.lowerBoundK},{species.lowerBoundK - 273.15f:F2}," +
-                    $"{species.upperBoundK},{species.upperBoundK - 273.15f:F2}");
+                    $"{species.upperBoundK},{species.upperBoundK - 273.15f:F2}," +
+                    $"{species.pmax:F2},{species.ctMinC:F2},{species.ctMaxC:F2}");
             }
         }
 

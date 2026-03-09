@@ -448,7 +448,10 @@ public class SpeciesTierConfig : MonoBehaviour
             arrhenLower = original.arrhenLower,
             arrhenUpper = original.arrhenUpper,
             lowerBoundK = original.lowerBoundK,
-            upperBoundK = original.upperBoundK
+            upperBoundK = original.upperBoundK,
+            pmax = original.pmax,
+            ctMinC = original.ctMinC,
+            ctMaxC = original.ctMaxC
         };
     }
 

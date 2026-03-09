@@ -330,6 +330,9 @@ public class SpeciesUIController : MonoBehaviour
         thermalGraphUI.arrhenUpper = currentSpeciesData.arrhenUpper;
         thermalGraphUI.lowerBound = currentSpeciesData.lowerBoundK;
         thermalGraphUI.upperBound = currentSpeciesData.upperBoundK;
+        thermalGraphUI.pmax = currentSpeciesData.pmax;
+        thermalGraphUI.ctMinC = currentSpeciesData.ctMinC;
+        thermalGraphUI.ctMaxC = currentSpeciesData.ctMaxC;
 
         // Force graph update
         if (Application.isPlaying)

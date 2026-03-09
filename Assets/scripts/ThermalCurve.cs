@@ -16,24 +16,35 @@ public class ThermalCurve : MonoBehaviour {
     public float lowerBound = 286;
     public float upperBound = 298;
 
+    public float pmax = 1.0f;
+    public float ctMinC = -5.0f;
+    public float ctMaxC = 50.0f;
+
     public float getCurve(float temp)
     {
-        //float oT = optimalTemp + 275.15f;
+        // Lethal limits (convert Celsius to Kelvin for comparison)
+        float ctMinK = ctMinC + 273.15f;
+        float ctMaxK = ctMaxC + 273.15f;
+        if (temp < ctMinK || temp > ctMaxK)
+            return 0f;
 
         float performance = (Mathf.Exp(arrhenBreadth / optimalTemp - arrhenBreadth / temp) *
                 (1 + Mathf.Exp(arrhenLower / optimalTemp - arrhenLower / lowerBound) +
                     Mathf.Exp(arrhenUpper / upperBound - arrhenUpper / optimalTemp))) /
                 (1 + Mathf.Exp(arrhenLower / temp - arrhenLower / lowerBound) +
                     Mathf.Exp(arrhenUpper / upperBound - arrhenUpper / temp));
-        /*if(performance > 1) {
-            performance = 1;
-        }*/
 
-        return performance;
+        return performance * pmax;
     }
 
     public float Curves(float temp)
     {
+        // Lethal limits (convert Celsius to Kelvin for comparison)
+        float ctMinK = ctMinC + 273.15f;
+        float ctMaxK = ctMaxC + 273.15f;
+        if (temp < ctMinK || temp > ctMaxK)
+            return 0f;
+
         float performance = (Mathf.Exp(arrhenBreadth / optimalTemp - arrhenBreadth / temp) *
                 (1 + Mathf.Exp(arrhenLower / optimalTemp - arrhenLower / lowerBound) +
                     Mathf.Exp(arrhenUpper / upperBound - arrhenUpper / optimalTemp))) /
@@ -43,7 +54,7 @@ public class ThermalCurve : MonoBehaviour {
         if(performance > 1) {
            performance = 1;
         }
-        return performance;
+        return performance * pmax;
     }
 
     void OnDrawGizmos()

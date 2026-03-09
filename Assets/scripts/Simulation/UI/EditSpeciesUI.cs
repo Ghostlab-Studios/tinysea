@@ -103,6 +103,9 @@ public class EditSpeciesUI : MonoBehaviour
         public float arrhenUpper;
         public float lowerBoundK;
         public float upperBoundK;
+        public float pmax;
+        public float ctMinC;
+        public float ctMaxC;
 
         /// <summary>
         /// Create a backup from SpeciesData
@@ -132,7 +135,10 @@ public class EditSpeciesUI : MonoBehaviour
                 arrhenLower = data.arrhenLower,
                 arrhenUpper = data.arrhenUpper,
                 lowerBoundK = data.lowerBoundK,
-                upperBoundK = data.upperBoundK
+                upperBoundK = data.upperBoundK,
+                pmax = data.pmax,
+                ctMinC = data.ctMinC,
+                ctMaxC = data.ctMaxC
             };
         }
 
@@ -163,6 +169,9 @@ public class EditSpeciesUI : MonoBehaviour
             data.arrhenUpper = arrhenUpper;
             data.lowerBoundK = lowerBoundK;
             data.upperBoundK = upperBoundK;
+            data.pmax = pmax;
+            data.ctMinC = ctMinC;
+            data.ctMaxC = ctMaxC;
         }
     }
 
@@ -616,6 +625,9 @@ public class EditSpeciesUI : MonoBehaviour
         currentEditingData.arrhenUpper = originalData.arrhenUpper;
         currentEditingData.lowerBoundK = originalData.lowerBoundK;
         currentEditingData.upperBoundK = originalData.upperBoundK;
+        currentEditingData.pmax = originalData.pmax;
+        currentEditingData.ctMinC = originalData.ctMinC;
+        currentEditingData.ctMaxC = originalData.ctMaxC;
 
         Debug.Log($"EditSpeciesUI: Factory reset {currentEditingData.speciesName} to original database values");
 
@@ -747,6 +759,9 @@ public class EditSpeciesUI : MonoBehaviour
             if (!Mathf.Approximately(currentThermal.arrhenBreadth, backupData.arrhenBreadth)) return true;
             if (!Mathf.Approximately(currentThermal.arrhenLower, backupData.arrhenLower)) return true;
             if (!Mathf.Approximately(currentThermal.arrhenUpper, backupData.arrhenUpper)) return true;
+            if (!Mathf.Approximately(currentThermal.pmax, backupData.pmax)) return true;
+            if (!Mathf.Approximately(currentThermal.ctMinC, backupData.ctMinC)) return true;
+            if (!Mathf.Approximately(currentThermal.ctMaxC, backupData.ctMaxC)) return true;
         }
 
         return false;

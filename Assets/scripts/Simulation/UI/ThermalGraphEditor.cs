@@ -58,6 +58,7 @@ public class ThermalGraphEditor : MonoBehaviour
 
     // Constants
     private const float KELVIN_OFFSET = 273.15f;
+    private const float LETHAL_TRANSITION_WIDTH = 2.0f; // Smooth fade width in degrees
 
     // Internal
     private RawImage rawImage;
@@ -239,10 +240,24 @@ public class ThermalGraphEditor : MonoBehaviour
 
     float CalculatePerformance(float tempKelvin)
     {
-        // Lethal limits check (convert Celsius to Kelvin)
+        // Smooth lethal fade (convert Celsius to Kelvin)
         float ctMinK = ctMinC + KELVIN_OFFSET;
         float ctMaxK = ctMaxC + KELVIN_OFFSET;
-        if (tempKelvin < ctMinK || tempKelvin > ctMaxK) return 0f;
+        float halfRange = (ctMaxK - ctMinK) / 2f;
+        float tw = Mathf.Min(LETHAL_TRANSITION_WIDTH, halfRange);
+
+        float fadeFactor = 1f;
+        if (tempKelvin <= ctMinK)
+            fadeFactor = 0f;
+        else if (tempKelvin < ctMinK + tw)
+            fadeFactor = 0.5f * (1f + Mathf.Cos(Mathf.PI * (ctMinK + tw - tempKelvin) / tw));
+
+        if (tempKelvin >= ctMaxK)
+            fadeFactor = 0f;
+        else if (tempKelvin > ctMaxK - tw)
+            fadeFactor *= 0.5f * (1f + Mathf.Cos(Mathf.PI * (tempKelvin - (ctMaxK - tw)) / tw));
+
+        if (fadeFactor <= 0f) return 0f;
 
         float T = tempKelvin;
         float OT = optimalTemp;
@@ -262,7 +277,7 @@ public class ThermalGraphEditor : MonoBehaviour
 
         if (denominator == 0) return 0f;
 
-        return Mathf.Clamp01(numerator / denominator) * pmax;
+        return Mathf.Clamp01(numerator / denominator) * fadeFactor * pmax;
     }
 
     void DrawCurveWithGlow()

@@ -37,6 +37,7 @@ public class SimSpecies
     // ==================== CONSTANTS ====================
     public const float NO_PREDATOR_PENALTY = 0.85f;           // 15% birth reduction when no predators
     public const float MIN_FINAL_PERF_FOR_NATURAL_DEATH = 0.1f; // Floor to prevent division by zero
+    private const float LETHAL_TRANSITION_WIDTH = 2.0f; // Smooth fade width in degrees Celsius
 
     // ==================== THERMAL CURVE PARAMETERS (Kelvin) ====================
     public float OptimalTempK;
@@ -68,9 +69,22 @@ public class SimSpecies
     /// </summary>
     public float CalculatePerformance(float temperatureCelsius)
     {
-        // Lethal limits — hard cutoff before any calculation
-        if (temperatureCelsius < CTminC || temperatureCelsius > CTmaxC)
-            return 0f;
+        // Smooth lethal fade (cosine transition over LETHAL_TRANSITION_WIDTH degrees)
+        float halfRange = (CTmaxC - CTminC) / 2f;
+        float tw = (float)Math.Min(LETHAL_TRANSITION_WIDTH, halfRange);
+
+        float fadeFactor = 1f;
+        if (temperatureCelsius <= CTminC)
+            fadeFactor = 0f;
+        else if (temperatureCelsius < CTminC + tw)
+            fadeFactor = 0.5f * (1f + (float)Math.Cos(Math.PI * (CTminC + tw - temperatureCelsius) / tw));
+
+        if (temperatureCelsius >= CTmaxC)
+            fadeFactor = 0f;
+        else if (temperatureCelsius > CTmaxC - tw)
+            fadeFactor *= 0.5f * (1f + (float)Math.Cos(Math.PI * (temperatureCelsius - (CTmaxC - tw)) / tw));
+
+        if (fadeFactor <= 0f) return 0f;
 
         float T = temperatureCelsius + 273.15f;  // Convert to Kelvin
         float OT = OptimalTempK;
@@ -88,7 +102,7 @@ public class SimSpecies
         double perf = numerator / denominator;
 
         // Clamp to [0, 1] then apply Pmax
-        return (float)Math.Max(0.0, Math.Min(1.0, perf)) * Pmax;
+        return (float)Math.Max(0.0, Math.Min(1.0, perf)) * fadeFactor * Pmax;
     }
 
     // ==================== FACTORY METHODS (for fallback/testing) ====================

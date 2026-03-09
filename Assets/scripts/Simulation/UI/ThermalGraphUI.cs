@@ -24,6 +24,8 @@ public class ThermalGraphUI : MonoBehaviour
     [Range(0.05f, 0.3f)]
     public float paddingPercent = 0.1f; // 10% padding top and bottom
 
+    private const float LETHAL_TRANSITION_WIDTH = 2.0f; // Smooth fade width in degrees
+
     private float tempMinCelsius = 0f;
     private float tempMaxCelsius = 40f;
 
@@ -102,16 +104,31 @@ public class ThermalGraphUI : MonoBehaviour
         // Auto-zoom to species range
         UpdateDisplayRange();
 
-        // Calculate performance values
+        // Calculate performance values with smooth lethal fade
         float ctMinK = ctMinC + 273.15f;
         float ctMaxK = ctMaxC + 273.15f;
+        float halfRange = (ctMaxK - ctMinK) / 2f;
+        float tw = Mathf.Min(LETHAL_TRANSITION_WIDTH, halfRange);
+
         for (int x = 0; x < textureWidth; x++)
         {
             float t = x / (float)(textureWidth - 1);
             float tempCelsius = Mathf.Lerp(tempMinCelsius, tempMaxCelsius, t);
             float tempKelvin = tempCelsius + 273.15f;
 
-            if (tempKelvin < ctMinK || tempKelvin > ctMaxK)
+            // Smooth lethal fade
+            float fadeFactor = 1f;
+            if (tempKelvin <= ctMinK)
+                fadeFactor = 0f;
+            else if (tempKelvin < ctMinK + tw)
+                fadeFactor = 0.5f * (1f + Mathf.Cos(Mathf.PI * (ctMinK + tw - tempKelvin) / tw));
+
+            if (tempKelvin >= ctMaxK)
+                fadeFactor = 0f;
+            else if (tempKelvin > ctMaxK - tw)
+                fadeFactor *= 0.5f * (1f + Mathf.Cos(Mathf.PI * (tempKelvin - (ctMaxK - tw)) / tw));
+
+            if (fadeFactor <= 0f)
             {
                 performanceValues[x] = 0f;
                 continue;
@@ -123,7 +140,7 @@ public class ThermalGraphUI : MonoBehaviour
                     (1 + Mathf.Exp(arrhenLower / tempKelvin - arrhenLower / lowerBound) +
                         Mathf.Exp(arrhenUpper / upperBound - arrhenUpper / tempKelvin));
 
-            performanceValues[x] = Mathf.Clamp01(performance) * pmax;
+            performanceValues[x] = Mathf.Clamp01(performance) * fadeFactor * pmax;
         }
 
         // Draw curve

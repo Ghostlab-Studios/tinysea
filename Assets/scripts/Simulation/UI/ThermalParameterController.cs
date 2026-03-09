@@ -36,8 +36,8 @@ public class ThermalParameterController : MonoBehaviour
 
     [Header("Slider Ranges - Peak & Lethal Limits")]
     [SerializeField] private Vector2 pmaxRange = new Vector2(0f, 1f);
-    [SerializeField] private Vector2 ctMinRange = new Vector2(-20f, 30f);
-    [SerializeField] private Vector2 ctMaxRange = new Vector2(10f, 60f);
+    [SerializeField] private Vector2 ctMinRange = new Vector2(-50f, 50f);
+    [SerializeField] private Vector2 ctMaxRange = new Vector2(-50f, 100f);
 
     [Header("Slider Ranges - Shape Coefficients")]
     [SerializeField] private Vector2 arrhenBreadthRange = new Vector2(1000f, 15000f);
@@ -58,6 +58,7 @@ public class ThermalParameterController : MonoBehaviour
 
     // Constants
     private const float KELVIN_OFFSET = 273.15f;
+    private const float LETHAL_TRANSITION_WIDTH = 2.0f; // Smooth fade width in degrees Celsius
 
     // Current values (in internal units - Kelvin for temps)
     private float currentOptimalTemp;
@@ -532,9 +533,22 @@ public class ThermalParameterController : MonoBehaviour
     /// </summary>
     private float CalculatePerformanceAtTemp(float tempCelsius)
     {
-        // Lethal limits check
-        if (tempCelsius < currentCTminC || tempCelsius > currentCTmaxC)
-            return 0f;
+        // Smooth lethal fade
+        float halfRange = (currentCTmaxC - currentCTminC) / 2f;
+        float tw = Mathf.Min(LETHAL_TRANSITION_WIDTH, halfRange);
+
+        float fadeFactor = 1f;
+        if (tempCelsius <= currentCTminC)
+            fadeFactor = 0f;
+        else if (tempCelsius < currentCTminC + tw)
+            fadeFactor = 0.5f * (1f + Mathf.Cos(Mathf.PI * (currentCTminC + tw - tempCelsius) / tw));
+
+        if (tempCelsius >= currentCTmaxC)
+            fadeFactor = 0f;
+        else if (tempCelsius > currentCTmaxC - tw)
+            fadeFactor *= 0.5f * (1f + Mathf.Cos(Mathf.PI * (tempCelsius - (currentCTmaxC - tw)) / tw));
+
+        if (fadeFactor <= 0f) return 0f;
 
         float T = tempCelsius + KELVIN_OFFSET;
         float OT = currentOptimalTemp;
@@ -560,7 +574,7 @@ public class ThermalParameterController : MonoBehaviour
 
         if (denominator == 0) return 0f;
 
-        return Mathf.Clamp01(numerator / denominator) * currentPmax;
+        return Mathf.Clamp01(numerator / denominator) * fadeFactor * currentPmax;
     }
 
     // ==================== Graph Updates ====================

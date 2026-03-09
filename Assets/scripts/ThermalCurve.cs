@@ -20,13 +20,28 @@ public class ThermalCurve : MonoBehaviour {
     public float ctMinC = -5.0f;
     public float ctMaxC = 50.0f;
 
+    private const float LETHAL_TRANSITION_WIDTH = 2.0f; // Smooth fade width in degrees (same delta in K)
+
     public float getCurve(float temp)
     {
-        // Lethal limits (convert Celsius to Kelvin for comparison)
+        // Smooth lethal fade (convert Celsius to Kelvin for comparison)
         float ctMinK = ctMinC + 273.15f;
         float ctMaxK = ctMaxC + 273.15f;
-        if (temp < ctMinK || temp > ctMaxK)
-            return 0f;
+        float halfRange = (ctMaxK - ctMinK) / 2f;
+        float tw = Mathf.Min(LETHAL_TRANSITION_WIDTH, halfRange);
+
+        float fadeFactor = 1f;
+        if (temp <= ctMinK)
+            fadeFactor = 0f;
+        else if (temp < ctMinK + tw)
+            fadeFactor = 0.5f * (1f + Mathf.Cos(Mathf.PI * (ctMinK + tw - temp) / tw));
+
+        if (temp >= ctMaxK)
+            fadeFactor = 0f;
+        else if (temp > ctMaxK - tw)
+            fadeFactor *= 0.5f * (1f + Mathf.Cos(Mathf.PI * (temp - (ctMaxK - tw)) / tw));
+
+        if (fadeFactor <= 0f) return 0f;
 
         float performance = (Mathf.Exp(arrhenBreadth / optimalTemp - arrhenBreadth / temp) *
                 (1 + Mathf.Exp(arrhenLower / optimalTemp - arrhenLower / lowerBound) +
@@ -34,16 +49,29 @@ public class ThermalCurve : MonoBehaviour {
                 (1 + Mathf.Exp(arrhenLower / temp - arrhenLower / lowerBound) +
                     Mathf.Exp(arrhenUpper / upperBound - arrhenUpper / temp));
 
-        return performance * pmax;
+        return performance * fadeFactor * pmax;
     }
 
     public float Curves(float temp)
     {
-        // Lethal limits (convert Celsius to Kelvin for comparison)
+        // Smooth lethal fade (convert Celsius to Kelvin for comparison)
         float ctMinK = ctMinC + 273.15f;
         float ctMaxK = ctMaxC + 273.15f;
-        if (temp < ctMinK || temp > ctMaxK)
-            return 0f;
+        float halfRange = (ctMaxK - ctMinK) / 2f;
+        float tw = Mathf.Min(LETHAL_TRANSITION_WIDTH, halfRange);
+
+        float fadeFactor = 1f;
+        if (temp <= ctMinK)
+            fadeFactor = 0f;
+        else if (temp < ctMinK + tw)
+            fadeFactor = 0.5f * (1f + Mathf.Cos(Mathf.PI * (ctMinK + tw - temp) / tw));
+
+        if (temp >= ctMaxK)
+            fadeFactor = 0f;
+        else if (temp > ctMaxK - tw)
+            fadeFactor *= 0.5f * (1f + Mathf.Cos(Mathf.PI * (temp - (ctMaxK - tw)) / tw));
+
+        if (fadeFactor <= 0f) return 0f;
 
         float performance = (Mathf.Exp(arrhenBreadth / optimalTemp - arrhenBreadth / temp) *
                 (1 + Mathf.Exp(arrhenLower / optimalTemp - arrhenLower / lowerBound) +
@@ -54,7 +82,7 @@ public class ThermalCurve : MonoBehaviour {
         if(performance > 1) {
            performance = 1;
         }
-        return performance * pmax;
+        return performance * fadeFactor * pmax;
     }
 
     void OnDrawGizmos()

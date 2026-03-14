@@ -29,6 +29,7 @@ public class BulkSpeciesConfig
     public float Pmax = 1.0f;
     public float CTminC = -5.0f;
     public float CTmaxC = 50.0f;
+    public float TempOffset = 0f;
 }
 
 /// <summary>

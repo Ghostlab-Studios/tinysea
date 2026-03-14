@@ -51,6 +51,7 @@ public class SimSpecies
     public float Pmax = 1.0f;          // Maximum performance at optimal temperature (0-1)
     public float CTminC = -5.0f;       // Critical thermal minimum (Celsius) — below this, performance = 0
     public float CTmaxC = 50.0f;       // Critical thermal maximum (Celsius) — above this, performance = 0
+    public float TemperatureDebuff = 0f;  // Per-species temperature offset (shifts experienced temp)
 
     // ==================== RUNTIME VALUES (calculated each step) ====================
     public float ThermalPerformance;        // From Arrhenius formula (0-1)
@@ -69,6 +70,8 @@ public class SimSpecies
     /// </summary>
     public float CalculatePerformance(float temperatureCelsius)
     {
+        temperatureCelsius += TemperatureDebuff;
+
         // Smooth lethal fade (cosine transition over LETHAL_TRANSITION_WIDTH degrees)
         float halfRange = (CTmaxC - CTminC) / 2f;
         float tw = (float)Math.Min(LETHAL_TRANSITION_WIDTH, halfRange);

@@ -41,7 +41,7 @@ public static class CsvBatchParser
     // Optional species columns with defaults (backward compatible)
     private static readonly string[] OPTIONAL_SPECIES_COLUMNS =
     {
-        "pmax", "ctmin", "ctmax"
+        "pmax", "ctmin", "ctmax", "temp_offset"
     };
 
     /// <summary>
@@ -225,6 +225,7 @@ public static class CsvBatchParser
         species.Pmax = GetFloatOptional(fields, columnIndex, prefix + "pmax", 1.0f);
         species.CTminC = GetFloatOptional(fields, columnIndex, prefix + "ctmin", -5.0f);
         species.CTmaxC = GetFloatOptional(fields, columnIndex, prefix + "ctmax", 50.0f);
+        species.TempOffset = GetFloatOptional(fields, columnIndex, prefix + "temp_offset", 0f);
     }
 
     // ==================== VALIDATION ====================

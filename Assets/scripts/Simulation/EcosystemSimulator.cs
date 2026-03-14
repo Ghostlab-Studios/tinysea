@@ -137,7 +137,8 @@ public class EcosystemSimulator
                 UpperBoundK = data.upperBoundK,
                 Pmax = data.pmax,
                 CTminC = data.ctMinC,
-                CTmaxC = data.ctMaxC
+                CTmaxC = data.ctMaxC,
+                TemperatureDebuff = data.TemperatureDebuff
             };
 
             Species.Add(simSpecies);
@@ -192,7 +193,8 @@ public class EcosystemSimulator
                 UpperBoundK = data.upperBoundK,
                 Pmax = data.pmax,
                 CTminC = data.ctMinC,
-                CTmaxC = data.ctMaxC
+                CTmaxC = data.ctMaxC,
+                TemperatureDebuff = data.TemperatureDebuff
             };
 
             Species.Add(simSpecies);

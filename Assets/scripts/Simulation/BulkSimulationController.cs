@@ -340,7 +340,8 @@ public class BulkSimulationController : MonoBehaviour
             upperBoundK = sp.UpperBoundC + 273.15f,
             pmax = sp.Pmax,
             ctMinC = sp.CTminC,
-            ctMaxC = sp.CTmaxC
+            ctMaxC = sp.CTmaxC,
+            TemperatureDebuff = sp.TempOffset
         };
     }
 }

@@ -42,6 +42,7 @@ public class EditSpeciesUI : MonoBehaviour
     [SerializeField] private TMP_InputField reproMultiplierField;
     [SerializeField] private TMP_InputField tempDeathThresholdField;
     [SerializeField] private TMP_InputField tempDeathRateField;
+    [SerializeField] private TMP_InputField tempDebuff;
     [SerializeField] private TMP_InputField naturalDeathVarianceField;
     [SerializeField] private TMP_InputField naturalDeathRateField;
 
@@ -106,6 +107,7 @@ public class EditSpeciesUI : MonoBehaviour
         public float pmax;
         public float ctMinC;
         public float ctMaxC;
+        public float temperatureDebuff;
 
         /// <summary>
         /// Create a backup from SpeciesData
@@ -138,7 +140,8 @@ public class EditSpeciesUI : MonoBehaviour
                 upperBoundK = data.upperBoundK,
                 pmax = data.pmax,
                 ctMinC = data.ctMinC,
-                ctMaxC = data.ctMaxC
+                ctMaxC = data.ctMaxC,
+                temperatureDebuff = data.TemperatureDebuff
             };
         }
 
@@ -172,6 +175,7 @@ public class EditSpeciesUI : MonoBehaviour
             data.pmax = pmax;
             data.ctMinC = ctMinC;
             data.ctMaxC = ctMaxC;
+            data.TemperatureDebuff = temperatureDebuff;
         }
     }
 
@@ -307,6 +311,9 @@ public class EditSpeciesUI : MonoBehaviour
         if (tempDeathRateField != null)
             tempDeathRateField.text = currentEditingData.deathRate.ToString("F2", CultureInfo.InvariantCulture);
 
+        if (tempDebuff != null)
+            tempDebuff.text = currentEditingData.TemperatureDebuff.ToString("F2", CultureInfo.InvariantCulture);
+
         if (naturalDeathVarianceField != null)
             naturalDeathVarianceField.text = currentEditingData.naturalDeathVariance.ToString("F3", CultureInfo.InvariantCulture);
 
@@ -435,6 +442,7 @@ public class EditSpeciesUI : MonoBehaviour
         float tempDeathRate = 0f;
         float naturalDeathVariance = 0f;
         float naturalDeathRate = 0f;
+        float tempDebuffValue = 0f;
         float huntingEfficiency = 0f;
         float huntingVariance = 0f;
 
@@ -459,6 +467,7 @@ public class EditSpeciesUI : MonoBehaviour
         allValid &= TryReadFloat(reproMultiplierField, out reproMultiplier);
         allValid &= TryReadFloat(tempDeathThresholdField, out tempDeathThreshold);
         allValid &= TryReadFloat(tempDeathRateField, out tempDeathRate);
+        allValid &= TryReadFloat(tempDebuff, out tempDebuffValue);
         allValid &= TryReadFloat(naturalDeathVarianceField, out naturalDeathVariance);
         allValid &= TryReadFloat(naturalDeathRateField, out naturalDeathRate);
 
@@ -499,6 +508,7 @@ public class EditSpeciesUI : MonoBehaviour
         currentEditingData.deathRate = tempDeathRate;
         currentEditingData.naturalDeathVariance = naturalDeathVariance;
         currentEditingData.naturalDeathRate = naturalDeathRate;
+        currentEditingData.TemperatureDebuff = tempDebuffValue;
 
         // Save hunting fields (Tier 2+ only)
         if (currentEditingData.tier >= 1)
@@ -628,6 +638,7 @@ public class EditSpeciesUI : MonoBehaviour
         currentEditingData.pmax = originalData.pmax;
         currentEditingData.ctMinC = originalData.ctMinC;
         currentEditingData.ctMaxC = originalData.ctMaxC;
+        currentEditingData.TemperatureDebuff = originalData.TemperatureDebuff;
 
         Debug.Log($"EditSpeciesUI: Factory reset {currentEditingData.speciesName} to original database values");
 
@@ -730,6 +741,7 @@ public class EditSpeciesUI : MonoBehaviour
         SetFieldColor(naturalDeathRateField, ValidColor);
         SetFieldColor(huntingEfficiencyField, ValidColor);
         SetFieldColor(huntingVarianceField, ValidColor);
+        SetFieldColor(tempDebuff, ValidColor);
     }
 
     // ==================== Public Getters ====================

@@ -43,14 +43,19 @@ public class SpeciesData
     public float reproductionMultiplier;    // Birth rate multiplier
     public float deathThreshold = 0.3f;     // FinalPerf below this triggers thermal death
     public float deathRate;                 // Fraction dying when thermal death triggers
+    public float TemperatureDebuff = 0.0f;  // Additional performance debuff from temperature applied after thermal curve 
     public float minimumDeaths = 1f;        // Minimum deaths when thermal death triggers
     public float reproThreshold = 0.25f;    // FinalPerf required to reproduce
-
+    
+    
     [Header("Natural Mortality")]
+
+
     [Tooltip("Base natural death rate per biology step (e.g., 0.02 = 2%)")]
     public float naturalDeathRate = 0.02f;
     [Tooltip("Random variance range (e.g., 0.01 = ±1%)")]
     public float naturalDeathVariance = 0.01f;
+
 
     [Header("Hunting Efficiency (Tier 2 only)")]
     [Tooltip("Base hunting success rate (e.g., 0.75 = 75%). Tier 1 ignores this.")]

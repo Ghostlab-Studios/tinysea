@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 /// <summary>
 /// Results from a single scenario run.
@@ -41,6 +42,27 @@ public class ScenarioResult
     public float AvgTemperature;
     public float MinTemperature;
     public float MaxTemperature;
+
+    // Per-column population summary statistics (keyed by column name)
+    public Dictionary<string, double> PopMean;
+    public Dictionary<string, long> PopMax;
+    public Dictionary<string, long> PopMin;
+    public Dictionary<string, double> PopStdDev;
+
+    // Extinction timing per variant: variant key -> day first reached 0 (-1 if survived)
+    public Dictionary<string, int> ExtinctionDay;
+
+    // Column name constants shared across SimulationRunner and AggregateResults
+    public static readonly string[] PopColumns = {
+        "Tier1Pop", "Tier2Pop",
+        "Tier1Arctic", "Tier1Common", "Tier1Tropical",
+        "Tier2Arctic", "Tier2Common", "Tier2Tropical"
+    };
+
+    public static readonly string[] VariantColumns = {
+        "Tier1Arctic", "Tier1Common", "Tier1Tropical",
+        "Tier2Arctic", "Tier2Common", "Tier2Tropical"
+    };
 
     // CSV data (stored for download)
     public string CsvData;
@@ -257,6 +279,89 @@ public class AggregateResults
                          $"{s.FinalTier1Arctic},{s.FinalTier1Common},{s.FinalTier1Tropical}," +
                          $"{s.FinalTier2Arctic},{s.FinalTier2Common},{s.FinalTier2Tropical}," +
                          $"{s.AvgTemperature:F2},{s.MinTemperature:F2},{s.MaxTemperature:F2}");
+        }
+
+        // Grand Mean across all runs
+        bool hasPopStats = Scenarios.Any(s => s.PopMean != null);
+        if (hasPopStats)
+        {
+            sb.AppendLine();
+            sb.AppendLine("=== SUMMARY STATISTICS (Grand Mean Across All Runs) ===");
+            sb.AppendLine("Statistic," + string.Join(",", ScenarioResult.PopColumns));
+
+            string[] statNames = { "Mean", "Max", "Min", "StdDev" };
+            foreach (var statName in statNames)
+            {
+                sb.Append($"GrandMean_{statName}");
+                foreach (var col in ScenarioResult.PopColumns)
+                {
+                    double sum = 0;
+                    int count = 0;
+                    foreach (var s in Scenarios)
+                    {
+                        double val;
+                        switch (statName)
+                        {
+                            case "Mean":
+                                if (s.PopMean == null) continue;
+                                val = s.PopMean.ContainsKey(col) ? s.PopMean[col] : 0; break;
+                            case "Max":
+                                if (s.PopMax == null) continue;
+                                val = s.PopMax.ContainsKey(col) ? s.PopMax[col] : 0; break;
+                            case "Min":
+                                if (s.PopMin == null) continue;
+                                val = s.PopMin.ContainsKey(col) ? s.PopMin[col] : 0; break;
+                            case "StdDev":
+                                if (s.PopStdDev == null) continue;
+                                val = s.PopStdDev.ContainsKey(col) ? s.PopStdDev[col] : 0; break;
+                            default: continue;
+                        }
+                        sum += val;
+                        count++;
+                    }
+                    double grandMean = count > 0 ? sum / count : 0;
+                    sb.Append($",{grandMean:F1}");
+                }
+                sb.AppendLine();
+            }
+        }
+
+        // Extinction timing across all runs
+        bool hasExtinction = Scenarios.Any(s => s.ExtinctionDay != null);
+        if (hasExtinction)
+        {
+            sb.AppendLine();
+            sb.AppendLine("=== EXTINCTION TIMING (Across All Runs) ===");
+            sb.AppendLine("Variant,MinDays,MaxDays,AvgDays,NumExtinct,NumSurvived");
+
+            foreach (var variant in ScenarioResult.VariantColumns)
+            {
+                var extinctDays = new List<int>();
+                int numSurvived = 0;
+
+                foreach (var s in Scenarios)
+                {
+                    if (s.ExtinctionDay == null || !s.ExtinctionDay.ContainsKey(variant)) continue;
+                    int day = s.ExtinctionDay[variant];
+                    if (day == -1)
+                        numSurvived++;
+                    else
+                        extinctDays.Add(day);
+                }
+
+                int numExtinct = extinctDays.Count;
+                if (numExtinct == 0)
+                {
+                    sb.AppendLine($"{variant},-1,-1,-1,0,{numSurvived}");
+                }
+                else
+                {
+                    int minDays = extinctDays.Min();
+                    int maxDays = extinctDays.Max();
+                    double avgDays = extinctDays.Average();
+                    sb.AppendLine($"{variant},{minDays},{maxDays},{avgDays:F1},{numExtinct},{numSurvived}");
+                }
+            }
         }
 
         return sb.ToString();

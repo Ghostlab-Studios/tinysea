@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.IO;
 using UnityEngine;
@@ -276,7 +277,100 @@ public class SimulationRunner
 
     public List<StepRecord> GetRecords() => new List<StepRecord>(_records);
 
+    private struct PopulationStats
+    {
+        public Dictionary<string, double> Mean;
+        public Dictionary<string, long> Max;
+        public Dictionary<string, long> Min;
+        public Dictionary<string, double> StdDev;
+        public Dictionary<string, int> ExtinctionDay;
+    }
+
+    private static long GetPopColumn(StepRecord r, string column)
+    {
+        switch (column)
+        {
+            case "Tier1Pop":      return r.Tier1Pop;
+            case "Tier2Pop":      return r.Tier2Pop;
+            case "Tier1Arctic":   return r.Tier1Arctic;
+            case "Tier1Common":   return r.Tier1Common;
+            case "Tier1Tropical": return r.Tier1Tropical;
+            case "Tier2Arctic":   return r.Tier2Arctic;
+            case "Tier2Common":   return r.Tier2Common;
+            case "Tier2Tropical": return r.Tier2Tropical;
+            default:              return 0;
+        }
+    }
+
+    private PopulationStats ComputePopulationStats()
+    {
+        var stats = new PopulationStats
+        {
+            Mean = new Dictionary<string, double>(),
+            Max = new Dictionary<string, long>(),
+            Min = new Dictionary<string, long>(),
+            StdDev = new Dictionary<string, double>(),
+            ExtinctionDay = new Dictionary<string, int>()
+        };
+
+        if (_records.Count == 0) return stats;
+
+        foreach (var col in ScenarioResult.PopColumns)
+        {
+            long max = long.MinValue;
+            long min = long.MaxValue;
+            double sum = 0;
+
+            foreach (var r in _records)
+            {
+                long val = GetPopColumn(r, col);
+                if (val > max) max = val;
+                if (val < min) min = val;
+                sum += val;
+            }
+
+            double mean = sum / _records.Count;
+
+            double varianceSum = 0;
+            foreach (var r in _records)
+            {
+                double diff = GetPopColumn(r, col) - mean;
+                varianceSum += diff * diff;
+            }
+            double stddev = Math.Sqrt(varianceSum / _records.Count);
+
+            stats.Mean[col] = mean;
+            stats.Max[col] = max;
+            stats.Min[col] = min;
+            stats.StdDev[col] = stddev;
+        }
+
+        foreach (var variant in ScenarioResult.VariantColumns)
+        {
+            int extinctionDay = -1;
+            bool wasAlive = false;
+            foreach (var r in _records)
+            {
+                long pop = GetPopColumn(r, variant);
+                if (pop > 0) wasAlive = true;
+                if (wasAlive && pop == 0)
+                {
+                    extinctionDay = r.Day;
+                    break;
+                }
+            }
+            stats.ExtinctionDay[variant] = extinctionDay;
+        }
+
+        return stats;
+    }
+
     public string ToCsv(int scenarioIndex = 0, int numberOfScenarios = 1)
+    {
+        return ToCsvInternal(scenarioIndex, numberOfScenarios, null);
+    }
+
+    private string ToCsvInternal(int scenarioIndex, int numberOfScenarios, PopulationStats? populationStats)
     {
         var sb = new StringBuilder();
 
@@ -330,6 +424,46 @@ public class SimulationRunner
         {
             sb.AppendLine(record.ToCsvLine());
         }
+
+        // Append summary statistics and extinction timing
+        if (_records.Count > 0)
+        {
+            var stats = populationStats ?? ComputePopulationStats();
+
+            // Summary statistics block
+            sb.AppendLine("#");
+            sb.AppendLine("#summary:Statistic," + string.Join(",", ScenarioResult.PopColumns));
+
+            sb.Append("#summary:Mean");
+            foreach (var col in ScenarioResult.PopColumns)
+                sb.Append($",{stats.Mean[col]:F1}");
+            sb.AppendLine();
+
+            sb.Append("#summary:Max");
+            foreach (var col in ScenarioResult.PopColumns)
+                sb.Append($",{stats.Max[col]}");
+            sb.AppendLine();
+
+            sb.Append("#summary:Min");
+            foreach (var col in ScenarioResult.PopColumns)
+                sb.Append($",{stats.Min[col]}");
+            sb.AppendLine();
+
+            sb.Append("#summary:StdDev");
+            foreach (var col in ScenarioResult.PopColumns)
+                sb.Append($",{stats.StdDev[col]:F1}");
+            sb.AppendLine();
+
+            // Extinction timing block
+            sb.AppendLine("#");
+            sb.AppendLine("#extinction:Variant,DayReachedZero");
+            foreach (var variant in ScenarioResult.VariantColumns)
+            {
+                sb.AppendLine($"#extinction:{variant},{stats.ExtinctionDay[variant]}");
+            }
+            sb.AppendLine("#");
+        }
+
         return sb.ToString();
     }
 
@@ -409,6 +543,7 @@ public class SimulationRunner
     public ScenarioResult ToScenarioResult(int scenarioIndex, int numberOfScenarios = 1)
     {
         var summary = GetSummary();
+        var popStats = ComputePopulationStats();
 
         return new ScenarioResult
         {
@@ -434,7 +569,12 @@ public class SimulationRunner
             AvgTemperature = summary?.AvgTemperature ?? 0,
             MinTemperature = summary?.MinTemperature ?? 0,
             MaxTemperature = summary?.MaxTemperature ?? 0,
-            CsvData = ToCsv(scenarioIndex, numberOfScenarios)
+            PopMean = popStats.Mean,
+            PopMax = popStats.Max,
+            PopMin = popStats.Min,
+            PopStdDev = popStats.StdDev,
+            ExtinctionDay = popStats.ExtinctionDay,
+            CsvData = ToCsvInternal(scenarioIndex, numberOfScenarios, popStats)
         };
     }
 }

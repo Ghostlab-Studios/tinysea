@@ -144,14 +144,14 @@ public class SimSpecies
                 species.LowerBoundK = 270.15f;    // -3°C
                 species.UpperBoundK = 280.15f;    // 7°C
                 species.Pmax = 1.0f;
-                species.CTminC = -10f;
+                species.CTminC = -30f;
                 species.CTmaxC = 20f;
                 break;
             case ThermalVariant.Common:
                 species.OptimalTempK = 293.15f;   // 20°C optimal
                 species.LowerBoundK = 285.15f;    // 12°C
                 species.UpperBoundK = 295.15f;    // 22°C
-                species.Pmax = 0.65f;
+                species.Pmax = 0.9f;
                 species.CTminC = -5f;
                 species.CTmaxC = 40f;
                 break;
@@ -160,8 +160,8 @@ public class SimSpecies
                 species.LowerBoundK = 300.15f;    // 27°C
                 species.UpperBoundK = 310.15f;    // 37°C
                 species.Pmax = 1.0f;
-                species.CTminC = 10f;
-                species.CTmaxC = 50f;
+                species.CTminC = 0f;
+                species.CTmaxC = 80f;
                 break;
         }
 
@@ -185,8 +185,8 @@ public class SimSpecies
             DeathRate = 0.3f,               // Lower death rate than Tier 1
             MinimumDeaths = 1f,
             ReproThreshold = 0.25f,
-            NaturalDeathRate = 0.03f,       // 3% base
-            NaturalDeathVariance = 0.015f,  // ±1.5%
+            NaturalDeathRate = 0.02f,       // 2% base
+            NaturalDeathVariance = 0.01f,   // ±1%
             HuntingEfficiency = 0.75f,      // 75% base success
             HuntingVariance = 0.15f,        // ±15% variance
             ArrhenBreadth = 5273.15f,
@@ -201,14 +201,14 @@ public class SimSpecies
                 species.LowerBoundK = 270.15f;
                 species.UpperBoundK = 280.15f;
                 species.Pmax = 1.0f;
-                species.CTminC = -10f;
+                species.CTminC = -30f;
                 species.CTmaxC = 20f;
                 break;
             case ThermalVariant.Common:
                 species.OptimalTempK = 293.15f;
                 species.LowerBoundK = 285.15f;
                 species.UpperBoundK = 295.15f;
-                species.Pmax = 0.65f;
+                species.Pmax = 0.9f;
                 species.CTminC = -5f;
                 species.CTmaxC = 40f;
                 break;
@@ -217,8 +217,8 @@ public class SimSpecies
                 species.LowerBoundK = 300.15f;
                 species.UpperBoundK = 310.15f;
                 species.Pmax = 1.0f;
-                species.CTminC = 10f;
-                species.CTmaxC = 50f;
+                species.CTminC = 0f;
+                species.CTmaxC = 80f;
                 break;
         }
 

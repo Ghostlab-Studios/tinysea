@@ -154,7 +154,7 @@ public class SpeciesDatabase : ScriptableObject
             optimalK: 293.15f,      // 20°C
             lowerBound: 285.15f,    // 12°C
             upperBound: 295.15f,    // 22°C
-            pmax: 0.65f,
+            pmax: 0.9f,
             ctMinC: -5f,
             ctMaxC: 40f
         );
@@ -179,8 +179,8 @@ public class SpeciesDatabase : ScriptableObject
             lowerBound: 300.15f,    // 27°C
             upperBound: 310.15f,    // 37°C
             pmax: 1.0f,
-            ctMinC: 10f,
-            ctMaxC: 50f
+            ctMinC: 0f,
+            ctMaxC: 80f
         );
 
         AddSpecies(
@@ -203,7 +203,7 @@ public class SpeciesDatabase : ScriptableObject
             lowerBound: 270.15f,    // -3°C
             upperBound: 280.15f,    // 7°C
             pmax: 1.0f,
-            ctMinC: -10f,
+            ctMinC: -30f,
             ctMaxC: 20f
         );
 
@@ -223,14 +223,14 @@ public class SpeciesDatabase : ScriptableObject
             deathRate: 0.3f,
             minDeaths: 1f,
             reproThresh: 0.25f,
-            naturalDeathRate: 0.03f,
-            naturalDeathVariance: 0.015f,
+            naturalDeathRate: 0.02f,
+            naturalDeathVariance: 0.01f,
             huntingEfficiency: 0.75f,
             huntingVariance: 0.15f,
             optimalK: 293.15f,      // 20°C
             lowerBound: 285.15f,    // 12°C
             upperBound: 295.15f,    // 22°C
-            pmax: 0.65f,
+            pmax: 0.9f,
             ctMinC: -5f,
             ctMaxC: 40f
         );
@@ -247,16 +247,16 @@ public class SpeciesDatabase : ScriptableObject
             deathRate: 0.3f,
             minDeaths: 1f,
             reproThresh: 0.25f,
-            naturalDeathRate: 0.03f,
-            naturalDeathVariance: 0.015f,
+            naturalDeathRate: 0.02f,
+            naturalDeathVariance: 0.01f,
             huntingEfficiency: 0.75f,
             huntingVariance: 0.15f,
             optimalK: 308.65f,      // 35.5°C
             lowerBound: 300.15f,    // 27°C
             upperBound: 310.15f,    // 37°C
             pmax: 1.0f,
-            ctMinC: 10f,
-            ctMaxC: 50f
+            ctMinC: 0f,
+            ctMaxC: 80f
         );
 
         AddSpecies(
@@ -271,15 +271,15 @@ public class SpeciesDatabase : ScriptableObject
             deathRate: 0.3f,
             minDeaths: 1f,
             reproThresh: 0.25f,
-            naturalDeathRate: 0.03f,
-            naturalDeathVariance: 0.015f,
+            naturalDeathRate: 0.02f,
+            naturalDeathVariance: 0.01f,
             huntingEfficiency: 0.75f,
             huntingVariance: 0.15f,
             optimalK: 278.15f,      // 5°C
             lowerBound: 270.15f,    // -3°C
             upperBound: 280.15f,    // 7°C
             pmax: 1.0f,
-            ctMinC: -10f,
+            ctMinC: -30f,
             ctMaxC: 20f
         );
 
@@ -340,6 +340,108 @@ public class SpeciesDatabase : ScriptableObject
         };
 
         speciesList.Add(data);
+    }
+
+    [ContextMenu("Reset Values (Preserve Icons)")]
+    private void ResetValuesPreserveIcons()
+    {
+        int resetCount = 0;
+
+        foreach (var data in speciesList)
+        {
+            // Preserve: icon, index, speciesName, variant, displayName, count
+
+            // --- Universal defaults ---
+            data.deathThreshold = 0.3f;
+            data.minimumDeaths = 1f;
+            data.reproThreshold = 0.25f;
+            data.TemperatureDebuff = 0f;
+            data.arrhenBreadth = 5273.15f;
+            data.arrhenLower = 10273.15f;
+            data.arrhenUpper = 21273.15f;
+
+            // --- Variant-based defaults (thermal params) ---
+            switch (data.variant)
+            {
+                case SpeciesVariant.Common:
+                    data.optimalTempK = 293.15f;
+                    data.lowerBoundK = 285.15f;
+                    data.upperBoundK = 295.15f;
+                    data.pmax = 0.9f;
+                    data.ctMinC = -5f;
+                    data.ctMaxC = 40f;
+                    break;
+                case SpeciesVariant.Tropical:
+                    data.optimalTempK = 308.65f;
+                    data.lowerBoundK = 300.15f;
+                    data.upperBoundK = 310.15f;
+                    data.pmax = 1.0f;
+                    data.ctMinC = 0f;
+                    data.ctMaxC = 80f;
+                    break;
+                case SpeciesVariant.Arctic:
+                    data.optimalTempK = 278.15f;
+                    data.lowerBoundK = 270.15f;
+                    data.upperBoundK = 280.15f;
+                    data.pmax = 1.0f;
+                    data.ctMinC = -30f;
+                    data.ctMaxC = 20f;
+                    break;
+                default:
+                    Debug.LogWarning($"Skipping thermal reset for Custom variant: {data.displayName}");
+                    break;
+            }
+
+            // --- Per-species defaults (biology + UI) ---
+            switch (data.speciesName)
+            {
+                case SpeciesName.Hexapod:
+                    data.tier = 0;
+                    data.eatingAmount = 0f;
+                    data.reproductionMultiplier = 0.45f;
+                    data.deathRate = 0.6f;
+                    data.naturalDeathRate = 0.02f;
+                    data.naturalDeathVariance = 0.01f;
+                    data.huntingEfficiency = 1.0f;
+                    data.huntingVariance = 0f;
+                    data.eatingStars = 0;
+                    data.reproductionStars = 4;
+                    data.deathThresholdStars = 3;
+                    data.deathRateStars = 2;
+                    data.thermalBreadthStars = 5;
+                    data.temperatureThresholdText = "High";
+                    data.reproductionRateText = "Low";
+                    data.description = $"Hexapod - {data.variant} variant";
+                    break;
+                case SpeciesName.Sheplik:
+                    data.tier = 1;
+                    data.eatingAmount = 1.5f;
+                    data.reproductionMultiplier = 0.1f;
+                    data.deathRate = 0.3f;
+                    data.naturalDeathRate = 0.02f;
+                    data.naturalDeathVariance = 0.01f;
+                    data.huntingEfficiency = 0.75f;
+                    data.huntingVariance = 0.15f;
+                    data.eatingStars = 4;
+                    data.reproductionStars = 2;
+                    data.deathThresholdStars = 4;
+                    data.deathRateStars = 4;
+                    data.thermalBreadthStars = data.variant == SpeciesVariant.Common ? 5 : 3;
+                    data.temperatureThresholdText = "High";
+                    data.reproductionRateText = "Low";
+                    data.description = $"Sheplik - {data.variant} variant";
+                    break;
+                default:
+                    Debug.LogWarning($"No per-species defaults for: {data.speciesName} {data.variant} — skipping biology reset");
+                    continue;
+            }
+
+            resetCount++;
+        }
+
+        EditorUtility.SetDirty(this);
+        AssetDatabase.SaveAssets();
+        Debug.Log($"Reset {resetCount}/{speciesList.Count} species values (icons preserved)");
     }
 
     private void AddSpecies(int index, string displayname, int tier, int count,

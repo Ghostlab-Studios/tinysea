@@ -24,12 +24,13 @@ MonoBehaviour:
     reproductionMultiplier: 0.45
     deathThreshold: 0.3
     deathRate: 0.6
+    TemperatureDebuff: 0
     minimumDeaths: 1
     reproThreshold: 0.25
     naturalDeathRate: 0.02
     naturalDeathVariance: 0.01
-    huntingEfficiency: 0.75
-    huntingVariance: 0.15
+    huntingEfficiency: 1
+    huntingVariance: 0
     eatingStars: 0
     reproductionStars: 4
     deathThresholdStars: 3
@@ -44,9 +45,9 @@ MonoBehaviour:
     arrhenUpper: 21273.15
     lowerBoundK: 285.15
     upperBoundK: 295.15
-    pmax: 0.65
-    ctMinC: -15
-    ctMaxC: 50
+    pmax: 0.9
+    ctMinC: -5
+    ctMaxC: 40
   - index: 1
     speciesName: 0
     variant: 1
@@ -58,12 +59,13 @@ MonoBehaviour:
     reproductionMultiplier: 0.45
     deathThreshold: 0.3
     deathRate: 0.6
+    TemperatureDebuff: 0
     minimumDeaths: 1
     reproThreshold: 0.25
     naturalDeathRate: 0.02
     naturalDeathVariance: 0.01
-    huntingEfficiency: 0.75
-    huntingVariance: 0.15
+    huntingEfficiency: 1
+    huntingVariance: 0
     eatingStars: 0
     reproductionStars: 4
     deathThresholdStars: 3
@@ -92,12 +94,13 @@ MonoBehaviour:
     reproductionMultiplier: 0.45
     deathThreshold: 0.3
     deathRate: 0.6
+    TemperatureDebuff: 0
     minimumDeaths: 1
     reproThreshold: 0.25
     naturalDeathRate: 0.02
     naturalDeathVariance: 0.01
-    huntingEfficiency: 0.75
-    huntingVariance: 0.15
+    huntingEfficiency: 1
+    huntingVariance: 0
     eatingStars: 0
     reproductionStars: 4
     deathThresholdStars: 3
@@ -114,7 +117,7 @@ MonoBehaviour:
     upperBoundK: 280.15
     pmax: 1
     ctMinC: -30
-    ctMaxC: 40
+    ctMaxC: 20
   - index: 4
     speciesName: 3
     variant: 1
@@ -126,6 +129,7 @@ MonoBehaviour:
     reproductionMultiplier: 0.1
     deathThreshold: 0.3
     deathRate: 0.3
+    TemperatureDebuff: 0
     minimumDeaths: 1
     reproThreshold: 0.25
     naturalDeathRate: 0.02
@@ -160,6 +164,7 @@ MonoBehaviour:
     reproductionMultiplier: 0.1
     deathThreshold: 0.3
     deathRate: 0.3
+    TemperatureDebuff: 0
     minimumDeaths: 1
     reproThreshold: 0.25
     naturalDeathRate: 0.02
@@ -182,7 +187,7 @@ MonoBehaviour:
     upperBoundK: 280.15
     pmax: 1
     ctMinC: -30
-    ctMaxC: 40
+    ctMaxC: 20
   - index: 3
     speciesName: 3
     variant: 0
@@ -194,6 +199,7 @@ MonoBehaviour:
     reproductionMultiplier: 0.1
     deathThreshold: 0.3
     deathRate: 0.3
+    TemperatureDebuff: 0
     minimumDeaths: 1
     reproThreshold: 0.25
     naturalDeathRate: 0.02
@@ -214,6 +220,6 @@ MonoBehaviour:
     arrhenUpper: 21273.15
     lowerBoundK: 285.15
     upperBoundK: 295.15
-    pmax: 0.65
-    ctMinC: -15
-    ctMaxC: 50
+    pmax: 0.9
+    ctMinC: -5
+    ctMaxC: 40

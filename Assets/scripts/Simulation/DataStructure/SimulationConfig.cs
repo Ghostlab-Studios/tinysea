@@ -29,7 +29,7 @@ public class SimulationConfig : ScriptableObject
              "running multiple scenarios allows for statistical analysis.\n\n" +
              "Each scenario runs for DaysPerScenario days with a different random seed.")]
     [Range(1, 100)]
-    public int NumberOfScenarios = 1;
+    public int NumberOfScenarios = 5;
 
     // ==================== CARRYING CAPACITY (Soft Limit) ====================
 

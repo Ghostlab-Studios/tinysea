@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SimulationConfig
   BiologyStep: 1
   DaysPerScenario: 365
-  NumberOfScenarios: 10
+  NumberOfScenarios: 5
   UseCarryingCapacity: 1
   CarryingCapacityTier1: 5000
   BaseTemperature: 20

@@ -52,9 +52,9 @@ MonoBehaviour:
   - index: 3
     speciesName: 3
     variant: 0
-    displayName: Sheplik
+    displayName: 
     icon: {fileID: 21300000, guid: 8ab2db50f00f92142abc4c674c239a1c, type: 3}
-    count: 2
+    count: 4
     tier: 1
     eatingAmount: 1.5
     reproductionMultiplier: 0.1

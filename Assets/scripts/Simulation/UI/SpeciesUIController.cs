@@ -6,8 +6,8 @@ using TMPro;
 public class SpeciesUIController : MonoBehaviour
 {
     [Header("Database")]
-    [SerializeField] private SpeciesDatabase speciesDatabase; // Used for defaults/fallback only
-    [SerializeField] private RunSpeciesList runSpeciesList;   // Runtime data source
+    [SerializeField] private SpeciesDatabase speciesDatabase; // Immutable catalog (defaults/fallback)
+    [SerializeField] private RunSpeciesList runSpeciesList;   // Mutable runtime data source
 
     [Header("Species Selection")]
     [SerializeField] private string displayNameOverride = "";
@@ -38,12 +38,25 @@ public class SpeciesUIController : MonoBehaviour
 
     void Start()
     {
-        UpdateSpeciesData();
+        // Only fall back to speciesDatabase if Initialize() hasn't already
+        // provided data from RunSpeciesList. Initialize() sets runSpeciesListIndex >= 0
+        // which means currentSpeciesData already points to the RunSpeciesList object.
+        if (runSpeciesListIndex < 0)
+        {
+            UpdateSpeciesData();
+        }
 
         // Wire up edit button to fire event
         if (editButton != null)
         {
             editButton.onClick.AddListener(OnEditButtonClicked);
+        }
+
+        // Wire up count field for immediate save on edit
+        if (countText != null)
+        {
+            countText.contentType = TMP_InputField.ContentType.IntegerNumber;
+            countText.onEndEdit.AddListener(OnCountFieldEndEdit);
         }
     }
 
@@ -61,10 +74,14 @@ public class SpeciesUIController : MonoBehaviour
 
     void OnDestroy()
     {
-        // Clean up listener
+        // Clean up listeners
         if (editButton != null)
         {
             editButton.onClick.RemoveListener(OnEditButtonClicked);
+        }
+        if (countText != null)
+        {
+            countText.onEndEdit.RemoveListener(OnCountFieldEndEdit);
         }
     }
 
@@ -130,6 +147,32 @@ public class SpeciesUIController : MonoBehaviour
         UpdateUIDisplay();
 
         Debug.Log($"SpeciesUIController: Refreshed from RunSpeciesList - {speciesName} {speciesVariant}, Count={currentSpeciesData.count}");
+    }
+
+    /// <summary>
+    /// Called when user finishes editing the count field on the background UI.
+    /// Saves immediately (no Save button needed).
+    /// </summary>
+    private void OnCountFieldEndEdit(string newValue)
+    {
+        if (currentSpeciesData == null) return;
+
+        if (int.TryParse(newValue, out int newCount) && newCount >= 0)
+        {
+            currentSpeciesData.count = newCount;
+            Debug.Log($"SpeciesUIController: Count updated to {newCount} for {speciesName} {speciesVariant}");
+
+#if UNITY_EDITOR
+            if (runSpeciesList != null)
+                UnityEditor.EditorUtility.SetDirty(runSpeciesList);
+#endif
+        }
+        else
+        {
+            // Invalid input — revert to current data value
+            countText.text = currentSpeciesData.count.ToString();
+            Debug.LogWarning($"SpeciesUIController: Invalid count '{newValue}', reverted to {currentSpeciesData.count}");
+        }
     }
 
     /// <summary>
@@ -276,7 +319,7 @@ public class SpeciesUIController : MonoBehaviour
     }
 
     /// <summary>
-    /// Update the species data from SpeciesDatabase (legacy fallback)
+    /// Update the species data from SpeciesDatabase (editor preview / fallback)
     /// </summary>
     private void UpdateSpeciesData()
     {
@@ -377,7 +420,7 @@ public class SpeciesUIController : MonoBehaviour
             typeText.text = currentSpeciesData.variant.ToString();
         }
 
-        // Update count
+        // Update count (editable — saves immediately on end edit)
         if (countText != null)
         {
             countText.text = currentSpeciesData.count.ToString();
@@ -386,8 +429,8 @@ public class SpeciesUIController : MonoBehaviour
 
     private string getName()
     {
-       return string.IsNullOrEmpty(currentSpeciesData.displayName) 
-            ? $"{currentSpeciesData.speciesName} {currentSpeciesData.variant}" 
+       return string.IsNullOrEmpty(currentSpeciesData.displayName)
+            ? $"{currentSpeciesData.speciesName} {currentSpeciesData.variant}"
             : currentSpeciesData.displayName;
     }
 

@@ -227,6 +227,25 @@ public class EditSpeciesUI : MonoBehaviour
         // Start with panel hidden
         if (editPanel != null)
             editPanel.SetActive(false);
+
+        // Set content types so keyboard/input only allows valid characters
+        SetContentType(countField, TMP_InputField.ContentType.IntegerNumber);
+        SetContentType(eatingAmountField, TMP_InputField.ContentType.DecimalNumber);
+        SetContentType(reproThresholdField, TMP_InputField.ContentType.DecimalNumber);
+        SetContentType(reproMultiplierField, TMP_InputField.ContentType.DecimalNumber);
+        SetContentType(tempDeathThresholdField, TMP_InputField.ContentType.DecimalNumber);
+        SetContentType(tempDeathRateField, TMP_InputField.ContentType.DecimalNumber);
+        SetContentType(tempDebuff, TMP_InputField.ContentType.DecimalNumber);
+        SetContentType(naturalDeathRateField, TMP_InputField.ContentType.DecimalNumber);
+        SetContentType(naturalDeathVarianceField, TMP_InputField.ContentType.DecimalNumber);
+        SetContentType(huntingEfficiencyField, TMP_InputField.ContentType.DecimalNumber);
+        SetContentType(huntingVarianceField, TMP_InputField.ContentType.DecimalNumber);
+    }
+
+    private static void SetContentType(TMP_InputField field, TMP_InputField.ContentType type)
+    {
+        if (field != null)
+            field.contentType = type;
     }
 
     /// <summary>
@@ -458,24 +477,24 @@ public class EditSpeciesUI : MonoBehaviour
             }
         }
 
-        // Validate count (integer)
-        allValid &= TryReadInt(countField, out count);
+        // Validate count (integer, non-negative)
+        allValid &= TryReadInt(countField, out count, min: 0);
 
-        // Validate gameplay stats (floats)
-        allValid &= TryReadFloat(eatingAmountField, out eatingAmount);
-        allValid &= TryReadFloat(reproThresholdField, out reproThreshold);
-        allValid &= TryReadFloat(reproMultiplierField, out reproMultiplier);
-        allValid &= TryReadFloat(tempDeathThresholdField, out tempDeathThreshold);
-        allValid &= TryReadFloat(tempDeathRateField, out tempDeathRate);
+        // Validate gameplay stats (floats, non-negative)
+        allValid &= TryReadFloat(eatingAmountField, out eatingAmount, min: 0f);
+        allValid &= TryReadFloat(reproThresholdField, out reproThreshold, min: 0f, max: 1f);
+        allValid &= TryReadFloat(reproMultiplierField, out reproMultiplier, min: 0f);
+        allValid &= TryReadFloat(tempDeathThresholdField, out tempDeathThreshold, min: 0f, max: 1f);
+        allValid &= TryReadFloat(tempDeathRateField, out tempDeathRate, min: 0f, max: 1f);
         allValid &= TryReadFloat(tempDebuff, out tempDebuffValue);
-        allValid &= TryReadFloat(naturalDeathVarianceField, out naturalDeathVariance);
-        allValid &= TryReadFloat(naturalDeathRateField, out naturalDeathRate);
+        allValid &= TryReadFloat(naturalDeathVarianceField, out naturalDeathVariance, min: 0f);
+        allValid &= TryReadFloat(naturalDeathRateField, out naturalDeathRate, min: 0f);
 
         // Validate hunting fields only for Tier 2+
         if (currentEditingData.tier >= 1)
         {
-            allValid &= TryReadFloat(huntingEfficiencyField, out huntingEfficiency);
-            allValid &= TryReadFloat(huntingVarianceField, out huntingVariance);
+            allValid &= TryReadFloat(huntingEfficiencyField, out huntingEfficiency, min: 0f, max: 1f);
+            allValid &= TryReadFloat(huntingVarianceField, out huntingVariance, min: 0f);
         }
 
         // If any validation failed, stop here and don't save
@@ -652,9 +671,10 @@ public class EditSpeciesUI : MonoBehaviour
     // ==================== Validation Methods ====================
 
     /// <summary>
-    /// Try to read a float from an input field. Highlights red if invalid.
+    /// Try to read a float from an input field. Highlights red if invalid or out of range.
     /// </summary>
-    private bool TryReadFloat(TMP_InputField field, out float value)
+    private bool TryReadFloat(TMP_InputField field, out float value,
+        float min = float.MinValue, float max = float.MaxValue)
     {
         value = 0f;
 
@@ -673,14 +693,18 @@ public class EditSpeciesUI : MonoBehaviour
             out value
         );
 
+        if (valid && (value < min || value > max))
+            valid = false;
+
         SetFieldColor(field, valid ? ValidColor : InvalidColor);
         return valid;
     }
 
     /// <summary>
-    /// Try to read an integer from an input field. Highlights red if invalid.
+    /// Try to read an integer from an input field. Highlights red if invalid or out of range.
     /// </summary>
-    private bool TryReadInt(TMP_InputField field, out int value)
+    private bool TryReadInt(TMP_InputField field, out int value,
+        int min = int.MinValue, int max = int.MaxValue)
     {
         value = 0;
 
@@ -698,6 +722,9 @@ public class EditSpeciesUI : MonoBehaviour
             CultureInfo.InvariantCulture,
             out value
         );
+
+        if (valid && (value < min || value > max))
+            valid = false;
 
         SetFieldColor(field, valid ? ValidColor : InvalidColor);
         return valid;

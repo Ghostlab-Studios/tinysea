@@ -90,7 +90,7 @@ public class SpeciesData
     [Tooltip("Critical thermal minimum in Celsius. Below this, performance = 0.")]
     public float ctMinC = -5.0f;
     [Tooltip("Critical thermal maximum in Celsius. Above this, performance = 0.")]
-    public float ctMaxC = 50.0f;
+    public float ctMaxC = 40.0f;
 }
 
 [CreateAssetMenu(fileName = "SpeciesDatabase", menuName = "TinySea/Species Database")]
@@ -288,7 +288,7 @@ public class SpeciesDatabase : ScriptableObject
 
         Debug.Log($"Populated {speciesList.Count} species entries");
         Debug.Log("Tier 1 (Hexapod): NaturalDeath=2%±1%, Hunting=N/A");
-        Debug.Log("Tier 2 (Sheplik): NaturalDeath=3%±1.5%, Hunting=75%±15%");
+        Debug.Log("Tier 2 (Sheplik): NaturalDeath=2%±1%, Hunting=75%±15%");
     }
 
     private void AddSpecies(int index, SpeciesName name, SpeciesVariant variant, int tier, int count,
@@ -479,7 +479,7 @@ public class SpeciesDatabase : ScriptableObject
             // Peak & lethal limits (defaults)
             pmax = 1.0f,
             ctMinC = -5.0f,
-            ctMaxC = 50.0f,
+            ctMaxC = 40.0f,
             // UI defaults
             eatingStars = tier == 0 ? 0 : 4,
             reproductionStars = tier == 0 ? 4 : 2,

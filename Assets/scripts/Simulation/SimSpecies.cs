@@ -27,7 +27,7 @@ public class SimSpecies
     public float ReproThreshold;            // FinalPerf required to reproduce (default 0.25)
 
     // ==================== NATURAL MORTALITY ====================
-    public float NaturalDeathRate = 0.02f;      // Base natural death rate (Tier 1: 2%, Tier 2: 3%)
+    public float NaturalDeathRate = 0.02f;      // Base natural death rate (all species: 2%)
     public float NaturalDeathVariance = 0.01f;  // Random variance range (±1%)
 
     // ==================== HUNTING EFFICIENCY (Tier 2 only) ====================
@@ -50,7 +50,7 @@ public class SimSpecies
     // ==================== PEAK HEIGHT & LETHAL LIMITS ====================
     public float Pmax = 1.0f;          // Maximum performance at optimal temperature (0-1)
     public float CTminC = -5.0f;       // Critical thermal minimum (Celsius) — below this, performance = 0
-    public float CTmaxC = 50.0f;       // Critical thermal maximum (Celsius) — above this, performance = 0
+    public float CTmaxC = 40.0f;       // Critical thermal maximum (Celsius) — above this, performance = 0
     public float TemperatureDebuff = 0f;  // Per-species temperature offset (shifts experienced temp)
 
     // ==================== RUNTIME VALUES (calculated each step) ====================
@@ -171,7 +171,7 @@ public class SimSpecies
     /// <summary>
     /// Create a Sheplik (Tier 2 predator) with default parameters
     /// </summary>
-    public static SimSpecies CreateShelpik(ThermalVariant variant, float initialPopulation)
+    public static SimSpecies CreateSheplik(ThermalVariant variant, float initialPopulation)
     {
         var species = new SimSpecies
         {

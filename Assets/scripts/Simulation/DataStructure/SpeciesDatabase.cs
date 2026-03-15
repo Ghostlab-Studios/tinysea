@@ -91,6 +91,33 @@ public class SpeciesData
     public float ctMinC = -5.0f;
     [Tooltip("Critical thermal maximum in Celsius. Above this, performance = 0.")]
     public float ctMaxC = 40.0f;
+
+    /// <summary>
+    /// Get variant-based thermal defaults (Pmax, CTminC, CTmaxC).
+    /// For Custom or unknown variants, returns Common defaults.
+    /// </summary>
+    public static void GetVariantThermalDefaults(SpeciesVariant variant,
+        out float pmax, out float ctMinC, out float ctMaxC)
+    {
+        switch (variant)
+        {
+            case SpeciesVariant.Tropical:
+                pmax = 1.0f;
+                ctMinC = 0f;
+                ctMaxC = 80f;
+                break;
+            case SpeciesVariant.Arctic:
+                pmax = 1.0f;
+                ctMinC = -30f;
+                ctMaxC = 20f;
+                break;
+            default: // Common and Custom
+                pmax = 0.9f;
+                ctMinC = -5f;
+                ctMaxC = 40f;
+                break;
+        }
+    }
 }
 
 [CreateAssetMenu(fileName = "SpeciesDatabase", menuName = "TinySea/Species Database")]

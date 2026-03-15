@@ -221,10 +221,13 @@ public static class CsvBatchParser
         species.LowerBoundC = GetFloat(fields, columnIndex, prefix + "lower_bound_c", rowNum, errors);
         species.UpperBoundC = GetFloat(fields, columnIndex, prefix + "upper_bound_c", rowNum, errors);
 
-        // Optional columns with defaults (backward compatible — missing columns use defaults)
-        species.Pmax = GetFloatOptional(fields, columnIndex, prefix + "pmax", 1.0f);
-        species.CTminC = GetFloatOptional(fields, columnIndex, prefix + "ctmin", -5.0f);
-        species.CTmaxC = GetFloatOptional(fields, columnIndex, prefix + "ctmax", 50.0f);
+        // Optional columns with variant-aware defaults (backward compatible — missing columns use variant defaults)
+        Enum.TryParse<SpeciesVariant>(species.Variant, true, out var parsedVariant);
+        SpeciesData.GetVariantThermalDefaults(parsedVariant, out float defPmax, out float defCtMin, out float defCtMax);
+
+        species.Pmax = GetFloatOptional(fields, columnIndex, prefix + "pmax", defPmax);
+        species.CTminC = GetFloatOptional(fields, columnIndex, prefix + "ctmin", defCtMin);
+        species.CTmaxC = GetFloatOptional(fields, columnIndex, prefix + "ctmax", defCtMax);
         species.TempOffset = GetFloatOptional(fields, columnIndex, prefix + "temp_offset", 0f);
     }
 

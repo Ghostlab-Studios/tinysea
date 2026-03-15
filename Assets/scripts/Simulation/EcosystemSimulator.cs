@@ -239,15 +239,15 @@ public class EcosystemSimulator
         Species.Clear();
         ClearAccumulators();
 
-        // Tier 1: Hexapod (4 of each variant)
-        Species.Add(SimSpecies.CreateHexapod(ThermalVariant.Arctic, 4f));
-        Species.Add(SimSpecies.CreateHexapod(ThermalVariant.Common, 4f));
-        Species.Add(SimSpecies.CreateHexapod(ThermalVariant.Tropical, 4f));
+        // Tier 1: Hexapod (20 of each variant)
+        Species.Add(SimSpecies.CreateHexapod(ThermalVariant.Arctic, 20f));
+        Species.Add(SimSpecies.CreateHexapod(ThermalVariant.Common, 20f));
+        Species.Add(SimSpecies.CreateHexapod(ThermalVariant.Tropical, 20f));
 
-        // Tier 2: Sheplik (2 of each variant)
-        Species.Add(SimSpecies.CreateShelpik(ThermalVariant.Arctic, 2f));
-        Species.Add(SimSpecies.CreateShelpik(ThermalVariant.Common, 2f));
-        Species.Add(SimSpecies.CreateShelpik(ThermalVariant.Tropical, 2f));
+        // Tier 2: Sheplik (4 of each variant)
+        Species.Add(SimSpecies.CreateSheplik(ThermalVariant.Arctic, 4f));
+        Species.Add(SimSpecies.CreateSheplik(ThermalVariant.Common, 4f));
+        Species.Add(SimSpecies.CreateSheplik(ThermalVariant.Tropical, 4f));
 
         foreach (var sp in Species)
         {

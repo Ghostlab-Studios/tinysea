@@ -36,6 +36,10 @@ public class EcosystemSimulator
     // Random number generator
     private System.Random _rng;
 
+    // Track whether tiers were populated at initialization
+    private bool _tier1WasPopulated = false;
+    private bool _tier2WasPopulated = false;
+
     // ==================== ACCUMULATORS ====================
     private Dictionary<string, float> _birthAccumulators = new Dictionary<string, float>();
     private Dictionary<string, float> _naturalDeathAccumulators = new Dictionary<string, float>();
@@ -148,6 +152,9 @@ public class EcosystemSimulator
         }
 
         Debug.Log($"Total species loaded from RunSpeciesList: {Species.Count}");
+
+        _tier1WasPopulated = GetTier1Population() > 0;
+        _tier2WasPopulated = GetTier2Population() > 0;
     }
 
     /// <summary>
@@ -204,6 +211,9 @@ public class EcosystemSimulator
         }
 
         Debug.Log($"Total species loaded: {Species.Count}");
+
+        _tier1WasPopulated = GetTier1Population() > 0;
+        _tier2WasPopulated = GetTier2Population() > 0;
     }
 
     private ThermalVariant ConvertVariant(SpeciesVariant variant)
@@ -253,6 +263,9 @@ public class EcosystemSimulator
         {
             InitializeAccumulators(sp.FullName);
         }
+
+        _tier1WasPopulated = GetTier1Population() > 0;
+        _tier2WasPopulated = GetTier2Population() > 0;
     }
 
     /// <summary>
@@ -701,12 +714,17 @@ public class EcosystemSimulator
     public float GetVariantPopulation(int tier, ThermalVariant variant) =>
         Species.Where(s => s.Tier == tier && s.Variant == variant).Sum(s => s.Population);
 
-    public bool HasCrashed() => GetTier1Population() == 0 || GetTier2Population() == 0;
+    public bool HasCrashed()
+    {
+        bool tier1Crashed = _tier1WasPopulated && GetTier1Population() == 0;
+        bool tier2Crashed = _tier2WasPopulated && GetTier2Population() == 0;
+        return tier1Crashed || tier2Crashed;
+    }
 
     public int GetCrashedTier()
     {
-        if (GetTier1Population() == 0) return 1;
-        if (GetTier2Population() == 0) return 2;
+        if (_tier1WasPopulated && GetTier1Population() == 0) return 1;
+        if (_tier2WasPopulated && GetTier2Population() == 0) return 2;
         return -1;
     }
 }

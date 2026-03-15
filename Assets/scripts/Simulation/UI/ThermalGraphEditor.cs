@@ -22,7 +22,7 @@ public class ThermalGraphEditor : MonoBehaviour
     [Range(0f, 1f)]
     public float pmax = 1.0f;
     public float ctMinC = -5.0f;
-    public float ctMaxC = 50.0f;
+    public float ctMaxC = 40.0f;
 
     [Header("Graph Settings")]
     public int textureWidth = 512;  // Higher resolution

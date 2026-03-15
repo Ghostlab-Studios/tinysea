@@ -14,7 +14,7 @@ public class ThermalGraphUI : MonoBehaviour
     public float upperBound = 298f;
     public float pmax = 1.0f;
     public float ctMinC = -5.0f;
-    public float ctMaxC = 50.0f;
+    public float ctMaxC = 40.0f;
 
     [Header("Graph Settings")]
     public int textureWidth = 256;

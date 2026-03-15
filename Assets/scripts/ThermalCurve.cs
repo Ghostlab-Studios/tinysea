@@ -18,7 +18,7 @@ public class ThermalCurve : MonoBehaviour {
 
     public float pmax = 1.0f;
     public float ctMinC = -5.0f;
-    public float ctMaxC = 50.0f;
+    public float ctMaxC = 40.0f;
 
     private const float LETHAL_TRANSITION_WIDTH = 2.0f; // Smooth fade width in degrees (same delta in K)
 

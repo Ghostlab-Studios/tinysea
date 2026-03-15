@@ -166,9 +166,13 @@ public static class CsvBatchParser
             batch.UseCarryingCap = GetBool(fields, columnIndex, "use_carrying_cap", rowNum, errors);
             batch.CarryingCapT1 = GetFloat(fields, columnIndex, "carrying_cap_t1", rowNum, errors);
 
-            // Parse species (dynamic N species)
+            // Parse species (dynamic N species — skip if name is empty)
             for (int s = 1; s <= speciesCount; s++)
             {
+                string spName = GetString(fields, columnIndex, $"sp{s}_name");
+                if (string.IsNullOrWhiteSpace(spName))
+                    continue;
+
                 var sp = new BulkSpeciesConfig();
                 ParseSpecies(fields, columnIndex, $"sp{s}_", sp, rowNum, errors);
                 batch.Species.Add(sp);

@@ -44,6 +44,7 @@ public class EcosystemSimulator
     private Dictionary<string, float> _birthAccumulators = new Dictionary<string, float>();
     private Dictionary<string, float> _naturalDeathAccumulators = new Dictionary<string, float>();
     private Dictionary<string, float> _predationAccumulators = new Dictionary<string, float>();
+    private Dictionary<string, float> _thermalDeathAccumulators = new Dictionary<string, float>();
 
     // ==================== POPULATION TRACKING ====================
     public float StartPopT1 { get; private set; } = 0f;
@@ -232,6 +233,7 @@ public class EcosystemSimulator
         _birthAccumulators.Clear();
         _naturalDeathAccumulators.Clear();
         _predationAccumulators.Clear();
+        _thermalDeathAccumulators.Clear();
     }
 
     private void InitializeAccumulators(string fullName)
@@ -239,6 +241,7 @@ public class EcosystemSimulator
         _birthAccumulators[fullName] = 0f;
         _naturalDeathAccumulators[fullName] = 0f;
         _predationAccumulators[fullName] = 0f;
+        _thermalDeathAccumulators[fullName] = 0f;
     }
 
     /// <summary>
@@ -295,10 +298,11 @@ public class EcosystemSimulator
         Debug.Log("--- Step 1: Thermal Performance ---");
         foreach (var sp in Species)
         {
-            sp.ThermalPerformance = sp.CalculatePerformance(temperature);
+            sp.RawThermalPerformance = sp.CalculatePerformance(temperature);
+            sp.ThermalPerformance = sp.RawThermalPerformance * sp.Pmax;
             sp.FedRate = 1f;
             sp.CurrentHuntingSuccess = 1f;
-            Debug.Log($"  {sp.FullName}: Pop={sp.Population:F0}, ThermalPerf={sp.ThermalPerformance:F3}");
+            Debug.Log($"  {sp.FullName}: Pop={sp.Population:F0}, RawPerf={sp.RawThermalPerformance:F3}, ThermalPerf={sp.ThermalPerformance:F3} (Pmax={sp.Pmax:F2})");
         }
 
         // ========== STEP 2: FEEDING (with predation accumulator) ==========
@@ -310,7 +314,8 @@ public class EcosystemSimulator
         foreach (var sp in Species)
         {
             sp.FinalPerformance = sp.ThermalPerformance * sp.FedRate;
-            Debug.Log($"  {sp.FullName}: FinalPerf = {sp.ThermalPerformance:F3} × {sp.FedRate:F3} = {sp.FinalPerformance:F3}");
+            sp.RawFinalPerformance = sp.RawThermalPerformance * sp.FedRate;
+            Debug.Log($"  {sp.FullName}: RawFinalPerf={sp.RawFinalPerformance:F3}, FinalPerf={sp.FinalPerformance:F3} (Raw={sp.RawThermalPerformance:F3}×Fed={sp.FedRate:F3}, Pmax={sp.Pmax:F2})");
         }
 
         // ========== STEP 4: THERMAL DEATH ==========
@@ -404,7 +409,7 @@ public class EcosystemSimulator
             pred.CurrentHuntingSuccess = huntingSuccess;
 
             // Raw demand (what they want)
-            float rawDemand = pred.Population * pred.EatingAmount * pred.ThermalPerformance * BiologyStep;
+            float rawDemand = pred.Population * pred.EatingAmount * pred.RawThermalPerformance * BiologyStep;
             totalRawDemand += rawDemand;
 
             // Actual demand (what they can attempt to catch)
@@ -534,26 +539,43 @@ public class EcosystemSimulator
             return;
         }
 
-        if (sp.FinalPerformance >= sp.DeathThreshold)
+        if (sp.RawFinalPerformance >= sp.DeathThreshold)
         {
-            Debug.Log($"  {sp.FullName}: SURVIVES (FinalPerf {sp.FinalPerformance:F3} >= {sp.DeathThreshold})");
+            Debug.Log($"  {sp.FullName}: SURVIVES (RawFinalPerf {sp.RawFinalPerformance:F3} >= {sp.DeathThreshold})");
             return;
         }
 
         // Species is stressed - calculate deaths
-        float deaths = Math.Max(sp.MinimumDeaths, sp.Population * sp.DeathRate * BiologyStep);
-        deaths = Math.Min(deaths, sp.Population);
-
+        float rawDeaths = sp.Population * sp.DeathRate * BiologyStep;
         float oldPop = sp.Population;
-        sp.Population = Math.Max(0f, sp.Population - deaths);
 
-        Debug.Log($"  {sp.FullName}: THERMAL DEATH - {deaths:F1} deaths (FinalPerf {sp.FinalPerformance:F3} < {sp.DeathThreshold}), Pop {oldPop:F0} → {sp.Population:F0}");
+        if (sp.MinimumDeaths > 0f)
+        {
+            // MinDeaths > 0: bypass accumulator, guarantee at least MinDeaths die instantly
+            float deaths = Math.Max(sp.MinimumDeaths, rawDeaths);
+            deaths = Math.Min(deaths, sp.Population);
+            sp.Population = Math.Max(0f, sp.Population - deaths);
 
-        // Track by tier
-        if (sp.Tier == 1)
-            LastTempDeathsT1 += deaths;
-        else if (sp.Tier == 2)
-            LastTempDeathsT2 += deaths;
+            Debug.Log($"  {sp.FullName}: THERMAL DEATH (instant) - {deaths:F1} deaths (MinDeaths={sp.MinimumDeaths}, RawFinalPerf {sp.RawFinalPerformance:F3} < {sp.DeathThreshold}), Pop {oldPop:F0} → {sp.Population:F0}");
+
+            if (sp.Tier == 1) LastTempDeathsT1 += deaths;
+            else if (sp.Tier == 2) LastTempDeathsT2 += deaths;
+        }
+        else
+        {
+            // MinDeaths = 0: accumulate fractional deaths, extract whole deaths via Floor
+            _thermalDeathAccumulators[sp.FullName] += rawDeaths;
+            float accumulated = _thermalDeathAccumulators[sp.FullName];
+            int wholeDeaths = (int)Math.Floor(accumulated);
+            _thermalDeathAccumulators[sp.FullName] = accumulated - wholeDeaths;
+            wholeDeaths = Math.Min(wholeDeaths, (int)sp.Population);
+            sp.Population = Math.Max(0f, sp.Population - wholeDeaths);
+
+            Debug.Log($"  {sp.FullName}: THERMAL DEATH (accum) - raw={rawDeaths:F2}, accum={accumulated:F2}, deaths={wholeDeaths} (RawFinalPerf {sp.RawFinalPerformance:F3} < {sp.DeathThreshold}), Pop {oldPop:F0} → {sp.Population:F0}");
+
+            if (sp.Tier == 1) LastTempDeathsT1 += wholeDeaths;
+            else if (sp.Tier == 2) LastTempDeathsT2 += wholeDeaths;
+        }
     }
 
     /// <summary>
@@ -627,7 +649,7 @@ public class EcosystemSimulator
     /// </summary>
     private void ApplyNaturalDeathWithAccumulator(SimSpecies sp)
     {
-        if (sp.Population < MIN_ALIVE_POP)
+        if (sp.Population <= 0f)
         {
             return;
         }
@@ -637,7 +659,7 @@ public class EcosystemSimulator
         float baseRate = Math.Max(0f, sp.NaturalDeathRate + variance);
 
         // Performance scaling with division-by-zero safeguard
-        float safeFinalPerf = Math.Max(SimSpecies.MIN_FINAL_PERF_FOR_NATURAL_DEATH, sp.FinalPerformance);
+        float safeFinalPerf = Math.Max(SimSpecies.MIN_FINAL_PERF_FOR_NATURAL_DEATH, sp.RawFinalPerformance);
         float effectiveRate = baseRate * (1f / safeFinalPerf);
 
         // Calculate raw deaths

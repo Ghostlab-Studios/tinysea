@@ -54,9 +54,11 @@ public class SimSpecies
     public float TemperatureDebuff = 0f;  // Per-species temperature offset (shifts experienced temp)
 
     // ==================== RUNTIME VALUES (calculated each step) ====================
-    public float ThermalPerformance;        // From Arrhenius formula (0-1)
+    public float RawThermalPerformance;     // Arrhenius + CTmin/CTmax fade, WITHOUT Pmax
+    public float ThermalPerformance;        // RawThermalPerformance × Pmax (used for reproduction)
     public float FedRate = 1f;              // Feeding satisfaction (0-1), Tier 1 always 1.0
-    public float FinalPerformance;          // ThermalPerf × FedRate
+    public float RawFinalPerformance;       // RawThermalPerformance × FedRate — used for death checks
+    public float FinalPerformance;          // ThermalPerf × FedRate (used for reproduction)
     public float CurrentHuntingSuccess;     // This step's hunting success (for tracking)
 
     /// <summary>
@@ -104,8 +106,8 @@ public class SimSpecies
 
         double perf = numerator / denominator;
 
-        // Clamp to [0, 1] then apply Pmax
-        return (float)Math.Max(0.0, Math.Min(1.0, perf)) * fadeFactor * Pmax;
+        // Clamp to [0, 1] with CTmin/CTmax fade — Pmax is applied externally
+        return (float)Math.Max(0.0, Math.Min(1.0, perf)) * fadeFactor;
     }
 
     // ==================== FACTORY METHODS (for fallback/testing) ====================

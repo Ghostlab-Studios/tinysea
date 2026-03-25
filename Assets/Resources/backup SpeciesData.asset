@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b9e5914ecd9801f409731e2074fbcb1f, type: 3}
-  m_Name: SpeciesDatabase
+  m_Name: backup SpeciesData
   m_EditorClassIdentifier: Assembly-CSharp::SpeciesDatabase
   speciesList:
   - index: 0
@@ -45,7 +45,7 @@ MonoBehaviour:
     arrhenUpper: 21273.15
     lowerBoundK: 285.15
     upperBoundK: 295.15
-    pmax: 0.65
+    pmax: 0.9
     ctMinC: -5
     ctMaxC: 40
   - index: 1
@@ -80,7 +80,7 @@ MonoBehaviour:
     arrhenUpper: 21273.15
     lowerBoundK: 300.15
     upperBoundK: 310.15
-    pmax: 0.85
+    pmax: 1
     ctMinC: 0
     ctMaxC: 80
   - index: 2
@@ -115,7 +115,7 @@ MonoBehaviour:
     arrhenUpper: 21273.15
     lowerBoundK: 270.15
     upperBoundK: 280.15
-    pmax: 0.85
+    pmax: 1
     ctMinC: -30
     ctMaxC: 20
   - index: 4
@@ -150,7 +150,7 @@ MonoBehaviour:
     arrhenUpper: 21273.15
     lowerBoundK: 300.15
     upperBoundK: 310.15
-    pmax: 0.85
+    pmax: 1
     ctMinC: 0
     ctMaxC: 80
   - index: 5
@@ -185,7 +185,7 @@ MonoBehaviour:
     arrhenUpper: 21273.15
     lowerBoundK: 270.15
     upperBoundK: 280.15
-    pmax: 0.85
+    pmax: 1
     ctMinC: -30
     ctMaxC: 20
   - index: 3
@@ -220,6 +220,6 @@ MonoBehaviour:
     arrhenUpper: 21273.15
     lowerBoundK: 285.15
     upperBoundK: 295.15
-    pmax: 0.65
+    pmax: 0.9
     ctMinC: -5
     ctMaxC: 40

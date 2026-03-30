@@ -4,29 +4,42 @@ using System.Linq;
 using UnityEngine;
 
 /// <summary>
-/// TinySea Ecosystem Simulator v5
-/// 
-/// BIOLOGY SEQUENCE (7 steps):
+/// TinySea Ecosystem Simulator v6
+///
+/// BIOLOGY SEQUENCE (9 steps):
 /// 1. Thermal Performance - Arrhenius formula
 /// 2. Feeding/Predation - With hunting efficiency + PREDATION ACCUMULATOR
 /// 3. Final Performance - ThermalPerf × FedRate
-/// 4. Thermal Death - If FinalPerf less than 0.3 (MinimumDeaths=1, NO accumulator)
-/// 5. Reproduction - With BIRTH ACCUMULATOR + Tier 1 penalty when no predators
-/// 6. Natural Death - Performance-scaled + NATURAL DEATH ACCUMULATOR
-/// 7. Population Rounding - All populations become integers
-/// 
+/// 4. Update Condition - Drain/recover toward RawFinalPerformance (health buffer)
+/// 5. Thermal Death - INSTANT kill at lethal limits (RawThermalPerf == 0)
+/// 6. Condition Death - When Condition less than DeathThreshold after chronic stress
+/// 7. Reproduction - With BIRTH ACCUMULATOR + Tier 1 penalty when no predators
+/// 8. Natural Death - FLAT RATE + NATURAL DEATH ACCUMULATOR
+/// 9. Population Rounding - All populations become integers
+///
+/// DEATH TYPES:
+/// - Thermal: Instant kill when beyond CTmin/CTmax (RawThermalPerf == 0)
+/// - Condition: Chronic stress — Condition drains on bad days, death when below threshold
+/// - Natural: Flat 2% rate — old age, disease, accidents (no performance scaling)
+/// - Predation: Tier 2 eats Tier 1 (unchanged)
+///
+/// CONDITION SYSTEM:
+/// - Per-species health value [0-1], starts at 1.0
+/// - Drains toward RawFinalPerformance (asymmetric: drains faster than recovers)
+/// - Drain accelerates up to 5x near lethal temperatures
+/// - Global drain/recovery rates on SimulationConfig
+///
 /// ACCUMULATORS:
-/// - Birth: Fractional births carry over (allows slow-reproducing Tier 2 to grow)
-/// - Predation: Fractional prey deaths carry over (rare variants eventually eaten)
-/// - Natural Death: Fractional deaths carry over (small populations eventually die)
-/// 
-/// CARRYING CAPACITY:
-/// - Soft limit applied ONLY to Tier 1
-/// - Slows reproduction as population approaches limit
-/// 
-/// v5 CHANGES:
-/// - Now uses RunSpeciesList instead of SpeciesDatabase
-/// - Carrying capacity only applies to Tier 1
+/// - Birth: Fractional births carry over
+/// - Predation: Fractional prey deaths carry over
+/// - Natural Death: Fractional deaths carry over
+/// - Condition Death: Fractional condition deaths carry over
+///
+/// v6 CHANGES:
+/// - Added Condition (health) system with drain/recovery
+/// - Split thermal death into instant (lethal) + condition (chronic)
+/// - Decoupled natural death from performance (flat rate)
+/// - HasCrashed() now checks total population == 0 (not single tier)
 /// </summary>
 public class EcosystemSimulator
 {
@@ -57,9 +70,10 @@ public class EcosystemSimulator
     // Tier 1
     public float LastEatenT1 { get; private set; } = 0f;
     public float LastTempDeathsT1 { get; private set; } = 0f;
-    public float LastConditionDeathsT1 { get; private set; } = 0f;
     public float LastNaturalDeathsT1 { get; private set; } = 0f;
     public float LastBirthsT1 { get; private set; } = 0f;
+
+    public float LastConditionDeathsT1 { get; private set; } = 0f;
 
     // Tier 2
     public float LastTempDeathsT2 { get; private set; } = 0f;
@@ -84,9 +98,7 @@ public class EcosystemSimulator
     public float ConditionDeathAccumT1 { get; private set; } = 0f;
     public float ConditionDeathAccumT2 { get; private set; } = 0f;
 
-    // ==================== CONDITION (HEALTH) SYSTEM ====================
-    public float ConditionDrainRate { get; set; } = 0.15f;
-    public float ConditionRecoveryRate { get; set; } = 0.10f;
+    // ==================== AVERAGE CONDITION (for CSV output) ====================
     public float AvgConditionT1 { get; private set; } = 1f;
     public float AvgConditionT2 { get; private set; } = 1f;
 
@@ -94,10 +106,14 @@ public class EcosystemSimulator
     public bool UseCarryingCapacity { get; set; } = true;
     public float CarryingCapacityPerTier { get; set; } = 5000f;
 
+    // ==================== CONDITION (HEALTH) SYSTEM ====================
+    public float ConditionDrainRate { get; set; } = 0.15f;
+    public float ConditionRecoveryRate { get; set; } = 0.10f;
+
     // ==================== CONSTANTS ====================
     private const float MIN_ALIVE_POP = 1.0f;
     private const float DRAIN_ACCEL_THRESHOLD = 0.2f;  // Performance below this accelerates drain
-    private const float DRAIN_ACCEL_MAX = 4f;           // Max acceleration multiplier (5× total at perf=0)
+    private const float DRAIN_ACCEL_MAX = 4f;           // Max acceleration multiplier (5x total at perf=0)
 
     public EcosystemSimulator(int seed = -1)
     {
@@ -291,6 +307,17 @@ public class EcosystemSimulator
 
     /// <summary>
     /// Run one biology step at the given temperature.
+    ///
+    /// BIOLOGY SEQUENCE (9 steps):
+    /// 1. Thermal Performance - Arrhenius formula
+    /// 2. Feeding/Predation - With hunting efficiency + PREDATION ACCUMULATOR
+    /// 3. Final Performance - ThermalPerf × FedRate
+    /// 4. Update Condition - Drain/recover toward RawFinalPerformance
+    /// 5. Thermal Death - INSTANT kill at lethal limits (RawThermalPerf == 0)
+    /// 6. Condition Death - When Condition less than DeathThreshold after chronic stress
+    /// 7. Reproduction - With BIRTH ACCUMULATOR + Tier 1 penalty when no predators
+    /// 8. Natural Death - FLAT RATE (no performance scaling)
+    /// 9. Population Rounding - All populations become integers
     /// </summary>
     public void ProcessBiologyStep(float temperature)
     {
@@ -338,21 +365,21 @@ public class EcosystemSimulator
             Debug.Log($"  {sp.FullName}: RawFinalPerf={sp.RawFinalPerformance:F3}, FinalPerf={sp.FinalPerformance:F3} (Raw={sp.RawThermalPerformance:F3}×Fed={sp.FedRate:F3}, Pmax={sp.Pmax:F2})");
         }
 
-        // ========== STEP 4: UPDATE CONDITION (health/energy reserves) ==========
+        // ========== STEP 4: UPDATE CONDITION ==========
         Debug.Log("--- Step 4: Update Condition ---");
         foreach (var sp in Species)
         {
             UpdateCondition(sp);
         }
 
-        // ========== STEP 5: THERMAL DEATH (instant kill at lethal limits) ==========
-        Debug.Log("--- Step 5: Thermal Death (Lethal Limits) ---");
+        // ========== STEP 5: THERMAL DEATH (instant at lethal limits) ==========
+        Debug.Log("--- Step 5: Thermal Death (lethal limits) ---");
         foreach (var sp in Species)
         {
             ApplyThermalDeath(sp);
         }
 
-        // ========== STEP 6: CONDITION DEATH (chronic stress/exhaustion) ==========
+        // ========== STEP 6: CONDITION DEATH (chronic stress) ==========
         Debug.Log("--- Step 6: Condition Death ---");
         foreach (var sp in Species)
         {
@@ -366,7 +393,7 @@ public class EcosystemSimulator
             ApplyReproduction(sp);
         }
 
-        // ========== STEP 8: NATURAL DEATH (flat rate, no performance scaling) ==========
+        // ========== STEP 8: NATURAL DEATH (flat rate) ==========
         Debug.Log("--- Step 8: Natural Death ---");
         foreach (var sp in Species)
         {
@@ -385,15 +412,18 @@ public class EcosystemSimulator
             }
         }
 
-        // Record end populations, condition averages, and accumulator totals
+        // Compute average condition per tier
+        ComputeAverageCondition();
+
+        // Record end populations and accumulator totals
         EndPopT1 = GetTier1Population();
         EndPopT2 = GetTier2Population();
-        ComputeAverageCondition();
         UpdateAccumulatorTotals();
 
         Debug.Log($"  END: T1={EndPopT1:F0}, T2={EndPopT2:F0}");
-        Debug.Log($"  Deaths: Eaten={LastEatenT1:F0}, Temp={LastTempDeathsT1 + LastTempDeathsT2:F0}, Natural={LastNaturalDeathsT1 + LastNaturalDeathsT2:F0}");
+        Debug.Log($"  Deaths: Eaten={LastEatenT1:F0}, Temp={LastTempDeathsT1 + LastTempDeathsT2:F0}, Condition={LastConditionDeathsT1 + LastConditionDeathsT2:F0}, Natural={LastNaturalDeathsT1 + LastNaturalDeathsT2:F0}");
         Debug.Log($"  Births: T1={LastBirthsT1:F0}, T2={LastBirthsT2:F0}");
+        Debug.Log($"  Condition: AvgT1={AvgConditionT1:F3}, AvgT2={AvgConditionT2:F3}");
     }
 
     /// <summary>
@@ -563,8 +593,46 @@ public class EcosystemSimulator
     }
 
     /// <summary>
-    /// Apply thermal death if FinalPerformance less than DeathThreshold.
-    /// NO ACCUMULATOR - MinimumDeaths ensures at least 1 dies when triggered.
+    /// Update Condition (health/energy reserves) for each species.
+    /// Condition moves toward RawFinalPerformance asymmetrically:
+    ///   - Drains faster than it recovers
+    ///   - Drain accelerates up to 5x near lethal temperatures
+    ///   - Feeding contributes via FedRate (starving predators drain even at good temps)
+    /// </summary>
+    private void UpdateCondition(SimSpecies sp)
+    {
+        if (sp.Population < MIN_ALIVE_POP) return;
+
+        float target = sp.RawFinalPerformance;  // thermal × fed, no Pmax
+        float oldCondition = sp.Condition;
+
+        if (sp.Condition > target)
+        {
+            // Draining — calculate effective drain rate with acceleration near lethal temps
+            float effectiveDrain = ConditionDrainRate;
+            if (target < DRAIN_ACCEL_THRESHOLD)
+            {
+                float severity = 1f - target / DRAIN_ACCEL_THRESHOLD;  // 1.0 at perf=0, 0 at threshold
+                effectiveDrain *= 1f + severity * DRAIN_ACCEL_MAX;     // Linear: up to 5x at perf=0
+            }
+            sp.Condition -= (sp.Condition - target) * effectiveDrain;
+        }
+        else
+        {
+            // Recovering — slower than drain
+            sp.Condition += (target - sp.Condition) * ConditionRecoveryRate;
+        }
+
+        sp.Condition = Math.Max(0f, Math.Min(1f, sp.Condition));
+
+        Debug.Log($"  {sp.FullName}: Condition {oldCondition:F3} → {sp.Condition:F3} (target={target:F3})");
+    }
+
+    /// <summary>
+    /// Apply INSTANT thermal death at lethal temperature limits.
+    /// Triggers ONLY when RawThermalPerformance == 0 (at/beyond CTmin/CTmax).
+    /// Beyond lethal limits = total wipeout. No Condition buffer can save you.
+    /// Suboptimal temperatures are handled by the Condition system instead.
     /// </summary>
     private void ApplyThermalDeath(SimSpecies sp)
     {
@@ -574,42 +642,56 @@ public class EcosystemSimulator
             return;
         }
 
-        if (sp.RawFinalPerformance >= sp.DeathThreshold)
+        if (sp.RawThermalPerformance > 0f)
         {
-            Debug.Log($"  {sp.FullName}: SURVIVES (RawFinalPerf {sp.RawFinalPerformance:F3} >= {sp.DeathThreshold})");
+            Debug.Log($"  {sp.FullName}: SURVIVES (RawThermalPerf {sp.RawThermalPerformance:F3} > 0)");
             return;
         }
 
-        // Species is stressed - calculate deaths
+        // Beyond lethal limits — total wipeout
+        float deaths = sp.Population;
+        sp.Population = 0f;
+        sp.Condition = 0f;
+
+        Debug.Log($"  {sp.FullName}: THERMAL DEATH (lethal limit) - {deaths:F0} deaths (RawThermalPerf=0), Pop → 0");
+
+        if (sp.Tier == 1) LastTempDeathsT1 += deaths;
+        else if (sp.Tier == 2) LastTempDeathsT2 += deaths;
+    }
+
+    /// <summary>
+    /// Apply condition-based death (chronic stress, exhaustion, starvation).
+    /// When Condition drops below DeathThreshold, species start dying at DeathRate.
+    /// This replaces the old suboptimal-temperature death mechanism.
+    /// Uses CONDITION DEATH ACCUMULATOR for fractional death tracking.
+    /// </summary>
+    private void ApplyConditionDeath(SimSpecies sp)
+    {
+        if (sp.Population < MIN_ALIVE_POP) return;
+        if (sp.Condition >= sp.DeathThreshold) return;
+
         float rawDeaths = sp.Population * sp.DeathRate * BiologyStep;
-        float oldPop = sp.Population;
 
-        if (sp.MinimumDeaths > 0f)
+        // Accumulator pattern — chronic decline, gradual
+        _conditionDeathAccumulators[sp.FullName] += rawDeaths;
+        float accumulated = _conditionDeathAccumulators[sp.FullName];
+        int wholeDeaths = (int)Math.Floor(accumulated);
+        _conditionDeathAccumulators[sp.FullName] = accumulated - wholeDeaths;
+        wholeDeaths = Math.Min(wholeDeaths, (int)sp.Population);
+
+        if (wholeDeaths > 0)
         {
-            // MinDeaths > 0: bypass accumulator, guarantee at least MinDeaths die instantly
-            float deaths = Math.Max(sp.MinimumDeaths, rawDeaths);
-            deaths = Math.Min(deaths, sp.Population);
-            sp.Population = Math.Max(0f, sp.Population - deaths);
+            float oldPop = sp.Population;
+            sp.Population = Math.Max(0f, sp.Population - wholeDeaths);
 
-            Debug.Log($"  {sp.FullName}: THERMAL DEATH (instant) - {deaths:F1} deaths (MinDeaths={sp.MinimumDeaths}, RawFinalPerf {sp.RawFinalPerformance:F3} < {sp.DeathThreshold}), Pop {oldPop:F0} → {sp.Population:F0}");
+            Debug.Log($"  {sp.FullName}: CONDITION DEATH - raw={rawDeaths:F2}, accum={accumulated:F2}, deaths={wholeDeaths} (Condition {sp.Condition:F3} < {sp.DeathThreshold}), Pop {oldPop:F0} → {sp.Population:F0}");
 
-            if (sp.Tier == 1) LastTempDeathsT1 += deaths;
-            else if (sp.Tier == 2) LastTempDeathsT2 += deaths;
+            if (sp.Tier == 1) LastConditionDeathsT1 += wholeDeaths;
+            else if (sp.Tier == 2) LastConditionDeathsT2 += wholeDeaths;
         }
         else
         {
-            // MinDeaths = 0: accumulate fractional deaths, extract whole deaths via Floor
-            _thermalDeathAccumulators[sp.FullName] += rawDeaths;
-            float accumulated = _thermalDeathAccumulators[sp.FullName];
-            int wholeDeaths = (int)Math.Floor(accumulated);
-            _thermalDeathAccumulators[sp.FullName] = accumulated - wholeDeaths;
-            wholeDeaths = Math.Min(wholeDeaths, (int)sp.Population);
-            sp.Population = Math.Max(0f, sp.Population - wholeDeaths);
-
-            Debug.Log($"  {sp.FullName}: THERMAL DEATH (accum) - raw={rawDeaths:F2}, accum={accumulated:F2}, deaths={wholeDeaths} (RawFinalPerf {sp.RawFinalPerformance:F3} < {sp.DeathThreshold}), Pop {oldPop:F0} → {sp.Population:F0}");
-
-            if (sp.Tier == 1) LastTempDeathsT1 += wholeDeaths;
-            else if (sp.Tier == 2) LastTempDeathsT2 += wholeDeaths;
+            Debug.Log($"  {sp.FullName}: Condition death - raw={rawDeaths:F2}, accum={_conditionDeathAccumulators[sp.FullName]:F2} (no deaths yet, Condition {sp.Condition:F3} < {sp.DeathThreshold})");
         }
     }
 
@@ -679,8 +761,8 @@ public class EcosystemSimulator
     }
 
     /// <summary>
-    /// Apply natural death with PERFORMANCE SCALING and ACCUMULATOR.
-    /// Creatures with poor performance have higher natural mortality.
+    /// Apply natural death with FLAT RATE and ACCUMULATOR.
+    /// Natural death represents old age, disease, accidents — independent of performance.
     /// </summary>
     private void ApplyNaturalDeathWithAccumulator(SimSpecies sp)
     {
@@ -693,9 +775,8 @@ public class EcosystemSimulator
         float variance = (float)((_rng.NextDouble() * 2 - 1) * sp.NaturalDeathVariance);
         float baseRate = Math.Max(0f, sp.NaturalDeathRate + variance);
 
-        // Performance scaling with division-by-zero safeguard
-        float safeFinalPerf = Math.Max(SimSpecies.MIN_FINAL_PERF_FOR_NATURAL_DEATH, sp.RawFinalPerformance);
-        float effectiveRate = baseRate * (1f / safeFinalPerf);
+        // Flat rate — natural death is independent of performance
+        float effectiveRate = baseRate;
 
         // Calculate raw deaths
         float deaths = sp.Population * effectiveRate * BiologyStep;
@@ -718,7 +799,7 @@ public class EcosystemSimulator
             float oldPop = sp.Population;
             sp.Population = Math.Max(0f, sp.Population - wholeDeaths);
 
-            Debug.Log($"  {sp.FullName}: NATURAL DEATH - baseRate={baseRate:P1}, effectiveRate={effectiveRate:P1} (perf={safeFinalPerf:F2}), raw={deaths:F2}, accum={accumulated:F2}, deaths={wholeDeaths}, Pop {oldPop:F0} → {sp.Population:F0}");
+            Debug.Log($"  {sp.FullName}: NATURAL DEATH - rate={effectiveRate:P1}, raw={deaths:F2}, accum={accumulated:F2}, deaths={wholeDeaths}, Pop {oldPop:F0} → {sp.Population:F0}");
 
             if (sp.Tier == 1)
                 LastNaturalDeathsT1 += wholeDeaths;
@@ -732,6 +813,25 @@ public class EcosystemSimulator
     }
 
     /// <summary>
+    /// Compute population-weighted average Condition per tier.
+    /// </summary>
+    private void ComputeAverageCondition()
+    {
+        float sumT1 = 0f, popT1 = 0f;
+        float sumT2 = 0f, popT2 = 0f;
+
+        foreach (var sp in Species)
+        {
+            if (sp.Population < MIN_ALIVE_POP) continue;
+            if (sp.Tier == 1) { sumT1 += sp.Condition * sp.Population; popT1 += sp.Population; }
+            else if (sp.Tier == 2) { sumT2 += sp.Condition * sp.Population; popT2 += sp.Population; }
+        }
+
+        AvgConditionT1 = popT1 > 0 ? sumT1 / popT1 : 0f;
+        AvgConditionT2 = popT2 > 0 ? sumT2 / popT2 : 0f;
+    }
+
+    /// <summary>
     /// Update accumulator totals for CSV output
     /// </summary>
     private void UpdateAccumulatorTotals()
@@ -741,6 +841,8 @@ public class EcosystemSimulator
         NaturalDeathAccumT1 = 0f;
         NaturalDeathAccumT2 = 0f;
         PredationAccumT1 = 0f;
+        ConditionDeathAccumT1 = 0f;
+        ConditionDeathAccumT2 = 0f;
 
         foreach (var sp in Species)
         {
@@ -759,6 +861,12 @@ public class EcosystemSimulator
             if (_predationAccumulators.ContainsKey(sp.FullName))
             {
                 if (sp.Tier == 1) PredationAccumT1 += _predationAccumulators[sp.FullName];
+            }
+
+            if (_conditionDeathAccumulators.ContainsKey(sp.FullName))
+            {
+                if (sp.Tier == 1) ConditionDeathAccumT1 += _conditionDeathAccumulators[sp.FullName];
+                else if (sp.Tier == 2) ConditionDeathAccumT2 += _conditionDeathAccumulators[sp.FullName];
             }
         }
     }
@@ -779,7 +887,6 @@ public class EcosystemSimulator
 
     public int GetCrashedTier()
     {
-        // Report which tier went extinct (both are 0 if HasCrashed is true)
         if (_tier1WasPopulated && GetTier1Population() == 0 && GetTier2Population() == 0) return 0; // all dead
         if (_tier1WasPopulated && GetTier1Population() == 0) return 1;
         if (_tier2WasPopulated && GetTier2Population() == 0) return 2;

@@ -13,13 +13,16 @@ using UnityEngine;
 /// - StartPop, EndPop: Total population (T1+T2)
 /// - Tier1Pop, Tier2Pop, Tier1Arctic...Tier2Tropical: Populations by tier/variant
 /// - EatenT1: Prey eaten (Tier 1 deaths from predation)
-/// - TempDeathsT1, TempDeathsT2: Thermal deaths
-/// - NaturalDeathsT1, NaturalDeathsT2: Natural mortality deaths
+/// - TempDeathsT1, TempDeathsT2: Thermal deaths (instant at lethal limits)
+/// - ConditionDeathsT1, ConditionDeathsT2: Condition deaths (chronic stress)
+/// - NaturalDeathsT1, NaturalDeathsT2: Natural mortality deaths (flat rate)
 /// - TotalDeaths: All deaths combined
 /// - BirthsT1, BirthsT2: New offspring
 /// - FedRateT2, AvgHuntingEff: Feeding metrics
+/// - AvgConditionT1, AvgConditionT2: Population-weighted average Condition per tier
 /// - BirthAccumT1, BirthAccumT2: Birth accumulator totals
 /// - NaturalDeathAccumT1, NaturalDeathAccumT2: Natural death accumulator totals
+/// - ConditionDeathAccumT1, ConditionDeathAccumT2: Condition death accumulator totals
 /// - PredationAccumT1: Predation accumulator total for Tier 1
 /// 
 /// NOTE: Population fields use 'long' to prevent integer overflow with large populations.
@@ -52,8 +55,10 @@ public class StepRecord
 
     // Death tracking (using long to prevent overflow)
     public long EatenT1;           // Prey eaten = T1 deaths from predation
-    public long TempDeathsT1;      // Temperature deaths T1
-    public long TempDeathsT2;      // Temperature deaths T2
+    public long TempDeathsT1;      // Temperature deaths T1 (lethal limits)
+    public long TempDeathsT2;      // Temperature deaths T2 (lethal limits)
+    public long ConditionDeathsT1; // Condition deaths T1 (chronic stress)
+    public long ConditionDeathsT2; // Condition deaths T2 (chronic stress)
     public long NaturalDeathsT1;   // Natural deaths T1
     public long NaturalDeathsT2;   // Natural deaths T2
     public long TotalDeaths;       // ALL deaths combined
@@ -66,11 +71,17 @@ public class StepRecord
     public float FedRateT2;
     public float AvgHuntingEff;
 
+    // Condition tracking
+    public float AvgConditionT1;
+    public float AvgConditionT2;
+
     // Accumulator tracking (float values for transparency)
     public float BirthAccumT1;
     public float BirthAccumT2;
     public float NaturalDeathAccumT1;
     public float NaturalDeathAccumT2;
+    public float ConditionDeathAccumT1;
+    public float ConditionDeathAccumT2;
     public float PredationAccumT1;
 
     public string ToCsvLine()
@@ -81,12 +92,15 @@ public class StepRecord
                $"{Tier1Arctic},{Tier1Common},{Tier1Tropical}," +
                $"{Tier2Arctic},{Tier2Common},{Tier2Tropical}," +
                $"{EatenT1},{TempDeathsT1},{TempDeathsT2}," +
+               $"{ConditionDeathsT1},{ConditionDeathsT2}," +
                $"{NaturalDeathsT1},{NaturalDeathsT2}," +
                $"{TotalDeaths}," +
                $"{BirthsT1},{BirthsT2}," +
                $"{FedRateT2:F3},{AvgHuntingEff:F3}," +
+               $"{AvgConditionT1:F3},{AvgConditionT2:F3}," +
                $"{BirthAccumT1:F3},{BirthAccumT2:F3}," +
                $"{NaturalDeathAccumT1:F3},{NaturalDeathAccumT2:F3}," +
+               $"{ConditionDeathAccumT1:F3},{ConditionDeathAccumT2:F3}," +
                $"{PredationAccumT1:F3}";
     }
 
@@ -98,12 +112,15 @@ public class StepRecord
                "Tier1Arctic,Tier1Common,Tier1Tropical," +
                "Tier2Arctic,Tier2Common,Tier2Tropical," +
                "EatenT1,TempDeathsT1,TempDeathsT2," +
+               "ConditionDeathsT1,ConditionDeathsT2," +
                "NaturalDeathsT1,NaturalDeathsT2," +
                "TotalDeaths," +
                "BirthsT1,BirthsT2," +
                "FedRateT2,AvgHuntingEff," +
+               "AvgConditionT1,AvgConditionT2," +
                "BirthAccumT1,BirthAccumT2," +
                "NaturalDeathAccumT1,NaturalDeathAccumT2," +
+               "ConditionDeathAccumT1,ConditionDeathAccumT2," +
                "PredationAccumT1";
     }
 }
@@ -220,11 +237,14 @@ public class SimulationRunner
         float eatenT1 = biologyRan ? Ecosystem.LastEatenT1 : 0f;
         float tempDeathsT1 = biologyRan ? Ecosystem.LastTempDeathsT1 : 0f;
         float tempDeathsT2 = biologyRan ? Ecosystem.LastTempDeathsT2 : 0f;
+        float conditionDeathsT1 = biologyRan ? Ecosystem.LastConditionDeathsT1 : 0f;
+        float conditionDeathsT2 = biologyRan ? Ecosystem.LastConditionDeathsT2 : 0f;
         float naturalDeathsT1 = biologyRan ? Ecosystem.LastNaturalDeathsT1 : 0f;
         float naturalDeathsT2 = biologyRan ? Ecosystem.LastNaturalDeathsT2 : 0f;
 
         // TotalDeaths = all death sources combined
         float totalDeaths = eatenT1 + tempDeathsT1 + tempDeathsT2 +
+                           conditionDeathsT1 + conditionDeathsT2 +
                            naturalDeathsT1 + naturalDeathsT2;
 
         var record = new StepRecord
@@ -252,6 +272,8 @@ public class SimulationRunner
             EatenT1 = (long)Math.Round(eatenT1),
             TempDeathsT1 = (long)Math.Round(tempDeathsT1),
             TempDeathsT2 = (long)Math.Round(tempDeathsT2),
+            ConditionDeathsT1 = (long)Math.Round(conditionDeathsT1),
+            ConditionDeathsT2 = (long)Math.Round(conditionDeathsT2),
             NaturalDeathsT1 = (long)Math.Round(naturalDeathsT1),
             NaturalDeathsT2 = (long)Math.Round(naturalDeathsT2),
             TotalDeaths = (long)Math.Round(totalDeaths),
@@ -264,11 +286,17 @@ public class SimulationRunner
             FedRateT2 = biologyRan ? Ecosystem.LastFedRateT2 : 0f,
             AvgHuntingEff = biologyRan ? Ecosystem.LastAvgHuntingEfficiency : 0f,
 
+            // Condition tracking
+            AvgConditionT1 = Ecosystem.AvgConditionT1,
+            AvgConditionT2 = Ecosystem.AvgConditionT2,
+
             // Accumulator tracking
             BirthAccumT1 = Ecosystem.BirthAccumT1,
             BirthAccumT2 = Ecosystem.BirthAccumT2,
             NaturalDeathAccumT1 = Ecosystem.NaturalDeathAccumT1,
             NaturalDeathAccumT2 = Ecosystem.NaturalDeathAccumT2,
+            ConditionDeathAccumT1 = Ecosystem.ConditionDeathAccumT1,
+            ConditionDeathAccumT2 = Ecosystem.ConditionDeathAccumT2,
             PredationAccumT1 = Ecosystem.PredationAccumT1
         };
 
@@ -392,6 +420,8 @@ public class SimulationRunner
         sb.AppendLine($"#config:temperature_bounds_max,{TempCalc.MaxTemp}");
         sb.AppendLine($"#config:use_carrying_capacity,{Ecosystem.UseCarryingCapacity.ToString().ToLower()}");
         sb.AppendLine($"#config:carrying_capacity_tier1,{Ecosystem.CarryingCapacityPerTier}");
+        sb.AppendLine($"#config:condition_drain_rate,{Ecosystem.ConditionDrainRate}");
+        sb.AppendLine($"#config:condition_recovery_rate,{Ecosystem.ConditionRecoveryRate}");
 
         sb.AppendLine("#");
         if (RunSpecies != null && RunSpecies.speciesList != null && RunSpecies.speciesList.Count > 0)

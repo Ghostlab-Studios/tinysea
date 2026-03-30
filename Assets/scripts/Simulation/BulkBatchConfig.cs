@@ -54,5 +54,7 @@ public class BulkBatchConfig
     public float TempMax;
     public bool UseCarryingCap;
     public float CarryingCapT1;
+    public float ConditionDrainRate = 0.15f;
+    public float ConditionRecoveryRate = 0.10f;
     public List<BulkSpeciesConfig> Species = new List<BulkSpeciesConfig>();
 }

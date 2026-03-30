@@ -26,6 +26,12 @@ public static class CsvBatchParser
         "use_carrying_cap", "carrying_cap_t1"
     };
 
+    // Optional global columns with defaults (backward compatible)
+    private static readonly string[] OPTIONAL_GLOBAL_COLUMNS =
+    {
+        "condition_drain_rate", "condition_recovery_rate"
+    };
+
     private static readonly string[] SPECIES_COLUMNS =
     {
         "name", "variant", "tier", "pop",
@@ -126,9 +132,16 @@ public static class CsvBatchParser
             return false;
         }
 
-        // Warn about unknown columns
+        // Warn about unknown columns (include optional columns as known)
         var knownColumns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var col in requiredColumns) knownColumns.Add(col);
+        foreach (var col in OPTIONAL_GLOBAL_COLUMNS) knownColumns.Add(col);
+        for (int s = 1; s <= speciesCount; s++)
+        {
+            string prefix = $"sp{s}_";
+            foreach (var col in OPTIONAL_SPECIES_COLUMNS)
+                knownColumns.Add(prefix + col);
+        }
         foreach (var kv in columnIndex)
         {
             if (!knownColumns.Contains(kv.Key))
@@ -165,6 +178,10 @@ public static class CsvBatchParser
             batch.TempMax = GetFloat(fields, columnIndex, "temp_max", rowNum, errors);
             batch.UseCarryingCap = GetBool(fields, columnIndex, "use_carrying_cap", rowNum, errors);
             batch.CarryingCapT1 = GetFloat(fields, columnIndex, "carrying_cap_t1", rowNum, errors);
+
+            // Optional global columns (backward compatible — missing columns use defaults)
+            batch.ConditionDrainRate = GetFloatOptional(fields, columnIndex, "condition_drain_rate", 0.15f);
+            batch.ConditionRecoveryRate = GetFloatOptional(fields, columnIndex, "condition_recovery_rate", 0.10f);
 
             // Parse species (dynamic N species — skip if name is empty)
             for (int s = 1; s <= speciesCount; s++)

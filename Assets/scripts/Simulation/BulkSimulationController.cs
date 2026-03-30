@@ -107,6 +107,8 @@ public class BulkSimulationController : MonoBehaviour
         float origTempMax = config.TemperatureBoundsMax;
         bool origUseCarry = config.UseCarryingCapacity;
         float origCarryT1 = config.CarryingCapacityTier1;
+        float origCondDrain = config.ConditionDrainRate;
+        float origCondRecovery = config.ConditionRecoveryRate;
         var origSpeciesList = new List<SpeciesData>(runSpecies.speciesList);
 
         var allFiles = new List<(string name, string content)>();
@@ -162,6 +164,8 @@ public class BulkSimulationController : MonoBehaviour
             config.TemperatureBoundsMax = batch.TempMax;
             config.UseCarryingCapacity = batch.UseCarryingCap;
             config.CarryingCapacityTier1 = batch.CarryingCapT1;
+            config.ConditionDrainRate = batch.ConditionDrainRate;
+            config.ConditionRecoveryRate = batch.ConditionRecoveryRate;
 
             // Override RunSpeciesList SO
             runSpecies.speciesList.Clear();
@@ -177,6 +181,8 @@ public class BulkSimulationController : MonoBehaviour
                 RandomSeed = config.RandomSeed,
                 UseCarryingCapacity = batch.UseCarryingCap,
                 CarryingCapacity = batch.CarryingCapT1,
+                ConditionDrainRate = batch.ConditionDrainRate,
+                ConditionRecoveryRate = batch.ConditionRecoveryRate,
                 BaseTemperature = batch.BaseTemp,
                 SeasonalAmplitude = batch.SeasonalAmp,
                 ClimateTrend = batch.ClimateTrend,
@@ -267,6 +273,8 @@ public class BulkSimulationController : MonoBehaviour
         config.TemperatureBoundsMax = origTempMax;
         config.UseCarryingCapacity = origUseCarry;
         config.CarryingCapacityTier1 = origCarryT1;
+        config.ConditionDrainRate = origCondDrain;
+        config.ConditionRecoveryRate = origCondRecovery;
         runSpecies.speciesList.Clear();
         runSpecies.speciesList.AddRange(origSpeciesList);
 

@@ -110,6 +110,10 @@ public class AggregateResults
     public bool UseCarryingCapacity;
     public float CarryingCapacity;
 
+    // Condition System
+    public float ConditionDrainRate;
+    public float ConditionRecoveryRate;
+
     // Temperature - Base
     public float BaseTemperature;
     public float SeasonalAmplitude;
@@ -247,6 +251,8 @@ public class AggregateResults
         sb.AppendLine($"# Base Temp,{BaseTemperature}C");
         sb.AppendLine($"# Climate Trend,{ClimateTrend}C/year");
         sb.AppendLine($"# Carrying Capacity,{(UseCarryingCapacity ? CarryingCapacity.ToString() : "Disabled")}");
+        sb.AppendLine($"# Condition Drain Rate,{ConditionDrainRate}");
+        sb.AppendLine($"# Condition Recovery Rate,{ConditionRecoveryRate}");
         sb.AppendLine();
 
         sb.AppendLine("=== SUMMARY ===");
@@ -379,7 +385,8 @@ public class AggregateResults
             InterannualVariation, VariabilityMagnitude, WarmingBias,
             Autocorrelated, DailyVariationRange, RandomnessGrowthRate,
             TemperatureBoundsMin, TemperatureBoundsMax,
-            RunSpecies
+            RunSpecies,
+            ConditionDrainRate, ConditionRecoveryRate
         );
     }
 
@@ -395,7 +402,8 @@ public class AggregateResults
             InterannualVariation, VariabilityMagnitude, WarmingBias,
             Autocorrelated, DailyVariationRange, RandomnessGrowthRate,
             TemperatureBoundsMin, TemperatureBoundsMax,
-            RunSpecies
+            RunSpecies,
+            ConditionDrainRate, ConditionRecoveryRate
         );
     }
 }
@@ -421,7 +429,8 @@ public static class ConfigExporter
             config.InterannualVariation, config.VariabilityMagnitude, config.WarmingBias,
             config.Autocorrelated, config.DailyVariationRange, config.RandomnessGrowthRate,
             config.TemperatureBoundsMin, config.TemperatureBoundsMax,
-            config.RunSpecies
+            config.RunSpecies,
+            config.ConditionDrainRate, config.ConditionRecoveryRate
         );
     }
 
@@ -439,7 +448,8 @@ public static class ConfigExporter
             config.InterannualVariation, config.VariabilityMagnitude, config.WarmingBias,
             config.Autocorrelated, config.DailyVariationRange, config.RandomnessGrowthRate,
             config.TemperatureBoundsMin, config.TemperatureBoundsMax,
-            config.RunSpecies
+            config.RunSpecies,
+            config.ConditionDrainRate, config.ConditionRecoveryRate
         );
     }
 
@@ -453,7 +463,8 @@ public static class ConfigExporter
         bool interannualVariation, float variabilityMagnitude, float warmingBias,
         bool autocorrelated, float dailyVariationRange, float randomnessGrowthRate,
         float temperatureBoundsMin, float temperatureBoundsMax,
-        RunSpeciesList runSpecies)
+        RunSpeciesList runSpecies,
+        float conditionDrainRate = 0.15f, float conditionRecoveryRate = 0.10f)
     {
         var sb = new System.Text.StringBuilder();
         sb.AppendLine("{");
@@ -473,6 +484,13 @@ public static class ConfigExporter
         sb.AppendLine("  \"carryingCapacity\": {");
         sb.AppendLine($"    \"enabled\": {useCarryingCapacity.ToString().ToLower()},");
         sb.AppendLine($"    \"tier1Limit\": {carryingCapacity}");
+        sb.AppendLine("  },");
+        sb.AppendLine();
+
+        // Condition system
+        sb.AppendLine("  \"conditionSystem\": {");
+        sb.AppendLine($"    \"drainRate\": {conditionDrainRate},");
+        sb.AppendLine($"    \"recoveryRate\": {conditionRecoveryRate}");
         sb.AppendLine("  },");
         sb.AppendLine();
 
@@ -555,7 +573,8 @@ public static class ConfigExporter
         bool interannualVariation, float variabilityMagnitude, float warmingBias,
         bool autocorrelated, float dailyVariationRange, float randomnessGrowthRate,
         float temperatureBoundsMin, float temperatureBoundsMax,
-        RunSpeciesList runSpecies)
+        RunSpeciesList runSpecies,
+        float conditionDrainRate = 0.15f, float conditionRecoveryRate = 0.10f)
     {
         var sb = new System.Text.StringBuilder();
 
@@ -573,6 +592,11 @@ public static class ConfigExporter
         sb.AppendLine("=== CARRYING CAPACITY ===");
         sb.AppendLine($"Enabled,{useCarryingCapacity.ToString().ToLower()}");
         sb.AppendLine($"Tier 1 Limit,{carryingCapacity}");
+        sb.AppendLine();
+
+        sb.AppendLine("=== CONDITION SYSTEM ===");
+        sb.AppendLine($"Condition Drain Rate,{conditionDrainRate}");
+        sb.AppendLine($"Condition Recovery Rate,{conditionRecoveryRate}");
         sb.AppendLine();
 
         sb.AppendLine("=== TEMPERATURE ===");

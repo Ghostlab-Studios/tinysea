@@ -33,6 +33,18 @@ public class SimulationInputUI : MonoBehaviour
     public TMP_InputField TemperatureBoundsMin;
     public TMP_InputField TemperatureBoundsMax;
 
+    [Header("=== CONDITION (HEALTH) SYSTEM ===")]
+
+    [Tooltip("How fast Condition drains toward poor performance.\n" +
+         "0.15 = ~8 days from full health to death threshold at suboptimal temps.\n" +
+         "Drain accelerates up to 5x near lethal limits.")]
+    public TMP_InputField ConditionDrainRate;
+
+    [Tooltip("How fast Condition recovers toward good performance.\n" +
+         "Slower than drain (asymmetric recovery).\n" +
+         "0.10 = ~10 good days to fully recover.")]
+    public TMP_InputField ConditionRecoveryRate;
+
     [Header("=== RUN SIMULATION ===")]
 
     [Tooltip("Maximum sustainable population for Tier 1.\n\n" +
@@ -75,6 +87,8 @@ public class SimulationInputUI : MonoBehaviour
         public float TemperatureBoundsMin;
         public float TemperatureBoundsMax;
         public float CarryingCapacityTier1;
+        public float ConditionDrainRate;
+        public float ConditionRecoveryRate;
         public int DaysPerScenario;
         public int NumberOfScenarios;
 
@@ -96,6 +110,8 @@ public class SimulationInputUI : MonoBehaviour
                 TemperatureBoundsMin = config.TemperatureBoundsMin,
                 TemperatureBoundsMax = config.TemperatureBoundsMax,
                 CarryingCapacityTier1 = config.CarryingCapacityTier1,
+                ConditionDrainRate = config.ConditionDrainRate,
+                ConditionRecoveryRate = config.ConditionRecoveryRate,
                 DaysPerScenario = config.DaysPerScenario,
                 NumberOfScenarios = config.NumberOfScenarios
             };
@@ -117,6 +133,8 @@ public class SimulationInputUI : MonoBehaviour
             config.TemperatureBoundsMin = TemperatureBoundsMin;
             config.TemperatureBoundsMax = TemperatureBoundsMax;
             config.CarryingCapacityTier1 = CarryingCapacityTier1;
+            config.ConditionDrainRate = ConditionDrainRate;
+            config.ConditionRecoveryRate = ConditionRecoveryRate;
             config.DaysPerScenario = DaysPerScenario;
             config.NumberOfScenarios = NumberOfScenarios;
         }
@@ -229,6 +247,10 @@ public class SimulationInputUI : MonoBehaviour
         SetFloat(TemperatureBoundsMax, config.TemperatureBoundsMax);
 
         SetFloat(CarryingCapacityTier1, config.CarryingCapacityTier1);
+
+        SetFloat(ConditionDrainRate, config.ConditionDrainRate);
+        SetFloat(ConditionRecoveryRate, config.ConditionRecoveryRate);
+
         SetInt(DaysPerScenarioInput, config.DaysPerScenario);
         SetInt(NumberOfScenariosInput, config.NumberOfScenarios);
     }
@@ -251,6 +273,8 @@ public class SimulationInputUI : MonoBehaviour
         float boundsMin = 0f;
         float boundsMax = 0f;
         float carryingCapacity = 0f;
+        float condDrain = 0f;
+        float condRecovery = 0f;
         int daysPerScenario = 0;
         int numberOfScenarios = 0;
 
@@ -267,6 +291,9 @@ public class SimulationInputUI : MonoBehaviour
         allValid &= TryReadFloat(TemperatureBoundsMin, out boundsMin);
         allValid &= TryReadFloat(TemperatureBoundsMax, out boundsMax);
         allValid &= TryReadFloat(CarryingCapacityTier1, out carryingCapacity);
+
+        allValid &= TryReadFloat(ConditionDrainRate, out condDrain);
+        allValid &= TryReadFloat(ConditionRecoveryRate, out condRecovery);
 
         allValid &= TryReadInt(DaysPerScenarioInput, out daysPerScenario, minValue: 1, maxValue: 182500);
         allValid &= TryReadInt(NumberOfScenariosInput, out numberOfScenarios, minValue: 1, maxValue: 100);
@@ -295,6 +322,8 @@ public class SimulationInputUI : MonoBehaviour
         config.TemperatureBoundsMax = boundsMax;
 
         config.CarryingCapacityTier1 = carryingCapacity;
+        config.ConditionDrainRate = condDrain;
+        config.ConditionRecoveryRate = condRecovery;
         config.DaysPerScenario = daysPerScenario;
         config.NumberOfScenarios = numberOfScenarios;
 
@@ -394,6 +423,8 @@ public class SimulationInputUI : MonoBehaviour
         SetFieldColor(TemperatureBoundsMin, ValidColor);
         SetFieldColor(TemperatureBoundsMax, ValidColor);
         SetFieldColor(CarryingCapacityTier1, ValidColor);
+        SetFieldColor(ConditionDrainRate, ValidColor);
+        SetFieldColor(ConditionRecoveryRate, ValidColor);
         SetFieldColor(DaysPerScenarioInput, ValidColor);
         SetFieldColor(NumberOfScenariosInput, ValidColor);
     }

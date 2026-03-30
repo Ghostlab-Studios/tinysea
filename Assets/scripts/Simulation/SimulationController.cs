@@ -129,6 +129,10 @@ public class SimulationController : MonoBehaviour
             UseCarryingCapacity = config.UseCarryingCapacity,
             CarryingCapacity = config.CarryingCapacityTier1,
 
+            // Condition system
+            ConditionDrainRate = config.ConditionDrainRate,
+            ConditionRecoveryRate = config.ConditionRecoveryRate,
+
             // Temperature - Base
             BaseTemperature = config.BaseTemperature,
             SeasonalAmplitude = config.SeasonalAmplitude,
@@ -257,6 +261,10 @@ public class SimulationController : MonoBehaviour
         // Apply carrying capacity settings
         runner.Ecosystem.UseCarryingCapacity = config.UseCarryingCapacity;
         runner.Ecosystem.CarryingCapacityPerTier = config.CarryingCapacityTier1;
+
+        // Apply condition system settings
+        runner.Ecosystem.ConditionDrainRate = config.ConditionDrainRate;
+        runner.Ecosystem.ConditionRecoveryRate = config.ConditionRecoveryRate;
 
         // Run the simulation
         runner.Run();

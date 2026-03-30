@@ -195,7 +195,7 @@ public class SimulationRunner
                 HasCrashed = true;
                 CrashDay = displayDay;
                 CrashTier = Ecosystem.GetCrashedTier();
-                Debug.LogWarning($"=== ECOSYSTEM CRASH on Day {displayDay} (Year {year}) - Tier {CrashTier} extinct ===");
+                Debug.LogWarning($"=== ECOSYSTEM CRASH on Day {displayDay} (Year {year}) - All populations extinct ===");
                 break;
             }
         }

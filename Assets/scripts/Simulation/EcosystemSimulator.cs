@@ -45,6 +45,7 @@ public class EcosystemSimulator
     private Dictionary<string, float> _naturalDeathAccumulators = new Dictionary<string, float>();
     private Dictionary<string, float> _predationAccumulators = new Dictionary<string, float>();
     private Dictionary<string, float> _thermalDeathAccumulators = new Dictionary<string, float>();
+    private Dictionary<string, float> _conditionDeathAccumulators = new Dictionary<string, float>();
 
     // ==================== POPULATION TRACKING ====================
     public float StartPopT1 { get; private set; } = 0f;
@@ -56,11 +57,13 @@ public class EcosystemSimulator
     // Tier 1
     public float LastEatenT1 { get; private set; } = 0f;
     public float LastTempDeathsT1 { get; private set; } = 0f;
+    public float LastConditionDeathsT1 { get; private set; } = 0f;
     public float LastNaturalDeathsT1 { get; private set; } = 0f;
     public float LastBirthsT1 { get; private set; } = 0f;
 
     // Tier 2
     public float LastTempDeathsT2 { get; private set; } = 0f;
+    public float LastConditionDeathsT2 { get; private set; } = 0f;
     public float LastNaturalDeathsT2 { get; private set; } = 0f;
     public float LastBirthsT2 { get; private set; } = 0f;
     public float LastFedRateT2 { get; private set; } = 1f;
@@ -68,6 +71,7 @@ public class EcosystemSimulator
 
     // Combined
     public float LastTotalDeaths => LastEatenT1 + LastTempDeathsT1 + LastTempDeathsT2 +
+                                    LastConditionDeathsT1 + LastConditionDeathsT2 +
                                     LastNaturalDeathsT1 + LastNaturalDeathsT2;
     public float LastTotalBirths => LastBirthsT1 + LastBirthsT2;
 
@@ -77,6 +81,14 @@ public class EcosystemSimulator
     public float NaturalDeathAccumT1 { get; private set; } = 0f;
     public float NaturalDeathAccumT2 { get; private set; } = 0f;
     public float PredationAccumT1 { get; private set; } = 0f;
+    public float ConditionDeathAccumT1 { get; private set; } = 0f;
+    public float ConditionDeathAccumT2 { get; private set; } = 0f;
+
+    // ==================== CONDITION (HEALTH) SYSTEM ====================
+    public float ConditionDrainRate { get; set; } = 0.15f;
+    public float ConditionRecoveryRate { get; set; } = 0.10f;
+    public float AvgConditionT1 { get; private set; } = 1f;
+    public float AvgConditionT2 { get; private set; } = 1f;
 
     // ==================== CARRYING CAPACITY (Soft Limit - Tier 1 Only) ====================
     public bool UseCarryingCapacity { get; set; } = true;
@@ -84,6 +96,8 @@ public class EcosystemSimulator
 
     // ==================== CONSTANTS ====================
     private const float MIN_ALIVE_POP = 1.0f;
+    private const float DRAIN_ACCEL_THRESHOLD = 0.2f;  // Performance below this accelerates drain
+    private const float DRAIN_ACCEL_MAX = 4f;           // Max acceleration multiplier (5× total at perf=0)
 
     public EcosystemSimulator(int seed = -1)
     {
@@ -143,7 +157,8 @@ public class EcosystemSimulator
                 Pmax = data.pmax,
                 CTminC = data.ctMinC,
                 CTmaxC = data.ctMaxC,
-                TemperatureDebuff = data.TemperatureDebuff
+                TemperatureDebuff = data.TemperatureDebuff,
+                Condition = 1.0f
             };
 
             Species.Add(simSpecies);
@@ -202,7 +217,8 @@ public class EcosystemSimulator
                 Pmax = data.pmax,
                 CTminC = data.ctMinC,
                 CTmaxC = data.ctMaxC,
-                TemperatureDebuff = data.TemperatureDebuff
+                TemperatureDebuff = data.TemperatureDebuff,
+                Condition = 1.0f
             };
 
             Species.Add(simSpecies);
@@ -234,6 +250,7 @@ public class EcosystemSimulator
         _naturalDeathAccumulators.Clear();
         _predationAccumulators.Clear();
         _thermalDeathAccumulators.Clear();
+        _conditionDeathAccumulators.Clear();
     }
 
     private void InitializeAccumulators(string fullName)
@@ -242,6 +259,7 @@ public class EcosystemSimulator
         _naturalDeathAccumulators[fullName] = 0f;
         _predationAccumulators[fullName] = 0f;
         _thermalDeathAccumulators[fullName] = 0f;
+        _conditionDeathAccumulators[fullName] = 0f;
     }
 
     /// <summary>
@@ -284,6 +302,8 @@ public class EcosystemSimulator
         LastEatenT1 = 0f;
         LastTempDeathsT1 = 0f;
         LastTempDeathsT2 = 0f;
+        LastConditionDeathsT1 = 0f;
+        LastConditionDeathsT2 = 0f;
         LastNaturalDeathsT1 = 0f;
         LastNaturalDeathsT2 = 0f;
         LastBirthsT1 = 0f;
@@ -318,29 +338,43 @@ public class EcosystemSimulator
             Debug.Log($"  {sp.FullName}: RawFinalPerf={sp.RawFinalPerformance:F3}, FinalPerf={sp.FinalPerformance:F3} (Raw={sp.RawThermalPerformance:F3}×Fed={sp.FedRate:F3}, Pmax={sp.Pmax:F2})");
         }
 
-        // ========== STEP 4: THERMAL DEATH ==========
-        Debug.Log("--- Step 4: Thermal Death ---");
+        // ========== STEP 4: UPDATE CONDITION (health/energy reserves) ==========
+        Debug.Log("--- Step 4: Update Condition ---");
+        foreach (var sp in Species)
+        {
+            UpdateCondition(sp);
+        }
+
+        // ========== STEP 5: THERMAL DEATH (instant kill at lethal limits) ==========
+        Debug.Log("--- Step 5: Thermal Death (Lethal Limits) ---");
         foreach (var sp in Species)
         {
             ApplyThermalDeath(sp);
         }
 
-        // ========== STEP 5: REPRODUCTION (with birth accumulator) ==========
-        Debug.Log("--- Step 5: Reproduction ---");
+        // ========== STEP 6: CONDITION DEATH (chronic stress/exhaustion) ==========
+        Debug.Log("--- Step 6: Condition Death ---");
+        foreach (var sp in Species)
+        {
+            ApplyConditionDeath(sp);
+        }
+
+        // ========== STEP 7: REPRODUCTION (with birth accumulator) ==========
+        Debug.Log("--- Step 7: Reproduction ---");
         foreach (var sp in Species)
         {
             ApplyReproduction(sp);
         }
 
-        // ========== STEP 6: NATURAL DEATH (with accumulator + performance scaling) ==========
-        Debug.Log("--- Step 6: Natural Death ---");
+        // ========== STEP 8: NATURAL DEATH (flat rate, no performance scaling) ==========
+        Debug.Log("--- Step 8: Natural Death ---");
         foreach (var sp in Species)
         {
             ApplyNaturalDeathWithAccumulator(sp);
         }
 
-        // ========== STEP 7: POPULATION ROUNDING ==========
-        Debug.Log("--- Step 7: Population Rounding ---");
+        // ========== STEP 9: POPULATION ROUNDING ==========
+        Debug.Log("--- Step 9: Population Rounding ---");
         foreach (var sp in Species)
         {
             float oldPop = sp.Population;
@@ -351,9 +385,10 @@ public class EcosystemSimulator
             }
         }
 
-        // Record end populations and accumulator totals
+        // Record end populations, condition averages, and accumulator totals
         EndPopT1 = GetTier1Population();
         EndPopT2 = GetTier2Population();
+        ComputeAverageCondition();
         UpdateAccumulatorTotals();
 
         Debug.Log($"  END: T1={EndPopT1:F0}, T2={EndPopT2:F0}");
@@ -738,13 +773,14 @@ public class EcosystemSimulator
 
     public bool HasCrashed()
     {
-        bool tier1Crashed = _tier1WasPopulated && GetTier1Population() == 0;
-        bool tier2Crashed = _tier2WasPopulated && GetTier2Population() == 0;
-        return tier1Crashed || tier2Crashed;
+        float totalPop = GetTier1Population() + GetTier2Population();
+        return totalPop == 0;
     }
 
     public int GetCrashedTier()
     {
+        // Report which tier went extinct (both are 0 if HasCrashed is true)
+        if (_tier1WasPopulated && GetTier1Population() == 0 && GetTier2Population() == 0) return 0; // all dead
         if (_tier1WasPopulated && GetTier1Population() == 0) return 1;
         if (_tier2WasPopulated && GetTier2Population() == 0) return 2;
         return -1;

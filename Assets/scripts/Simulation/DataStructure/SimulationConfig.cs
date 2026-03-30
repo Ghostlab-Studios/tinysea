@@ -49,6 +49,21 @@ public class SimulationConfig : ScriptableObject
     [Range(100, 100000)]
     public float CarryingCapacityTier1 = 5000f;
 
+    // ==================== CONDITION (HEALTH) SYSTEM ====================
+
+    [Header("=== CONDITION (HEALTH) SYSTEM ===")]
+    [Tooltip("How fast Condition drains toward poor performance.\n" +
+             "0.15 = ~8 days from full health to death threshold at suboptimal temps.\n" +
+             "Drain accelerates up to 5x near lethal limits.")]
+    [Range(0.01f, 1.0f)]
+    public float ConditionDrainRate = 0.15f;
+
+    [Tooltip("How fast Condition recovers toward good performance.\n" +
+             "Slower than drain (asymmetric recovery).\n" +
+             "0.10 = ~10 good days to fully recover.")]
+    [Range(0.01f, 1.0f)]
+    public float ConditionRecoveryRate = 0.10f;
+
     // ==================== TEMPERATURE SETTINGS ====================
 
     [Header("=== TEMPERATURE: BASE ===")]

@@ -11,7 +11,7 @@ using UnityEngine;
 /// 2. Feeding/Predation - With hunting efficiency + PREDATION ACCUMULATOR
 /// 3. Raw Final Performance - RawThermalPerf x FedRate (Condition drain target)
 /// 4. Update Condition - Drain/recover toward RawFinalPerformance (health buffer)
-/// 5. Final Performance - ThermalPerf x FedRate (Condition applied to births only, not threshold)
+/// 5. Final Performance - ThermalPerf x FedRate (Condition NOT used in reproduction)
 /// 6. Thermal Death - INSTANT kill at lethal limits (RawThermalPerf == 0)
 /// 7. Condition Death - When Condition less than DeathThreshold after chronic stress
 /// 8. Reproduction - With BIRTH ACCUMULATOR + Tier 1 penalty when no predators
@@ -388,12 +388,9 @@ public class EcosystemSimulator
         }
 
         // ========== STEP 5: FINAL PERFORMANCE ==========
-        // NOTE: Condition is intentionally NOT included here. FinalPerformance gates the
-        // reproduction threshold check (can species reproduce at all?), and including
-        // Condition created a cliff effect where small Condition drops (~0.5) pushed
-        // FinalPerf below ReproThreshold, completely locking out reproduction.
-        // Instead, Condition scales the birth COUNT in ApplyReproduction() — stressed
-        // species can still reproduce, just with fewer offspring.
+        // Condition is NOT included — it does not affect reproduction at all.
+        // Condition only governs condition-death (below DeathThreshold → DeathRate kill).
+        // FinalPerformance = ThermalPerf × FedRate, used for reproduction threshold + birth count.
         Debug.Log("--- Step 5: Final Performance ---");
         foreach (var sp in Species)
         {
@@ -720,11 +717,9 @@ public class EcosystemSimulator
     /// Apply reproduction with BIRTH ACCUMULATOR, Tier 1 penalty, and carrying capacity.
     /// CARRYING CAPACITY ONLY APPLIES TO TIER 1.
     ///
-    /// Condition (species health) scales the number of births but does NOT affect the
-    /// reproduction threshold. This means stressed species can still reproduce, just with
-    /// fewer offspring. Including Condition in FinalPerformance (and thus the threshold)
-    /// caused a cliff effect where even moderate health drops locked species out of
-    /// reproduction entirely, leading to guaranteed extinction spirals.
+    /// Condition does NOT affect reproduction at all — neither the threshold check nor
+    /// the birth count. Condition only governs condition-death (below 0.3 → 60% kill).
+    /// Newborn dilution still applies (newborns enter at NEWBORN_CONDITION = 0.5).
     /// </summary>
     private void ApplyReproduction(SimSpecies sp)
     {
@@ -740,11 +735,10 @@ public class EcosystemSimulator
             return;
         }
 
-        // Calculate base births — Condition scales birth count (stressed species have fewer offspring)
-        // Condition is applied here rather than in FinalPerformance to avoid blocking the
-        // reproduction threshold check. This way the threshold only depends on temperature
-        // and food (environmental factors), while Condition affects reproductive output.
-        float births = sp.Population * sp.FinalPerformance * sp.ReproductionMultiplier * BiologyStep * sp.Condition;
+        // Calculate base births — Condition does NOT affect birth rate.
+        // Condition only governs condition-death (threshold 0.3 → 60% kill).
+        // Newborn dilution still applies (newborns enter at NEWBORN_CONDITION).
+        float births = sp.Population * sp.FinalPerformance * sp.ReproductionMultiplier * BiologyStep;
 
         // Tier 1 penalty if no predators exist
         if (sp.Tier == 1)

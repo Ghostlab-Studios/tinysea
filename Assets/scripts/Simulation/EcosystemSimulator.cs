@@ -13,14 +13,14 @@ using UnityEngine;
 /// 4. Update Condition - Drain/recover toward RawFinalPerformance (health buffer)
 /// 5. Final Performance - ThermalPerf x FedRate (Condition NOT used in reproduction)
 /// 6. Thermal Death - INSTANT kill at lethal limits (RawThermalPerf == 0)
-/// 7. Condition Death - When Condition less than DeathThreshold after chronic stress
+/// 7. Condition Death - GRADUATED: severity scales with how far below threshold + survivor fitness boost
 /// 8. Reproduction - With BIRTH ACCUMULATOR + Tier 1 penalty when no predators
 /// 9. Natural Death - FLAT RATE + NATURAL DEATH ACCUMULATOR
 /// 10. Population Rounding - All populations become integers
 ///
 /// DEATH TYPES:
 /// - Thermal: Instant kill when beyond CTmin/CTmax (RawThermalPerf == 0)
-/// - Condition: Chronic stress — Condition drains on bad days, death when below threshold
+/// - Condition: GRADUATED — severity proportional to (threshold - condition) / threshold, survivors get fitness boost
 /// - Natural: Flat 2% rate — old age, disease, accidents (no performance scaling)
 /// - Predation: Tier 2 eats Tier 1 (unchanged)
 ///
@@ -678,9 +678,27 @@ public class EcosystemSimulator
     }
 
     /// <summary>
-    /// Apply condition-based death (chronic stress, exhaustion, starvation).
-    /// When Condition drops below DeathThreshold, species start dying at DeathRate.
-    /// This replaces the old suboptimal-temperature death mechanism.
+    /// Apply GRADUATED condition-based death (chronic stress, exhaustion, starvation).
+    ///
+    /// Instead of a binary cliff (below threshold → flat DeathRate kill), deaths are
+    /// proportional to how far below the threshold Condition has fallen:
+    ///
+    ///   severity = (DeathThreshold - Condition) / DeathThreshold    // 0 at threshold, 1 at zero
+    ///   rawDeaths = Population × severity × DeathRate × BiologyStep
+    ///
+    /// This models realistic population dynamics: barely below threshold = a few weak
+    /// individuals die; severely depleted = mass die-off. At Condition=0, the full
+    /// DeathRate applies (same maximum as the old system).
+    ///
+    /// SURVIVOR FITNESS BOOST: After deaths, the surviving population's Condition is
+    /// recalculated assuming the dead were the weakest members (condition ≈ 0):
+    ///
+    ///   new_condition = old_condition × old_population / new_population
+    ///
+    /// No new variables — this is conservation of the population's total health pool
+    /// distributed among fewer (healthier) survivors. This creates self-correction:
+    /// deaths push condition back toward the threshold, preventing death spirals.
+    ///
     /// Uses CONDITION DEATH ACCUMULATOR for fractional death tracking.
     /// </summary>
     private void ApplyConditionDeath(SimSpecies sp)
@@ -688,9 +706,11 @@ public class EcosystemSimulator
         if (sp.Population < MIN_ALIVE_POP) return;
         if (sp.Condition >= sp.DeathThreshold) return;
 
-        float rawDeaths = sp.Population * sp.DeathRate * BiologyStep;
+        // Graduated severity: 0 at threshold, 1 at condition=0
+        float severity = (sp.DeathThreshold - sp.Condition) / sp.DeathThreshold;
+        float rawDeaths = sp.Population * severity * sp.DeathRate * BiologyStep;
 
-        // Accumulator pattern — chronic decline, gradual
+        // Accumulator pattern — fractional deaths carry over between days
         _conditionDeathAccumulators[sp.FullName] += rawDeaths;
         float accumulated = _conditionDeathAccumulators[sp.FullName];
         int wholeDeaths = (int)Math.Floor(accumulated);
@@ -700,16 +720,26 @@ public class EcosystemSimulator
         if (wholeDeaths > 0)
         {
             float oldPop = sp.Population;
+            float oldCondition = sp.Condition;
             sp.Population = Math.Max(0f, sp.Population - wholeDeaths);
 
-            Debug.Log($"  {sp.FullName}: CONDITION DEATH - raw={rawDeaths:F2}, accum={accumulated:F2}, deaths={wholeDeaths} (Condition {sp.Condition:F3} < {sp.DeathThreshold}), Pop {oldPop:F0} → {sp.Population:F0}");
+            // Survivor fitness boost: the dead were the weakest (condition ≈ 0).
+            // Same total health pool, fewer individuals → higher average condition.
+            // This prevents death spirals by pushing condition back toward threshold.
+            if (sp.Population > 0f)
+            {
+                sp.Condition = oldCondition * oldPop / sp.Population;
+                sp.Condition = Math.Min(1f, sp.Condition); // Cap at 1.0
+            }
+
+            Debug.Log($"  {sp.FullName}: CONDITION DEATH - severity={severity:F3}, raw={rawDeaths:F2}, deaths={wholeDeaths}, Pop {oldPop:F0} → {sp.Population:F0}, Condition {oldCondition:F3} → {sp.Condition:F3}");
 
             if (sp.Tier == 1) LastConditionDeathsT1 += wholeDeaths;
             else if (sp.Tier == 2) LastConditionDeathsT2 += wholeDeaths;
         }
         else
         {
-            Debug.Log($"  {sp.FullName}: Condition death - raw={rawDeaths:F2}, accum={_conditionDeathAccumulators[sp.FullName]:F2} (no deaths yet, Condition {sp.Condition:F3} < {sp.DeathThreshold})");
+            Debug.Log($"  {sp.FullName}: Condition death - severity={severity:F3}, raw={rawDeaths:F2}, accum={_conditionDeathAccumulators[sp.FullName]:F2} (no whole deaths yet, Condition {sp.Condition:F3} < {sp.DeathThreshold})");
         }
     }
 

@@ -17,6 +17,8 @@ MonoBehaviour:
   NumberOfScenarios: 5
   UseCarryingCapacity: 1
   CarryingCapacityTier1: 5000
+  ConditionDrainRate: 0.3
+  ConditionRecoveryRate: 0.1
   BaseTemperature: 20
   SeasonalAmplitude: 10
   ClimateTrend: 1

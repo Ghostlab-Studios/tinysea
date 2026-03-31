@@ -544,6 +544,7 @@ public class SimulationRunner
         float tempSum = 0;
         float minTemp = float.MaxValue;
         float maxTemp = float.MinValue;
+        float condSumT1 = 0, condSumT2 = 0;
 
         foreach (var r in _records)
         {
@@ -554,6 +555,8 @@ public class SimulationRunner
             if (r.Tier1Pop < minT1 && r.Tier1Pop >= 1) minT1 = r.Tier1Pop;
             if (r.Tier2Pop > maxT2) maxT2 = r.Tier2Pop;
             if (r.Tier2Pop < minT2 && r.Tier2Pop >= 1) minT2 = r.Tier2Pop;
+            condSumT1 += r.AvgConditionT1;
+            condSumT2 += r.AvgConditionT2;
         }
 
         summary.MaxTier1Pop = maxT1;
@@ -563,6 +566,8 @@ public class SimulationRunner
         summary.AvgTemperature = tempSum / _records.Count;
         summary.MinTemperature = minTemp;
         summary.MaxTemperature = maxTemp;
+        summary.AvgConditionT1 = condSumT1 / _records.Count;
+        summary.AvgConditionT2 = condSumT2 / _records.Count;
 
         return summary;
     }
@@ -599,6 +604,10 @@ public class SimulationRunner
             AvgTemperature = summary?.AvgTemperature ?? 0,
             MinTemperature = summary?.MinTemperature ?? 0,
             MaxTemperature = summary?.MaxTemperature ?? 0,
+            AvgConditionT1 = summary?.AvgConditionT1 ?? 0,
+            AvgConditionT2 = summary?.AvgConditionT2 ?? 0,
+            FinalConditionT1 = _records.Count > 0 ? _records[_records.Count - 1].AvgConditionT1 : 0,
+            FinalConditionT2 = _records.Count > 0 ? _records[_records.Count - 1].AvgConditionT2 : 0,
             PopMean = popStats.Mean,
             PopMax = popStats.Max,
             PopMin = popStats.Min,
@@ -634,6 +643,8 @@ public class SimulationSummary
     public float AvgTemperature;
     public float MinTemperature;
     public float MaxTemperature;
+    public float AvgConditionT1;
+    public float AvgConditionT2;
 
     public override string ToString()
     {

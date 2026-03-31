@@ -113,7 +113,8 @@ public class EcosystemSimulator
     // ==================== CONSTANTS ====================
     private const float MIN_ALIVE_POP = 1.0f;
     private const float DRAIN_ACCEL_THRESHOLD = 0.2f;  // Performance below this accelerates drain
-    private const float DRAIN_ACCEL_MAX = 4f;           // Max acceleration multiplier (5x total at perf=0)
+    private const float DRAIN_ACCEL_MAX = 4f;           // Max acceleration multiplier (5× total at perf=0)
+    private const float NEWBORN_CONDITION = 0.5f;       // Condition value for newborn individuals (vulnerable)
 
     public EcosystemSimulator(int seed = -1)
     {
@@ -750,6 +751,14 @@ public class EcosystemSimulator
 
         float oldPop = sp.Population;
         sp.Population += wholeBirths;
+
+        // Dilute Condition: newborns drag down group average
+        if (wholeBirths > 0 && sp.Population > 0)
+        {
+            float oldCondition = sp.Condition;
+            sp.Condition = (oldPop * oldCondition + wholeBirths * NEWBORN_CONDITION) / sp.Population;
+            Debug.Log($"  {sp.FullName}: Condition diluted {oldCondition:F3} → {sp.Condition:F3} ({wholeBirths} newborns at {NEWBORN_CONDITION:F2})");
+        }
 
         Debug.Log($"  {sp.FullName}: +{births:F2} raw, accum={accumulated:F2}, actual={wholeBirths}, Pop {oldPop:F0} → {sp.Population:F0}");
 

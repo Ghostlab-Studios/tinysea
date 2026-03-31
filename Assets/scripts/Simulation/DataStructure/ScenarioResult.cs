@@ -43,6 +43,12 @@ public class ScenarioResult
     public float MinTemperature;
     public float MaxTemperature;
 
+    // Condition stats (averaged across all days)
+    public float AvgConditionT1;
+    public float AvgConditionT2;
+    public float FinalConditionT1;
+    public float FinalConditionT2;
+
     // Per-column population summary statistics (keyed by column name)
     public Dictionary<string, double> PopMean;
     public Dictionary<string, long> PopMax;
@@ -151,6 +157,12 @@ public class AggregateResults
     public float CrashRate;
     public float AvgCrashDay;
 
+    // Condition stats (across scenarios)
+    public float AvgConditionT1;   // Grand mean of per-scenario avg condition
+    public float AvgConditionT2;
+    public float AvgFinalConditionT1;  // Mean final condition (survived only)
+    public float AvgFinalConditionT2;
+
     // Individual results
     public List<ScenarioResult> Scenarios = new List<ScenarioResult>();
 
@@ -168,6 +180,8 @@ public class AggregateResults
 
         float sumT1 = 0, sumT2 = 0;
         float sumCrashDay = 0;
+        float sumCondT1 = 0, sumCondT2 = 0;
+        float sumFinalCondT1 = 0, sumFinalCondT2 = 0;
         int survivedCount = 0;
         int crashedCount = 0;
 
@@ -178,6 +192,10 @@ public class AggregateResults
 
         foreach (var scenario in Scenarios)
         {
+            // Condition stats across ALL scenarios (crashed + survived)
+            sumCondT1 += scenario.AvgConditionT1;
+            sumCondT2 += scenario.AvgConditionT2;
+
             if (scenario.Crashed)
             {
                 CrashedScenarios++;
@@ -191,6 +209,8 @@ public class AggregateResults
 
                 sumT1 += scenario.FinalTier1Pop;
                 sumT2 += scenario.FinalTier2Pop;
+                sumFinalCondT1 += scenario.FinalConditionT1;
+                sumFinalCondT2 += scenario.FinalConditionT2;
 
                 if (scenario.FinalTier1Pop < MinFinalTier1Pop) MinFinalTier1Pop = scenario.FinalTier1Pop;
                 if (scenario.FinalTier1Pop > MaxFinalTier1Pop) MaxFinalTier1Pop = scenario.FinalTier1Pop;
@@ -203,12 +223,18 @@ public class AggregateResults
         {
             AvgFinalTier1Pop = sumT1 / survivedCount;
             AvgFinalTier2Pop = sumT2 / survivedCount;
+            AvgFinalConditionT1 = sumFinalCondT1 / survivedCount;
+            AvgFinalConditionT2 = sumFinalCondT2 / survivedCount;
         }
 
         if (crashedCount > 0)
         {
             AvgCrashDay = sumCrashDay / crashedCount;
         }
+
+        // Condition averages across ALL scenarios
+        AvgConditionT1 = sumCondT1 / TotalScenarios;
+        AvgConditionT2 = sumCondT2 / TotalScenarios;
 
         CrashRate = (float)CrashedScenarios / TotalScenarios;
 
@@ -273,6 +299,13 @@ public class AggregateResults
         sb.AppendLine($"Max Final T1,{MaxFinalTier1Pop}");
         sb.AppendLine($"Min Final T2,{MinFinalTier2Pop}");
         sb.AppendLine($"Max Final T2,{MaxFinalTier2Pop}");
+        sb.AppendLine();
+
+        sb.AppendLine("=== CONDITION STATS ===");
+        sb.AppendLine($"Avg Condition T1 (All Scenarios),{AvgConditionT1:F3}");
+        sb.AppendLine($"Avg Condition T2 (All Scenarios),{AvgConditionT2:F3}");
+        sb.AppendLine($"Avg Final Condition T1 (Survived),{AvgFinalConditionT1:F3}");
+        sb.AppendLine($"Avg Final Condition T2 (Survived),{AvgFinalConditionT2:F3}");
         sb.AppendLine();
 
         sb.AppendLine("=== INDIVIDUAL SCENARIOS ===");

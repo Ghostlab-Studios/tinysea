@@ -322,8 +322,11 @@ public class SimulationInputUI : MonoBehaviour
         config.TemperatureBoundsMax = boundsMax;
 
         config.CarryingCapacityTier1 = carryingCapacity;
-        config.ConditionDrainRate = condDrain;
-        config.ConditionRecoveryRate = condRecovery;
+
+        // Only overwrite condition fields if their UI fields are assigned
+        if (ConditionDrainRate != null) config.ConditionDrainRate = condDrain;
+        if (ConditionRecoveryRate != null) config.ConditionRecoveryRate = condRecovery;
+
         config.DaysPerScenario = daysPerScenario;
         config.NumberOfScenarios = numberOfScenarios;
 
@@ -357,7 +360,9 @@ public class SimulationInputUI : MonoBehaviour
 
         if (field == null)
         {
-            return false;
+            // Unassigned field — skip validation, keep config default
+            Debug.Log("SimulationInputUI: A float input field is not assigned in Inspector — using config default.");
+            return true;
         }
 
         string s = field.text;
@@ -381,7 +386,9 @@ public class SimulationInputUI : MonoBehaviour
 
         if (field == null)
         {
-            return false;
+            // Unassigned field — skip validation, keep config default
+            Debug.Log("SimulationInputUI: An int input field is not assigned in Inspector — using config default.");
+            return true;
         }
 
         string s = field.text;

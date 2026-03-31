@@ -125,7 +125,12 @@ public class EcosystemSimulator
     private const float MAX_HUNTING_SUCCESS = 1.0f;         // Ceiling for hunting success
 
     // --- Scarcity ---
-    private const float SCARCITY_SATISFIED_RATIO = 8f;      // Prey per predator for full FedRate
+    // Ratio-dependent functional response: predators need many prey per capita due to
+    // hunting failure, search time, and intraspecific competition (Arditi & Ginzburg 1989).
+    // Cury et al. (2011, Science) found predator success degrades below ~1/3 max prey biomass.
+    // At 15:1, FedRate starts declining early enough to prevent predator overshoot-and-collapse
+    // (Rosenzweig's paradox of enrichment). Previously 3 then 8; raised to 15 for stability.
+    private const float SCARCITY_SATISFIED_RATIO = 15f;     // Prey per predator for full FedRate
     private const float SCARCITY_MIN_FED = 0.20f;           // Minimum FedRate at zero prey
 
     // --- Reproduction ---
@@ -596,10 +601,13 @@ public class EcosystemSimulator
 
     /// <summary>
     /// Calculate FedRate multiplier based on prey availability per predator.
-    /// Proportional scaling centered on prey need.
+    /// Models ratio-dependent functional response (Arditi & Ginzburg 1989):
+    /// predators need sufficient prey per capita for successful hunting.
     ///
-    /// At SCARCITY_SATISFIED_RATIO (8 prey/pred) -> FedRate = 1.0 (fully satisfied).
-    /// Linearly scales down to SCARCITY_MIN_FED at 0 prey. No penalty above threshold.
+    /// At SCARCITY_SATISFIED_RATIO (15 prey/pred) → FedRate = 1.0 (fully satisfied).
+    /// Linearly scales down to SCARCITY_MIN_FED (0.20) at 0 prey.
+    /// This early engagement prevents predator overshoot by slowing T2 growth
+    /// well before prey are critically depleted.
     /// </summary>
     private float CalculateScarcityMultiplier(float preyPerPredator)
     {
@@ -679,6 +687,11 @@ public class EcosystemSimulator
 
     /// <summary>
     /// Apply GRADUATED condition-based death (chronic stress, exhaustion, starvation).
+    ///
+    /// Ecological basis: Casini et al. (2016) established critical condition thresholds
+    /// for Baltic cod; Dutil & Lambert (2000) showed starvation mortality is continuous,
+    /// not binary. Booth & Hixon (1999) found survivorship of well-fed reef fish was
+    /// double that of poorly-fed fish — mortality scales with condition severity.
     ///
     /// Instead of a binary cliff (below threshold → flat DeathRate kill), deaths are
     /// proportional to how far below the threshold Condition has fallen:

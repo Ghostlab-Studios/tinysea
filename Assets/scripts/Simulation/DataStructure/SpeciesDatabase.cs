@@ -76,19 +76,19 @@ public class SpeciesData
     public string description;
 
     [Header("Thermal Curve Parameters (Kelvin)")]
-    public float optimalTempK = 293.15f;    // 20°C default
-    public float arrhenBreadth = 5273.15f;
-    public float arrhenLower = 10273.15f;
-    public float arrhenUpper = 21273.15f;
-    public float lowerBoundK = 285.15f;     // 12°C default
-    public float upperBoundK = 295.15f;     // 22°C default
+    public float optimalTempK = 297.0f;     // 24°C default (Common)
+    public float arrhenBreadth = 8000.0f;
+    public float arrhenLower = 3000.0f;
+    public float arrhenUpper = 35000.0f;
+    public float lowerBoundK = 296.0f;      // 23°C default (Common)
+    public float upperBoundK = 298.0f;      // 25°C default (Common)
 
     [Header("Thermal Curve - Peak & Lethal Limits")]
     [Tooltip("Maximum performance at optimal temperature (0-1). Scales the curve output.")]
     [Range(0f, 1f)]
-    public float pmax = 1.0f;
+    public float pmax = 0.65f;
     [Tooltip("Critical thermal minimum in Celsius. Below this, performance = 0.")]
-    public float ctMinC = -5.0f;
+    public float ctMinC = 0.0f;
     [Tooltip("Critical thermal maximum in Celsius. Above this, performance = 0.")]
     public float ctMaxC = 40.0f;
 
@@ -102,18 +102,18 @@ public class SpeciesData
         switch (variant)
         {
             case SpeciesVariant.Tropical:
-                pmax = 1.0f;
+                pmax = 0.85f;
                 ctMinC = 0f;
-                ctMaxC = 80f;
+                ctMaxC = 40f;
                 break;
             case SpeciesVariant.Arctic:
-                pmax = 1.0f;
-                ctMinC = -30f;
-                ctMaxC = 20f;
+                pmax = 0.85f;
+                ctMinC = 0f;
+                ctMaxC = 40f;
                 break;
             default: // Common and Custom
-                pmax = 0.9f;
-                ctMinC = -5f;
+                pmax = 0.65f;
+                ctMinC = 0f;
                 ctMaxC = 40f;
                 break;
         }
@@ -178,11 +178,14 @@ public class SpeciesDatabase : ScriptableObject
             naturalDeathVariance: 0.01f,
             huntingEfficiency: 1.0f,
             huntingVariance: 0f,
-            optimalK: 293.15f,      // 20°C
-            lowerBound: 285.15f,    // 12°C
-            upperBound: 295.15f,    // 22°C
-            pmax: 0.9f,
-            ctMinC: -5f,
+            optimalK: 297.0f,       // 24°C
+            arrhenBreadth: 8000.0f,
+            arrhenLower: 3000.0f,
+            arrhenUpper: 35000.0f,
+            lowerBound: 296.0f,     // 23°C
+            upperBound: 298.0f,     // 25°C
+            pmax: 0.65f,
+            ctMinC: 0f,
             ctMaxC: 40f
         );
 
@@ -202,12 +205,15 @@ public class SpeciesDatabase : ScriptableObject
             naturalDeathVariance: 0.01f,
             huntingEfficiency: 1.0f,
             huntingVariance: 0f,
-            optimalK: 308.65f,      // 35.5°C
-            lowerBound: 300.15f,    // 27°C
-            upperBound: 310.15f,    // 37°C
-            pmax: 1.0f,
+            optimalK: 303.0f,       // 30°C
+            arrhenBreadth: 4000.0f,
+            arrhenLower: 15827.0f,
+            arrhenUpper: 35000.0f,
+            lowerBound: 302.9f,     // 29.75°C
+            upperBound: 303.1f,     // 29.95°C
+            pmax: 0.85f,
             ctMinC: 0f,
-            ctMaxC: 80f
+            ctMaxC: 40f
         );
 
         AddSpecies(
@@ -226,12 +232,15 @@ public class SpeciesDatabase : ScriptableObject
             naturalDeathVariance: 0.01f,
             huntingEfficiency: 1.0f,
             huntingVariance: 0f,
-            optimalK: 278.15f,      // 5°C
-            lowerBound: 270.15f,    // -3°C
-            upperBound: 280.15f,    // 7°C
-            pmax: 1.0f,
-            ctMinC: -30f,
-            ctMaxC: 20f
+            optimalK: 291.0f,       // 18°C
+            arrhenBreadth: 4000.0f,
+            arrhenLower: 13974.0f,
+            arrhenUpper: 35000.0f,
+            lowerBound: 290.9f,     // 17.75°C
+            upperBound: 291.1f,     // 17.95°C
+            pmax: 0.85f,
+            ctMinC: 0f,
+            ctMaxC: 40f
         );
 
         // ===== SHEPLIK (Tier 2 - Predator) =====
@@ -247,18 +256,21 @@ public class SpeciesDatabase : ScriptableObject
             eating: 1.5f,
             repro: 0.1f,
             deathThresh: 0.3f,
-            deathRate: 0.3f,
+            deathRate: 0.6f,
             minDeaths: 1f,
             reproThresh: 0.25f,
             naturalDeathRate: 0.02f,
             naturalDeathVariance: 0.01f,
             huntingEfficiency: 0.75f,
             huntingVariance: 0.15f,
-            optimalK: 293.15f,      // 20°C
-            lowerBound: 285.15f,    // 12°C
-            upperBound: 295.15f,    // 22°C
-            pmax: 0.9f,
-            ctMinC: -5f,
+            optimalK: 297.0f,       // 24°C
+            arrhenBreadth: 8000.0f,
+            arrhenLower: 3000.0f,
+            arrhenUpper: 35000.0f,
+            lowerBound: 296.0f,     // 23°C
+            upperBound: 298.0f,     // 25°C
+            pmax: 0.65f,
+            ctMinC: 0f,
             ctMaxC: 40f
         );
 
@@ -271,19 +283,22 @@ public class SpeciesDatabase : ScriptableObject
             eating: 1.5f,
             repro: 0.1f,
             deathThresh: 0.3f,
-            deathRate: 0.3f,
+            deathRate: 0.6f,
             minDeaths: 1f,
             reproThresh: 0.25f,
             naturalDeathRate: 0.02f,
             naturalDeathVariance: 0.01f,
             huntingEfficiency: 0.75f,
             huntingVariance: 0.15f,
-            optimalK: 308.65f,      // 35.5°C
-            lowerBound: 300.15f,    // 27°C
-            upperBound: 310.15f,    // 37°C
-            pmax: 1.0f,
+            optimalK: 303.0f,       // 30°C
+            arrhenBreadth: 4000.0f,
+            arrhenLower: 15827.0f,
+            arrhenUpper: 35000.0f,
+            lowerBound: 302.9f,     // 29.75°C
+            upperBound: 303.1f,     // 29.95°C
+            pmax: 0.85f,
             ctMinC: 0f,
-            ctMaxC: 80f
+            ctMaxC: 40f
         );
 
         AddSpecies(
@@ -295,19 +310,22 @@ public class SpeciesDatabase : ScriptableObject
             eating: 1.5f,
             repro: 0.1f,
             deathThresh: 0.3f,
-            deathRate: 0.3f,
+            deathRate: 0.6f,
             minDeaths: 1f,
             reproThresh: 0.25f,
             naturalDeathRate: 0.02f,
             naturalDeathVariance: 0.01f,
             huntingEfficiency: 0.75f,
             huntingVariance: 0.15f,
-            optimalK: 278.15f,      // 5°C
-            lowerBound: 270.15f,    // -3°C
-            upperBound: 280.15f,    // 7°C
-            pmax: 1.0f,
-            ctMinC: -30f,
-            ctMaxC: 20f
+            optimalK: 291.0f,       // 18°C
+            arrhenBreadth: 4000.0f,
+            arrhenLower: 13974.0f,
+            arrhenUpper: 35000.0f,
+            lowerBound: 290.9f,     // 17.75°C
+            upperBound: 291.1f,     // 17.95°C
+            pmax: 0.85f,
+            ctMinC: 0f,
+            ctMaxC: 40f
         );
 
         EditorUtility.SetDirty(this);
@@ -323,7 +341,8 @@ public class SpeciesDatabase : ScriptableObject
                            float minDeaths, float reproThresh,
                            float naturalDeathRate, float naturalDeathVariance,
                            float huntingEfficiency, float huntingVariance,
-                           float optimalK, float lowerBound, float upperBound,
+                           float optimalK, float arrhenBreadth, float arrhenLower, float arrhenUpper,
+                           float lowerBound, float upperBound,
                            float pmax, float ctMinC, float ctMaxC)
     {
         var data = new SpeciesData
@@ -346,9 +365,9 @@ public class SpeciesDatabase : ScriptableObject
             huntingVariance = huntingVariance,
             // Thermal parameters
             optimalTempK = optimalK,
-            arrhenBreadth = 5273.15f,
-            arrhenLower = 10273.15f,
-            arrhenUpper = 21273.15f,
+            arrhenBreadth = arrhenBreadth,
+            arrhenLower = arrhenLower,
+            arrhenUpper = arrhenUpper,
             lowerBoundK = lowerBound,
             upperBoundK = upperBound,
             // Peak & lethal limits
@@ -383,36 +402,38 @@ public class SpeciesDatabase : ScriptableObject
             data.minimumDeaths = 1f;
             data.reproThreshold = 0.25f;
             data.TemperatureDebuff = 0f;
-            data.arrhenBreadth = 5273.15f;
-            data.arrhenLower = 10273.15f;
-            data.arrhenUpper = 21273.15f;
+            data.ctMinC = 0f;
+            data.ctMaxC = 40f;
 
             // --- Variant-based defaults (thermal params) ---
             switch (data.variant)
             {
                 case SpeciesVariant.Common:
-                    data.optimalTempK = 293.15f;
-                    data.lowerBoundK = 285.15f;
-                    data.upperBoundK = 295.15f;
-                    data.pmax = 0.9f;
-                    data.ctMinC = -5f;
-                    data.ctMaxC = 40f;
+                    data.optimalTempK = 297.0f;
+                    data.arrhenBreadth = 8000.0f;
+                    data.arrhenLower = 3000.0f;
+                    data.arrhenUpper = 35000.0f;
+                    data.lowerBoundK = 296.0f;
+                    data.upperBoundK = 298.0f;
+                    data.pmax = 0.65f;
                     break;
                 case SpeciesVariant.Tropical:
-                    data.optimalTempK = 308.65f;
-                    data.lowerBoundK = 300.15f;
-                    data.upperBoundK = 310.15f;
-                    data.pmax = 1.0f;
-                    data.ctMinC = 0f;
-                    data.ctMaxC = 80f;
+                    data.optimalTempK = 303.0f;
+                    data.arrhenBreadth = 4000.0f;
+                    data.arrhenLower = 15827.0f;
+                    data.arrhenUpper = 35000.0f;
+                    data.lowerBoundK = 302.9f;
+                    data.upperBoundK = 303.1f;
+                    data.pmax = 0.85f;
                     break;
                 case SpeciesVariant.Arctic:
-                    data.optimalTempK = 278.15f;
-                    data.lowerBoundK = 270.15f;
-                    data.upperBoundK = 280.15f;
-                    data.pmax = 1.0f;
-                    data.ctMinC = -30f;
-                    data.ctMaxC = 20f;
+                    data.optimalTempK = 291.0f;
+                    data.arrhenBreadth = 4000.0f;
+                    data.arrhenLower = 13974.0f;
+                    data.arrhenUpper = 35000.0f;
+                    data.lowerBoundK = 290.9f;
+                    data.upperBoundK = 291.1f;
+                    data.pmax = 0.85f;
                     break;
                 default:
                     Debug.LogWarning($"Skipping thermal reset for Custom variant: {data.displayName}");
@@ -444,7 +465,7 @@ public class SpeciesDatabase : ScriptableObject
                     data.tier = 1;
                     data.eatingAmount = 1.5f;
                     data.reproductionMultiplier = 0.1f;
-                    data.deathRate = 0.3f;
+                    data.deathRate = 0.6f;
                     data.naturalDeathRate = 0.02f;
                     data.naturalDeathVariance = 0.01f;
                     data.huntingEfficiency = 0.75f;

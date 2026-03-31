@@ -39,14 +39,14 @@ MonoBehaviour:
     temperatureThresholdText: High
     reproductionRateText: Low
     description: Hexapod - Common variant
-    optimalTempK: 293.15
-    arrhenBreadth: 5273.15
-    arrhenLower: 10273.15
-    arrhenUpper: 21273.15
-    lowerBoundK: 285.15
-    upperBoundK: 295.15
+    optimalTempK: 297
+    arrhenBreadth: 8000
+    arrhenLower: 3000
+    arrhenUpper: 35000
+    lowerBoundK: 296
+    upperBoundK: 298
     pmax: 0.65
-    ctMinC: -5
+    ctMinC: 0
     ctMaxC: 40
   - index: 1
     speciesName: 0
@@ -74,15 +74,15 @@ MonoBehaviour:
     temperatureThresholdText: High
     reproductionRateText: Low
     description: Hexapod - Tropical variant
-    optimalTempK: 308.65
-    arrhenBreadth: 5273.15
-    arrhenLower: 10273.15
-    arrhenUpper: 21273.15
-    lowerBoundK: 300.15
-    upperBoundK: 310.15
+    optimalTempK: 303
+    arrhenBreadth: 4000
+    arrhenLower: 15827
+    arrhenUpper: 35000
+    lowerBoundK: 302.9
+    upperBoundK: 303.1
     pmax: 0.85
     ctMinC: 0
-    ctMaxC: 80
+    ctMaxC: 40
   - index: 2
     speciesName: 0
     variant: 2
@@ -109,15 +109,15 @@ MonoBehaviour:
     temperatureThresholdText: High
     reproductionRateText: Low
     description: Hexapod - Arctic variant
-    optimalTempK: 278.15
-    arrhenBreadth: 5273.15
-    arrhenLower: 10273.15
-    arrhenUpper: 21273.15
-    lowerBoundK: 270.15
-    upperBoundK: 280.15
+    optimalTempK: 291
+    arrhenBreadth: 4000
+    arrhenLower: 13974
+    arrhenUpper: 35000
+    lowerBoundK: 290.9
+    upperBoundK: 291.1
     pmax: 0.85
-    ctMinC: -30
-    ctMaxC: 20
+    ctMinC: 0
+    ctMaxC: 40
   - index: 4
     speciesName: 3
     variant: 1
@@ -128,7 +128,7 @@ MonoBehaviour:
     eatingAmount: 1.5
     reproductionMultiplier: 0.1
     deathThreshold: 0.3
-    deathRate: 0.3
+    deathRate: 0.6
     TemperatureDebuff: 0
     minimumDeaths: 1
     reproThreshold: 0.25
@@ -144,15 +144,15 @@ MonoBehaviour:
     temperatureThresholdText: High
     reproductionRateText: Low
     description: Sheplik - Tropical variant
-    optimalTempK: 308.65
-    arrhenBreadth: 5273.15
-    arrhenLower: 10273.15
-    arrhenUpper: 21273.15
-    lowerBoundK: 300.15
-    upperBoundK: 310.15
+    optimalTempK: 303
+    arrhenBreadth: 4000
+    arrhenLower: 15827
+    arrhenUpper: 35000
+    lowerBoundK: 302.9
+    upperBoundK: 303.1
     pmax: 0.85
     ctMinC: 0
-    ctMaxC: 80
+    ctMaxC: 40
   - index: 5
     speciesName: 3
     variant: 2
@@ -163,7 +163,7 @@ MonoBehaviour:
     eatingAmount: 1.5
     reproductionMultiplier: 0.1
     deathThreshold: 0.3
-    deathRate: 0.3
+    deathRate: 0.6
     TemperatureDebuff: 0
     minimumDeaths: 1
     reproThreshold: 0.25
@@ -179,15 +179,15 @@ MonoBehaviour:
     temperatureThresholdText: High
     reproductionRateText: Low
     description: Sheplik - Arctic variant
-    optimalTempK: 278.15
-    arrhenBreadth: 5273.15
-    arrhenLower: 10273.15
-    arrhenUpper: 21273.15
-    lowerBoundK: 270.15
-    upperBoundK: 280.15
+    optimalTempK: 291
+    arrhenBreadth: 4000
+    arrhenLower: 13974
+    arrhenUpper: 35000
+    lowerBoundK: 290.9
+    upperBoundK: 291.1
     pmax: 0.85
-    ctMinC: -30
-    ctMaxC: 20
+    ctMinC: 0
+    ctMaxC: 40
   - index: 3
     speciesName: 3
     variant: 0
@@ -198,7 +198,7 @@ MonoBehaviour:
     eatingAmount: 1.5
     reproductionMultiplier: 0.1
     deathThreshold: 0.3
-    deathRate: 0.3
+    deathRate: 0.6
     TemperatureDebuff: 0
     minimumDeaths: 1
     reproThreshold: 0.25
@@ -214,12 +214,12 @@ MonoBehaviour:
     temperatureThresholdText: High
     reproductionRateText: Low
     description: Sheplik - Common variant
-    optimalTempK: 293.15
-    arrhenBreadth: 5273.15
-    arrhenLower: 10273.15
-    arrhenUpper: 21273.15
-    lowerBoundK: 285.15
-    upperBoundK: 295.15
+    optimalTempK: 297
+    arrhenBreadth: 8000
+    arrhenLower: 3000
+    arrhenUpper: 35000
+    lowerBoundK: 296
+    upperBoundK: 298
     pmax: 0.65
-    ctMinC: -5
+    ctMinC: 0
     ctMaxC: 40

@@ -6,16 +6,17 @@ using UnityEngine;
 /// <summary>
 /// TinySea Ecosystem Simulator v6
 ///
-/// BIOLOGY SEQUENCE (9 steps):
+/// BIOLOGY SEQUENCE (10 steps):
 /// 1. Thermal Performance - Arrhenius formula
 /// 2. Feeding/Predation - With hunting efficiency + PREDATION ACCUMULATOR
-/// 3. Final Performance - ThermalPerf × FedRate
+/// 3. Raw Final Performance - RawThermalPerf x FedRate (Condition drain target)
 /// 4. Update Condition - Drain/recover toward RawFinalPerformance (health buffer)
-/// 5. Thermal Death - INSTANT kill at lethal limits (RawThermalPerf == 0)
-/// 6. Condition Death - When Condition less than DeathThreshold after chronic stress
-/// 7. Reproduction - With BIRTH ACCUMULATOR + Tier 1 penalty when no predators
-/// 8. Natural Death - FLAT RATE + NATURAL DEATH ACCUMULATOR
-/// 9. Population Rounding - All populations become integers
+/// 5. Final Performance - ThermalPerf x FedRate (Condition applied to births only, not threshold)
+/// 6. Thermal Death - INSTANT kill at lethal limits (RawThermalPerf == 0)
+/// 7. Condition Death - When Condition less than DeathThreshold after chronic stress
+/// 8. Reproduction - With BIRTH ACCUMULATOR + Tier 1 penalty when no predators
+/// 9. Natural Death - FLAT RATE + NATURAL DEATH ACCUMULATOR
+/// 10. Population Rounding - All populations become integers
 ///
 /// DEATH TYPES:
 /// - Thermal: Instant kill when beyond CTmin/CTmax (RawThermalPerf == 0)
@@ -112,9 +113,23 @@ public class EcosystemSimulator
 
     // ==================== CONSTANTS ====================
     private const float MIN_ALIVE_POP = 1.0f;
-    private const float DRAIN_ACCEL_THRESHOLD = 0.2f;  // Performance below this accelerates drain
-    private const float DRAIN_ACCEL_MAX = 4f;           // Max acceleration multiplier (5× total at perf=0)
-    private const float NEWBORN_CONDITION = 0.5f;       // Condition value for newborn individuals (vulnerable)
+    private const float DRAIN_ACCEL_THRESHOLD = 0.2f;      // Performance below this accelerates drain
+    private const float DRAIN_ACCEL_MAX = 4f;               // Max acceleration multiplier (5x total at perf=0)
+    private const float NEWBORN_CONDITION = 0.5f;           // Condition value for newborn individuals (vulnerable)
+
+    // --- Hunting Bonus ---
+    private const float HUNTING_BALANCED_RATIO = 10f;       // Prey:predator ratio considered balanced
+    private const float HUNTING_MAX_BONUS = 0.20f;          // Maximum hunting efficiency bonus/penalty
+    private const float HUNTING_SCALE_PER_DECADE = 0.15f;   // Efficiency change per 10x ratio shift
+    private const float MIN_HUNTING_SUCCESS = 0.05f;        // Floor for hunting success after all modifiers
+    private const float MAX_HUNTING_SUCCESS = 1.0f;         // Ceiling for hunting success
+
+    // --- Scarcity ---
+    private const float SCARCITY_SATISFIED_RATIO = 8f;      // Prey per predator for full FedRate
+    private const float SCARCITY_MIN_FED = 0.20f;           // Minimum FedRate at zero prey
+
+    // --- Reproduction ---
+    private const float MIN_POPULATION_FOR_REPRODUCTION = 2f; // Need at least 2 to reproduce
 
     public EcosystemSimulator(int seed = -1)
     {
@@ -357,13 +372,12 @@ public class EcosystemSimulator
         Debug.Log("--- Step 2: Feeding/Predation ---");
         ProcessFeedingWithAccumulator();
 
-        // ========== STEP 3: FINAL PERFORMANCE ==========
-        Debug.Log("--- Step 3: Final Performance ---");
+        // ========== STEP 3: RAW FINAL PERFORMANCE (Condition drain target) ==========
+        Debug.Log("--- Step 3: Raw Final Performance ---");
         foreach (var sp in Species)
         {
-            sp.FinalPerformance = sp.ThermalPerformance * sp.FedRate;
             sp.RawFinalPerformance = sp.RawThermalPerformance * sp.FedRate;
-            Debug.Log($"  {sp.FullName}: RawFinalPerf={sp.RawFinalPerformance:F3}, FinalPerf={sp.FinalPerformance:F3} (Raw={sp.RawThermalPerformance:F3}×Fed={sp.FedRate:F3}, Pmax={sp.Pmax:F2})");
+            Debug.Log($"  {sp.FullName}: RawFinalPerf={sp.RawFinalPerformance:F3} (RawThermal={sp.RawThermalPerformance:F3} x Fed={sp.FedRate:F3})");
         }
 
         // ========== STEP 4: UPDATE CONDITION ==========
@@ -373,36 +387,50 @@ public class EcosystemSimulator
             UpdateCondition(sp);
         }
 
-        // ========== STEP 5: THERMAL DEATH (instant at lethal limits) ==========
-        Debug.Log("--- Step 5: Thermal Death (lethal limits) ---");
+        // ========== STEP 5: FINAL PERFORMANCE ==========
+        // NOTE: Condition is intentionally NOT included here. FinalPerformance gates the
+        // reproduction threshold check (can species reproduce at all?), and including
+        // Condition created a cliff effect where small Condition drops (~0.5) pushed
+        // FinalPerf below ReproThreshold, completely locking out reproduction.
+        // Instead, Condition scales the birth COUNT in ApplyReproduction() — stressed
+        // species can still reproduce, just with fewer offspring.
+        Debug.Log("--- Step 5: Final Performance ---");
+        foreach (var sp in Species)
+        {
+            sp.FinalPerformance = sp.ThermalPerformance * sp.FedRate;
+            Debug.Log($"  {sp.FullName}: FinalPerf={sp.FinalPerformance:F3} (Thermal={sp.ThermalPerformance:F3} x Fed={sp.FedRate:F3})");
+        }
+
+        // ========== STEP 6: THERMAL DEATH (instant at lethal limits) ==========
+        Debug.Log("--- Step 6: Thermal Death (lethal limits) ---");
         foreach (var sp in Species)
         {
             ApplyThermalDeath(sp);
         }
 
-        // ========== STEP 6: CONDITION DEATH (chronic stress) ==========
-        Debug.Log("--- Step 6: Condition Death ---");
+        // ========== STEP 7: CONDITION DEATH (chronic stress) ==========
+        Debug.Log("--- Step 7: Condition Death ---");
         foreach (var sp in Species)
         {
             ApplyConditionDeath(sp);
         }
 
-        // ========== STEP 7: REPRODUCTION (with birth accumulator) ==========
-        Debug.Log("--- Step 7: Reproduction ---");
+        // ========== STEP 8: REPRODUCTION (with birth accumulator) ==========
+        Debug.Log("--- Step 8: Reproduction ---");
         foreach (var sp in Species)
         {
             ApplyReproduction(sp);
         }
 
-        // ========== STEP 8: NATURAL DEATH (flat rate) ==========
-        Debug.Log("--- Step 8: Natural Death ---");
+        // ========== STEP 9: NATURAL DEATH (flat rate) ==========
+        Debug.Log("--- Step 9: Natural Death ---");
         foreach (var sp in Species)
         {
             ApplyNaturalDeathWithAccumulator(sp);
         }
 
-        // ========== STEP 9: POPULATION ROUNDING ==========
-        Debug.Log("--- Step 9: Population Rounding ---");
+        // ========== STEP 10: POPULATION ROUNDING ==========
+        Debug.Log("--- Step 10: Population Rounding ---");
         foreach (var sp in Species)
         {
             float oldPop = sp.Population;
@@ -471,11 +499,11 @@ public class EcosystemSimulator
             // Calculate hunting success with variance AND prey-ratio bonus
             float variance = (float)((_rng.NextDouble() * 2 - 1) * pred.HuntingVariance);
             float huntingSuccess = pred.HuntingEfficiency + variance + huntingBonus;
-            huntingSuccess = Math.Max(0.05f, Math.Min(1f, huntingSuccess)); // Clamp to [0.05, 1.0]
+            huntingSuccess = Math.Max(MIN_HUNTING_SUCCESS, Math.Min(MAX_HUNTING_SUCCESS, huntingSuccess));
             pred.CurrentHuntingSuccess = huntingSuccess;
 
-            // Raw demand (what they want)
-            float rawDemand = pred.Population * pred.EatingAmount * pred.RawThermalPerformance * BiologyStep;
+            // Raw demand (what they want) — uses ThermalPerformance (with Pmax)
+            float rawDemand = pred.Population * pred.EatingAmount * pred.ThermalPerformance * BiologyStep;
             totalRawDemand += rawDemand;
 
             // Actual demand (what they can attempt to catch)
@@ -553,44 +581,36 @@ public class EcosystemSimulator
 
     /// <summary>
     /// Calculate hunting efficiency bonus/penalty based on prey-to-predator ratio.
-    /// When prey is abundant, hunting is easier. When prey is scarce, hunting is MUCH harder.
-    /// 
-    /// This creates strong negative feedback to prevent predator overpopulation:
-    /// - As predators grow, ratio drops
-    /// - Lower ratio = harder hunting
-    /// - Harder hunting = less food = lower FinalPerf = higher natural death + fewer births
+    /// Proportional scaling: same rate of change above and below the balanced ratio.
+    ///
+    /// Balanced ratio = 10:1. Each 10x change in ratio = ±15% hunting efficiency.
+    /// At 1:1 ratio → -15%, at 100:1 → +15%. Clamped to ±20%.
     /// </summary>
     private float CalculateHuntingBonus(float preyRatio)
     {
-        // Very abundant prey = easier hunting (but not too easy)
-        if (preyRatio >= 200f) return 0.15f;  // Extremely abundant: +15%
-        if (preyRatio >= 100f) return 0.10f;  // Very abundant: +10%
-        if (preyRatio >= 50f) return 0.05f;   // Abundant: +5%
-        if (preyRatio >= 20f) return 0f;      // Baseline: balanced ecosystem
+        if (preyRatio <= 0f) return -HUNTING_MAX_BONUS;
 
-        // Scarce prey = MUCH harder hunting (strong negative feedback)
-        if (preyRatio >= 10f) return -0.15f;  // Getting crowded: -15%
-        if (preyRatio >= 5f) return -0.30f;   // Competitive: -30%
-        if (preyRatio >= 2f) return -0.45f;   // Very competitive: -45%
-        return -0.55f;                         // Desperate: -55% (ratio < 2:1)
+        // Log-scaled proportional bonus: 0 at balanced, ±SCALE per decade
+        float logRatio = (float)Math.Log10(preyRatio / HUNTING_BALANCED_RATIO);
+        float bonus = logRatio * HUNTING_SCALE_PER_DECADE;
+
+        return Math.Max(-HUNTING_MAX_BONUS, Math.Min(HUNTING_MAX_BONUS, bonus));
     }
 
     /// <summary>
     /// Calculate FedRate multiplier based on prey availability per predator.
-    /// Even if predators catch what they attempt, searching for scarce prey costs energy.
-    /// This creates strong negative feedback when predators overpopulate.
-    /// 
-    /// Low preyPerPredator → low FedRate → low FinalPerf → higher natural death → predator decline
+    /// Proportional scaling centered on prey need.
+    ///
+    /// At SCARCITY_SATISFIED_RATIO (8 prey/pred) -> FedRate = 1.0 (fully satisfied).
+    /// Linearly scales down to SCARCITY_MIN_FED at 0 prey. No penalty above threshold.
     /// </summary>
     private float CalculateScarcityMultiplier(float preyPerPredator)
     {
-        // Abundant prey per predator = no penalty
-        if (preyPerPredator >= 50f) return 1.0f;   // Plenty of prey
-        if (preyPerPredator >= 20f) return 0.85f;  // Adequate prey
-        if (preyPerPredator >= 10f) return 0.70f;  // Getting scarce
-        if (preyPerPredator >= 5f) return 0.50f;   // Scarce - significant hunger
-        if (preyPerPredator >= 2f) return 0.35f;   // Very scarce - severe hunger
-        return 0.20f;                               // Critical scarcity (< 2 prey per predator)
+        if (preyPerPredator >= SCARCITY_SATISFIED_RATIO) return 1.0f;
+        if (preyPerPredator <= 0f) return SCARCITY_MIN_FED;
+
+        // Linear interpolation: 0 -> SCARCITY_MIN_FED, SCARCITY_SATISFIED_RATIO -> 1.0
+        return SCARCITY_MIN_FED + (1.0f - SCARCITY_MIN_FED) * (preyPerPredator / SCARCITY_SATISFIED_RATIO);
     }
 
     /// <summary>
@@ -699,12 +719,18 @@ public class EcosystemSimulator
     /// <summary>
     /// Apply reproduction with BIRTH ACCUMULATOR, Tier 1 penalty, and carrying capacity.
     /// CARRYING CAPACITY ONLY APPLIES TO TIER 1.
+    ///
+    /// Condition (species health) scales the number of births but does NOT affect the
+    /// reproduction threshold. This means stressed species can still reproduce, just with
+    /// fewer offspring. Including Condition in FinalPerformance (and thus the threshold)
+    /// caused a cliff effect where even moderate health drops locked species out of
+    /// reproduction entirely, leading to guaranteed extinction spirals.
     /// </summary>
     private void ApplyReproduction(SimSpecies sp)
     {
-        if (sp.Population < 2f)
+        if (sp.Population < MIN_POPULATION_FOR_REPRODUCTION)
         {
-            Debug.Log($"  {sp.FullName}: Cannot reproduce (Pop={sp.Population:F1} < 2)");
+            Debug.Log($"  {sp.FullName}: Cannot reproduce (Pop={sp.Population:F1} < {MIN_POPULATION_FOR_REPRODUCTION})");
             return;
         }
 
@@ -714,8 +740,11 @@ public class EcosystemSimulator
             return;
         }
 
-        // Calculate base births
-        float births = sp.Population * sp.FinalPerformance * sp.ReproductionMultiplier * BiologyStep;
+        // Calculate base births — Condition scales birth count (stressed species have fewer offspring)
+        // Condition is applied here rather than in FinalPerformance to avoid blocking the
+        // reproduction threshold check. This way the threshold only depends on temperature
+        // and food (environmental factors), while Condition affects reproductive output.
+        float births = sp.Population * sp.FinalPerformance * sp.ReproductionMultiplier * BiologyStep * sp.Condition;
 
         // Tier 1 penalty if no predators exist
         if (sp.Tier == 1)

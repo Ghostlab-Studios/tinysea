@@ -58,7 +58,7 @@ public class SimSpecies
     public float ThermalPerformance;        // RawThermalPerformance × Pmax (used for reproduction)
     public float FedRate = 1f;              // Feeding satisfaction (0-1), Tier 1 always 1.0
     public float RawFinalPerformance;       // RawThermalPerformance × FedRate — used for death checks
-    public float FinalPerformance;          // ThermalPerf × FedRate (used for reproduction)
+    public float FinalPerformance;          // ThermalPerf x FedRate (used for repro threshold; Condition scales births separately)
     public float CurrentHuntingSuccess;     // This step's hunting success (for tracking)
     public float Condition = 1.0f;          // Health/energy reserves [0-1], starts at 1.0
 

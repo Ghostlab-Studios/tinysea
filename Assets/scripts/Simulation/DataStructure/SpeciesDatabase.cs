@@ -159,6 +159,8 @@ public class SpeciesDatabase : ScriptableObject
         speciesList.Clear();
 
         // ===== HEXAPOD (Tier 1 - Prey) =====
+        // DeathRate 0.6 — smaller prey have less physiological buffering against
+        // chronic stress (allometric scaling: M ∝ W^-0.25, Peterson & Wroblewski 1984)
         // Natural death: 2% base ±1% variance
         // Hunting: N/A (Tier 1 doesn't hunt)
 
@@ -244,7 +246,10 @@ public class SpeciesDatabase : ScriptableObject
         );
 
         // ===== SHEPLIK (Tier 2 - Predator) =====
-        // Natural death: 3% base ±1.5% variance
+        // DeathRate 0.3 — larger predators have greater energy reserves and stress
+        // tolerance, dying at roughly half the rate of prey (allometric scaling:
+        // M ∝ W^-0.25; cod M≈0.2 vs capelin M≈0.8, McCoy & Gillooly 2008)
+        // Natural death: 2% base ±1% variance
         // Hunting: 75% base ±15% variance
 
         AddSpecies(
@@ -256,7 +261,7 @@ public class SpeciesDatabase : ScriptableObject
             eating: 1.5f,
             repro: 0.1f,
             deathThresh: 0.3f,
-            deathRate: 0.6f,
+            deathRate: 0.3f,
             minDeaths: 1f,
             reproThresh: 0.25f,
             naturalDeathRate: 0.02f,
@@ -283,7 +288,7 @@ public class SpeciesDatabase : ScriptableObject
             eating: 1.5f,
             repro: 0.1f,
             deathThresh: 0.3f,
-            deathRate: 0.6f,
+            deathRate: 0.3f,
             minDeaths: 1f,
             reproThresh: 0.25f,
             naturalDeathRate: 0.02f,
@@ -310,7 +315,7 @@ public class SpeciesDatabase : ScriptableObject
             eating: 1.5f,
             repro: 0.1f,
             deathThresh: 0.3f,
-            deathRate: 0.6f,
+            deathRate: 0.3f,
             minDeaths: 1f,
             reproThresh: 0.25f,
             naturalDeathRate: 0.02f,
@@ -465,7 +470,7 @@ public class SpeciesDatabase : ScriptableObject
                     data.tier = 1;
                     data.eatingAmount = 1.5f;
                     data.reproductionMultiplier = 0.1f;
-                    data.deathRate = 0.6f;
+                    data.deathRate = 0.3f;  // Predators die at half prey rate (allometric scaling)
                     data.naturalDeathRate = 0.02f;
                     data.naturalDeathVariance = 0.01f;
                     data.huntingEfficiency = 0.75f;

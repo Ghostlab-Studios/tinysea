@@ -188,8 +188,8 @@ public class SimSpecies
             DeathRate = 0.3f,               // Lower death rate than Tier 1
             MinimumDeaths = 1f,
             ReproThreshold = 0.25f,
-            NaturalDeathRate = 0.02f,       // 2% base
-            NaturalDeathVariance = 0.01f,   // ±1%
+            NaturalDeathRate = 0.01f,       // 1% base (allometric: larger predators have lower background mortality)
+            NaturalDeathVariance = 0.005f,  // ±0.5%
             HuntingEfficiency = 0.75f,      // 75% base success
             HuntingVariance = 0.15f,        // ±15% variance
             ArrhenBreadth = 5273.15f,

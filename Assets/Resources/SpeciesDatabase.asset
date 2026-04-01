@@ -132,8 +132,8 @@ MonoBehaviour:
     TemperatureDebuff: 0
     minimumDeaths: 1
     reproThreshold: 0.25
-    naturalDeathRate: 0.02
-    naturalDeathVariance: 0.01
+    naturalDeathRate: 0.01
+    naturalDeathVariance: 0.005
     huntingEfficiency: 0.75
     huntingVariance: 0.15
     eatingStars: 4
@@ -167,8 +167,8 @@ MonoBehaviour:
     TemperatureDebuff: 0
     minimumDeaths: 1
     reproThreshold: 0.25
-    naturalDeathRate: 0.02
-    naturalDeathVariance: 0.01
+    naturalDeathRate: 0.01
+    naturalDeathVariance: 0.005
     huntingEfficiency: 0.75
     huntingVariance: 0.15
     eatingStars: 4
@@ -202,8 +202,8 @@ MonoBehaviour:
     TemperatureDebuff: 0
     minimumDeaths: 1
     reproThreshold: 0.25
-    naturalDeathRate: 0.02
-    naturalDeathVariance: 0.01
+    naturalDeathRate: 0.01
+    naturalDeathVariance: 0.005
     huntingEfficiency: 0.75
     huntingVariance: 0.15
     eatingStars: 4

@@ -264,8 +264,8 @@ public class SpeciesDatabase : ScriptableObject
             deathRate: 0.3f,
             minDeaths: 1f,
             reproThresh: 0.25f,
-            naturalDeathRate: 0.02f,
-            naturalDeathVariance: 0.01f,
+            naturalDeathRate: 0.01f,      // Allometric: larger predators have lower background mortality
+            naturalDeathVariance: 0.005f,
             huntingEfficiency: 0.75f,
             huntingVariance: 0.15f,
             optimalK: 297.0f,       // 24°C
@@ -291,8 +291,8 @@ public class SpeciesDatabase : ScriptableObject
             deathRate: 0.3f,
             minDeaths: 1f,
             reproThresh: 0.25f,
-            naturalDeathRate: 0.02f,
-            naturalDeathVariance: 0.01f,
+            naturalDeathRate: 0.01f,      // Allometric: larger predators have lower background mortality
+            naturalDeathVariance: 0.005f,
             huntingEfficiency: 0.75f,
             huntingVariance: 0.15f,
             optimalK: 303.0f,       // 30°C
@@ -318,8 +318,8 @@ public class SpeciesDatabase : ScriptableObject
             deathRate: 0.3f,
             minDeaths: 1f,
             reproThresh: 0.25f,
-            naturalDeathRate: 0.02f,
-            naturalDeathVariance: 0.01f,
+            naturalDeathRate: 0.01f,      // Allometric: larger predators have lower background mortality
+            naturalDeathVariance: 0.005f,
             huntingEfficiency: 0.75f,
             huntingVariance: 0.15f,
             optimalK: 291.0f,       // 18°C
@@ -471,8 +471,8 @@ public class SpeciesDatabase : ScriptableObject
                     data.eatingAmount = 1.5f;
                     data.reproductionMultiplier = 0.1f;
                     data.deathRate = 0.3f;  // Predators die at half prey rate (allometric scaling)
-                    data.naturalDeathRate = 0.02f;
-                    data.naturalDeathVariance = 0.01f;
+                    data.naturalDeathRate = 0.01f;   // Allometric: larger predators have lower background mortality
+                    data.naturalDeathVariance = 0.005f;
                     data.huntingEfficiency = 0.75f;
                     data.huntingVariance = 0.15f;
                     data.eatingStars = 4;

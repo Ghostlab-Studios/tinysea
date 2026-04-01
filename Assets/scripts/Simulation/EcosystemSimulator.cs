@@ -4,11 +4,11 @@ using System.Linq;
 using UnityEngine;
 
 /// <summary>
-/// TinySea Ecosystem Simulator v6
+/// TinySea Ecosystem Simulator v7
 ///
 /// BIOLOGY SEQUENCE (10 steps):
 /// 1. Thermal Performance - Arrhenius formula
-/// 2. Feeding/Predation - With hunting efficiency + PREDATION ACCUMULATOR
+/// 2. Feeding/Predation - Holling Type II functional response + PREDATION ACCUMULATOR
 /// 3. Raw Final Performance - RawThermalPerf x FedRate (Condition drain target)
 /// 4. Update Condition - Drain/recover toward RawFinalPerformance (health buffer)
 /// 5. Final Performance - ThermalPerf x FedRate (Condition NOT used in reproduction)
@@ -41,6 +41,12 @@ using UnityEngine;
 /// - Split thermal death into instant (lethal) + condition (chronic)
 /// - Decoupled natural death from performance (flat rate)
 /// - HasCrashed() now checks total population == 0 (not single tier)
+///
+/// v7 CHANGES:
+/// - Replaced dual hunting system (hunting bonus + scarcity multiplier) with
+///   single Holling Type II Functional Response (Holling 1959)
+/// - Hunting efficiency now scales naturally with prey:predator ratio
+/// - No FedRate floor — zero prey = zero hunting efficiency = true starvation
 /// </summary>
 public class EcosystemSimulator
 {
@@ -117,21 +123,24 @@ public class EcosystemSimulator
     private const float DRAIN_ACCEL_MAX = 4f;               // Max acceleration multiplier (5x total at perf=0)
     private const float NEWBORN_CONDITION = 0.5f;           // Condition value for newborn individuals (vulnerable)
 
-    // --- Hunting Bonus ---
-    private const float HUNTING_BALANCED_RATIO = 10f;       // Prey:predator ratio considered balanced
-    private const float HUNTING_MAX_BONUS = 0.20f;          // Maximum hunting efficiency bonus/penalty
-    private const float HUNTING_SCALE_PER_DECADE = 0.15f;   // Efficiency change per 10x ratio shift
-    private const float MIN_HUNTING_SUCCESS = 0.05f;        // Floor for hunting success after all modifiers
+    // --- Holling Type II Functional Response (Holling 1959) ---
+    // "The Components of Predation as Revealed by a Study of Small-Mammal Predation
+    //  of the European Pine Sawfly" — Canadian Entomologist 91(5):293-320.
+    //
+    // Models how predator hunting success scales with prey availability:
+    //   efficiency = ratio / (ratio + halfSaturation)
+    // where halfSaturation = NORMAL_PREY_RATIO × (1 - baseEff) / baseEff
+    //
+    // At high prey density, search time is negligible → efficiency approaches 1.0.
+    // At NORMAL_PREY_RATIO, efficiency equals the species' base hunting efficiency.
+    // At low prey density, search time dominates → efficiency drops toward 0.0.
+    //
+    // This replaces the previous dual system (hunting bonus + scarcity multiplier)
+    // with a single, scientifically-grounded curve. The half-saturation constant is
+    // derived from each species' base efficiency, so no arbitrary tuning is needed.
+    private const float NORMAL_PREY_RATIO = 20f;            // Prey:predator ratio where base efficiency applies
+    private const float MIN_HUNTING_SUCCESS = 0.0f;         // Floor for hunting success (0 = nothing to hunt)
     private const float MAX_HUNTING_SUCCESS = 1.0f;         // Ceiling for hunting success
-
-    // --- Scarcity ---
-    // Ratio-dependent functional response: predators need many prey per capita due to
-    // hunting failure, search time, and intraspecific competition (Arditi & Ginzburg 1989).
-    // Cury et al. (2011, Science) found predator success degrades below ~1/3 max prey biomass.
-    // At 15:1, FedRate starts declining early enough to prevent predator overshoot-and-collapse
-    // (Rosenzweig's paradox of enrichment). Previously 3 then 8; raised to 15 for stability.
-    private const float SCARCITY_SATISFIED_RATIO = 15f;     // Prey per predator for full FedRate
-    private const float SCARCITY_MIN_FED = 0.20f;           // Minimum FedRate at zero prey
 
     // --- Reproduction ---
     private const float MIN_POPULATION_FOR_REPRODUCTION = 2f; // Need at least 2 to reproduce
@@ -329,16 +338,17 @@ public class EcosystemSimulator
     /// <summary>
     /// Run one biology step at the given temperature.
     ///
-    /// BIOLOGY SEQUENCE (9 steps):
+    /// BIOLOGY SEQUENCE (10 steps):
     /// 1. Thermal Performance - Arrhenius formula
-    /// 2. Feeding/Predation - With hunting efficiency + PREDATION ACCUMULATOR
-    /// 3. Final Performance - ThermalPerf × FedRate
-    /// 4. Update Condition - Drain/recover toward RawFinalPerformance
-    /// 5. Thermal Death - INSTANT kill at lethal limits (RawThermalPerf == 0)
-    /// 6. Condition Death - When Condition less than DeathThreshold after chronic stress
-    /// 7. Reproduction - With BIRTH ACCUMULATOR + Tier 1 penalty when no predators
-    /// 8. Natural Death - FLAT RATE (no performance scaling)
-    /// 9. Population Rounding - All populations become integers
+    /// 2. Feeding/Predation - Holling Type II functional response + PREDATION ACCUMULATOR
+    /// 3. Raw Final Performance - RawThermalPerf x FedRate (Condition drain target)
+    /// 4. Update Condition - Drain/recover toward RawFinalPerformance (health buffer)
+    /// 5. Final Performance - ThermalPerf x FedRate (Condition NOT used in reproduction)
+    /// 6. Thermal Death - INSTANT kill at lethal limits (RawThermalPerf == 0)
+    /// 7. Condition Death - GRADUATED: severity scales with how far below threshold
+    /// 8. Reproduction - With BIRTH ACCUMULATOR + Tier 1 penalty when no predators
+    /// 9. Natural Death - FLAT RATE + NATURAL DEATH ACCUMULATOR
+    /// 10. Population Rounding - All populations become integers
     /// </summary>
     public void ProcessBiologyStep(float temperature)
     {
@@ -458,12 +468,14 @@ public class EcosystemSimulator
     }
 
     /// <summary>
-    /// Process feeding with hunting efficiency, prey-ratio scaling, and PREDATION ACCUMULATOR.
+    /// Process feeding with Holling Type II functional response and PREDATION ACCUMULATOR.
     /// Prey removal is proportional across variants with fractional accumulation.
-    /// 
-    /// HUNTING EFFICIENCY SCALING:
-    /// When prey is abundant (high Tier1:Tier2 ratio), hunting is easier.
-    /// When prey is scarce (low ratio), hunting is harder.
+    ///
+    /// Hunting efficiency is determined by the Holling Type II curve:
+    ///   efficiency = ratio / (ratio + halfSaturation)
+    /// At NORMAL_PREY_RATIO (20:1), efficiency equals the species' base value.
+    /// Above → efficiency increases toward 1.0 (abundance).
+    /// Below → efficiency decreases toward 0.0 (scarcity).
     /// </summary>
     private void ProcessFeedingWithAccumulator()
     {
@@ -485,37 +497,36 @@ public class EcosystemSimulator
         float availablePrey = prey.Sum(p => p.Population);
         float totalPredators = predators.Sum(p => p.Population);
 
-        // Calculate prey-to-predator ratio for hunting efficiency scaling
+        // Calculate prey-to-predator ratio for Holling Type II efficiency scaling
         float preyRatio = totalPredators > 0 ? availablePrey / totalPredators : 0f;
-        float huntingBonus = CalculateHuntingBonus(preyRatio);
-        Debug.Log($"  Prey ratio: {preyRatio:F1}:1, Hunting bonus: {huntingBonus:+0.00;-0.00;0}");
+        Debug.Log($"  Prey ratio: {preyRatio:F1}:1");
 
         // Calculate hunting success and demand for each predator
-        float totalActualDemand = 0f;
-        float totalRawDemand = 0f;
+        float totalRawDemand = 0f;       // What predators NEED (full nutritional requirement)
+        float totalActualDemand = 0f;    // What predators CAN catch (after Holling efficiency)
         float huntingEfficiencySum = 0f;
         int predatorCount = 0;
 
         foreach (var pred in predators)
         {
-            // Calculate hunting success with variance AND prey-ratio bonus
+            // Holling Type II: hunting efficiency scales with prey availability
+            float hollingEff = CalculateHollingEfficiency(pred.HuntingEfficiency, preyRatio);
             float variance = (float)((_rng.NextDouble() * 2 - 1) * pred.HuntingVariance);
-            float huntingSuccess = pred.HuntingEfficiency + variance + huntingBonus;
-            huntingSuccess = Math.Max(MIN_HUNTING_SUCCESS, Math.Min(MAX_HUNTING_SUCCESS, huntingSuccess));
+            float huntingSuccess = Math.Max(MIN_HUNTING_SUCCESS, Math.Min(MAX_HUNTING_SUCCESS, hollingEff + variance));
             pred.CurrentHuntingSuccess = huntingSuccess;
 
-            // Raw demand (what they want) — uses ThermalPerformance (with Pmax)
+            // Raw demand (what they NEED) — uses ThermalPerformance (with Pmax)
             float rawDemand = pred.Population * pred.EatingAmount * pred.ThermalPerformance * BiologyStep;
             totalRawDemand += rawDemand;
 
-            // Actual demand (what they can attempt to catch)
+            // Actual demand (what they CAN catch — reduced by Holling efficiency)
             float actualDemand = rawDemand * huntingSuccess;
             totalActualDemand += actualDemand;
 
             huntingEfficiencySum += huntingSuccess;
             predatorCount++;
 
-            Debug.Log($"  {pred.FullName}: Hunting={huntingSuccess:P0} (base={pred.HuntingEfficiency:P0}, bonus={huntingBonus:+0.00;-0.00;0}), RawDemand={rawDemand:F1}, ActualDemand={actualDemand:F1}");
+            Debug.Log($"  {pred.FullName}: Hunting={huntingSuccess:P0} (holling={hollingEff:F3}, variance={variance:+0.00;-0.00;0}), RawDemand={rawDemand:F1}, ActualDemand={actualDemand:F1}");
         }
 
         LastAvgHuntingEfficiency = predatorCount > 0 ? huntingEfficiencySum / predatorCount : 1f;
@@ -525,23 +536,17 @@ public class EcosystemSimulator
         float totalEaten = Math.Min(availablePrey, totalActualDemand);
         LastEatenT1 = 0f;  // Will be counted by actual removals
 
-        // FIX: Calculate FedRate based on what was ATTEMPTED (actualDemand), not what was WANTED (rawDemand)
-        // If predator catches everything it attempted, it's satisfied (FedRate = 1.0)
-        // FedRate only drops if prey is scarce and predator can't catch enough
+        // FedRate = what was caught / what was NEEDED (not what was attempted)
+        // This is critical: Holling efficiency reduces actual demand, so predators catch less.
+        // But FedRate must reflect their true nutritional satisfaction — how much of their
+        // actual need was met. At ratio 5:1 with Holling efficiency 0.43, predators only
+        // catch 43% of what they need, so FedRate ≈ 0.43, not 1.0.
+        // This directly affects FinalPerformance, reproduction, and Condition drain.
         float fedRate;
-        if (totalActualDemand <= 0f)
+        if (totalRawDemand <= 0f)
             fedRate = 1f;
         else
-            fedRate = Math.Min(1f, totalEaten / totalActualDemand);
-
-        // PREY SCARCITY PENALTY: Even if predators catch what they attempt, 
-        // searching for scarce prey costs energy, prey quality is lower, etc.
-        // This creates negative feedback when predators overpopulate.
-        float preyPerPredator = totalPredators > 0 ? availablePrey / totalPredators : 0f;
-        float scarcityMultiplier = CalculateScarcityMultiplier(preyPerPredator);
-        fedRate *= scarcityMultiplier;
-
-        Debug.Log($"  Prey per predator: {preyPerPredator:F1}, Scarcity multiplier: {scarcityMultiplier:F2}");
+            fedRate = Math.Min(1f, totalEaten / totalRawDemand);
 
         LastFedRateT2 = fedRate;
         foreach (var pred in predators)
@@ -549,7 +554,7 @@ public class EcosystemSimulator
             pred.FedRate = fedRate;
         }
 
-        Debug.Log($"  Total Eaten: {totalEaten:F1}, FedRate: {fedRate:F3} (eaten/attemptedDemand = {totalEaten:F1}/{totalActualDemand:F1})");
+        Debug.Log($"  Total Eaten: {totalEaten:F1}, FedRate: {fedRate:F3} (eaten/rawDemand = {totalEaten:F1}/{totalRawDemand:F1}, actualDemand={totalActualDemand:F1})");
 
         // Remove prey PROPORTIONALLY with PREDATION ACCUMULATOR
         if (totalEaten > 0f && availablePrey > 0f)
@@ -582,40 +587,38 @@ public class EcosystemSimulator
     }
 
     /// <summary>
-    /// Calculate hunting efficiency bonus/penalty based on prey-to-predator ratio.
-    /// Proportional scaling: same rate of change above and below the balanced ratio.
+    /// Holling Type II Functional Response (Holling 1959).
+    /// Reference: Holling, C.S. (1959), "The Components of Predation as Revealed by a
+    /// Study of Small-Mammal Predation of the European Pine Sawfly",
+    /// Canadian Entomologist, 91(5), 293-320.
     ///
-    /// Balanced ratio = 10:1. Each 10x change in ratio = ±15% hunting efficiency.
-    /// At 1:1 ratio → -15%, at 100:1 → +15%. Clamped to ±20%.
-    /// </summary>
-    private float CalculateHuntingBonus(float preyRatio)
-    {
-        if (preyRatio <= 0f) return -HUNTING_MAX_BONUS;
-
-        // Log-scaled proportional bonus: 0 at balanced, ±SCALE per decade
-        float logRatio = (float)Math.Log10(preyRatio / HUNTING_BALANCED_RATIO);
-        float bonus = logRatio * HUNTING_SCALE_PER_DECADE;
-
-        return Math.Max(-HUNTING_MAX_BONUS, Math.Min(HUNTING_MAX_BONUS, bonus));
-    }
-
-    /// <summary>
-    /// Calculate FedRate multiplier based on prey availability per predator.
-    /// Models ratio-dependent functional response (Arditi & Ginzburg 1989):
-    /// predators need sufficient prey per capita for successful hunting.
+    /// Models how predator hunting success scales with prey availability.
+    /// As prey becomes scarcer, predators spend more time searching and less time eating.
+    /// The curve naturally produces:
+    ///   - 0.0 at zero prey (nothing to hunt)
+    ///   - baseEfficiency at NORMAL_PREY_RATIO (normal hunting conditions)
+    ///   - Approaches 1.0 at very high prey density (abundance, easy to find prey)
     ///
-    /// At SCARCITY_SATISFIED_RATIO (15 prey/pred) → FedRate = 1.0 (fully satisfied).
-    /// Linearly scales down to SCARCITY_MIN_FED (0.20) at 0 prey.
-    /// This early engagement prevents predator overshoot by slowing T2 growth
-    /// well before prey are critically depleted.
+    /// Formula: efficiency = ratio / (ratio + halfSaturation)
+    /// where halfSaturation = NORMAL_PREY_RATIO × (1 - baseEff) / baseEff
+    ///
+    /// The half-saturation constant is derived from the species' own base efficiency,
+    /// so the curve always passes through (NORMAL_PREY_RATIO, baseEfficiency).
+    /// No arbitrary tuning constants are needed.
+    ///
+    /// Example for Sheplik (base 0.75, normal ratio 20:1):
+    ///   halfSat = 20 × 0.25 / 0.75 = 6.67
+    ///   ratio  0 → 0.00 | ratio  5 → 0.43 | ratio 10 → 0.60
+    ///   ratio 20 → 0.75 | ratio 50 → 0.88 | ratio ∞  → 1.00
     /// </summary>
-    private float CalculateScarcityMultiplier(float preyPerPredator)
+    private float CalculateHollingEfficiency(float baseEfficiency, float preyRatio)
     {
-        if (preyPerPredator >= SCARCITY_SATISFIED_RATIO) return 1.0f;
-        if (preyPerPredator <= 0f) return SCARCITY_MIN_FED;
+        if (preyRatio <= 0f) return 0f;
+        if (baseEfficiency <= 0f) return 0f;
+        if (baseEfficiency >= 1f) return 1f;
 
-        // Linear interpolation: 0 -> SCARCITY_MIN_FED, SCARCITY_SATISFIED_RATIO -> 1.0
-        return SCARCITY_MIN_FED + (1.0f - SCARCITY_MIN_FED) * (preyPerPredator / SCARCITY_SATISFIED_RATIO);
+        float halfSaturation = NORMAL_PREY_RATIO * (1f - baseEfficiency) / baseEfficiency;
+        return preyRatio / (preyRatio + halfSaturation);
     }
 
     /// <summary>
@@ -761,7 +764,7 @@ public class EcosystemSimulator
     /// CARRYING CAPACITY ONLY APPLIES TO TIER 1.
     ///
     /// Condition does NOT affect reproduction at all — neither the threshold check nor
-    /// the birth count. Condition only governs condition-death (below 0.3 → 60% kill).
+    /// the birth count. Condition only governs condition-death (graduated severity below DeathThreshold).
     /// Newborn dilution still applies (newborns enter at NEWBORN_CONDITION = 0.5).
     /// </summary>
     private void ApplyReproduction(SimSpecies sp)
@@ -779,7 +782,7 @@ public class EcosystemSimulator
         }
 
         // Calculate base births — Condition does NOT affect birth rate.
-        // Condition only governs condition-death (threshold 0.3 → 60% kill).
+        // Condition only governs condition-death (graduated severity below DeathThreshold).
         // Newborn dilution still applies (newborns enter at NEWBORN_CONDITION).
         float births = sp.Population * sp.FinalPerformance * sp.ReproductionMultiplier * BiologyStep;
 

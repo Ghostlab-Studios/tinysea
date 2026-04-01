@@ -128,7 +128,7 @@ MonoBehaviour:
     eatingAmount: 1.5
     reproductionMultiplier: 0.1
     deathThreshold: 0.3
-    deathRate: 0.6
+    deathRate: 0.3
     TemperatureDebuff: 0
     minimumDeaths: 1
     reproThreshold: 0.25
@@ -163,7 +163,7 @@ MonoBehaviour:
     eatingAmount: 1.5
     reproductionMultiplier: 0.1
     deathThreshold: 0.3
-    deathRate: 0.6
+    deathRate: 0.3
     TemperatureDebuff: 0
     minimumDeaths: 1
     reproThreshold: 0.25
@@ -198,7 +198,7 @@ MonoBehaviour:
     eatingAmount: 1.5
     reproductionMultiplier: 0.1
     deathThreshold: 0.3
-    deathRate: 0.6
+    deathRate: 0.3
     TemperatureDebuff: 0
     minimumDeaths: 1
     reproThreshold: 0.25

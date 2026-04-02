@@ -42,7 +42,6 @@ public class EditSpeciesUI : MonoBehaviour
     [SerializeField] private TMP_InputField reproMultiplierField;
     [SerializeField] private TMP_InputField tempDeathThresholdField;
     [SerializeField] private TMP_InputField tempDeathRateField;
-    [SerializeField] private TMP_InputField minimumDeathsField;
     [SerializeField] private TMP_InputField tempDebuff;
     [SerializeField] private TMP_InputField naturalDeathVarianceField;
     [SerializeField] private TMP_InputField naturalDeathRateField;
@@ -90,7 +89,6 @@ public class EditSpeciesUI : MonoBehaviour
         public float reproductionMultiplier;
         public float deathThreshold;
         public float deathRate;
-        public float minimumDeaths;
         public float naturalDeathRate;
         public float naturalDeathVariance;
 
@@ -128,7 +126,6 @@ public class EditSpeciesUI : MonoBehaviour
                 reproductionMultiplier = data.reproductionMultiplier,
                 deathThreshold = data.deathThreshold,
                 deathRate = data.deathRate,
-                minimumDeaths = data.minimumDeaths,
                 naturalDeathRate = data.naturalDeathRate,
                 naturalDeathVariance = data.naturalDeathVariance,
                 huntingEfficiency = data.huntingEfficiency,
@@ -162,7 +159,6 @@ public class EditSpeciesUI : MonoBehaviour
             data.reproductionMultiplier = reproductionMultiplier;
             data.deathThreshold = deathThreshold;
             data.deathRate = deathRate;
-            data.minimumDeaths = minimumDeaths;
             data.naturalDeathRate = naturalDeathRate;
             data.naturalDeathVariance = naturalDeathVariance;
             data.huntingEfficiency = huntingEfficiency;
@@ -236,7 +232,6 @@ public class EditSpeciesUI : MonoBehaviour
         SetContentType(reproMultiplierField, TMP_InputField.ContentType.DecimalNumber);
         SetContentType(tempDeathThresholdField, TMP_InputField.ContentType.DecimalNumber);
         SetContentType(tempDeathRateField, TMP_InputField.ContentType.DecimalNumber);
-        SetContentType(minimumDeathsField, TMP_InputField.ContentType.DecimalNumber);
         SetContentType(tempDebuff, TMP_InputField.ContentType.DecimalNumber);
         SetContentType(naturalDeathRateField, TMP_InputField.ContentType.DecimalNumber);
         SetContentType(naturalDeathVarianceField, TMP_InputField.ContentType.DecimalNumber);
@@ -331,9 +326,6 @@ public class EditSpeciesUI : MonoBehaviour
 
         if (tempDeathRateField != null)
             tempDeathRateField.text = currentEditingData.deathRate.ToString("F2", CultureInfo.InvariantCulture);
-
-        if (minimumDeathsField != null)
-            minimumDeathsField.text = currentEditingData.minimumDeaths.ToString("F0", CultureInfo.InvariantCulture);
 
         if (tempDebuff != null)
             tempDebuff.text = currentEditingData.TemperatureDebuff.ToString("F2", CultureInfo.InvariantCulture);
@@ -464,7 +456,6 @@ public class EditSpeciesUI : MonoBehaviour
         float reproMultiplier = 0f;
         float tempDeathThreshold = 0f;
         float tempDeathRate = 0f;
-        float minimumDeaths = 0f;
         float naturalDeathVariance = 0f;
         float naturalDeathRate = 0f;
         float tempDebuffValue = 0f;
@@ -492,7 +483,6 @@ public class EditSpeciesUI : MonoBehaviour
         allValid &= TryReadFloat(reproMultiplierField, out reproMultiplier, min: 0f);
         allValid &= TryReadFloat(tempDeathThresholdField, out tempDeathThreshold, min: 0f, max: 1f);
         allValid &= TryReadFloat(tempDeathRateField, out tempDeathRate, min: 0f, max: 1f);
-        allValid &= TryReadFloat(minimumDeathsField, out minimumDeaths, min: 0f);
         allValid &= TryReadFloat(tempDebuff, out tempDebuffValue);
         allValid &= TryReadFloat(naturalDeathVarianceField, out naturalDeathVariance, min: 0f);
         allValid &= TryReadFloat(naturalDeathRateField, out naturalDeathRate, min: 0f);
@@ -532,7 +522,6 @@ public class EditSpeciesUI : MonoBehaviour
         currentEditingData.reproductionMultiplier = reproMultiplier;
         currentEditingData.deathThreshold = tempDeathThreshold;
         currentEditingData.deathRate = tempDeathRate;
-        currentEditingData.minimumDeaths = minimumDeaths;
         currentEditingData.naturalDeathVariance = naturalDeathVariance;
         currentEditingData.naturalDeathRate = naturalDeathRate;
         currentEditingData.TemperatureDebuff = tempDebuffValue;
@@ -651,7 +640,6 @@ public class EditSpeciesUI : MonoBehaviour
         currentEditingData.reproThreshold = originalData.reproThreshold;
         currentEditingData.deathThreshold = originalData.deathThreshold;
         currentEditingData.deathRate = originalData.deathRate;
-        currentEditingData.minimumDeaths = originalData.minimumDeaths;
         currentEditingData.naturalDeathRate = originalData.naturalDeathRate;
         currentEditingData.naturalDeathVariance = originalData.naturalDeathVariance;
         currentEditingData.huntingEfficiency = originalData.huntingEfficiency;
@@ -772,7 +760,6 @@ public class EditSpeciesUI : MonoBehaviour
         SetFieldColor(reproMultiplierField, ValidColor);
         SetFieldColor(tempDeathThresholdField, ValidColor);
         SetFieldColor(tempDeathRateField, ValidColor);
-        SetFieldColor(minimumDeathsField, ValidColor);
         SetFieldColor(naturalDeathVarianceField, ValidColor);
         SetFieldColor(naturalDeathRateField, ValidColor);
         SetFieldColor(huntingEfficiencyField, ValidColor);

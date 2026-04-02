@@ -14,7 +14,6 @@ public class BulkSpeciesConfig
     public float ReproMult;
     public float DeathThresh;
     public float DeathRate;
-    public float MinDeaths;
     public float ReproThresh;
     public float NaturalDeathRate;
     public float NaturalDeathVar;

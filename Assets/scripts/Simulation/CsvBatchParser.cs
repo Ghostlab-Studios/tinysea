@@ -36,7 +36,7 @@ public static class CsvBatchParser
     {
         "name", "variant", "tier", "pop",
         "eating", "repro_mult",
-        "death_thresh", "death_rate", "min_deaths", "repro_thresh",
+        "death_thresh", "death_rate", "repro_thresh",
         "natural_death_rate", "natural_death_var",
         "hunt_eff", "hunt_var",
         "opt_temp_c",
@@ -229,7 +229,6 @@ public static class CsvBatchParser
         species.ReproMult = GetFloat(fields, columnIndex, prefix + "repro_mult", rowNum, errors);
         species.DeathThresh = GetFloat(fields, columnIndex, prefix + "death_thresh", rowNum, errors);
         species.DeathRate = GetFloat(fields, columnIndex, prefix + "death_rate", rowNum, errors);
-        species.MinDeaths = GetFloat(fields, columnIndex, prefix + "min_deaths", rowNum, errors);
         species.ReproThresh = GetFloat(fields, columnIndex, prefix + "repro_thresh", rowNum, errors);
         species.NaturalDeathRate = GetFloat(fields, columnIndex, prefix + "natural_death_rate", rowNum, errors);
         species.NaturalDeathVar = GetFloat(fields, columnIndex, prefix + "natural_death_var", rowNum, errors);
@@ -299,9 +298,6 @@ public static class CsvBatchParser
 
         if (sp.ReproThresh < 0 || sp.ReproThresh > 1)
             errors.Add($"Row {rowNum}: {prefix}_repro_thresh must be between 0 and 1.");
-
-        if (sp.MinDeaths < 0)
-            errors.Add($"Row {rowNum}: {prefix}_min_deaths must be non-negative.");
 
         if (sp.ReproMult < 0)
             errors.Add($"Row {rowNum}: {prefix}_repro_mult must be non-negative.");

@@ -419,7 +419,6 @@ public class SpeciesTierConfig : MonoBehaviour
             reproductionMultiplier = original.reproductionMultiplier,
             deathThreshold = original.deathThreshold,
             deathRate = original.deathRate,
-            minimumDeaths = original.minimumDeaths,
             reproThreshold = original.reproThreshold,
 
             // Natural Mortality

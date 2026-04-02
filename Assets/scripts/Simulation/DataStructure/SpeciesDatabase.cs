@@ -44,7 +44,6 @@ public class SpeciesData
     public float deathThreshold = 0.3f;     // FinalPerf below this triggers thermal death
     public float deathRate;                 // Fraction dying when thermal death triggers
     public float TemperatureDebuff = 0.0f;  // Additional performance debuff from temperature applied after thermal curve 
-    public float minimumDeaths = 1f;        // Minimum deaths when thermal death triggers
     public float reproThreshold = 0.25f;    // FinalPerf required to reproduce
     
     
@@ -174,7 +173,6 @@ public class SpeciesDatabase : ScriptableObject
             repro: 0.45f,
             deathThresh: 0.3f,
             deathRate: 0.6f,
-            minDeaths: 1f,
             reproThresh: 0.25f,
             naturalDeathRate: 0.02f,
             naturalDeathVariance: 0.01f,
@@ -201,7 +199,6 @@ public class SpeciesDatabase : ScriptableObject
             repro: 0.45f,
             deathThresh: 0.3f,
             deathRate: 0.6f,
-            minDeaths: 1f,
             reproThresh: 0.25f,
             naturalDeathRate: 0.02f,
             naturalDeathVariance: 0.01f,
@@ -228,7 +225,6 @@ public class SpeciesDatabase : ScriptableObject
             repro: 0.45f,
             deathThresh: 0.3f,
             deathRate: 0.6f,
-            minDeaths: 1f,
             reproThresh: 0.25f,
             naturalDeathRate: 0.02f,
             naturalDeathVariance: 0.01f,
@@ -262,7 +258,6 @@ public class SpeciesDatabase : ScriptableObject
             repro: 0.1f,
             deathThresh: 0.3f,
             deathRate: 0.3f,
-            minDeaths: 1f,
             reproThresh: 0.25f,
             naturalDeathRate: 0.01f,      // Allometric: larger predators have lower background mortality
             naturalDeathVariance: 0.005f,
@@ -289,7 +284,6 @@ public class SpeciesDatabase : ScriptableObject
             repro: 0.1f,
             deathThresh: 0.3f,
             deathRate: 0.3f,
-            minDeaths: 1f,
             reproThresh: 0.25f,
             naturalDeathRate: 0.01f,      // Allometric: larger predators have lower background mortality
             naturalDeathVariance: 0.005f,
@@ -316,7 +310,6 @@ public class SpeciesDatabase : ScriptableObject
             repro: 0.1f,
             deathThresh: 0.3f,
             deathRate: 0.3f,
-            minDeaths: 1f,
             reproThresh: 0.25f,
             naturalDeathRate: 0.01f,      // Allometric: larger predators have lower background mortality
             naturalDeathVariance: 0.005f,
@@ -343,7 +336,7 @@ public class SpeciesDatabase : ScriptableObject
 
     private void AddSpecies(int index, SpeciesName name, SpeciesVariant variant, int tier, int count,
                            float eating, float repro, float deathThresh, float deathRate,
-                           float minDeaths, float reproThresh,
+                           float reproThresh,
                            float naturalDeathRate, float naturalDeathVariance,
                            float huntingEfficiency, float huntingVariance,
                            float optimalK, float arrhenBreadth, float arrhenLower, float arrhenUpper,
@@ -362,7 +355,6 @@ public class SpeciesDatabase : ScriptableObject
             reproductionMultiplier = repro,
             deathThreshold = deathThresh,
             deathRate = deathRate,
-            minimumDeaths = minDeaths,
             reproThreshold = reproThresh,
             naturalDeathRate = naturalDeathRate,
             naturalDeathVariance = naturalDeathVariance,
@@ -404,7 +396,6 @@ public class SpeciesDatabase : ScriptableObject
 
             // --- Universal defaults ---
             data.deathThreshold = 0.3f;
-            data.minimumDeaths = 1f;
             data.reproThreshold = 0.25f;
             data.TemperatureDebuff = 0f;
             data.ctMinC = 0f;
@@ -499,7 +490,7 @@ public class SpeciesDatabase : ScriptableObject
 
     private void AddSpecies(int index, string displayname, int tier, int count,
                            float eating, float repro, float deathThresh, float deathRate,
-                           float minDeaths, float reproThresh,
+                           float reproThresh,
                            float naturalDeathRate, float naturalDeathVariance,
                            float huntingEfficiency, float huntingVariance,
                            float optimalK, float lowerBound, float upperBound)
@@ -516,7 +507,6 @@ public class SpeciesDatabase : ScriptableObject
             reproductionMultiplier = repro,
             deathThreshold = deathThresh,
             deathRate = deathRate,
-            minimumDeaths = minDeaths,
             reproThreshold = reproThresh,
             naturalDeathRate = naturalDeathRate,
             naturalDeathVariance = naturalDeathVariance,

@@ -334,7 +334,6 @@ public class BulkSimulationController : MonoBehaviour
             reproductionMultiplier = sp.ReproMult,
             deathThreshold = sp.DeathThresh,
             deathRate = sp.DeathRate,
-            minimumDeaths = sp.MinDeaths,
             reproThreshold = sp.ReproThresh,
             naturalDeathRate = sp.NaturalDeathRate,
             naturalDeathVariance = sp.NaturalDeathVar,

@@ -23,7 +23,6 @@ public class CharacterManager : MonoBehaviour {
 
     public float deathThreashold = .3f; //if performance gets too low, you start dying
     public float deathRate = .5f; //if I'm dying, population drops by this ratio every day
-    public float minimumDeaths = 1; //if I'm dying, I will always lose at least this many fish!
     public float reproThreshold = .25f; // Only reproduce if above this threshold
 
     public int eatingStars = 5;
@@ -74,7 +73,6 @@ public class CharacterManager : MonoBehaviour {
         if (getFinalPerformance() < deathThreashold)
         {
             float deaths = speciesAmount * deathRate * days;
-            deaths = Mathf.Max(minimumDeaths, deaths);
             speciesAmount -= deaths;
             speciesAmount = Mathf.Max(0, speciesAmount);
             Debug.Log("Deaths: " + deaths);

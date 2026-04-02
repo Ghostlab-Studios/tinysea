@@ -23,7 +23,6 @@ public class SimSpecies
     public float ReproductionMultiplier;    // Birth rate multiplier
     public float DeathThreshold;            // FinalPerf below this triggers thermal death (default 0.3)
     public float DeathRate;                 // Fraction dying when thermal death triggers
-    public float MinimumDeaths;             // Minimum deaths when thermal death triggers (default 1)
     public float ReproThreshold;            // FinalPerf required to reproduce (default 0.25)
 
     // ==================== NATURAL MORTALITY ====================
@@ -128,7 +127,6 @@ public class SimSpecies
             ReproductionMultiplier = 0.45f,
             DeathThreshold = 0.3f,
             DeathRate = 0.6f,
-            MinimumDeaths = 1f,
             ReproThreshold = 0.25f,
             NaturalDeathRate = 0.02f,       // 2% base
             NaturalDeathVariance = 0.01f,   // ±1%
@@ -186,7 +184,6 @@ public class SimSpecies
             ReproductionMultiplier = 0.1f,  // 4.5x slower than Tier 1
             DeathThreshold = 0.3f,
             DeathRate = 0.3f,               // Lower death rate than Tier 1
-            MinimumDeaths = 1f,
             ReproThreshold = 0.25f,
             NaturalDeathRate = 0.01f,       // 1% base (allometric: larger predators have lower background mortality)
             NaturalDeathVariance = 0.005f,  // ±0.5%

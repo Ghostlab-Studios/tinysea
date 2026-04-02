@@ -564,7 +564,6 @@ public static class ConfigExporter
                 sb.AppendLine($"        \"reproductionMultiplier\": {species.reproductionMultiplier},");
                 sb.AppendLine($"        \"deathThreshold\": {species.deathThreshold},");
                 sb.AppendLine($"        \"deathRate\": {species.deathRate},");
-                sb.AppendLine($"        \"minimumDeaths\": {species.minimumDeaths},");
                 sb.AppendLine($"        \"reproThreshold\": {species.reproThreshold},");
                 sb.AppendLine($"        \"naturalDeathRate\": {species.naturalDeathRate},");
                 sb.AppendLine($"        \"naturalDeathVariance\": {species.naturalDeathVariance},");
@@ -650,7 +649,7 @@ public static class ConfigExporter
         if (runSpecies != null && runSpecies.speciesList != null && runSpecies.speciesList.Count > 0)
         {
             sb.AppendLine("Name,Variant,Tier,InitialCount,EatingAmount,ReproductionMultiplier," +
-                "DeathThreshold,DeathRate,MinimumDeaths,ReproThreshold," +
+                "DeathThreshold,DeathRate,ReproThreshold," +
                 "NaturalDeathRate,NaturalDeathVariance,HuntingEfficiency,HuntingVariance," +
                 "OptimalTempK,OptimalTempC,ArrhenBreadth,ArrhenLower,ArrhenUpper," +
                 "LowerBoundK,LowerBoundC,UpperBoundK,UpperBoundC," +
@@ -661,7 +660,7 @@ public static class ConfigExporter
                 string spName = !string.IsNullOrEmpty(species.displayName) ? species.displayName : species.speciesName.ToString();
                 sb.AppendLine($"{spName},{species.variant},{species.tier},{species.count}," +
                     $"{species.eatingAmount},{species.reproductionMultiplier}," +
-                    $"{species.deathThreshold},{species.deathRate},{species.minimumDeaths},{species.reproThreshold}," +
+                    $"{species.deathThreshold},{species.deathRate},{species.reproThreshold}," +
                     $"{species.naturalDeathRate},{species.naturalDeathVariance}," +
                     $"{species.huntingEfficiency},{species.huntingVariance}," +
                     $"{species.optimalTempK},{species.optimalTempK - 273.15f:F2}," +

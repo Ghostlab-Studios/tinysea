@@ -58,7 +58,7 @@ public static class TinySeaSpeciesExport
         string[] header = new string[] {
             "Index","Name","Variant","Tier",
             "EatingAmount","ReproductionMultiplier",
-            "DeathThreshold","DeathRate","MinimumDeaths","ReproThreshold",
+            "DeathThreshold","DeathRate","ReproThreshold",
             "EatingStars","ReproductionStars","DeathThresholdStars","DeathRateStars","ThermalBreadthStars",
             "Description","TemperatureThresholdText","ReproductionRateText",
             "SpeciesAmount",
@@ -107,7 +107,6 @@ public static class TinySeaSpeciesExport
 
             row.Add(c.deathThreashold.ToString(inv));
             row.Add(c.deathRate.ToString(inv));
-            row.Add(c.minimumDeaths.ToString(inv));
             row.Add(c.reproThreshold.ToString(inv));
 
             row.Add(c.eatingStars.ToString(inv));

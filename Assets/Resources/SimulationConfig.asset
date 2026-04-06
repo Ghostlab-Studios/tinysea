@@ -21,7 +21,7 @@ MonoBehaviour:
   ConditionRecoveryRate: 0.1
   BaseTemperature: 20
   SeasonalAmplitude: 10
-  ClimateTrend: 1
+  ClimateTrend: 0
   InterannualVariation: 1
   VariabilityMagnitude: 2
   WarmingBias: 1.5

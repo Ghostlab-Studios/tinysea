@@ -14,7 +14,7 @@ using UnityEngine;
 /// 5. Final Performance - ThermalPerf x FedRate (Condition NOT used in reproduction)
 /// 6. Thermal Death - INSTANT kill at lethal limits (RawThermalPerf == 0)
 /// 7. Condition Death - GRADUATED: severity scales with how far below threshold + survivor fitness boost
-/// 8. Reproduction - With BIRTH ACCUMULATOR + Tier 1 penalty when no predators
+/// 8. Reproduction - CONDITION-BASED GRADUATED SCALE + BIRTH ACCUMULATOR + Tier 1 penalty
 /// 9. Natural Death - FLAT RATE + NATURAL DEATH ACCUMULATOR
 /// 10. Population Rounding - All populations become integers
 ///
@@ -47,6 +47,13 @@ using UnityEngine;
 ///   single Holling Type II Functional Response (Holling 1959)
 /// - Hunting efficiency now scales naturally with prey:predator ratio
 /// - No FedRate floor — zero prey = zero hunting efficiency = true starvation
+///
+/// v8 CHANGES:
+/// - Switched reproduction from FinalPerformance-driven to Condition-driven
+/// - Reproduction now uses species health (Condition) as the scale factor
+/// - No hard cliff: below ReproThreshold gives diminished but non-zero reproduction
+/// - Continuous piecewise formula joined at STRUGGLING_REPRO_RATE (0.10)
+/// - Ecologically: animals with energy reserves reproduce in all seasons, just less in harsh conditions
 /// </summary>
 public class EcosystemSimulator
 {
@@ -89,6 +96,10 @@ public class EcosystemSimulator
     public float LastBirthsT2 { get; private set; } = 0f;
     public float LastFedRateT2 { get; private set; } = 1f;
     public float LastAvgHuntingEfficiency { get; private set; } = 1f;
+
+    // Reproduction scale tracking (graduated reproduction)
+    public float LastReproScaleT1 { get; private set; } = 0f;
+    public float LastReproScaleT2 { get; private set; } = 0f;
 
     // Combined
     public float LastTotalDeaths => LastEatenT1 + LastTempDeathsT1 + LastTempDeathsT2 +
@@ -144,6 +155,14 @@ public class EcosystemSimulator
 
     // --- Reproduction ---
     private const float MIN_POPULATION_FOR_REPRODUCTION = 2f; // Need at least 2 to reproduce
+
+    // --- Condition-Based Reproduction (v8) ---
+    // Below ReproThreshold, reproduction is diminished but non-zero.
+    // This constant sets the maximum reproScale when Condition equals ReproThreshold.
+    // Above threshold: reproScale ramps from this value to 1.0.
+    // Below threshold: reproScale ramps from 0 to this value.
+    // The two regions meet at this value, ensuring continuity (no cliff).
+    private const float STRUGGLING_REPRO_RATE = 0.10f;        // 10% max reproduction when below threshold
 
     public EcosystemSimulator(int seed = -1)
     {
@@ -344,7 +363,7 @@ public class EcosystemSimulator
     /// 5. Final Performance - ThermalPerf x FedRate (Condition NOT used in reproduction)
     /// 6. Thermal Death - INSTANT kill at lethal limits (RawThermalPerf == 0)
     /// 7. Condition Death - GRADUATED: severity scales with how far below threshold
-    /// 8. Reproduction - With BIRTH ACCUMULATOR + Tier 1 penalty when no predators
+    /// 8. Reproduction - CONDITION-BASED GRADUATED SCALE + BIRTH ACCUMULATOR + Tier 1 penalty
     /// 9. Natural Death - FLAT RATE + NATURAL DEATH ACCUMULATOR
     /// 10. Population Rounding - All populations become integers
     /// </summary>
@@ -366,6 +385,8 @@ public class EcosystemSimulator
         LastBirthsT2 = 0f;
         LastFedRateT2 = 1f;
         LastAvgHuntingEfficiency = 1f;
+        LastReproScaleT1 = 0f;
+        LastReproScaleT2 = 0f;
 
         Debug.Log($"=== Biology Step at {temperature:F2}°C (BiologyStep={BiologyStep}) ===");
         Debug.Log($"  START: T1={StartPopT1:F0}, T2={StartPopT2:F0}");
@@ -758,11 +779,28 @@ public class EcosystemSimulator
     }
 
     /// <summary>
-    /// Apply reproduction with BIRTH ACCUMULATOR, Tier 1 penalty, and carrying capacity.
-    /// CARRYING CAPACITY ONLY APPLIES TO TIER 1.
+    /// Apply reproduction with CONDITION-BASED GRADUATED SCALE, BIRTH ACCUMULATOR,
+    /// Tier 1 penalty, and carrying capacity. CARRYING CAPACITY ONLY APPLIES TO TIER 1.
     ///
-    /// Condition does NOT affect reproduction at all — neither the threshold check nor
-    /// the birth count. Condition only governs condition-death (graduated severity below DeathThreshold).
+    /// CONDITION-BASED REPRODUCTION (v8):
+    /// Reproduction is driven by Condition (species health), not FinalPerformance.
+    /// Condition integrates temperature, feeding, and history — a species with stored
+    /// health reserves can reproduce even in poor conditions, just at a reduced rate.
+    ///
+    /// Two regions, continuous at ReproThreshold:
+    ///   Above threshold: reproScale = STRUGGLING_RATE + (1 - STRUGGLING_RATE) × (Cond - thresh) / (1 - thresh)
+    ///   Below threshold: reproScale = STRUGGLING_RATE × (Cond / thresh)
+    ///   At threshold: both give STRUGGLING_RATE (0.10) — no discontinuity
+    ///   At Condition = 0: reproScale = 0 (only truly dead species don't reproduce)
+    ///
+    /// births = Population × reproScale × ReproMult × BiologyStep
+    ///
+    /// Why Condition, not FinalPerformance:
+    /// - FinalPerformance is instantaneous (thermal × fed) — drops to near-zero in winter
+    /// - Condition is lagged — drains gradually, preserving summer health into early winter
+    /// - This prevents the "90-day zero reproduction" winter problem
+    /// - No death spiral: Condition drains toward RawFinalPerf (environmental), not birth-dependent
+    ///
     /// Newborn dilution still applies (newborns enter at NEWBORN_CONDITION = 0.5).
     /// </summary>
     private void ApplyReproduction(SimSpecies sp)
@@ -773,16 +811,48 @@ public class EcosystemSimulator
             return;
         }
 
-        if (sp.FinalPerformance < sp.ReproThreshold)
+        // Condition-based graduated reproduction scale (v8)
+        // Two continuous regions joined at STRUGGLING_REPRO_RATE:
+        //   Above ReproThreshold: healthy reproduction, ramps from 0.10 to 1.0
+        //   Below ReproThreshold: struggling reproduction, ramps from 0 to 0.10
+        //   At Condition = 0: reproScale = 0 (truly dead species don't reproduce)
+        //
+        // No hard cliff anywhere — even poor-condition species produce a trickle of
+        // births that the accumulator captures over multiple days. This models the
+        // ecological reality that animals with energy reserves reproduce in all seasons,
+        // just at reduced rates in harsh conditions.
+        float reproScale;
+        if (sp.ReproThreshold >= 1.0f)
         {
-            Debug.Log($"  {sp.FullName}: Cannot reproduce (FinalPerf {sp.FinalPerformance:F3} < {sp.ReproThreshold})");
-            return;
+            // Edge case: threshold at max — all reproduction is "struggling" mode
+            reproScale = STRUGGLING_REPRO_RATE * sp.Condition;
         }
+        else if (sp.ReproThreshold <= 0f)
+        {
+            // Edge case: no threshold — reproScale equals Condition directly
+            reproScale = sp.Condition;
+        }
+        else if (sp.Condition >= sp.ReproThreshold)
+        {
+            // Healthy: ramp from STRUGGLING_REPRO_RATE at threshold to 1.0 at full condition
+            float t = (sp.Condition - sp.ReproThreshold) / (1.0f - sp.ReproThreshold);
+            reproScale = STRUGGLING_REPRO_RATE + (1.0f - STRUGGLING_REPRO_RATE) * t;
+        }
+        else
+        {
+            // Struggling: ramp from 0 at Condition=0 to STRUGGLING_REPRO_RATE at threshold
+            // Non-zero as long as Condition > 0 — the accumulator will capture fractional births
+            reproScale = STRUGGLING_REPRO_RATE * (sp.Condition / sp.ReproThreshold);
+        }
+        reproScale = Math.Max(0f, Math.Min(1f, reproScale)); // Safety clamp
 
-        // Calculate base births — Condition does NOT affect birth rate.
-        // Condition only governs condition-death (graduated severity below DeathThreshold).
+        // Track reproScale per tier for CSV output and debugging
+        if (sp.Tier == 1) LastReproScaleT1 = reproScale;
+        else if (sp.Tier == 2) LastReproScaleT2 = reproScale;
+
+        // births = Population × reproScale × ReproMult × BiologyStep
         // Newborn dilution still applies (newborns enter at NEWBORN_CONDITION).
-        float births = sp.Population * sp.FinalPerformance * sp.ReproductionMultiplier * BiologyStep;
+        float births = sp.Population * reproScale * sp.ReproductionMultiplier * BiologyStep;
 
         // Tier 1 penalty if no predators exist
         if (sp.Tier == 1)
@@ -827,7 +897,7 @@ public class EcosystemSimulator
             Debug.Log($"  {sp.FullName}: Condition diluted {oldCondition:F3} → {sp.Condition:F3} ({wholeBirths} newborns at {NEWBORN_CONDITION:F2})");
         }
 
-        Debug.Log($"  {sp.FullName}: +{births:F2} raw, accum={accumulated:F2}, actual={wholeBirths}, Pop {oldPop:F0} → {sp.Population:F0}");
+        Debug.Log($"  {sp.FullName}: reproScale={reproScale:F3} (Condition={sp.Condition:F3}, thresh={sp.ReproThreshold}), +{births:F2} raw, accum={accumulated:F2}, actual={wholeBirths}, Pop {oldPop:F0} → {sp.Population:F0}");
 
         // Track by tier
         if (sp.Tier == 1)

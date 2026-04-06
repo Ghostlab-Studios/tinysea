@@ -23,7 +23,7 @@ public class SimSpecies
     public float ReproductionMultiplier;    // Birth rate multiplier
     public float DeathThreshold;            // FinalPerf below this triggers thermal death (default 0.3)
     public float DeathRate;                 // Fraction dying when thermal death triggers
-    public float ReproThreshold;            // FinalPerf required to reproduce (default 0.25)
+    public float ReproThreshold;            // Condition inflection point: above = healthy reproduction ramp, below = struggling but non-zero (default 0.25)
 
     // ==================== NATURAL MORTALITY ====================
     public float NaturalDeathRate = 0.02f;      // Base natural death rate (all species: 2%)

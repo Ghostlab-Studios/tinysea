@@ -67,10 +67,12 @@ Each species uses a numbered prefix: `sp1_` for species 1, `sp2_` for species 2,
 
 ### Reproduction
 
+Reproduction is driven by **Condition** (species health), not instantaneous thermal performance. Condition integrates temperature, feeding, and history — a species with stored health reserves can reproduce even in poor conditions, just at a reduced rate. There is no hard cliff: reproduction scales smoothly from zero (at Condition = 0) to full rate (at Condition = 1.0).
+
 | Column Suffix | Type | Default (T1/T2) | Description |
 |---------------|------|-----------------|-------------|
-| `repro_mult` | number | 0.45 / 0.1 | Reproduction rate multiplier. Higher = faster population growth. Birth formula: `births = population x FinalPerformance x repro_mult` |
-| `repro_thresh` | number | 0.25 / 0.25 | Minimum FinalPerformance required for reproduction to occur. `FinalPerformance = ThermalPerformance x FedRate`. Below this threshold, zero reproduction |
+| `repro_mult` | number | 0.45 / 0.1 | Reproduction rate multiplier. Higher = faster population growth. Birth formula: `births = population x reproScale x repro_mult`. The `reproScale` is condition-based: above threshold it ramps from 0.10 to 1.0, below threshold it ramps from 0 to 0.10. No hard cliff anywhere |
+| `repro_thresh` | number | 0.25 / 0.25 | Condition inflection point for reproduction. Above this Condition value, reproduction ramps strongly toward full rate. Below it, reproduction is diminished but non-zero (up to 10% of full rate). Zero reproduction only occurs when Condition = 0 (species is effectively dead). This is NOT a hard cutoff |
 
 ### Death — Condition System
 

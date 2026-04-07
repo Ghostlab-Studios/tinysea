@@ -117,10 +117,27 @@ public class BulkSimulationController : MonoBehaviour
         float origCondRecovery = config.ConditionRecoveryRate;
         var origSpeciesList = new List<SpeciesData>(runSpecies.speciesList);
 
-        // Initialize progressive ZIP — files stream to JS heap (WebGL) or disk (Editor)
-        // as each scenario completes, instead of accumulating all CSV data in C# memory
-        string zipFilename = $"tinysea_bulk_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.zip";
-        WebGLZipDownload.InitProgressiveZip(zipFilename);
+        // Storage strategy: WebGL uses server upload (S3), Editor uses progressive ZIP
+        bool useServerUpload = ServerUpload.IsAvailable;
+
+        if (useServerUpload)
+        {
+            // Create a server session for S3 uploads
+            bool sessionOk = false;
+            yield return ServerUpload.CreateSession((ok, id) => sessionOk = ok);
+            if (!sessionOk)
+            {
+                Debug.LogWarning("Server upload unavailable, falling back to progressive ZIP");
+                useServerUpload = false;
+            }
+        }
+
+        if (!useServerUpload)
+        {
+            // Fallback: progressive ZIP (files stream to JS heap or disk)
+            string zipFilename = $"tinysea_bulk_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.zip";
+            WebGLZipDownload.InitProgressiveZip(zipFilename);
+        }
 
         // Calculate total scenarios across all batches
         int totalScenarios = 0;
@@ -243,13 +260,15 @@ public class BulkSimulationController : MonoBehaviour
                 var result = simulationController.RunSingleScenarioPublic(scenarioIndex, seed);
                 batchResults.Scenarios.Add(result);
 
-                // Stream scenario CSV to progressive ZIP immediately and free WASM memory.
-                // The ScenarioResult stats (populations, crash info, etc.) are kept for
-                // CalculateAggregates() — only the large CsvData string is released.
+                // Stream scenario CSV out of memory immediately.
+                // Server upload → S3; progressive ZIP → JS heap or disk.
                 if (!string.IsNullOrEmpty(result.CsvData))
                 {
-                    WebGLZipDownload.AddFileToProgressiveZip(
-                        $"{batchFolder}/scenario_{result.ScenarioIndex}.csv", result.CsvData);
+                    string csvPath = $"{batchFolder}/scenario_{result.ScenarioIndex}.csv";
+                    if (useServerUpload)
+                        yield return ServerUpload.UploadFile(csvPath, result.CsvData);
+                    else
+                        WebGLZipDownload.AddFileToProgressiveZip(csvPath, result.CsvData);
                     result.CsvData = null; // Free ~3-6 MB per scenario from WASM heap
                 }
 
@@ -263,10 +282,18 @@ public class BulkSimulationController : MonoBehaviour
                 batchResults.CalculateAggregates();
 
                 // Generate and stream aggregate/config CSVs (uses scenario stats, not CsvData)
-                WebGLZipDownload.AddFileToProgressiveZip(
-                    $"{batchFolder}/aggregate.csv", batchResults.ToAggregateCsv());
-                WebGLZipDownload.AddFileToProgressiveZip(
-                    $"{batchFolder}/config.csv", batchResults.ToConfigCsv());
+                string aggCsv = batchResults.ToAggregateCsv();
+                string cfgCsv = batchResults.ToConfigCsv();
+                if (useServerUpload)
+                {
+                    yield return ServerUpload.UploadFile($"{batchFolder}/aggregate.csv", aggCsv);
+                    yield return ServerUpload.UploadFile($"{batchFolder}/config.csv", cfgCsv);
+                }
+                else
+                {
+                    WebGLZipDownload.AddFileToProgressiveZip($"{batchFolder}/aggregate.csv", aggCsv);
+                    WebGLZipDownload.AddFileToProgressiveZip($"{batchFolder}/config.csv", cfgCsv);
+                }
 
                 Debug.Log($"Batch '{batch.BatchName}' complete: {batchResults.SurvivedScenarios} survived, " +
                           $"{batchResults.CrashedScenarios} crashed");
@@ -298,11 +325,12 @@ public class BulkSimulationController : MonoBehaviour
         runSpecies.speciesList.AddRange(origSpeciesList);
 
         // Switch to results screen with Download All (ZIP) button
-        // ZIP files are already streamed — Finalize happens when user clicks Download
         if (resultsScreen != null)
-            resultsScreen.DisplayBulkResults(batches.Count, completedScenarios);
+            resultsScreen.DisplayBulkResults(batches.Count, completedScenarios, useServerUpload);
 
-        Debug.Log($"Bulk simulation complete. {WebGLZipDownload.ProgressiveFileCount} files ready for download.");
+        int fileCount = useServerUpload ? ServerUpload.UploadedFileCount : WebGLZipDownload.ProgressiveFileCount;
+        Debug.Log($"Bulk simulation complete. {fileCount} files ready for download" +
+                  (useServerUpload ? " (server/S3)" : " (progressive ZIP)") + ".");
 
         _isRunning = false;
         _runCoroutine = null;

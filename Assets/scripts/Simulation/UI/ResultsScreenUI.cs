@@ -56,6 +56,7 @@ public class ResultsScreenUI : MonoBehaviour
     // State
     private AggregateResults _currentResults;
     private bool _bulkProgressiveReady = false;
+    private bool _bulkServerReady = false;
     private bool _isRunning = false;
     private bool _cancelRequested = false;
     private List<GameObject> _scenarioRows = new List<GameObject>();
@@ -100,6 +101,7 @@ public class ResultsScreenUI : MonoBehaviour
         ClearScenarioList();
         _currentResults = null;
         _bulkProgressiveReady = false;
+        _bulkServerReady = false;
 
         // Reset progress
         UpdateProgress(0, 1, "Initializing...");
@@ -130,6 +132,7 @@ public class ResultsScreenUI : MonoBehaviour
 
         _isRunning = false;
         _bulkProgressiveReady = false;
+        _bulkServerReady = false;
     }
 
     /// <summary>
@@ -209,13 +212,14 @@ public class ResultsScreenUI : MonoBehaviour
     /// Shows resultsSection with only the "Download All (ZIP)" button.
     /// Hides config download, aggregate download, and scenario rows.
     ///
-    /// CSV files have already been streamed to WebGLZipDownload's progressive ZIP.
-    /// Clicking Download will finalize the ZIP and trigger the browser download.
+    /// CSV files have already been streamed to S3 (server) or progressive ZIP.
+    /// Clicking Download will either open the server download URL or finalize the ZIP.
     /// </summary>
-    public void DisplayBulkResults(int totalBatches, int totalScenarios)
+    public void DisplayBulkResults(int totalBatches, int totalScenarios, bool serverUpload = false)
     {
         _isRunning = false;
-        _bulkProgressiveReady = true;
+        _bulkServerReady = serverUpload;
+        _bulkProgressiveReady = !serverUpload;
 
         // Switch to results mode
         SetProgressMode(false);
@@ -431,7 +435,13 @@ public class ResultsScreenUI : MonoBehaviour
 
     private void OnDownloadAllZipClicked()
     {
-        // Bulk mode: finalize progressive ZIP (files already streamed)
+        // Bulk mode: server download (S3) or progressive ZIP
+        if (_bulkServerReady)
+        {
+            ServerUpload.TriggerDownload();
+            _bulkServerReady = false;
+            return;
+        }
         if (_bulkProgressiveReady)
         {
             StartCoroutine(DownloadBulkAsZip());

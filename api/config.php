@@ -4,6 +4,12 @@
  * Loads .env and provides S3 config constants.
  */
 
+// Runtime PHP limits (replaces .htaccess php_value which breaks on PHP-FPM)
+ini_set('post_max_size', '32M');
+ini_set('upload_max_filesize', '32M');
+ini_set('memory_limit', '256M');
+ini_set('max_execution_time', '300');
+
 // Load .env file (one directory up)
 $envFile = dirname(__DIR__) . '/.env';
 if (file_exists($envFile)) {

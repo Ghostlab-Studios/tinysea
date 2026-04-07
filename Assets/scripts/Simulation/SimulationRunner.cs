@@ -433,7 +433,7 @@ public class SimulationRunner
         if (RunSpecies != null && RunSpecies.speciesList != null && RunSpecies.speciesList.Count > 0)
         {
             sb.AppendLine("#species:Name,Variant,Tier,InitialCount,EatingAmount,ReproductionMultiplier," +
-                "DeathThreshold,DeathRate,MinimumDeaths,ReproThreshold," +
+                "DeathThreshold,DeathRate,ReproThreshold," +
                 "NaturalDeathRate,NaturalDeathVariance,HuntingEfficiency,HuntingVariance," +
                 "OptimalTempK,OptimalTempC,ArrhenBreadth,ArrhenLower,ArrhenUpper," +
                 "LowerBoundK,LowerBoundC,UpperBoundK,UpperBoundC," +
@@ -443,7 +443,7 @@ public class SimulationRunner
                 string spName = !string.IsNullOrEmpty(sp.displayName) ? sp.displayName : sp.speciesName.ToString();
                 sb.AppendLine($"#species:{spName},{sp.variant},{sp.tier},{sp.count}," +
                     $"{sp.eatingAmount},{sp.reproductionMultiplier}," +
-                    $"{sp.deathThreshold},{sp.deathRate},{sp.minimumDeaths},{sp.reproThreshold}," +
+                    $"{sp.deathThreshold},{sp.deathRate},{sp.reproThreshold}," +
                     $"{sp.naturalDeathRate},{sp.naturalDeathVariance}," +
                     $"{sp.huntingEfficiency},{sp.huntingVariance}," +
                     $"{sp.optimalTempK},{sp.optimalTempK - 273.15f:F2}," +

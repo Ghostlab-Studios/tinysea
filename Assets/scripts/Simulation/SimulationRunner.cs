@@ -24,7 +24,8 @@ using UnityEngine;
 /// - NaturalDeathAccumT1, NaturalDeathAccumT2: Natural death accumulator totals
 /// - ConditionDeathAccumT1, ConditionDeathAccumT2: Condition death accumulator totals
 /// - PredationAccumT1: Predation accumulator total for Tier 1
-/// 
+/// - ReproScaleT1, ReproScaleT2: Condition-based reproduction scale factor per tier [0-1]
+///
 /// NOTE: Population fields use 'long' to prevent integer overflow with large populations.
 /// </summary>
 public class StepRecord
@@ -84,6 +85,10 @@ public class StepRecord
     public float ConditionDeathAccumT2;
     public float PredationAccumT1;
 
+    // Reproduction scale tracking (graduated reproduction)
+    public float ReproScaleT1;
+    public float ReproScaleT2;
+
     public string ToCsvLine()
     {
         return $"{Day},{Year},{Temperature:F2},{BiologyCycle}," +
@@ -101,7 +106,8 @@ public class StepRecord
                $"{BirthAccumT1:F3},{BirthAccumT2:F3}," +
                $"{NaturalDeathAccumT1:F3},{NaturalDeathAccumT2:F3}," +
                $"{ConditionDeathAccumT1:F3},{ConditionDeathAccumT2:F3}," +
-               $"{PredationAccumT1:F3}";
+               $"{PredationAccumT1:F3}," +
+               $"{ReproScaleT1:F3},{ReproScaleT2:F3}";
     }
 
     public static string CsvHeader()
@@ -121,7 +127,8 @@ public class StepRecord
                "BirthAccumT1,BirthAccumT2," +
                "NaturalDeathAccumT1,NaturalDeathAccumT2," +
                "ConditionDeathAccumT1,ConditionDeathAccumT2," +
-               "PredationAccumT1";
+               "PredationAccumT1," +
+               "ReproScaleT1,ReproScaleT2";
     }
 }
 
@@ -287,6 +294,10 @@ public class SimulationRunner
             // Birth tracking - using long to prevent overflow
             BirthsT1 = biologyRan ? (long)Math.Round(Ecosystem.LastBirthsT1) : 0,
             BirthsT2 = biologyRan ? (long)Math.Round(Ecosystem.LastBirthsT2) : 0,
+
+            // Reproduction scale tracking (graduated reproduction)
+            ReproScaleT1 = biologyRan ? Ecosystem.LastReproScaleT1 : 0f,
+            ReproScaleT2 = biologyRan ? Ecosystem.LastReproScaleT2 : 0f,
 
             // Feeding tracking
             FedRateT2 = biologyRan ? Ecosystem.LastFedRateT2 : 0f,

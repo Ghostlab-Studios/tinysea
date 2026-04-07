@@ -61,6 +61,11 @@ public class ResultsScreenUI : MonoBehaviour
     private bool _cancelRequested = false;
     private List<GameObject> _scenarioRows = new List<GameObject>();
 
+    // Animated dots state — cycles between ".", "..", "..." to show activity
+    private Coroutine _dotsCoroutine;
+    private string _baseProgressText = "";
+    private int _dotCount = 0;
+
     // Events for external communication
     public System.Action OnCancelRequested;
     public System.Action OnCloseRequested;
@@ -131,6 +136,7 @@ public class ResultsScreenUI : MonoBehaviour
             resultsPanel.SetActive(false);
 
         _isRunning = false;
+        StopDotsAnimation();
         _bulkProgressiveReady = false;
         _bulkServerReady = false;
     }
@@ -185,6 +191,8 @@ public class ResultsScreenUI : MonoBehaviour
     /// <summary>
     /// Update progress with custom text and explicit progress value (0-1).
     /// Used by bulk simulation for multi-batch progress display.
+    /// Starts an animated dots suffix (".", "..", "...") that cycles every 0.4s
+    /// to show the system is alive during long synchronous scenario computations.
     /// </summary>
     public void UpdateBulkProgress(string text, float progress01)
     {
@@ -194,8 +202,51 @@ public class ResultsScreenUI : MonoBehaviour
             progressBar.value = progress01;
         }
 
+        // Store base text (without trailing dots) and reset dot cycle
+        _baseProgressText = text.TrimEnd('.');
+        _dotCount = 0;
+
         if (progressText != null)
-            progressText.text = text;
+            progressText.text = _baseProgressText;
+
+        // Start dots animation if not already running
+        if (_dotsCoroutine == null)
+            _dotsCoroutine = StartCoroutine(AnimateDots());
+    }
+
+    /// <summary>
+    /// Animates ".", "..", "..." suffix on the progress text.
+    /// Runs as a coroutine — advances each frame Unity gets control
+    /// (between synchronous scenario computations via yield return null).
+    /// </summary>
+    private IEnumerator AnimateDots()
+    {
+        float timer = 0f;
+        while (_isRunning)
+        {
+            timer += Time.unscaledDeltaTime;
+            if (timer >= 0.4f)
+            {
+                timer = 0f;
+                _dotCount = (_dotCount % 3) + 1;
+                if (progressText != null)
+                    progressText.text = _baseProgressText + new string('.', _dotCount);
+            }
+            yield return null;
+        }
+        _dotsCoroutine = null;
+    }
+
+    /// <summary>
+    /// Stop the animated dots coroutine.
+    /// </summary>
+    private void StopDotsAnimation()
+    {
+        if (_dotsCoroutine != null)
+        {
+            StopCoroutine(_dotsCoroutine);
+            _dotsCoroutine = null;
+        }
     }
 
     /// <summary>
@@ -218,6 +269,7 @@ public class ResultsScreenUI : MonoBehaviour
     public void DisplayBulkResults(int totalBatches, int totalScenarios, bool serverUpload = false)
     {
         _isRunning = false;
+        StopDotsAnimation();
         _bulkServerReady = serverUpload;
         _bulkProgressiveReady = !serverUpload;
 
@@ -261,6 +313,7 @@ public class ResultsScreenUI : MonoBehaviour
     {
         _currentResults = results;
         _isRunning = false;
+        StopDotsAnimation();
 
         // Switch to results mode
         SetProgressMode(false);
@@ -438,19 +491,47 @@ public class ResultsScreenUI : MonoBehaviour
         // Bulk mode: server download (S3) or progressive ZIP
         if (_bulkServerReady)
         {
+            SetDownloadButtonState("Downloading...", false);
             ServerUpload.TriggerDownload();
             _bulkServerReady = false;
+            // Re-enable after a short delay (browser handles the actual download)
+            StartCoroutine(ResetDownloadButtonAfterDelay(3f));
             return;
         }
         if (_bulkProgressiveReady)
         {
+            SetDownloadButtonState("Preparing ZIP...", false);
             StartCoroutine(DownloadBulkAsZip());
             return;
         }
 
         // Normal mode: build ZIP from current results
         if (_currentResults == null) return;
+        SetDownloadButtonState("Building ZIP...", false);
         StartCoroutine(DownloadAllAsZip());
+    }
+
+    /// <summary>
+    /// Update the download button text and interactable state to show feedback.
+    /// </summary>
+    private void SetDownloadButtonState(string text, bool interactable)
+    {
+        if (downloadAllZipButton == null) return;
+
+        downloadAllZipButton.interactable = interactable;
+        var label = downloadAllZipButton.GetComponentInChildren<TextMeshProUGUI>();
+        if (label != null)
+            label.text = text;
+    }
+
+    /// <summary>
+    /// Reset the download button after a delay (used for S3 downloads where the
+    /// browser handles the actual file download and we have no completion callback).
+    /// </summary>
+    private IEnumerator ResetDownloadButtonAfterDelay(float seconds)
+    {
+        yield return new WaitForSeconds(seconds);
+        SetDownloadButtonState("Download All (ZIP)", true);
     }
 
     /// <summary>
@@ -460,11 +541,9 @@ public class ResultsScreenUI : MonoBehaviour
     {
 #if UNITY_WEBGL && !UNITY_EDITOR
         WebGLDownload.DownloadCsv(filename, content);
-        Debug.Log($"Download triggered: {filename}");
 #else
         string path = Path.Combine(Application.persistentDataPath, filename);
         File.WriteAllText(path, content);
-        Debug.Log($"Saved to: {path}");
 
         if (openFilesAfterSave)
         {
@@ -486,7 +565,6 @@ public class ResultsScreenUI : MonoBehaviour
                 FileName = path.Replace("/", "\\"),
                 UseShellExecute = true
             });
-            Debug.Log($"Opened file: {path}");
         }
         catch (System.Exception e)
         {
@@ -496,14 +574,12 @@ public class ResultsScreenUI : MonoBehaviour
         try
         {
             System.Diagnostics.Process.Start("open", path);
-            Debug.Log($"Opened file: {path}");
         }
         catch (System.Exception e)
         {
             Debug.LogError($"Failed to open file: {e.Message}");
         }
 #else
-        Debug.Log($"File saved at: {path}");
 #endif
     }
 
@@ -516,7 +592,6 @@ public class ResultsScreenUI : MonoBehaviour
         try
         {
             System.Diagnostics.Process.Start("explorer.exe", folderPath.Replace("/", "\\"));
-            Debug.Log($"Opened folder: {folderPath}");
         }
         catch (System.Exception e)
         {
@@ -526,14 +601,12 @@ public class ResultsScreenUI : MonoBehaviour
         try
         {
             System.Diagnostics.Process.Start("open", folderPath);
-            Debug.Log($"Opened folder: {folderPath}");
         }
         catch (System.Exception e)
         {
             Debug.LogError($"Failed to open folder: {e.Message}");
         }
 #else
-        Debug.Log($"Folder path: {folderPath}");
 #endif
     }
 
@@ -544,7 +617,6 @@ public class ResultsScreenUI : MonoBehaviour
     {
         if (_currentResults == null) yield break;
 
-        Debug.Log("Building ZIP file...");
 
         var files = new List<(string name, string content)>();
 
@@ -576,7 +648,6 @@ public class ResultsScreenUI : MonoBehaviour
 
 #if UNITY_WEBGL && !UNITY_EDITOR
         WebGLZipDownload.DownloadAsZip(zipFilename, files);
-        Debug.Log($"ZIP download triggered: {zipFilename} ({files.Count} files)");
 #else
         string folder = Path.Combine(Application.persistentDataPath,
             Path.GetFileNameWithoutExtension(zipFilename));
@@ -590,7 +661,6 @@ public class ResultsScreenUI : MonoBehaviour
             File.WriteAllText(path, content);
         }
 
-        Debug.Log($"All files saved to: {folder}");
 
         if (openFilesAfterSave)
         {
@@ -598,6 +668,7 @@ public class ResultsScreenUI : MonoBehaviour
         }
 #endif
 
+        SetDownloadButtonState("Download All (ZIP)", false); // Done — keep disabled
         yield return null;
     }
 
@@ -611,7 +682,9 @@ public class ResultsScreenUI : MonoBehaviour
     {
         if (!_bulkProgressiveReady) yield break;
 
-        Debug.Log($"Finalizing progressive ZIP ({WebGLZipDownload.ProgressiveFileCount} files)...");
+
+        // Yield a frame so "Preparing ZIP..." text renders before the blocking call
+        yield return null;
 
         string outputFolder = WebGLZipDownload.FinalizeProgressiveZip();
         _bulkProgressiveReady = false;
@@ -621,6 +694,8 @@ public class ResultsScreenUI : MonoBehaviour
         {
             OpenFolder(outputFolder);
         }
+
+        SetDownloadButtonState("Download All (ZIP)", false); // Done — keep disabled (already downloaded)
 
         yield return null;
     }

@@ -165,9 +165,10 @@ public class SimulationRunner
     public int UsedSeed { get; private set; } = -1;
 
     /// <summary>
-    /// Editor-only simulation log. Stripped from built players via [Conditional].
+    /// Verbose simulation log. Stripped everywhere by default.
+    /// To enable: add TINYSEA_SIM_LOG to Scripting Define Symbols.
     /// </summary>
-    [System.Diagnostics.Conditional("UNITY_EDITOR")]
+    [System.Diagnostics.Conditional("TINYSEA_SIM_LOG")]
     private static void SimLog(string message) => Debug.Log(message);
 
     public SimulationRunner(int seed = -1)

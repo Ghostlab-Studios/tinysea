@@ -66,7 +66,6 @@ public static class ServerUpload
 
         var response = JsonUtility.FromJson<SessionResponse>(request.downloadHandler.text);
         _sessionId = response.session;
-        Debug.Log($"ServerUpload: Session created: {_sessionId}");
         onComplete?.Invoke(true, _sessionId);
     }
 
@@ -143,10 +142,9 @@ public static class ServerUpload
         {
             // Use the existing jslib download mechanism or open URL
             Application.OpenURL(url);
-            Debug.Log($"ServerUpload: Download triggered: {url}");
         }
 #else
-        Debug.Log($"ServerUpload: Download URL: {GetDownloadUrl()}");
+        // Standalone: no browser download available
 #endif
     }
 

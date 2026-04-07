@@ -112,9 +112,7 @@ public class SimulationController : MonoBehaviour
         // Wait one frame so the UI renders
         yield return null;
 
-        Debug.Log("=== TinySea Simulation v6 Starting ===");
-        Debug.Log($"Config: {config.DaysPerScenario} days x {config.NumberOfScenarios} scenarios");
-        Debug.Log($"BiologyStep: {config.BiologyStep}");
+        // Config is already shown in UI — no console logging needed
 
         // Initialize aggregate results with ALL config parameters
         _currentResults = new AggregateResults
@@ -164,20 +162,12 @@ public class SimulationController : MonoBehaviour
         {
             // Check for cancel
             if (_cancelRequested)
-            {
-                Debug.Log($"Simulation cancelled after {i} scenarios");
                 break;
-            }
 
-            int scenarioIndex = i + 1;  // 1-based for display
+            int scenarioIndex = i + 1;
 
-            // Update progress
             if (resultsScreen != null)
-            {
                 resultsScreen.UpdateProgress(scenarioIndex, config.NumberOfScenarios);
-            }
-
-            Debug.Log($"--- Running Scenario {scenarioIndex} of {config.NumberOfScenarios} ---");
 
             // Calculate seed for this scenario
             // Each scenario gets a DIFFERENT seed: baseSeed + scenarioIndex
@@ -207,16 +197,6 @@ public class SimulationController : MonoBehaviour
         if (resultsScreen != null)
         {
             resultsScreen.DisplayResults(_currentResults);
-        }
-
-        // Log summary
-        Debug.Log("=== All Scenarios Complete ===");
-        Debug.Log($"Completed: {_currentResults.CompletedScenarios} scenarios");
-        Debug.Log($"Survived: {_currentResults.SurvivedScenarios}, Crashed: {_currentResults.CrashedScenarios}");
-        Debug.Log($"Crash Rate: {_currentResults.CrashRate:P1}");
-        if (_currentResults.SurvivedScenarios > 0)
-        {
-            Debug.Log($"Avg Final T1: {_currentResults.AvgFinalTier1Pop:N0}, T2: {_currentResults.AvgFinalTier2Pop:N0}");
         }
 
         _isRunning = false;
@@ -279,17 +259,11 @@ public class SimulationController : MonoBehaviour
     private void OnCancelRequested()
     {
         _cancelRequested = true;
-        Debug.Log("Cancel requested");
     }
 
-    /// <summary>
-    /// Handle results screen close
-    /// </summary>
     private void OnResultsClosed()
     {
-        // Clear results to free memory
         _currentResults = null;
-        Debug.Log("Results screen closed, data cleared");
     }
 
     /// <summary>

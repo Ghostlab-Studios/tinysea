@@ -179,7 +179,7 @@ public class CsvUploadHandler : MonoBehaviour
     {
         if (parsedBatches == null || parsedBatches.Count == 0) return;
 
-        Debug.Log($"Starting bulk simulation with {parsedBatches.Count} batches...");
+        // Progress shown in UI
 
         // Hide buttons, keep overlay visible for BulkSimulationController progress
         goBackButton.gameObject.SetActive(false);

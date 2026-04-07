@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 
 /// <summary>
@@ -149,10 +150,7 @@ public class BulkSimulationController : MonoBehaviour
         for (int b = 0; b < batches.Count; b++)
         {
             if (_cancelRequested)
-            {
-                Debug.Log($"Bulk simulation cancelled after {b} batches");
                 break;
-            }
 
             var batch = batches[b];
             string batchFolder = batch.BatchName;
@@ -162,17 +160,13 @@ public class BulkSimulationController : MonoBehaviour
             {
                 float progress = totalScenarios > 0 ? (float)completedScenarios / totalScenarios : 0f;
                 resultsScreen.UpdateBulkProgress(
-                    $"Batch {b + 1} of {batches.Count} ({batch.BatchName}) \u2014 Scenario 0 of {batch.NumScenarios}...",
+                    $"Batch {b + 1} of {batches.Count} ({batch.BatchName}) — 0 of {batch.NumScenarios}",
                     progress);
             }
             yield return null;
 
-            // Re-check cancel after yield (catches clicks processed during yield frame)
             if (_cancelRequested)
-            {
-                Debug.Log($"Bulk simulation cancelled before batch {b + 1} setup");
                 break;
-            }
 
             // Override SimulationConfig SO fields
             config.DaysPerScenario = batch.Days;
@@ -224,44 +218,28 @@ public class BulkSimulationController : MonoBehaviour
                 Scenarios = new List<ScenarioResult>()
             };
 
-            // Run each scenario in this batch
+#if UNITY_WEBGL && !UNITY_EDITOR
+            // WebGL: sequential (single-threaded WASM, must yield for UI)
             for (int s = 0; s < batch.NumScenarios; s++)
             {
-                if (_cancelRequested)
-                {
-                    Debug.Log($"Bulk simulation cancelled during batch {b + 1}");
-                    break;
-                }
+                if (_cancelRequested) break;
 
                 int scenarioIndex = s + 1;
                 int seed = config.RandomSeed < 0 ? -1 : config.RandomSeed + s;
 
-                // Update progress for each scenario
                 if (resultsScreen != null)
                 {
                     float progress = totalScenarios > 0 ? (float)completedScenarios / totalScenarios : 0f;
                     resultsScreen.UpdateBulkProgress(
-                        $"Batch {b + 1} of {batches.Count} ({batch.BatchName}) \u2014 Scenario {scenarioIndex} of {batch.NumScenarios}...",
+                        $"Batch {b + 1} of {batches.Count} ({batch.BatchName}) — {scenarioIndex} of {batch.NumScenarios}",
                         progress);
                 }
-
-                // Yield before the blocking scenario call so Unity can process
-                // pending UI events (cancel button clicks) from the previous frame
                 yield return null;
-
-                // Re-check cancel after yield — catches clicks queued during
-                // the previous scenario's synchronous execution
-                if (_cancelRequested)
-                {
-                    Debug.Log($"Bulk simulation cancelled during batch {b + 1}");
-                    break;
-                }
+                if (_cancelRequested) break;
 
                 var result = simulationController.RunSingleScenarioPublic(scenarioIndex, seed);
                 batchResults.Scenarios.Add(result);
 
-                // Stream scenario CSV out of memory immediately.
-                // Server upload → S3; progressive ZIP → JS heap or disk.
                 if (!string.IsNullOrEmpty(result.CsvData))
                 {
                     string csvPath = $"{batchFolder}/scenario_{result.ScenarioIndex}.csv";
@@ -269,19 +247,78 @@ public class BulkSimulationController : MonoBehaviour
                         yield return ServerUpload.UploadFile(csvPath, result.CsvData);
                     else
                         WebGLZipDownload.AddFileToProgressiveZip(csvPath, result.CsvData);
-                    result.CsvData = null; // Free ~3-6 MB per scenario from WASM heap
+                    result.CsvData = null;
                 }
-
                 completedScenarios++;
             }
+#else
+            // Editor/Standalone: parallel scenarios using background threads.
+            // Each scenario creates its own SimulationRunner — no shared mutable state.
+            int parallelism = Math.Max(1, Environment.ProcessorCount - 1);
+            int batchSize = batch.NumScenarios;
+            var scenarioResults = new ScenarioResult[batchSize];
 
-            // Stream aggregate + config CSVs for this batch (even if partially completed)
+            // Launch all scenarios as parallel tasks
+            var tasks = new Task[batchSize];
+            for (int s = 0; s < batchSize; s++)
+            {
+                int scenarioIndex = s + 1;
+                int seed = config.RandomSeed < 0 ? -1 : config.RandomSeed + s;
+                int taskIndex = s;
+
+                tasks[s] = Task.Run(() =>
+                {
+                    scenarioResults[taskIndex] = simulationController.RunSingleScenarioPublic(scenarioIndex, seed);
+                });
+            }
+
+            // Wait for tasks, yielding to Unity each frame for UI updates
+            int lastReported = 0;
+            while (!Task.WhenAll(tasks).IsCompleted)
+            {
+                // Count completed tasks for progress
+                int done = 0;
+                for (int t = 0; t < tasks.Length; t++)
+                    if (tasks[t].IsCompleted) done++;
+
+                if (done > lastReported)
+                {
+                    lastReported = done;
+                    if (resultsScreen != null)
+                    {
+                        float progress = totalScenarios > 0 ? (float)(completedScenarios + done) / totalScenarios : 0f;
+                        resultsScreen.UpdateBulkProgress(
+                            $"Batch {b + 1} of {batches.Count} ({batch.BatchName}) — {done} of {batchSize} complete ({parallelism} threads)",
+                            progress);
+                    }
+                }
+                yield return null;
+            }
+
+            // Collect results and stream CSVs (main thread for file I/O)
+            for (int s = 0; s < batchSize; s++)
+            {
+                var result = scenarioResults[s];
+                if (result == null) continue;
+
+                batchResults.Scenarios.Add(result);
+
+                if (!string.IsNullOrEmpty(result.CsvData))
+                {
+                    string csvPath = $"{batchFolder}/scenario_{result.ScenarioIndex}.csv";
+                    WebGLZipDownload.AddFileToProgressiveZip(csvPath, result.CsvData);
+                    result.CsvData = null;
+                }
+            }
+            completedScenarios += batchSize;
+#endif
+
+            // Stream aggregate + config CSVs for this batch
             if (batchResults.Scenarios.Count > 0)
             {
                 batchResults.CompletedAt = DateTime.Now;
                 batchResults.CalculateAggregates();
 
-                // Generate and stream aggregate/config CSVs (uses scenario stats, not CsvData)
                 string aggCsv = batchResults.ToAggregateCsv();
                 string cfgCsv = batchResults.ToConfigCsv();
                 if (useServerUpload)
@@ -295,10 +332,6 @@ public class BulkSimulationController : MonoBehaviour
                     WebGLZipDownload.AddFileToProgressiveZip($"{batchFolder}/config.csv", cfgCsv);
                 }
 
-                Debug.Log($"Batch '{batch.BatchName}' complete: {batchResults.SurvivedScenarios} survived, " +
-                          $"{batchResults.CrashedScenarios} crashed");
-
-                // Free scenario stats — aggregates are already calculated and CSVs streamed
                 batchResults.Scenarios.Clear();
             }
         }
@@ -328,10 +361,6 @@ public class BulkSimulationController : MonoBehaviour
         if (resultsScreen != null)
             resultsScreen.DisplayBulkResults(batches.Count, completedScenarios, useServerUpload);
 
-        int fileCount = useServerUpload ? ServerUpload.UploadedFileCount : WebGLZipDownload.ProgressiveFileCount;
-        Debug.Log($"Bulk simulation complete. {fileCount} files ready for download" +
-                  (useServerUpload ? " (server/S3)" : " (progressive ZIP)") + ".");
-
         _isRunning = false;
         _runCoroutine = null;
     }
@@ -339,7 +368,6 @@ public class BulkSimulationController : MonoBehaviour
     private void OnCancelRequested()
     {
         _cancelRequested = true;
-        Debug.Log("Bulk simulation cancel requested");
     }
 
     private void OnBulkResultsClosed()

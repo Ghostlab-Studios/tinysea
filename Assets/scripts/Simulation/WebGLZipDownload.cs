@@ -69,7 +69,7 @@ public static class WebGLZipDownload
         // Finalize and trigger download
         TinySea_FinalizeZipDownload();
 #else
-        Debug.Log($"WebGLZipDownload.DownloadAsZip called with {files.Count} files, but not running in WebGL build.");
+        // Debug.Log($"WebGLZipDownload.DownloadAsZip called with {files.Count} files, but not running in WebGL build.");
 
         // In Editor, save files individually to persistentDataPath
         string folder = System.IO.Path.Combine(Application.persistentDataPath,
@@ -85,10 +85,10 @@ public static class WebGLZipDownload
             if (!System.IO.Directory.Exists(dir))
                 System.IO.Directory.CreateDirectory(dir);
             System.IO.File.WriteAllText(path, content);
-            Debug.Log($"Saved: {path}");
+            // Debug.Log($"Saved: {path}");
         }
 
-        Debug.Log($"All files saved to: {folder}");
+        // Debug.Log($"All files saved to: {folder}");
 #endif
     }
 
@@ -110,7 +110,7 @@ public static class WebGLZipDownload
 
 #if UNITY_WEBGL && !UNITY_EDITOR
         TinySea_InitZipDownload(zipFilename);
-        Debug.Log($"Progressive ZIP initialized (WebGL): {zipFilename}");
+        // Debug.Log($"Progressive ZIP initialized (WebGL): {zipFilename}");
 #else
         _progressiveFolder = System.IO.Path.Combine(Application.persistentDataPath,
             System.IO.Path.GetFileNameWithoutExtension(zipFilename));
@@ -120,7 +120,7 @@ public static class WebGLZipDownload
             System.IO.Directory.Delete(_progressiveFolder, true);
         System.IO.Directory.CreateDirectory(_progressiveFolder);
 
-        Debug.Log($"Progressive ZIP initialized (Editor): {_progressiveFolder}");
+        // Debug.Log($"Progressive ZIP initialized (Editor): {_progressiveFolder}");
 #endif
     }
 
@@ -155,12 +155,12 @@ public static class WebGLZipDownload
     {
 #if UNITY_WEBGL && !UNITY_EDITOR
         TinySea_FinalizeZipDownload();
-        Debug.Log($"Progressive ZIP download triggered: {_progressiveZipName} ({_progressiveFileCount} files)");
+        // Debug.Log($"Progressive ZIP download triggered: {_progressiveZipName} ({_progressiveFileCount} files)");
         _progressiveFileCount = 0;
         _progressiveZipName = null;
         return null;
 #else
-        Debug.Log($"Progressive ZIP complete: {_progressiveFileCount} files in {_progressiveFolder}");
+        // Debug.Log($"Progressive ZIP complete: {_progressiveFileCount} files in {_progressiveFolder}");
         string folder = _progressiveFolder;
         _progressiveFileCount = 0;
         _progressiveZipName = null;
@@ -184,7 +184,7 @@ public static class WebGLZipDownload
         if (!string.IsNullOrEmpty(_progressiveFolder) && System.IO.Directory.Exists(_progressiveFolder))
         {
             System.IO.Directory.Delete(_progressiveFolder, true);
-            Debug.Log($"Progressive ZIP cleared: {_progressiveFolder}");
+            // Debug.Log($"Progressive ZIP cleared: {_progressiveFolder}");
         }
         _progressiveFolder = null;
 #endif

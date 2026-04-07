@@ -165,11 +165,12 @@ public class EcosystemSimulator
     private const float STRUGGLING_REPRO_RATE = 0.10f;        // 10% max reproduction when below threshold
 
     /// <summary>
-    /// Editor-only simulation log. Stripped entirely from built players (including WebGL)
-    /// via [Conditional]. The string interpolation in callers is also removed at compile time,
+    /// Verbose simulation log. Stripped from ALL builds AND the Editor by default.
+    /// To enable: add TINYSEA_SIM_LOG to Player Settings > Scripting Define Symbols.
+    /// Uses [Conditional] so string interpolation in callers is also removed at compile time,
     /// preventing ~900,000 string allocations per 50-year scenario.
     /// </summary>
-    [System.Diagnostics.Conditional("UNITY_EDITOR")]
+    [System.Diagnostics.Conditional("TINYSEA_SIM_LOG")]
     private static void SimLog(string message) => Debug.Log(message);
 
     public EcosystemSimulator(int seed = -1)

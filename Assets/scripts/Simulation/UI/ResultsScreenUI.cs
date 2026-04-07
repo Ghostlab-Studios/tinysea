@@ -55,7 +55,7 @@ public class ResultsScreenUI : MonoBehaviour
 
     // State
     private AggregateResults _currentResults;
-    private List<(string name, string content)> _bulkFiles;
+    private bool _bulkProgressiveReady = false;
     private bool _isRunning = false;
     private bool _cancelRequested = false;
     private List<GameObject> _scenarioRows = new List<GameObject>();
@@ -99,7 +99,7 @@ public class ResultsScreenUI : MonoBehaviour
         // Clear previous results
         ClearScenarioList();
         _currentResults = null;
-        _bulkFiles = null;
+        _bulkProgressiveReady = false;
 
         // Reset progress
         UpdateProgress(0, 1, "Initializing...");
@@ -129,7 +129,7 @@ public class ResultsScreenUI : MonoBehaviour
             resultsPanel.SetActive(false);
 
         _isRunning = false;
-        _bulkFiles = null;
+        _bulkProgressiveReady = false;
     }
 
     /// <summary>
@@ -208,13 +208,14 @@ public class ResultsScreenUI : MonoBehaviour
     /// Display bulk simulation completion state.
     /// Shows resultsSection with only the "Download All (ZIP)" button.
     /// Hides config download, aggregate download, and scenario rows.
-    /// ZIP is NOT auto-downloaded — user clicks the button.
+    ///
+    /// CSV files have already been streamed to WebGLZipDownload's progressive ZIP.
+    /// Clicking Download will finalize the ZIP and trigger the browser download.
     /// </summary>
-    public void DisplayBulkResults(int totalBatches, int totalScenarios,
-        List<(string name, string content)> bulkFiles)
+    public void DisplayBulkResults(int totalBatches, int totalScenarios)
     {
         _isRunning = false;
-        _bulkFiles = bulkFiles;
+        _bulkProgressiveReady = true;
 
         // Switch to results mode
         SetProgressMode(false);
@@ -430,8 +431,8 @@ public class ResultsScreenUI : MonoBehaviour
 
     private void OnDownloadAllZipClicked()
     {
-        // Bulk mode: download stored bulk files
-        if (_bulkFiles != null && _bulkFiles.Count > 0)
+        // Bulk mode: finalize progressive ZIP (files already streamed)
+        if (_bulkProgressiveReady)
         {
             StartCoroutine(DownloadBulkAsZip());
             return;
@@ -591,44 +592,25 @@ public class ResultsScreenUI : MonoBehaviour
     }
 
     /// <summary>
-    /// Download bulk simulation files as a ZIP.
-    /// Same pattern as DownloadAllAsZip: WebGL triggers browser download,
-    /// Editor saves to folder and opens it.
+    /// Finalize and download the progressive bulk ZIP.
+    /// Files have already been streamed to WebGLZipDownload during simulation.
+    /// In WebGL: triggers JSZip to build the archive and start browser download.
+    /// In Editor: files are already on disk; opens the output folder.
     /// </summary>
     private IEnumerator DownloadBulkAsZip()
     {
-        if (_bulkFiles == null || _bulkFiles.Count == 0) yield break;
+        if (!_bulkProgressiveReady) yield break;
 
-        Debug.Log($"Building bulk ZIP: {_bulkFiles.Count} files...");
+        Debug.Log($"Finalizing progressive ZIP ({WebGLZipDownload.ProgressiveFileCount} files)...");
 
-        string zipFilename = $"tinysea_bulk_{System.DateTime.Now:yyyy-MM-dd_HH-mm-ss}.zip";
+        string outputFolder = WebGLZipDownload.FinalizeProgressiveZip();
+        _bulkProgressiveReady = false;
 
-#if UNITY_WEBGL && !UNITY_EDITOR
-        WebGLZipDownload.DownloadAsZip(zipFilename, _bulkFiles);
-        Debug.Log($"Bulk ZIP download triggered: {zipFilename} ({_bulkFiles.Count} files)");
-#else
-        string folder = Path.Combine(Application.persistentDataPath,
-            Path.GetFileNameWithoutExtension(zipFilename));
-
-        if (!Directory.Exists(folder))
-            Directory.CreateDirectory(folder);
-
-        foreach (var (name, content) in _bulkFiles)
+        // In Editor/standalone, open the output folder
+        if (outputFolder != null && openFilesAfterSave)
         {
-            string path = Path.Combine(folder, name);
-            string dir = Path.GetDirectoryName(path);
-            if (!Directory.Exists(dir))
-                Directory.CreateDirectory(dir);
-            File.WriteAllText(path, content);
+            OpenFolder(outputFolder);
         }
-
-        Debug.Log($"All files saved to: {folder}");
-
-        if (openFilesAfterSave)
-        {
-            OpenFolder(folder);
-        }
-#endif
 
         yield return null;
     }

@@ -47,14 +47,29 @@ All temperatures are in **Celsius**. The simulation converts to Kelvin internall
 |--------|------|---------|-------------|
 | `use_carrying_cap` | true/false | true | Enable carrying capacity limit for Tier 1 (prey). When enabled, Tier 1 reproduction slows as population approaches the limit |
 | `carrying_cap_t1` | integer | 5000 | Maximum Tier 1 population. Reproduction gradually decreases as population approaches this value (soft cap, not a hard wall) |
-| `condition_drain_rate` | number | 0.15 | *(Optional)* How fast health condition drains when thermal performance is poor. Higher = faster drain |
+| `condition_drain_rate` | number | 0.20 | *(Optional)* How fast health condition drains when thermal performance is poor. Higher = faster drain |
 | `condition_recovery_rate` | number | 0.10 | *(Optional)* How fast health condition recovers when thermal performance is good. Higher = faster recovery |
 
 ---
 
 ## Species Columns
 
-Each species uses a numbered prefix: `sp1_` for species 1, `sp2_` for species 2, etc. The simulation detects how many species you have by scanning for sequential prefixes. A typical setup has 2 species (sp1 = prey, sp2 = predator).
+Each species uses a numbered prefix: `sp1_` for species 1, `sp2_` for species 2, etc. The simulation detects how many species you have by scanning for sequential prefixes (up to 100). Prefixes must be sequential with no gaps (sp1, sp2, sp3...).
+
+**You can have as many species as you want in each tier.** The `tier` field on each species determines whether it is prey (0) or predator (1), not its position in the spreadsheet. For example, you could have 4 prey species and 2 predator species, or 1 prey and 5 predators. The standard 6-species setup is:
+
+| Prefix | Species | Variant | Tier |
+|--------|---------|---------|------|
+| sp1_ | Hexapod | Common | 0 (prey) |
+| sp2_ | Hexapod | Arctic | 0 (prey) |
+| sp3_ | Hexapod | Tropical | 0 (prey) |
+| sp4_ | Sheplik | Common | 1 (predator) |
+| sp5_ | Sheplik | Arctic | 1 (predator) |
+| sp6_ | Sheplik | Tropical | 1 (predator) |
+
+The included template (`bulk_test_template.csv`) ships with all 6 species pre-filled. You can add more by adding `sp7_`, `sp8_`, etc. columns.
+
+To skip a species for a particular batch row, set its `pop` to `0`. The simulation ignores any species with population below 1. This lets you define all species in the header once and toggle them on/off per row by changing just the population, which is useful for running matched vs mismatched experiments in the same spreadsheet.
 
 ### Identity
 
@@ -130,26 +145,42 @@ These parameters define how well a species performs at different temperatures. T
 
 ---
 
-## Default Species Values (Common Variant)
+## Default Species Values
 
-For quick reference, these are the default values used when not specified:
+Biology parameters (reproduction, death, feeding) are the same across all variants of a species. Only the thermal curve differs between Common, Arctic, and Tropical variants.
 
-| Parameter | Hexapod (Prey, Tier 1) | Sheplik (Predator, Tier 2) |
+### Biology Defaults (Same for All Variants)
+
+| Parameter | Hexapod (Prey, Tier 0) | Sheplik (Predator, Tier 1) |
 |-----------|----------------------|--------------------------|
 | Population | 20 | 4 |
-| Eating | 0 (doesn't hunt) | 1.5 |
+| Eating | 0 (prey don't hunt) | 1.5 |
 | Repro Mult | 0.45 | 0.1 |
 | Death Threshold | 0.3 | 0.3 |
 | Death Rate | 0.6 | 0.3 |
 | Repro Threshold | 0.25 | 0.25 |
 | Natural Death Rate | 0.02 (2%/day) | 0.01 (1%/day) |
 | Natural Death Var | 0.01 | 0.005 |
-| Hunting Efficiency | 1.0 (ignored) | 0.75 |
-| Hunting Variance | 0 (ignored) | 0.15 |
-| Optimal Temp | 20 C | 20 C |
-| Lower/Upper Bound | 12 C / 22 C | 12 C / 22 C |
-| Pmax | 0.9 | 0.9 |
-| CTmin / CTmax | -5 C / 40 C | -5 C / 40 C |
+| Hunting Efficiency | 1.0 (ignored for prey) | 0.75 |
+| Hunting Variance | 0 (ignored for prey) | 0.15 |
+
+### Thermal Curve Defaults (Vary by Variant)
+
+All values below are in Celsius for the CSV. The simulation converts to Kelvin internally by adding 273.15. Arrhenius energy parameters are dimensionless and used as-is (do NOT add 273.15 to them).
+
+| Parameter | Common | Arctic | Tropical |
+|-----------|--------|--------|----------|
+| Optimal Temp (C) | 23.85 (297 K) | 17.85 (291 K) | 29.85 (303 K) |
+| Arrhenius Breadth | 8000 | 4000 | 4000 |
+| Arrhenius Lower | 3000 | 13974 | 15827 |
+| Arrhenius Upper | 35000 | 35000 | 35000 |
+| Lower Bound (C) | 22.85 (296 K) | 17.75 (290.9 K) | 29.75 (302.9 K) |
+| Upper Bound (C) | 24.85 (298 K) | 17.95 (291.1 K) | 29.95 (303.1 K) |
+| Pmax | 0.65 | 0.85 | 0.85 |
+| CTmin (C) | 0 | 0 | 0 |
+| CTmax (C) | 40 | 40 | 40 |
+
+**Note:** Common has a wider thermal breadth (8000 vs 4000) but lower Pmax (0.65 vs 0.85). Arctic and Tropical variants are specialists with higher peak performance but a narrower tolerance range. These values come from the SpeciesDatabase and should not be changed without consultation with the marine biology team.
 
 ---
 

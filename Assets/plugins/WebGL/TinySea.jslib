@@ -63,6 +63,11 @@ mergeInto(LibraryManager.library, {
         
         window._tsZipFiles = null;
         window._tsZipName = null;
+    },
+
+    TinySea_ClearZipDownload: function() {
+        window._tsZipFiles = null;
+        window._tsZipName = null;
     }
 
 });

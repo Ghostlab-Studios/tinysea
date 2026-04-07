@@ -257,6 +257,7 @@ public class BulkSimulationController : MonoBehaviour
             int parallelism = Math.Max(1, Environment.ProcessorCount - 1);
             int batchSize = batch.NumScenarios;
             var scenarioResults = new ScenarioResult[batchSize];
+            var taskErrors = new Exception[batchSize];
 
             // Launch all scenarios as parallel tasks
             var tasks = new Task[batchSize];
@@ -268,13 +269,21 @@ public class BulkSimulationController : MonoBehaviour
 
                 tasks[s] = Task.Run(() =>
                 {
-                    scenarioResults[taskIndex] = simulationController.RunSingleScenarioPublic(scenarioIndex, seed);
+                    try
+                    {
+                        scenarioResults[taskIndex] = simulationController.RunSingleScenarioPublic(scenarioIndex, seed);
+                    }
+                    catch (Exception ex)
+                    {
+                        taskErrors[taskIndex] = ex;
+                    }
                 });
             }
 
-            // Wait for tasks, yielding to Unity each frame for UI updates
+            // Wait for all tasks, yielding to Unity each frame for UI updates
+            var allDone = Task.WhenAll(tasks);
             int lastReported = 0;
-            while (!Task.WhenAll(tasks).IsCompleted)
+            while (!allDone.IsCompleted)
             {
                 // Count completed tasks for progress
                 int done = 0;
@@ -293,6 +302,13 @@ public class BulkSimulationController : MonoBehaviour
                     }
                 }
                 yield return null;
+            }
+
+            // Log any task errors
+            for (int s = 0; s < batchSize; s++)
+            {
+                if (taskErrors[s] != null)
+                    Debug.LogError($"Scenario {s + 1} in batch '{batch.BatchName}' failed: {taskErrors[s].Message}\n{taskErrors[s].StackTrace}");
             }
 
             // Collect results and stream CSVs (main thread for file I/O)

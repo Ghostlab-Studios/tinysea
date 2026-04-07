@@ -458,6 +458,7 @@ public class ResultsScreenUI : MonoBehaviour
 
         string filename = $"tinysea_config_{timestamp}.csv";
         TriggerDownload(filename, csv);
+        ShowButtonFeedback(downloadConfigButton, "Saved!", "Download Config");
     }
 
     private void OnDownloadAggregateClicked()
@@ -468,6 +469,7 @@ public class ResultsScreenUI : MonoBehaviour
         string filename = $"tinysea_aggregate_{_currentResults.CompletedAt:yyyy-MM-dd_HH-mm-ss}.csv";
 
         TriggerDownload(filename, csv);
+        ShowButtonFeedback(downloadAggregateButton, "Saved!", "Download Aggregate");
     }
 
     private void OnDownloadScenarioClicked(int scenarioIndex)
@@ -522,6 +524,31 @@ public class ResultsScreenUI : MonoBehaviour
         var label = downloadAllZipButton.GetComponentInChildren<TextMeshProUGUI>();
         if (label != null)
             label.text = text;
+    }
+
+    /// <summary>
+    /// Show temporary feedback on any button: sets text, disables, then resets after delay.
+    /// </summary>
+    private void ShowButtonFeedback(Button button, string feedbackText, string originalText, float delay = 2f)
+    {
+        if (button == null) return;
+        button.interactable = false;
+        var label = button.GetComponentInChildren<TextMeshProUGUI>();
+        if (label != null)
+            label.text = feedbackText;
+        StartCoroutine(ResetButtonAfterDelay(button, originalText, delay));
+    }
+
+    private IEnumerator ResetButtonAfterDelay(Button button, string originalText, float seconds)
+    {
+        yield return new WaitForSeconds(seconds);
+        if (button != null)
+        {
+            button.interactable = true;
+            var label = button.GetComponentInChildren<TextMeshProUGUI>();
+            if (label != null)
+                label.text = originalText;
+        }
     }
 
     /// <summary>
@@ -668,8 +695,10 @@ public class ResultsScreenUI : MonoBehaviour
         }
 #endif
 
-        SetDownloadButtonState("Download All (ZIP)", false); // Done — keep disabled
-        yield return null;
+        // Show "Saved!" feedback, then re-enable after 2s
+        SetDownloadButtonState("Saved!", false);
+        yield return new WaitForSeconds(2f);
+        SetDownloadButtonState("Download All (ZIP)", true);
     }
 
     /// <summary>
@@ -695,8 +724,9 @@ public class ResultsScreenUI : MonoBehaviour
             OpenFolder(outputFolder);
         }
 
-        SetDownloadButtonState("Download All (ZIP)", false); // Done — keep disabled (already downloaded)
-
-        yield return null;
+        // Show "Saved!" feedback, then re-enable after 2s
+        SetDownloadButtonState("Saved!", false);
+        yield return new WaitForSeconds(2f);
+        SetDownloadButtonState("Download All (ZIP)", true);
     }
 }

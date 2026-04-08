@@ -1,5 +1,7 @@
 using System;
 using System.Collections;
+using System.IO;
+using System.IO.Compression;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -83,11 +85,15 @@ public static class ServerUpload
             yield break;
         }
 
+        // Gzip + base64 compress the content to avoid hitting post_max_size limits.
+        // CSV compresses ~90%, so a 3 MB scenario becomes ~400 KB in the JSON body.
+        string compressed = CompressToBase64(content);
         var body = JsonUtility.ToJson(new UploadRequest
         {
             session = _sessionId,
             filename = filename,
-            content = content,
+            content = compressed,
+            encoding = "gzip+base64",
         });
 
         var bodyBytes = Encoding.UTF8.GetBytes(body);
@@ -181,5 +187,17 @@ public static class ServerUpload
         public string session;
         public string filename;
         public string content;
+        public string encoding;
+    }
+
+    private static string CompressToBase64(string text)
+    {
+        byte[] raw = Encoding.UTF8.GetBytes(text);
+        using (var ms = new MemoryStream())
+        {
+            using (var gz = new GZipStream(ms, CompressionLevel.Fastest))
+                gz.Write(raw, 0, raw.Length);
+            return Convert.ToBase64String(ms.ToArray());
+        }
     }
 }

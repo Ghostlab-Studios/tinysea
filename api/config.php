@@ -4,9 +4,8 @@
  * Loads .env and provides S3 config constants.
  */
 
-// Runtime PHP limits (replaces .htaccess php_value which breaks on PHP-FPM)
-ini_set('post_max_size', '32M');
-ini_set('upload_max_filesize', '32M');
+// Runtime PHP limits — only memory_limit and max_execution_time can be set via ini_set().
+// post_max_size and upload_max_filesize are PHP_INI_PERDIR — set in .user.ini instead.
 ini_set('memory_limit', '256M');
 ini_set('max_execution_time', '300');
 

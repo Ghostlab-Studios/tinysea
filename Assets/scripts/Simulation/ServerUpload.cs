@@ -195,7 +195,7 @@ public static class ServerUpload
         byte[] raw = Encoding.UTF8.GetBytes(text);
         using (var ms = new MemoryStream())
         {
-            using (var gz = new GZipStream(ms, CompressionLevel.Fastest))
+            using (var gz = new GZipStream(ms, System.IO.Compression.CompressionLevel.Fastest))
                 gz.Write(raw, 0, raw.Length);
             return Convert.ToBase64String(ms.ToArray());
         }

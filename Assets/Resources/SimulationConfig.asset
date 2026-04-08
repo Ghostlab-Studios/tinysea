@@ -17,18 +17,18 @@ MonoBehaviour:
   NumberOfScenarios: 5
   UseCarryingCapacity: 1
   CarryingCapacityTier1: 5000
-  ConditionDrainRate: 0.2
+  ConditionDrainRate: 0.15
   ConditionRecoveryRate: 0.1
-  BaseTemperature: 20
+  BaseTemperature: 24
   SeasonalAmplitude: 10
   ClimateTrend: 0
-  InterannualVariation: 1
-  VariabilityMagnitude: 2
-  WarmingBias: 1.5
+  InterannualVariation: 0
+  VariabilityMagnitude: 0
+  WarmingBias: 0
   Autocorrelated: 1
   DailyVariationRange: 5
-  RandomnessGrowthRate: 0.5
-  TemperatureBoundsMin: -5
-  TemperatureBoundsMax: 50
+  RandomnessGrowthRate: 0
+  TemperatureBoundsMin: 0
+  TemperatureBoundsMax: 40
   RunSpecies: {fileID: 11400000, guid: cd179f552d2ff62439d8a6b811b28584, type: 2}
   RandomSeed: 12345

@@ -13,4 +13,74 @@ MonoBehaviour:
   m_Name: RunSpeciesList
   m_EditorClassIdentifier: Assembly-CSharp::RunSpeciesList
   SpeciesDatabase: {fileID: 11400000, guid: be0823a57129c854eb7f6fff08e7b75d, type: 2}
-  speciesList: []
+  speciesList:
+  - index: 0
+    speciesName: 0
+    variant: 0
+    displayName: 
+    icon: {fileID: 21300000, guid: f89c1a59fafaa3e41aa5e9f94d051ee9, type: 3}
+    count: 20
+    tier: 0
+    eatingAmount: 0
+    reproductionMultiplier: 0.45
+    deathThreshold: 0.3
+    deathRate: 0.6
+    TemperatureDebuff: 0
+    minimumDeaths: 1
+    reproThreshold: 0.25
+    naturalDeathRate: 0.02
+    naturalDeathVariance: 0.01
+    huntingEfficiency: 1
+    huntingVariance: 0
+    eatingStars: 0
+    reproductionStars: 4
+    deathThresholdStars: 3
+    deathRateStars: 2
+    thermalBreadthStars: 5
+    temperatureThresholdText: High
+    reproductionRateText: Low
+    description: Hexapod - Common variant
+    optimalTempK: 293.15
+    arrhenBreadth: 5273.15
+    arrhenLower: 10273.15
+    arrhenUpper: 21273.15
+    lowerBoundK: 285.15
+    upperBoundK: 295.15
+    pmax: 0.65
+    ctMinC: -5
+    ctMaxC: 40
+  - index: 3
+    speciesName: 3
+    variant: 0
+    displayName: 
+    icon: {fileID: 21300000, guid: 8ab2db50f00f92142abc4c674c239a1c, type: 3}
+    count: 4
+    tier: 1
+    eatingAmount: 1.5
+    reproductionMultiplier: 0.1
+    deathThreshold: 0.3
+    deathRate: 0.3
+    TemperatureDebuff: 0
+    minimumDeaths: 1
+    reproThreshold: 0.25
+    naturalDeathRate: 0.02
+    naturalDeathVariance: 0.01
+    huntingEfficiency: 0.75
+    huntingVariance: 0.15
+    eatingStars: 4
+    reproductionStars: 2
+    deathThresholdStars: 4
+    deathRateStars: 4
+    thermalBreadthStars: 5
+    temperatureThresholdText: High
+    reproductionRateText: Low
+    description: Sheplik - Common variant
+    optimalTempK: 293.15
+    arrhenBreadth: 5273.15
+    arrhenLower: 10273.15
+    arrhenUpper: 21273.15
+    lowerBoundK: 285.15
+    upperBoundK: 295.15
+    pmax: 0.65
+    ctMinC: -5
+    ctMaxC: 40

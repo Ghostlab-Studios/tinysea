@@ -212,6 +212,40 @@ public class SimulationController : MonoBehaviour
     }
 
     /// <summary>
+    /// Run a single scenario with explicit batch parameters — does NOT touch any ScriptableObject.
+    /// Used by BulkSimulationController to avoid mutating shared SOs.
+    /// </summary>
+    public ScenarioResult RunSingleScenarioFromBatch(
+        BulkBatchConfig batch, RunSpeciesList tempSpecies, int scenarioIndex, int seed)
+    {
+        var runner = new SimulationRunner(seed);
+
+        runner.TotalDays = batch.Days;
+        runner.BiologyStep = config.BiologyStep;
+
+        runner.TempCalc.BaseTemperature = batch.BaseTemp;
+        runner.TempCalc.SeasonalAmplitude = batch.SeasonalAmp;
+        runner.TempCalc.ClimateTrendPerYear = batch.ClimateTrend;
+        runner.TempCalc.VariabilityMagnitude = batch.VariabilityMag;
+        runner.TempCalc.WarmingBias = batch.WarmingBias;
+        runner.TempCalc.BaseRandomness = batch.DailyVarRange;
+        runner.TempCalc.RandomnessGrowthRate = batch.RandomnessGrowth;
+        runner.TempCalc.UseAutocorrelation = batch.Autocorrelated;
+        runner.TempCalc.MinTemp = batch.TempMin;
+        runner.TempCalc.MaxTemp = batch.TempMax;
+
+        runner.RunSpecies = tempSpecies;
+
+        runner.Ecosystem.UseCarryingCapacity = batch.UseCarryingCap;
+        runner.Ecosystem.CarryingCapacityPerTier = batch.CarryingCapT1;
+        runner.Ecosystem.ConditionDrainRate = batch.ConditionDrainRate;
+        runner.Ecosystem.ConditionRecoveryRate = batch.ConditionRecoveryRate;
+
+        runner.Run();
+        return runner.ToScenarioResult(scenarioIndex, batch.NumScenarios);
+    }
+
+    /// <summary>
     /// Run a single scenario and return results
     /// </summary>
     private ScenarioResult RunSingleScenario(int scenarioIndex, int seed)

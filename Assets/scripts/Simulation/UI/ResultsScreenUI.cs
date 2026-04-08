@@ -202,12 +202,11 @@ public class ResultsScreenUI : MonoBehaviour
             progressBar.value = progress01;
         }
 
-        // Store base text (without trailing dots) and reset dot cycle
+        // Update base text but keep dots cycling continuously
         _baseProgressText = text.TrimEnd('.');
-        _dotCount = 0;
 
         if (progressText != null)
-            progressText.text = _baseProgressText;
+            progressText.text = _baseProgressText + (_dotCount > 0 ? new string('.', _dotCount) : "");
 
         // Start dots animation if not already running
         if (_dotsCoroutine == null)

@@ -30,6 +30,10 @@ public class BulkSimulationController : MonoBehaviour
     private bool _cancelRequested = false;
     private Coroutine _runCoroutine;
 
+    // ETA — recalculated once per minute, cached between updates
+    private float _lastEtaUpdateTime;
+    private string _cachedEta = "";
+
     private void Start()
     {
         if (csvUploadHandler != null)
@@ -89,35 +93,6 @@ public class BulkSimulationController : MonoBehaviour
             yield break;
         }
 
-        var runSpecies = config.RunSpecies;
-        if (runSpecies == null)
-        {
-            if (resultsScreen != null)
-                resultsScreen.UpdateBulkProgress("Error: RunSpeciesList not assigned!", 0f);
-            _isRunning = false;
-            yield break;
-        }
-
-        // Save original SO values so we can restore after bulk run
-        int origDays = config.DaysPerScenario;
-        int origScenarios = config.NumberOfScenarios;
-        float origBaseTemp = config.BaseTemperature;
-        float origSeasonalAmp = config.SeasonalAmplitude;
-        float origClimateTrend = config.ClimateTrend;
-        float origVarMag = config.VariabilityMagnitude;
-        float origWarmBias = config.WarmingBias;
-        float origDailyVar = config.DailyVariationRange;
-        float origRandGrowth = config.RandomnessGrowthRate;
-        bool origAutocorr = config.Autocorrelated;
-        bool origInterannual = config.InterannualVariation;
-        float origTempMin = config.TemperatureBoundsMin;
-        float origTempMax = config.TemperatureBoundsMax;
-        bool origUseCarry = config.UseCarryingCapacity;
-        float origCarryT1 = config.CarryingCapacityTier1;
-        float origCondDrain = config.ConditionDrainRate;
-        float origCondRecovery = config.ConditionRecoveryRate;
-        var origSpeciesList = new List<SpeciesData>(runSpecies.speciesList);
-
         // Storage strategy: WebGL uses server upload (S3), Editor uses progressive ZIP
         bool useServerUpload = ServerUpload.IsAvailable;
 
@@ -146,6 +121,9 @@ public class BulkSimulationController : MonoBehaviour
             totalScenarios += batch.NumScenarios;
 
         int completedScenarios = 0;
+        float startTime = Time.realtimeSinceStartup;
+        _lastEtaUpdateTime = 0f;
+        _cachedEta = "";
 
         for (int b = 0; b < batches.Count; b++)
         {
@@ -159,8 +137,9 @@ public class BulkSimulationController : MonoBehaviour
             if (resultsScreen != null)
             {
                 float progress = totalScenarios > 0 ? (float)completedScenarios / totalScenarios : 0f;
+                string eta = GetETA(completedScenarios, totalScenarios, startTime);
                 resultsScreen.UpdateBulkProgress(
-                    $"Batch {b + 1} of {batches.Count} ({batch.BatchName}) — 0 of {batch.NumScenarios}",
+                    $"Batch {b + 1} of {batches.Count} ({batch.BatchName}) — 0 of {batch.NumScenarios}{eta}",
                     progress);
             }
             yield return null;
@@ -168,29 +147,11 @@ public class BulkSimulationController : MonoBehaviour
             if (_cancelRequested)
                 break;
 
-            // Override SimulationConfig SO fields
-            config.DaysPerScenario = batch.Days;
-            config.NumberOfScenarios = batch.NumScenarios;
-            config.BaseTemperature = batch.BaseTemp;
-            config.SeasonalAmplitude = batch.SeasonalAmp;
-            config.ClimateTrend = batch.ClimateTrend;
-            config.VariabilityMagnitude = batch.VariabilityMag;
-            config.WarmingBias = batch.WarmingBias;
-            config.DailyVariationRange = batch.DailyVarRange;
-            config.RandomnessGrowthRate = batch.RandomnessGrowth;
-            config.Autocorrelated = batch.Autocorrelated;
-            config.InterannualVariation = batch.InterannualVariation;
-            config.TemperatureBoundsMin = batch.TempMin;
-            config.TemperatureBoundsMax = batch.TempMax;
-            config.UseCarryingCapacity = batch.UseCarryingCap;
-            config.CarryingCapacityTier1 = batch.CarryingCapT1;
-            config.ConditionDrainRate = batch.ConditionDrainRate;
-            config.ConditionRecoveryRate = batch.ConditionRecoveryRate;
-
-            // Override RunSpeciesList SO
-            runSpecies.speciesList.Clear();
+            // Create a temporary RunSpeciesList for this batch — never touches the real SO
+            var tempSpecies = ScriptableObject.CreateInstance<RunSpeciesList>();
+            tempSpecies.speciesList = new List<SpeciesData>();
             for (int i = 0; i < batch.Species.Count; i++)
-                runSpecies.speciesList.Add(ConvertSpecies(batch.Species[i], i));
+                tempSpecies.speciesList.Add(ConvertSpecies(batch.Species[i], i));
 
             // Build AggregateResults for this batch
             var batchResults = new AggregateResults
@@ -214,7 +175,7 @@ public class BulkSimulationController : MonoBehaviour
                 RandomnessGrowthRate = batch.RandomnessGrowth,
                 TemperatureBoundsMin = batch.TempMin,
                 TemperatureBoundsMax = batch.TempMax,
-                RunSpecies = runSpecies,
+                RunSpecies = tempSpecies,
                 Scenarios = new List<ScenarioResult>()
             };
 
@@ -230,14 +191,15 @@ public class BulkSimulationController : MonoBehaviour
                 if (resultsScreen != null)
                 {
                     float progress = totalScenarios > 0 ? (float)completedScenarios / totalScenarios : 0f;
+                    string eta = GetETA(completedScenarios, totalScenarios, startTime);
                     resultsScreen.UpdateBulkProgress(
-                        $"Batch {b + 1} of {batches.Count} ({batch.BatchName}) — {scenarioIndex} of {batch.NumScenarios}",
+                        $"Batch {b + 1} of {batches.Count} ({batch.BatchName}) — {scenarioIndex} of {batch.NumScenarios}{eta}",
                         progress);
                 }
                 yield return null;
                 if (_cancelRequested) break;
 
-                var result = simulationController.RunSingleScenarioPublic(scenarioIndex, seed);
+                var result = simulationController.RunSingleScenarioFromBatch(batch, tempSpecies, scenarioIndex, seed);
                 batchResults.Scenarios.Add(result);
 
                 if (!string.IsNullOrEmpty(result.CsvData))
@@ -252,78 +214,80 @@ public class BulkSimulationController : MonoBehaviour
                 completedScenarios++;
             }
 #else
-            // Editor/Standalone: parallel scenarios using background threads.
-            // Each scenario creates its own SimulationRunner — no shared mutable state.
+            // Editor/Standalone: parallel scenarios in chunks to bound memory.
+            // Each chunk runs ProcessorCount scenarios, writes CSVs, then frees memory.
             int parallelism = Math.Max(1, Environment.ProcessorCount - 1);
             int batchSize = batch.NumScenarios;
             var scenarioResults = new ScenarioResult[batchSize];
             var taskErrors = new Exception[batchSize];
 
-            // Launch all scenarios as parallel tasks
-            var tasks = new Task[batchSize];
-            for (int s = 0; s < batchSize; s++)
+            for (int chunk = 0; chunk < batchSize; chunk += parallelism)
             {
-                int scenarioIndex = s + 1;
-                int seed = config.RandomSeed < 0 ? -1 : config.RandomSeed + s;
-                int taskIndex = s;
+                if (_cancelRequested) break;
 
-                tasks[s] = Task.Run(() =>
+                int chunkEnd = Math.Min(chunk + parallelism, batchSize);
+                int chunkSize = chunkEnd - chunk;
+                var tasks = new Task[chunkSize];
+
+                for (int i = 0; i < chunkSize; i++)
                 {
-                    try
-                    {
-                        scenarioResults[taskIndex] = simulationController.RunSingleScenarioPublic(scenarioIndex, seed);
-                    }
-                    catch (Exception ex)
-                    {
-                        taskErrors[taskIndex] = ex;
-                    }
-                });
-            }
+                    int s = chunk + i;
+                    int scenarioIndex = s + 1;
+                    int seed = config.RandomSeed < 0 ? -1 : config.RandomSeed + s;
+                    int taskIndex = s;
 
-            // Wait for all tasks, yielding to Unity each frame for UI updates
-            var allDone = Task.WhenAll(tasks);
-            int lastReported = 0;
-            while (!allDone.IsCompleted)
-            {
-                // Count completed tasks for progress
-                int done = 0;
-                for (int t = 0; t < tasks.Length; t++)
-                    if (tasks[t].IsCompleted) done++;
+                    tasks[i] = Task.Run(() =>
+                    {
+                        try
+                        {
+                            scenarioResults[taskIndex] = simulationController.RunSingleScenarioFromBatch(batch, tempSpecies, scenarioIndex, seed);
+                        }
+                        catch (Exception ex)
+                        {
+                            taskErrors[taskIndex] = ex;
+                        }
+                    });
+                }
 
-                if (done > lastReported)
+                // Wait for this chunk to finish
+                var chunkDone = Task.WhenAll(tasks);
+                while (!chunkDone.IsCompleted)
                 {
-                    lastReported = done;
+                    int done = 0;
+                    for (int t = 0; t < tasks.Length; t++)
+                        if (tasks[t].IsCompleted) done++;
+
                     if (resultsScreen != null)
                     {
-                        float progress = totalScenarios > 0 ? (float)(completedScenarios + done) / totalScenarios : 0f;
+                        int totalDone = completedScenarios + chunk + done;
+                        float progress = totalScenarios > 0 ? (float)totalDone / totalScenarios : 0f;
+                        string eta = GetETA(totalDone, totalScenarios, startTime);
                         resultsScreen.UpdateBulkProgress(
-                            $"Batch {b + 1} of {batches.Count} ({batch.BatchName}) — {done} of {batchSize} complete ({parallelism} threads)",
+                            $"Batch {b + 1} of {batches.Count} ({batch.BatchName}) — {chunk + done} of {batchSize}{eta}",
                             progress);
                     }
+                    yield return null;
                 }
-                yield return null;
-            }
 
-            // Log any task errors
-            for (int s = 0; s < batchSize; s++)
-            {
-                if (taskErrors[s] != null)
-                    Debug.LogError($"Scenario {s + 1} in batch '{batch.BatchName}' failed: {taskErrors[s].Message}\n{taskErrors[s].StackTrace}");
-            }
-
-            // Collect results and stream CSVs (main thread for file I/O)
-            for (int s = 0; s < batchSize; s++)
-            {
-                var result = scenarioResults[s];
-                if (result == null) continue;
-
-                batchResults.Scenarios.Add(result);
-
-                if (!string.IsNullOrEmpty(result.CsvData))
+                // Log errors and stream CSVs for this chunk immediately (frees memory)
+                for (int i = 0; i < chunkSize; i++)
                 {
-                    string csvPath = $"{batchFolder}/scenario_{result.ScenarioIndex}.csv";
-                    WebGLZipDownload.AddFileToProgressiveZip(csvPath, result.CsvData);
-                    result.CsvData = null;
+                    int s = chunk + i;
+                    if (taskErrors[s] != null)
+                        Debug.LogError($"Scenario {s + 1} in batch '{batch.BatchName}' failed: {taskErrors[s].Message}\n{taskErrors[s].StackTrace}");
+
+                    var result = scenarioResults[s];
+                    if (result == null) continue;
+
+                    batchResults.Scenarios.Add(result);
+
+                    if (!string.IsNullOrEmpty(result.CsvData))
+                    {
+                        string csvPath = $"{batchFolder}/scenario_{result.ScenarioIndex}.csv";
+                        WebGLZipDownload.AddFileToProgressiveZip(csvPath, result.CsvData);
+                        result.CsvData = null;
+                    }
+                    scenarioResults[s] = null; // Free memory
                 }
             }
             completedScenarios += batchSize;
@@ -351,27 +315,6 @@ public class BulkSimulationController : MonoBehaviour
                 batchResults.Scenarios.Clear();
             }
         }
-
-        // Restore original SO values
-        config.DaysPerScenario = origDays;
-        config.NumberOfScenarios = origScenarios;
-        config.BaseTemperature = origBaseTemp;
-        config.SeasonalAmplitude = origSeasonalAmp;
-        config.ClimateTrend = origClimateTrend;
-        config.VariabilityMagnitude = origVarMag;
-        config.WarmingBias = origWarmBias;
-        config.DailyVariationRange = origDailyVar;
-        config.RandomnessGrowthRate = origRandGrowth;
-        config.Autocorrelated = origAutocorr;
-        config.InterannualVariation = origInterannual;
-        config.TemperatureBoundsMin = origTempMin;
-        config.TemperatureBoundsMax = origTempMax;
-        config.UseCarryingCapacity = origUseCarry;
-        config.CarryingCapacityTier1 = origCarryT1;
-        config.ConditionDrainRate = origCondDrain;
-        config.ConditionRecoveryRate = origCondRecovery;
-        runSpecies.speciesList.Clear();
-        runSpecies.speciesList.AddRange(origSpeciesList);
 
         // Switch to results screen with Download All (ZIP) button
         if (resultsScreen != null)
@@ -441,5 +384,30 @@ public class BulkSimulationController : MonoBehaviour
             ctMaxC = sp.CTmaxC,
             TemperatureDebuff = sp.TempOffset
         };
+    }
+
+    /// <summary>
+    /// Returns cached ETA string. Recalculates only once per minute.
+    /// </summary>
+    private string GetETA(int completed, int total, float startTime)
+    {
+        float now = Time.realtimeSinceStartup;
+        if (completed <= 0) return "";
+        if (now - _lastEtaUpdateTime < 60f && _cachedEta.Length > 0) return _cachedEta;
+
+        _lastEtaUpdateTime = now;
+        float elapsed = now - startTime;
+        float perScenario = elapsed / completed;
+        float remaining = perScenario * (total - completed);
+
+        if (remaining < 60) _cachedEta = $" — ~{remaining:F0}s left";
+        else if (remaining < 3600) _cachedEta = $" — ~{remaining / 60:F0}m left";
+        else
+        {
+            float hours = remaining / 3600;
+            float mins = (remaining % 3600) / 60;
+            _cachedEta = $" — ~{hours:F0}h {mins:F0}m left";
+        }
+        return _cachedEta;
     }
 }

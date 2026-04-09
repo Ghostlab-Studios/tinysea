@@ -23,6 +23,19 @@ if (!$input) {
 $session = $input['session'] ?? '';
 $filename = $input['filename'] ?? '';
 $content = $input['content'] ?? '';
+$encoding = $input['encoding'] ?? '';
+
+// Decompress gzip+base64 content (reduces POST body ~90% to avoid post_max_size limits)
+if ($encoding === 'gzip+base64') {
+    $decoded = base64_decode($content, true);
+    if ($decoded === false) {
+        json_response(['error' => 'Invalid base64 encoding'], 400);
+    }
+    $content = gzdecode($decoded);
+    if ($content === false) {
+        json_response(['error' => 'Invalid gzip data'], 400);
+    }
+}
 
 // Validate session ID
 if (!validate_session_id($session)) {

@@ -158,9 +158,18 @@ let downloading = false;
 async function downloadAll() {
     if (downloading) return;
     downloading = true;
+    completed = 0;
     document.getElementById('downloadAllBtn').disabled = true;
+    document.getElementById('progressBar').style.width = '0%';
+    document.getElementById('progressCount').textContent = '0 / ' + batches.length;
     document.getElementById('progressLabel').textContent = 'Downloading...';
     document.getElementById('progressText').textContent = 'Downloading batch 1 of ' + batches.length + '...';
+    // Reset all batch statuses
+    batches.forEach(b => {
+        const el = document.getElementById('status-' + b);
+        el.textContent = 'Waiting';
+        el.className = 'batch-status status-waiting';
+    });
 
     for (let i = 0; i < batches.length; i++) {
         const batch = batches[i];

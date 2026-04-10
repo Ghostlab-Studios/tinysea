@@ -1,7 +1,9 @@
 using UnityEngine;
+using System;
 using System.IO;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 /// <summary>
 /// Unity MonoBehaviour to run TinySea simulation v6.
@@ -157,37 +159,96 @@ public class SimulationController : MonoBehaviour
             Scenarios = new List<ScenarioResult>()
         };
 
-        // Run each scenario
+#if UNITY_WEBGL && !UNITY_EDITOR
+        // WebGL: sequential (single-threaded WASM, must yield for UI)
         for (int i = 0; i < config.NumberOfScenarios; i++)
         {
-            // Check for cancel
-            if (_cancelRequested)
-                break;
+            if (_cancelRequested) break;
 
             int scenarioIndex = i + 1;
-
             if (resultsScreen != null)
                 resultsScreen.UpdateProgress(scenarioIndex, config.NumberOfScenarios);
 
-            // Calculate seed for this scenario
-            // Each scenario gets a DIFFERENT seed: baseSeed + scenarioIndex
-            int scenarioSeed = config.RandomSeed < 0
-                ? -1  // Random each time (truly random)
-                : config.RandomSeed + i;  // Deterministic but different per scenario
-
-            // Run single scenario
+            int scenarioSeed = config.RandomSeed < 0 ? -1 : config.RandomSeed + i;
             var result = RunSingleScenario(scenarioIndex, scenarioSeed);
             _currentResults.Scenarios.Add(result);
 
-            // Notify results screen (for real-time updates if desired)
             if (resultsScreen != null)
-            {
                 resultsScreen.OnScenarioCompleted(result);
-            }
 
-            // Yield to allow UI to update
             yield return null;
         }
+#else
+        // Editor/Standalone: parallel scenarios using Task.Run for maximum speed.
+        // Chunks by ProcessorCount to bound memory and allow UI updates.
+        int totalScenarios = config.NumberOfScenarios;
+        int parallelism = Math.Max(1, Environment.ProcessorCount - 1);
+        var allResults = new ScenarioResult[totalScenarios];
+        var taskErrors = new Exception[totalScenarios];
+
+        for (int chunk = 0; chunk < totalScenarios; chunk += parallelism)
+        {
+            if (_cancelRequested) break;
+
+            int chunkEnd = Math.Min(chunk + parallelism, totalScenarios);
+            int chunkSize = chunkEnd - chunk;
+            var tasks = new Task[chunkSize];
+
+            for (int t = 0; t < chunkSize; t++)
+            {
+                int i = chunk + t;
+                int scenarioIndex = i + 1;
+                int scenarioSeed = config.RandomSeed < 0 ? -1 : config.RandomSeed + i;
+                int taskIndex = i;
+
+                tasks[t] = Task.Run(() =>
+                {
+                    try
+                    {
+                        allResults[taskIndex] = RunSingleScenario(scenarioIndex, scenarioSeed);
+                    }
+                    catch (Exception ex)
+                    {
+                        taskErrors[taskIndex] = ex;
+                    }
+                });
+            }
+
+            // Wait for this chunk, updating UI
+            var chunkDone = Task.WhenAll(tasks);
+            while (!chunkDone.IsCompleted)
+            {
+                int done = 0;
+                for (int t = 0; t < tasks.Length; t++)
+                    if (tasks[t].IsCompleted) done++;
+
+                if (resultsScreen != null)
+                    resultsScreen.UpdateProgress(chunk + done, totalScenarios);
+
+                yield return null;
+            }
+
+            // Collect results from this chunk
+            for (int t = 0; t < chunkSize; t++)
+            {
+                int i = chunk + t;
+                if (taskErrors[i] != null)
+                    Debug.LogError($"Scenario {i + 1} failed: {taskErrors[i].Message}\n{taskErrors[i].StackTrace}");
+
+                if (allResults[i] != null)
+                {
+                    _currentResults.Scenarios.Add(allResults[i]);
+                    if (resultsScreen != null)
+                        resultsScreen.OnScenarioCompleted(allResults[i]);
+                }
+            }
+
+            if (resultsScreen != null)
+                resultsScreen.UpdateProgress(chunkEnd, totalScenarios);
+
+            yield return null;
+        }
+#endif
 
         // Calculate aggregates
         _currentResults.CompletedAt = System.DateTime.Now;

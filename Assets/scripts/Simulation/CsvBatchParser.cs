@@ -386,6 +386,68 @@ public static class CsvBatchParser
         return false;
     }
 
+    // ==================== TEMPLATE GENERATION ====================
+
+    /// <summary>
+    /// Generate a downloadable template CSV with headers and one example row.
+    /// Uses the same column definitions as TryParse so they stay in sync.
+    /// Example row uses default Hexapod/Sheplik species (6 species: 3 prey + 3 predators).
+    /// </summary>
+    public static string GenerateTemplate()
+    {
+        const int TEMPLATE_SPECIES = 6;
+        var sb = new StringBuilder();
+
+        // Header row
+        foreach (var col in GLOBAL_COLUMNS)
+            sb.Append(col).Append(',');
+        foreach (var col in OPTIONAL_GLOBAL_COLUMNS)
+            sb.Append(col).Append(',');
+        for (int s = 1; s <= TEMPLATE_SPECIES; s++)
+        {
+            string prefix = $"sp{s}_";
+            foreach (var col in SPECIES_COLUMNS)
+                sb.Append(prefix).Append(col).Append(',');
+            foreach (var col in OPTIONAL_SPECIES_COLUMNS)
+                sb.Append(prefix).Append(col).Append(',');
+        }
+        // Remove trailing comma, add newline
+        sb.Length--;
+        sb.AppendLine();
+
+        // Example data row (matches default 6-species ecosystem)
+        // Global params
+        sb.Append("example_batch,3650,5,20,10,0,2,1.5,5,0.5,true,true,-5,50,true,5000,0.20,0.10,");
+
+        // Species: Hexapod Common, Arctic, Tropical (Tier 0 = prey)
+        string[] hexVariants = { "Common", "Arctic", "Tropical" };
+        float[] hexOptTemps = { 23.85f, 17.85f, 29.85f };
+        float[] hexBreadth = { 8000f, 4000f, 4000f };
+        float[] hexLower = { 3000f, 13974f, 15827f };
+        float[] hexLowerBound = { 22.85f, 17.75f, 29.75f };
+        float[] hexUpperBound = { 24.85f, 17.95f, 29.95f };
+        float[] hexPmax = { 0.65f, 0.85f, 0.85f };
+
+        for (int i = 0; i < 3; i++)
+        {
+            sb.Append($"Hexapod,{hexVariants[i]},0,20,0,0.45,0.3,0.6,0.25,0.02,0.01,1,0,");
+            sb.Append($"{hexOptTemps[i]},{hexBreadth[i]},{hexLower[i]},35000,{hexLowerBound[i]},{hexUpperBound[i]},");
+            sb.Append($"{hexPmax[i]},0,40,0,");
+        }
+
+        // Species: Sheplik Common, Arctic, Tropical (Tier 1 = predator)
+        for (int i = 0; i < 3; i++)
+        {
+            sb.Append($"Sheplik,{hexVariants[i]},1,4,1.5,0.1,0.3,0.3,0.25,0.01,0.005,0.75,0.15,");
+            sb.Append($"{hexOptTemps[i]},{hexBreadth[i]},{hexLower[i]},35000,{hexLowerBound[i]},{hexUpperBound[i]},");
+            sb.Append($"{hexPmax[i]},0,40,0");
+            if (i < 2) sb.Append(',');
+        }
+
+        sb.AppendLine();
+        return sb.ToString();
+    }
+
     // ==================== CSV LINE PARSER ====================
 
     /// <summary>

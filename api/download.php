@@ -32,9 +32,9 @@ if (!preg_match('/^[a-zA-Z0-9_\-]+$/', $batch)) {
     exit;
 }
 
-// Large batches (100+ files from S3) need extra time and memory
-set_time_limit(600);
-ini_set('memory_limit', '1G');
+// Large batches (100+ files from S3) need extra time and memory — no limits
+set_time_limit(0);
+ini_set('memory_limit', '-1');
 
 $s3 = new S3Client(AWS_ACCESS_KEY, AWS_SECRET_KEY, AWS_REGION, S3_BUCKET);
 $prefix = SESSION_PREFIX . $session . '/' . $batch . '/';

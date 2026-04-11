@@ -33,7 +33,7 @@ public class SimulationController : MonoBehaviour
     private AggregateResults _currentResults;
 
     // Cached output directory (Editor only)
-    private string OutputDirectory => Path.Combine(Application.persistentDataPath, outputFolderName);
+    private string OutputDirectory => Path.Combine(SavePaths.ResultsFolder, outputFolderName);
 
     /// <summary>
     /// Get the current SimulationConfig (for config export before simulation)
@@ -431,7 +431,7 @@ public class SimulationController : MonoBehaviour
 
         string json = ConfigExporter.ToJson(config);
         string filename = $"tinysea_config_{System.DateTime.Now:yyyy-MM-dd_HH-mm-ss}.json";
-        string path = Path.Combine(Application.persistentDataPath, filename);
+        string path = Path.Combine(SavePaths.ResultsFolder, filename);
 
         File.WriteAllText(path, json);
         Debug.Log($"Config exported to: {path}");

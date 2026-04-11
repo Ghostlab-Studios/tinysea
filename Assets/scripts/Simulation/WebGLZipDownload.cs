@@ -71,8 +71,8 @@ public static class WebGLZipDownload
 #else
         // Debug.Log($"WebGLZipDownload.DownloadAsZip called with {files.Count} files, but not running in WebGL build.");
 
-        // In Editor, save files individually to persistentDataPath
-        string folder = System.IO.Path.Combine(Application.persistentDataPath,
+        // In Editor/standalone, save files individually to results folder
+        string folder = System.IO.Path.Combine(SavePaths.ResultsFolder,
             System.IO.Path.GetFileNameWithoutExtension(zipFilename));
 
         if (!System.IO.Directory.Exists(folder))
@@ -112,7 +112,7 @@ public static class WebGLZipDownload
         TinySea_InitZipDownload(zipFilename);
         // Debug.Log($"Progressive ZIP initialized (WebGL): {zipFilename}");
 #else
-        _progressiveFolder = System.IO.Path.Combine(Application.persistentDataPath,
+        _progressiveFolder = System.IO.Path.Combine(SavePaths.ResultsFolder,
             System.IO.Path.GetFileNameWithoutExtension(zipFilename));
 
         // Clean up previous run if folder exists

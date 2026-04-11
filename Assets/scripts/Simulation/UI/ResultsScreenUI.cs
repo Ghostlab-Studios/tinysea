@@ -568,7 +568,7 @@ public class ResultsScreenUI : MonoBehaviour
 #if UNITY_WEBGL && !UNITY_EDITOR
         WebGLDownload.DownloadCsv(filename, content);
 #else
-        string path = Path.Combine(Application.persistentDataPath, filename);
+        string path = Path.Combine(SavePaths.ResultsFolder, filename);
         File.WriteAllText(path, content);
 
         if (openFilesAfterSave)
@@ -675,7 +675,7 @@ public class ResultsScreenUI : MonoBehaviour
 #if UNITY_WEBGL && !UNITY_EDITOR
         WebGLZipDownload.DownloadAsZip(zipFilename, files);
 #else
-        string folder = Path.Combine(Application.persistentDataPath,
+        string folder = Path.Combine(SavePaths.ResultsFolder,
             Path.GetFileNameWithoutExtension(zipFilename));
 
         if (!Directory.Exists(folder))

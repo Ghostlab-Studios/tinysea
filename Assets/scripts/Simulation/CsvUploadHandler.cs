@@ -326,10 +326,10 @@ public class CsvUploadHandler : MonoBehaviour
         else
         {
             // Fallback: save to persistent data path and open folder
-            string fallbackPath = System.IO.Path.Combine(Application.persistentDataPath, "bulk_template.csv");
+            string fallbackPath = System.IO.Path.Combine(SavePaths.ResultsFolder, "bulk_template.csv");
             System.IO.File.WriteAllText(fallbackPath, templateCsv);
             Debug.Log($"Template saved to: {fallbackPath}");
-            Application.OpenURL("file://" + Application.persistentDataPath);
+            Application.OpenURL("file://" + SavePaths.ResultsFolder);
         }
 #endif
     }

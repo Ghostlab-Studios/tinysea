@@ -303,6 +303,66 @@ main {
     box-shadow: 0 0 10px rgba(0, 217, 255, 0.5);
 }
 
+/* Standalone Builds Download */
+.download-builds {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.download-builds h3 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: #0a4d68;
+    margin-bottom: 6px;
+}
+
+.download-builds p {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 14px;
+}
+
+.download-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+
+.download-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 22px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.download-btn.windows {
+    background: #0078d4;
+    color: #fff;
+}
+
+.download-btn.windows:hover {
+    background: #106ebe;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 120, 212, 0.3);
+}
+
+.download-btn.macos {
+    background: #333;
+    color: #fff;
+}
+
+.download-btn.macos:hover {
+    background: #444;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
 /* Info Card */
 .info-card {
     background: rgba(255, 255, 255, 0.95);

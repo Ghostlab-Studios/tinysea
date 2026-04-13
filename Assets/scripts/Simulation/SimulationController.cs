@@ -42,11 +42,12 @@ public class SimulationController : MonoBehaviour
 
     private void Awake()
     {
-#if !UNITY_WEBGL && !UNITY_EDITOR
-        // Windowed mode for standalone builds (both Windows and macOS)
+        // Force windowed mode on macOS standalone
         if (Application.platform == RuntimePlatform.OSXPlayer)
+        {
+            Screen.fullScreen = false;
             Screen.SetResolution(1280, 720, false);
-#endif
+        }
 
         // Subscribe to results screen events
         if (resultsScreen != null)

@@ -419,14 +419,14 @@ public class BulkSimulationController : MonoBehaviour
         sb.AppendLine();
 
         // Per-species aggregate across all runs
+        // Only GrandMean is valid here (avg of run-level avgs). Min/Max of averages
+        // are not meaningful population values — use the per-run table for drill-down.
         sb.AppendLine("=== PER-SPECIES AGGREGATE (Across All Runs) ===");
-        sb.AppendLine("Species,Avg,Min,Max,RunsExtinct,RunsSurvived,ExtinctionRate");
+        sb.AppendLine("Species,GrandMean,RunsExtinct,RunsSurvived,ExtinctionRate");
 
         foreach (var sp in allSpecies)
         {
             float sum = 0;
-            float min = float.MaxValue;
-            float max = float.MinValue;
             int count = 0;
             int runsExtinct = 0;
             int runsSurvived = 0;
@@ -437,16 +437,12 @@ public class BulkSimulationController : MonoBehaviour
                 float val = run.AvgSpeciesPop[sp];
                 sum += val;
                 count++;
-                if (val < min) min = val;
-                if (val > max) max = val;
                 if (val <= 0) runsExtinct++; else runsSurvived++;
             }
 
-            float avg = count > 0 ? sum / count : 0;
-            if (min == float.MaxValue) min = 0;
-            if (max == float.MinValue) max = 0;
+            float grandMean = count > 0 ? sum / count : 0;
             float extinctionRate = count > 0 ? (float)runsExtinct / count : 0;
-            sb.AppendLine($"{sp},{avg:F1},{min:F1},{max:F1},{runsExtinct},{runsSurvived},{extinctionRate:P1}");
+            sb.AppendLine($"{sp},{grandMean:F1},{runsExtinct},{runsSurvived},{extinctionRate:P1}");
         }
 
         return sb.ToString();

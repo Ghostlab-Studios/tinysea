@@ -57,6 +57,43 @@ mergeInto(LibraryManager.library, {
         });
 
         console.log('[TinySea] Drag-and-drop initialized on document.');
+    },
+
+    TinySea_OpenFilePicker: function() {
+        var input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.csv';
+        input.style.display = 'none';
+        document.body.appendChild(input);
+
+        input.onchange = function() {
+            if (!input.files || input.files.length === 0) {
+                document.body.removeChild(input);
+                return;
+            }
+
+            var file = input.files[0];
+            var name = file.name.toLowerCase();
+
+            if (name.substring(name.length - 4) !== '.csv') {
+                SendMessage('CsvUploadHandler', 'OnCsvUploadError', 'Only CSV files are accepted.');
+                document.body.removeChild(input);
+                return;
+            }
+
+            var reader = new FileReader();
+            reader.onload = function() {
+                SendMessage('CsvUploadHandler', 'OnCsvFileReceived', reader.result);
+                document.body.removeChild(input);
+            };
+            reader.onerror = function() {
+                SendMessage('CsvUploadHandler', 'OnCsvUploadError', 'Failed to read file.');
+                document.body.removeChild(input);
+            };
+            reader.readAsText(file);
+        };
+
+        input.click();
     }
 
 });

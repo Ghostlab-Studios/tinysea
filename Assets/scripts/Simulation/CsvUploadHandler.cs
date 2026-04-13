@@ -12,13 +12,16 @@ public class CsvUploadHandler : MonoBehaviour
     [SerializeField] private Button goBackButton;
     [SerializeField] private Button runSimulationButton;
 
-    [Header("Standalone UI (auto-hidden in WebGL)")]
-    [Tooltip("Parent panel containing 'Press L to upload' text and Download Template button. Disabled in WebGL, enabled in standalone/editor.")]
+    [Header("Upload UI")]
+    [Tooltip("Parent panel containing 'Press L to upload' text and Download Template button. Shown on all platforms.")]
     [SerializeField] private GameObject standaloneUploadSection;
     [SerializeField] private Button downloadTemplateButton;
 
     [DllImport("__Internal")]
     private static extern void TinySea_InitDragDrop();
+
+    [DllImport("__Internal")]
+    private static extern void TinySea_OpenFilePicker();
 
     private string receivedCsvContent;
     public string ReceivedCsvContent => receivedCsvContent;
@@ -37,16 +40,10 @@ public class CsvUploadHandler : MonoBehaviour
         // No need for TinySea_InitDragDrop() — it registered duplicate listeners
         // that produced "object not found" errors.
 
-        // Auto-hide standalone upload section in WebGL (L key and file dialogs don't work there).
-        // Keep enabled in standalone (Windows/macOS) and Editor.
+        // Show the upload section (L key + download template) on all platforms.
+        // L key now works in WebGL via browser file picker, standalone via OS dialog, editor via EditorUtility.
         if (standaloneUploadSection != null)
-        {
-#if UNITY_WEBGL && !UNITY_EDITOR
-            standaloneUploadSection.SetActive(false);
-#else
             standaloneUploadSection.SetActive(true);
-#endif
-        }
 
         SetIdleState();
     }
@@ -270,7 +267,16 @@ public class CsvUploadHandler : MonoBehaviour
             OnCsvDragLeave();
         }
     }
-#elif !UNITY_WEBGL
+#elif UNITY_WEBGL
+    void Update()
+    {
+        // Press L to load a CSV in WebGL via browser file picker
+        if (Input.GetKeyDown(KeyCode.L))
+        {
+            TinySea_OpenFilePicker();
+        }
+    }
+#else
     void Update()
     {
         // Press L to load a CSV in standalone builds (Windows/macOS)

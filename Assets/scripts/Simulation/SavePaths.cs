@@ -18,8 +18,10 @@ public static class SavePaths
 #if UNITY_EDITOR
             return Application.persistentDataPath;
 #elif UNITY_STANDALONE_OSX
-            // Application.dataPath = <app>/Contents → parent.parent = folder with .app
-            return Directory.GetParent(Application.dataPath).Parent.FullName;
+            // ~/Downloads — always writable and easy to find
+            return Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                "Downloads");
 #elif UNITY_STANDALONE_WIN || UNITY_STANDALONE_LINUX
             // Application.dataPath = <exe>/TinySea_Data → parent = folder with .exe
             return Directory.GetParent(Application.dataPath).FullName;

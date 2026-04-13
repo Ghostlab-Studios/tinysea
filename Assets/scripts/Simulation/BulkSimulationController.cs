@@ -399,14 +399,16 @@ public class BulkSimulationController : MonoBehaviour
 
         // Per-run results table
         sb.AppendLine("=== PER-RUN RESULTS ===");
-        sb.Append("Run,Scenarios,Survived,Crashed,BaseTemp,ClimateTrend");
+        sb.Append("Run,Scenarios,Survived,Crashed,CrashRate,BaseTemp,ClimateTrend");
         foreach (var sp in allSpecies)
             sb.Append($",{sp}");
         sb.AppendLine();
 
         foreach (var run in summaries)
         {
-            sb.Append($"{run.BatchName},{run.NumScenarios},{run.Survived},{run.Crashed},{run.BaseTemp:F2},{run.ClimateTrend:F4}");
+            int total = run.Survived + run.Crashed;
+            float crashRate = total > 0 ? (float)run.Crashed / total : 0;
+            sb.Append($"{run.BatchName},{run.NumScenarios},{run.Survived},{run.Crashed},{crashRate:P1},{run.BaseTemp:F2},{run.ClimateTrend:F4}");
             foreach (var sp in allSpecies)
             {
                 float val = run.AvgSpeciesPop != null && run.AvgSpeciesPop.ContainsKey(sp) ? run.AvgSpeciesPop[sp] : 0;
@@ -418,7 +420,7 @@ public class BulkSimulationController : MonoBehaviour
 
         // Per-species aggregate across all runs
         sb.AppendLine("=== PER-SPECIES AGGREGATE (Across All Runs) ===");
-        sb.AppendLine("Species,Avg,Min,Max");
+        sb.AppendLine("Species,Avg,Min,Max,RunsExtinct,RunsSurvived,ExtinctionRate");
 
         foreach (var sp in allSpecies)
         {
@@ -426,6 +428,8 @@ public class BulkSimulationController : MonoBehaviour
             float min = float.MaxValue;
             float max = float.MinValue;
             int count = 0;
+            int runsExtinct = 0;
+            int runsSurvived = 0;
 
             foreach (var run in summaries)
             {
@@ -435,12 +439,14 @@ public class BulkSimulationController : MonoBehaviour
                 count++;
                 if (val < min) min = val;
                 if (val > max) max = val;
+                if (val <= 0) runsExtinct++; else runsSurvived++;
             }
 
             float avg = count > 0 ? sum / count : 0;
             if (min == float.MaxValue) min = 0;
             if (max == float.MinValue) max = 0;
-            sb.AppendLine($"{sp},{avg:F1},{min:F1},{max:F1}");
+            float extinctionRate = count > 0 ? (float)runsExtinct / count : 0;
+            sb.AppendLine($"{sp},{avg:F1},{min:F1},{max:F1},{runsExtinct},{runsSurvived},{extinctionRate:P1}");
         }
 
         return sb.ToString();

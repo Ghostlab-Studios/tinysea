@@ -29,6 +29,18 @@ public class BulkSimulationController : MonoBehaviour
     private bool _isRunning = false;
     private bool _cancelRequested = false;
     private Coroutine _runCoroutine;
+    private List<BulkRunSummary> _bulkSummaries;
+
+    private struct BulkRunSummary
+    {
+        public string BatchName;
+        public int NumScenarios;
+        public int Survived;
+        public int Crashed;
+        public float BaseTemp;
+        public float ClimateTrend;
+        public Dictionary<string, float> AvgSpeciesPop;
+    }
 
     // ETA — recalculated once per minute, cached between updates
     private float _lastEtaUpdateTime;
@@ -73,6 +85,7 @@ public class BulkSimulationController : MonoBehaviour
     {
         _isRunning = true;
         _cancelRequested = false;
+        _bulkSummaries = new List<BulkRunSummary>();
 
         // Hide upload overlay
         if (uploadOverlayPanel != null)
@@ -299,6 +312,19 @@ public class BulkSimulationController : MonoBehaviour
                 batchResults.CompletedAt = DateTime.Now;
                 batchResults.CalculateAggregates();
 
+                _bulkSummaries.Add(new BulkRunSummary
+                {
+                    BatchName = batch.BatchName,
+                    NumScenarios = batch.NumScenarios,
+                    Survived = batchResults.SurvivedScenarios,
+                    Crashed = batchResults.CrashedScenarios,
+                    BaseTemp = batch.BaseTemp,
+                    ClimateTrend = batch.ClimateTrend,
+                    AvgSpeciesPop = batchResults.PerSpeciesAvg != null
+                        ? new Dictionary<string, float>(batchResults.PerSpeciesAvg)
+                        : new Dictionary<string, float>()
+                });
+
                 string aggCsv = batchResults.ToAggregateCsv();
                 string cfgCsv = batchResults.ToConfigCsv();
                 if (useServerUpload)
@@ -314,6 +340,16 @@ public class BulkSimulationController : MonoBehaviour
 
                 batchResults.Scenarios.Clear();
             }
+        }
+
+        // Generate and stream bulk summary CSV
+        if (_bulkSummaries.Count > 0)
+        {
+            string bulkSummary = GenerateBulkSummary(_bulkSummaries);
+            if (useServerUpload)
+                yield return ServerUpload.UploadFile("bulk_summary.csv", bulkSummary);
+            else
+                WebGLZipDownload.AddFileToProgressiveZip("bulk_summary.csv", bulkSummary);
         }
 
         // Switch to results screen with Download All (ZIP) button
@@ -338,6 +374,76 @@ public class BulkSimulationController : MonoBehaviour
         // Reset upload handler to idle state (ready for next drag-drop)
         if (csvUploadHandler != null)
             csvUploadHandler.ResetToIdle();
+    }
+
+    /// <summary>
+    /// Generate a bulk summary CSV aggregating per-species stats across all runs.
+    /// </summary>
+    private string GenerateBulkSummary(List<BulkRunSummary> summaries)
+    {
+        var sb = new System.Text.StringBuilder();
+
+        sb.AppendLine("=== TINYSEA BULK SUMMARY (Across All Runs) ===");
+        sb.AppendLine($"# Total Runs,{summaries.Count}");
+        sb.AppendLine($"# Generated,{DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+        sb.AppendLine();
+
+        // Collect all species names across all runs
+        var allSpecies = new SortedSet<string>();
+        foreach (var run in summaries)
+        {
+            if (run.AvgSpeciesPop != null)
+                foreach (var key in run.AvgSpeciesPop.Keys)
+                    allSpecies.Add(key);
+        }
+
+        // Per-run results table
+        sb.AppendLine("=== PER-RUN RESULTS ===");
+        sb.Append("Run,Scenarios,Survived,Crashed,BaseTemp,ClimateTrend");
+        foreach (var sp in allSpecies)
+            sb.Append($",{sp}");
+        sb.AppendLine();
+
+        foreach (var run in summaries)
+        {
+            sb.Append($"{run.BatchName},{run.NumScenarios},{run.Survived},{run.Crashed},{run.BaseTemp:F2},{run.ClimateTrend:F4}");
+            foreach (var sp in allSpecies)
+            {
+                float val = run.AvgSpeciesPop != null && run.AvgSpeciesPop.ContainsKey(sp) ? run.AvgSpeciesPop[sp] : 0;
+                sb.Append($",{val:F1}");
+            }
+            sb.AppendLine();
+        }
+        sb.AppendLine();
+
+        // Per-species aggregate across all runs
+        sb.AppendLine("=== PER-SPECIES AGGREGATE (Across All Runs) ===");
+        sb.AppendLine("Species,Avg,Min,Max");
+
+        foreach (var sp in allSpecies)
+        {
+            float sum = 0;
+            float min = float.MaxValue;
+            float max = float.MinValue;
+            int count = 0;
+
+            foreach (var run in summaries)
+            {
+                if (run.AvgSpeciesPop == null || !run.AvgSpeciesPop.ContainsKey(sp)) continue;
+                float val = run.AvgSpeciesPop[sp];
+                sum += val;
+                count++;
+                if (val < min) min = val;
+                if (val > max) max = val;
+            }
+
+            float avg = count > 0 ? sum / count : 0;
+            if (min == float.MaxValue) min = 0;
+            if (max == float.MinValue) max = 0;
+            sb.AppendLine($"{sp},{avg:F1},{min:F1},{max:F1}");
+        }
+
+        return sb.ToString();
     }
 
     /// <summary>

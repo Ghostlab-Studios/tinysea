@@ -312,6 +312,7 @@ public class EcosystemSimulator
             case SpeciesVariant.Arctic: return ThermalVariant.Arctic;
             case SpeciesVariant.Common: return ThermalVariant.Common;
             case SpeciesVariant.Tropical: return ThermalVariant.Tropical;
+            case SpeciesVariant.Custom: return ThermalVariant.Custom;
             default: return ThermalVariant.Common;
         }
     }

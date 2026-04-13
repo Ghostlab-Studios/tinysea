@@ -53,6 +53,8 @@ public class StepRecord
     public long Tier2Arctic;
     public long Tier2Common;
     public long Tier2Tropical;
+    public long Tier1Custom;
+    public long Tier2Custom;
 
     // Death tracking (using long to prevent overflow)
     public long EatenT1;           // Prey eaten = T1 deaths from predation
@@ -94,8 +96,8 @@ public class StepRecord
         return $"{Day},{Year},{Temperature:F2},{BiologyCycle}," +
                $"{StartPop},{EndPop}," +
                $"{Tier1Pop},{Tier2Pop}," +
-               $"{Tier1Arctic},{Tier1Common},{Tier1Tropical}," +
-               $"{Tier2Arctic},{Tier2Common},{Tier2Tropical}," +
+               $"{Tier1Arctic},{Tier1Common},{Tier1Tropical},{Tier1Custom}," +
+               $"{Tier2Arctic},{Tier2Common},{Tier2Tropical},{Tier2Custom}," +
                $"{EatenT1},{TempDeathsT1},{TempDeathsT2}," +
                $"{ConditionDeathsT1},{ConditionDeathsT2}," +
                $"{NaturalDeathsT1},{NaturalDeathsT2}," +
@@ -115,8 +117,8 @@ public class StepRecord
         return "Day,Year,Temperature,BiologyCycle," +
                "StartPop,EndPop," +
                "Tier1Pop,Tier2Pop," +
-               "Tier1Arctic,Tier1Common,Tier1Tropical," +
-               "Tier2Arctic,Tier2Common,Tier2Tropical," +
+               "Tier1Arctic,Tier1Common,Tier1Tropical,Tier1Custom," +
+               "Tier2Arctic,Tier2Common,Tier2Tropical,Tier2Custom," +
                "EatenT1,TempDeathsT1,TempDeathsT2," +
                "ConditionDeathsT1,ConditionDeathsT2," +
                "NaturalDeathsT1,NaturalDeathsT2," +
@@ -281,6 +283,8 @@ public class SimulationRunner
             Tier2Arctic = (long)Math.Round(Ecosystem.GetVariantPopulation(2, ThermalVariant.Arctic)),
             Tier2Common = (long)Math.Round(Ecosystem.GetVariantPopulation(2, ThermalVariant.Common)),
             Tier2Tropical = (long)Math.Round(Ecosystem.GetVariantPopulation(2, ThermalVariant.Tropical)),
+            Tier1Custom = (long)Math.Round(Ecosystem.GetVariantPopulation(1, ThermalVariant.Custom)),
+            Tier2Custom = (long)Math.Round(Ecosystem.GetVariantPopulation(2, ThermalVariant.Custom)),
 
             // Death tracking - using long to prevent overflow
             EatenT1 = (long)Math.Round(eatenT1),
@@ -344,6 +348,8 @@ public class SimulationRunner
             case "Tier2Arctic":   return r.Tier2Arctic;
             case "Tier2Common":   return r.Tier2Common;
             case "Tier2Tropical": return r.Tier2Tropical;
+            case "Tier1Custom":   return r.Tier1Custom;
+            case "Tier2Custom":   return r.Tier2Custom;
             default:              return 0;
         }
     }
@@ -556,6 +562,8 @@ public class SimulationRunner
         summary.FinalTier2Arctic = lastRecord.Tier2Arctic;
         summary.FinalTier2Common = lastRecord.Tier2Common;
         summary.FinalTier2Tropical = lastRecord.Tier2Tropical;
+        summary.FinalTier1Custom = lastRecord.Tier1Custom;
+        summary.FinalTier2Custom = lastRecord.Tier2Custom;
 
         long maxT1 = 0, minT1 = long.MaxValue;
         long maxT2 = 0, minT2 = long.MaxValue;
@@ -610,6 +618,9 @@ public class SimulationRunner
             FinalTier2Arctic = summary?.FinalTier2Arctic ?? 0,
             FinalTier2Common = summary?.FinalTier2Common ?? 0,
             FinalTier2Tropical = summary?.FinalTier2Tropical ?? 0,
+            FinalTier1Custom = summary?.FinalTier1Custom ?? 0,
+            FinalTier2Custom = summary?.FinalTier2Custom ?? 0,
+            FinalSpeciesPopulations = CaptureSpeciesPopulations(),
             MaxTier1Pop = summary?.MaxTier1Pop ?? 0,
             MinTier1Pop = summary?.MinTier1Pop ?? 0,
             MaxTier2Pop = summary?.MaxTier2Pop ?? 0,
@@ -624,6 +635,14 @@ public class SimulationRunner
             ExtinctionDay = popStats.ExtinctionDay,
             CsvData = ToCsvInternal(scenarioIndex, numberOfScenarios, popStats)
         };
+    }
+
+    private Dictionary<string, long> CaptureSpeciesPopulations()
+    {
+        var pops = new Dictionary<string, long>();
+        foreach (var sp in Ecosystem.Species)
+            pops[sp.FullName] = (long)Math.Round(sp.Population);
+        return pops;
     }
 }
 
@@ -645,6 +664,8 @@ public class SimulationSummary
     public long FinalTier2Arctic;
     public long FinalTier2Common;
     public long FinalTier2Tropical;
+    public long FinalTier1Custom;
+    public long FinalTier2Custom;
     public long MaxTier1Pop;
     public long MinTier1Pop;
     public long MaxTier2Pop;

@@ -31,6 +31,11 @@ public class ScenarioResult
     public long FinalTier2Arctic;
     public long FinalTier2Common;
     public long FinalTier2Tropical;
+    public long FinalTier1Custom;
+    public long FinalTier2Custom;
+
+    // Per-species final populations (key = FullName like "Hexapod_Arctic" or "Coral_Custom")
+    public Dictionary<string, long> FinalSpeciesPopulations;
 
     // Population stats (across all days)
     public long MaxTier1Pop;
@@ -61,13 +66,13 @@ public class ScenarioResult
     // Column name constants shared across SimulationRunner and AggregateResults
     public static readonly string[] PopColumns = {
         "Tier1Pop", "Tier2Pop",
-        "Tier1Arctic", "Tier1Common", "Tier1Tropical",
-        "Tier2Arctic", "Tier2Common", "Tier2Tropical"
+        "Tier1Arctic", "Tier1Common", "Tier1Tropical", "Tier1Custom",
+        "Tier2Arctic", "Tier2Common", "Tier2Tropical", "Tier2Custom"
     };
 
     public static readonly string[] VariantColumns = {
-        "Tier1Arctic", "Tier1Common", "Tier1Tropical",
-        "Tier2Arctic", "Tier2Common", "Tier2Tropical"
+        "Tier1Arctic", "Tier1Common", "Tier1Tropical", "Tier1Custom",
+        "Tier2Arctic", "Tier2Common", "Tier2Tropical", "Tier2Custom"
     };
 
     // CSV data (stored for download)
@@ -163,6 +168,12 @@ public class AggregateResults
     public float AvgFinalConditionT1;  // Mean final condition (survived only)
     public float AvgFinalConditionT2;
 
+    // Per-species population stats across survived scenarios
+    // Key = species FullName (e.g., "Hexapod_Arctic", "Coral_Custom")
+    public Dictionary<string, float> PerSpeciesAvg;
+    public Dictionary<string, float> PerSpeciesMin;
+    public Dictionary<string, float> PerSpeciesMax;
+
     // Individual results
     public List<ScenarioResult> Scenarios = new List<ScenarioResult>();
 
@@ -245,6 +256,41 @@ public class AggregateResults
             MinFinalTier2Pop = 0;
             MaxFinalTier2Pop = 0;
         }
+
+        // Per-species aggregation (survived scenarios only)
+        var spSum = new Dictionary<string, float>();
+        var spMin = new Dictionary<string, float>();
+        var spMax = new Dictionary<string, float>();
+        var spCount = new Dictionary<string, int>();
+
+        foreach (var scenario in Scenarios)
+        {
+            if (scenario.Crashed || scenario.FinalSpeciesPopulations == null) continue;
+            foreach (var kvp in scenario.FinalSpeciesPopulations)
+            {
+                if (!spSum.ContainsKey(kvp.Key))
+                {
+                    spSum[kvp.Key] = 0;
+                    spMin[kvp.Key] = float.MaxValue;
+                    spMax[kvp.Key] = float.MinValue;
+                    spCount[kvp.Key] = 0;
+                }
+                spSum[kvp.Key] += kvp.Value;
+                spCount[kvp.Key]++;
+                if (kvp.Value < spMin[kvp.Key]) spMin[kvp.Key] = kvp.Value;
+                if (kvp.Value > spMax[kvp.Key]) spMax[kvp.Key] = kvp.Value;
+            }
+        }
+
+        PerSpeciesAvg = new Dictionary<string, float>();
+        PerSpeciesMin = new Dictionary<string, float>();
+        PerSpeciesMax = new Dictionary<string, float>();
+        foreach (var key in spSum.Keys)
+        {
+            PerSpeciesAvg[key] = spCount[key] > 0 ? spSum[key] / spCount[key] : 0;
+            PerSpeciesMin[key] = spMin[key] == float.MaxValue ? 0 : spMin[key];
+            PerSpeciesMax[key] = spMax[key] == float.MinValue ? 0 : spMax[key];
+        }
     }
 
     /// <summary>
@@ -301,6 +347,20 @@ public class AggregateResults
         sb.AppendLine($"Max Final T2,{MaxFinalTier2Pop}");
         sb.AppendLine();
 
+        if (PerSpeciesAvg != null && PerSpeciesAvg.Count > 0)
+        {
+            sb.AppendLine("=== PER-SPECIES POPULATION STATS (Survived Only) ===");
+            sb.AppendLine("Species,Avg,Min,Max");
+            foreach (var key in PerSpeciesAvg.Keys.OrderBy(k => k))
+            {
+                float avg = PerSpeciesAvg[key];
+                float min = PerSpeciesMin != null && PerSpeciesMin.ContainsKey(key) ? PerSpeciesMin[key] : 0;
+                float max = PerSpeciesMax != null && PerSpeciesMax.ContainsKey(key) ? PerSpeciesMax[key] : 0;
+                sb.AppendLine($"{key},{avg:F1},{min},{max}");
+            }
+            sb.AppendLine();
+        }
+
         sb.AppendLine("=== CONDITION STATS ===");
         sb.AppendLine($"Avg Condition T1 (All Scenarios),{AvgConditionT1:F3}");
         sb.AppendLine($"Avg Condition T2 (All Scenarios),{AvgConditionT2:F3}");
@@ -309,14 +369,14 @@ public class AggregateResults
         sb.AppendLine();
 
         sb.AppendLine("=== INDIVIDUAL SCENARIOS ===");
-        sb.AppendLine("Scenario,Seed,Crashed,CrashDay,CrashTier,FinalT1,FinalT2,T1Arctic,T1Common,T1Tropical,T2Arctic,T2Common,T2Tropical,AvgTemp,MinTemp,MaxTemp");
+        sb.AppendLine("Scenario,Seed,Crashed,CrashDay,CrashTier,FinalT1,FinalT2,T1Arctic,T1Common,T1Tropical,T1Custom,T2Arctic,T2Common,T2Tropical,T2Custom,AvgTemp,MinTemp,MaxTemp");
 
         foreach (var s in Scenarios)
         {
             sb.AppendLine($"{s.ScenarioIndex},{s.RandomSeed},{s.Crashed},{s.CrashDay},{s.CrashTier}," +
                          $"{s.FinalTier1Pop},{s.FinalTier2Pop}," +
-                         $"{s.FinalTier1Arctic},{s.FinalTier1Common},{s.FinalTier1Tropical}," +
-                         $"{s.FinalTier2Arctic},{s.FinalTier2Common},{s.FinalTier2Tropical}," +
+                         $"{s.FinalTier1Arctic},{s.FinalTier1Common},{s.FinalTier1Tropical},{s.FinalTier1Custom}," +
+                         $"{s.FinalTier2Arctic},{s.FinalTier2Common},{s.FinalTier2Tropical},{s.FinalTier2Custom}," +
                          $"{s.AvgTemperature:F2},{s.MinTemperature:F2},{s.MaxTemperature:F2}");
         }
 

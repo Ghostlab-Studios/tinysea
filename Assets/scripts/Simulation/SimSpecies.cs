@@ -1,6 +1,6 @@
 using System;
 
-public enum ThermalVariant { Arctic, Common, Tropical }
+public enum ThermalVariant { Arctic, Common, Tropical, Custom }
 
 /// <summary>
 /// Species data class for simulation.

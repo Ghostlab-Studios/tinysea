@@ -257,7 +257,7 @@ public class AggregateResults
             MaxFinalTier2Pop = 0;
         }
 
-        // Per-species aggregation (survived scenarios only)
+        // Per-species aggregation (all scenarios, including crashed)
         var spSum = new Dictionary<string, float>();
         var spMin = new Dictionary<string, float>();
         var spMax = new Dictionary<string, float>();
@@ -265,7 +265,7 @@ public class AggregateResults
 
         foreach (var scenario in Scenarios)
         {
-            if (scenario.Crashed || scenario.FinalSpeciesPopulations == null) continue;
+            if (scenario.FinalSpeciesPopulations == null) continue;
             foreach (var kvp in scenario.FinalSpeciesPopulations)
             {
                 if (!spSum.ContainsKey(kvp.Key))
@@ -349,7 +349,7 @@ public class AggregateResults
 
         if (PerSpeciesAvg != null && PerSpeciesAvg.Count > 0)
         {
-            sb.AppendLine("=== PER-SPECIES POPULATION STATS (Survived Only) ===");
+            sb.AppendLine("=== PER-SPECIES POPULATION STATS (All Scenarios) ===");
             sb.AppendLine("Species,Avg,Min,Max");
             foreach (var key in PerSpeciesAvg.Keys.OrderBy(k => k))
             {

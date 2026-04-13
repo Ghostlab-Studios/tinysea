@@ -175,6 +175,7 @@ public class AggregateResults
     public Dictionary<string, float> PerSpeciesMax;
     public Dictionary<string, int> PerSpeciesExtinct;  // scenarios where final pop = 0
     public Dictionary<string, int> PerSpeciesSurvived; // scenarios where final pop > 0
+    public Dictionary<string, float> PerSpeciesSurvivedAvg; // avg pop only across survived scenarios
 
     // Individual results
     public List<ScenarioResult> Scenarios = new List<ScenarioResult>();
@@ -289,14 +290,16 @@ public class AggregateResults
         PerSpeciesMax = new Dictionary<string, float>();
         PerSpeciesExtinct = new Dictionary<string, int>();
         PerSpeciesSurvived = new Dictionary<string, int>();
+        PerSpeciesSurvivedAvg = new Dictionary<string, float>();
         foreach (var key in spSum.Keys)
         {
             PerSpeciesAvg[key] = spCount[key] > 0 ? spSum[key] / spCount[key] : 0;
             PerSpeciesMin[key] = spMin[key] == float.MaxValue ? 0 : spMin[key];
             PerSpeciesMax[key] = spMax[key] == float.MinValue ? 0 : spMax[key];
 
-            // Count extinctions vs survivals for this species
+            // Count extinctions vs survivals, and compute survived-only average
             int extinct = 0, survived = 0;
+            float survivedSum = 0;
             foreach (var scenario in Scenarios)
             {
                 if (scenario.FinalSpeciesPopulations == null) continue;
@@ -304,10 +307,14 @@ public class AggregateResults
                 if (scenario.FinalSpeciesPopulations[key] <= 0)
                     extinct++;
                 else
+                {
                     survived++;
+                    survivedSum += scenario.FinalSpeciesPopulations[key];
+                }
             }
             PerSpeciesExtinct[key] = extinct;
             PerSpeciesSurvived[key] = survived;
+            PerSpeciesSurvivedAvg[key] = survived > 0 ? survivedSum / survived : 0;
         }
     }
 
@@ -368,17 +375,18 @@ public class AggregateResults
         if (PerSpeciesAvg != null && PerSpeciesAvg.Count > 0)
         {
             sb.AppendLine("=== PER-SPECIES POPULATION STATS (All Scenarios) ===");
-            sb.AppendLine("Species,Avg,Min,Max,Extinct,Survived,ExtinctionRate");
+            sb.AppendLine("Species,Avg,SurvivedAvg,Min,Max,Extinct,Survived,ExtinctionRate");
             foreach (var key in PerSpeciesAvg.Keys.OrderBy(k => k))
             {
                 float avg = PerSpeciesAvg[key];
+                float survivedAvg = PerSpeciesSurvivedAvg != null && PerSpeciesSurvivedAvg.ContainsKey(key) ? PerSpeciesSurvivedAvg[key] : 0;
                 float min = PerSpeciesMin != null && PerSpeciesMin.ContainsKey(key) ? PerSpeciesMin[key] : 0;
                 float max = PerSpeciesMax != null && PerSpeciesMax.ContainsKey(key) ? PerSpeciesMax[key] : 0;
                 int extinct = PerSpeciesExtinct != null && PerSpeciesExtinct.ContainsKey(key) ? PerSpeciesExtinct[key] : 0;
                 int survived = PerSpeciesSurvived != null && PerSpeciesSurvived.ContainsKey(key) ? PerSpeciesSurvived[key] : 0;
                 int total = extinct + survived;
                 float extinctionRate = total > 0 ? (float)extinct / total : 0;
-                sb.AppendLine($"{key},{avg:F1},{min},{max},{extinct},{survived},{extinctionRate:P1}");
+                sb.AppendLine($"{key},{avg:F1},{survivedAvg:F1},{min},{max},{extinct},{survived},{extinctionRate:P1}");
             }
             sb.AppendLine();
         }

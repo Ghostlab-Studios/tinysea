@@ -79,13 +79,13 @@ Note: In code, "batch" and "run" are used interchangeably for the same concept (
 | Level | What it aggregates | Output file | Valid stats |
 |-------|-------------------|-------------|-------------|
 | Scenario Result | One sim (daily data) | `scenario_N.csv` | Raw per-day populations, deaths, births |
-| Run Aggregate | Scenarios within 1 run | `aggregate.csv` | Avg/Min/Max per species (real population values), extinction rate per species |
-| Bulk Summary | Runs within 1 bulk upload | `bulk_summary.csv` | Grand mean per species (avg of run avgs), per-run extinction rate. Min/Max are NOT valid here (they would be min/max of averages, not real population values). |
+| Run Aggregate | Scenarios within 1 run | `aggregate.csv` | Avg/SurvivedAvg/Min/Max per species (real population values), extinction rate per species |
+| Bulk Summary | Runs within 1 bulk upload | `bulk_summary.csv` | GrandMean + SurvivedMean per species, per-run extinction rate. Min/Max are NOT valid here (they would be min/max of averages, not real population values). |
 
 **CSV output formats:**
 - **Scenario CSV** — Each scenario file has `#config:key,value` lines (simulation params), then a `#species:` table (header + data rows with `#species:` prefix), then the daily step data. All `#` lines are ignored by R's `read.csv()`. Includes `Tier1Custom`/`Tier2Custom` columns for custom species.
-- **Aggregate CSV** — Section headers use `=== TITLE ===`, metadata lines use `# Key,Value`, then summary stats, per-species stats (with extinction counts), and a per-scenario table. The `PER-SPECIES POPULATION STATS` section lists every species individually (including each custom species by name) with Avg/Min/Max/Extinct/Survived/ExtinctionRate.
-- **Bulk Summary CSV** — At ZIP root. Has a per-run results table (one row per CSV row, with per-species avg populations and crash rate) and a per-species grand mean aggregate (avg of run-level averages + extinction rate across runs). No Min/Max at this level.
+- **Aggregate CSV** — Section headers use `=== TITLE ===`, metadata lines use `# Key,Value`, then summary stats, per-species stats (with extinction counts), and a per-scenario table. The `PER-SPECIES POPULATION STATS` section lists every species individually (including each custom species by name) with Avg/SurvivedAvg/Min/Max/Extinct/Survived/ExtinctionRate. `SurvivedAvg` = average population only across scenarios where the species survived (final pop > 0).
+- **Bulk Summary CSV** — At ZIP root. Has a per-run results table (one row per CSV row, with per-species avg populations and crash rate) and a per-species aggregate with GrandMean + SurvivedMean + extinction rate across runs. `SurvivedMean` = average of run-level survived averages across runs where the species had any presence. No Min/Max at this level.
 - **Config CSV** — Same `=== SECTION ===` style with `Parameter,Value` rows and a species table. Downloaded via "Download Config" button (CSV, not JSON). Also included in ZIP downloads as `config.csv`.
 - Species columns must stay consistent across all three formats: Name, Variant (separate columns), all biology params, temps in both Kelvin and Celsius (`:F2`).
 

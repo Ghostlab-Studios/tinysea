@@ -40,6 +40,7 @@ public class BulkSimulationController : MonoBehaviour
         public float BaseTemp;
         public float ClimateTrend;
         public Dictionary<string, float> AvgSpeciesPop;
+        public Dictionary<string, float> SurvivedSpeciesPop; // avg pop only from survived scenarios
     }
 
     // ETA — recalculated once per minute, cached between updates
@@ -322,6 +323,9 @@ public class BulkSimulationController : MonoBehaviour
                     ClimateTrend = batch.ClimateTrend,
                     AvgSpeciesPop = batchResults.PerSpeciesAvg != null
                         ? new Dictionary<string, float>(batchResults.PerSpeciesAvg)
+                        : new Dictionary<string, float>(),
+                    SurvivedSpeciesPop = batchResults.PerSpeciesSurvivedAvg != null
+                        ? new Dictionary<string, float>(batchResults.PerSpeciesSurvivedAvg)
                         : new Dictionary<string, float>()
                 });
 
@@ -419,10 +423,11 @@ public class BulkSimulationController : MonoBehaviour
         sb.AppendLine();
 
         // Per-species aggregate across all runs
-        // Only GrandMean is valid here (avg of run-level avgs). Min/Max of averages
-        // are not meaningful population values — use the per-run table for drill-down.
+        // GrandMean = avg of run-level avgs (all scenarios, including extinct).
+        // SurvivedMean = avg of run-level survived avgs (only scenarios where species lived).
+        // Min/Max of averages are not meaningful population values — use the per-run table.
         sb.AppendLine("=== PER-SPECIES AGGREGATE (Across All Runs) ===");
-        sb.AppendLine("Species,GrandMean,RunsExtinct,RunsSurvived,ExtinctionRate");
+        sb.AppendLine("Species,GrandMean,SurvivedMean,RunsExtinct,RunsSurvived,ExtinctionRate");
 
         foreach (var sp in allSpecies)
         {
@@ -430,6 +435,8 @@ public class BulkSimulationController : MonoBehaviour
             int count = 0;
             int runsExtinct = 0;
             int runsSurvived = 0;
+            float survivedSum = 0;
+            int survivedCount = 0;
 
             foreach (var run in summaries)
             {
@@ -437,12 +444,25 @@ public class BulkSimulationController : MonoBehaviour
                 float val = run.AvgSpeciesPop[sp];
                 sum += val;
                 count++;
-                if (val <= 0) runsExtinct++; else runsSurvived++;
+                if (val <= 0)
+                {
+                    runsExtinct++;
+                }
+                else
+                {
+                    runsSurvived++;
+                    // Use survived-only avg if available, otherwise fall back to run avg
+                    float survivedVal = run.SurvivedSpeciesPop != null && run.SurvivedSpeciesPop.ContainsKey(sp)
+                        ? run.SurvivedSpeciesPop[sp] : val;
+                    survivedSum += survivedVal;
+                    survivedCount++;
+                }
             }
 
             float grandMean = count > 0 ? sum / count : 0;
+            float survivedMean = survivedCount > 0 ? survivedSum / survivedCount : 0;
             float extinctionRate = count > 0 ? (float)runsExtinct / count : 0;
-            sb.AppendLine($"{sp},{grandMean:F1},{runsExtinct},{runsSurvived},{extinctionRate:P1}");
+            sb.AppendLine($"{sp},{grandMean:F1},{survivedMean:F1},{runsExtinct},{runsSurvived},{extinctionRate:P1}");
         }
 
         return sb.ToString();

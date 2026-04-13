@@ -51,6 +51,9 @@ include __DIR__ . '/includes/header.php';
                 macOS
             </a>
         </div>
+        <div class="setup-guide-link">
+            <a href="/builds/download.php?file=macos-guide">macOS Setup Guide (PDF)</a>
+        </div>
     </div>
 
     <div class="info-card">

@@ -5,8 +5,9 @@
 $file = $_GET['file'] ?? '';
 
 $allowed = [
-    'windows' => 'TinySea-Windows.zip',
-    'macos'   => 'TinySea-macOS.zip',
+    'windows'     => 'TinySea-Windows.zip',
+    'macos'       => 'TinySea-macOS.zip',
+    'macos-guide' => 'TinySea macOS Setup Guide.pdf',
 ];
 
 if (!isset($allowed[$file])) {
@@ -26,7 +27,9 @@ if (!file_exists($path)) {
 
 $size = filesize($path);
 
-header('Content-Type: application/zip');
+$ext = pathinfo($filename, PATHINFO_EXTENSION);
+$mime = $ext === 'pdf' ? 'application/pdf' : 'application/zip';
+header('Content-Type: ' . $mime);
 header('Content-Disposition: attachment; filename="' . $filename . '"');
 header('Content-Length: ' . $size);
 header('Cache-Control: public, max-age=3600');

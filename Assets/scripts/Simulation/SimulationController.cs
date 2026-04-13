@@ -42,6 +42,10 @@ public class SimulationController : MonoBehaviour
 
     private void Awake()
     {
+#if UNITY_STANDALONE_OSX && !UNITY_EDITOR
+        Screen.SetResolution(1280, 720, false);
+#endif
+
         // Subscribe to results screen events
         if (resultsScreen != null)
         {

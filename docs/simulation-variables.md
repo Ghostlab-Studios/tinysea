@@ -60,7 +60,7 @@ Complete reference for every configurable parameter, runtime variable, constant,
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `ClimateTrend` | float | 1 | Degrees Celsius warming per year (linear climate change). |
-| `InterannualVariation` | bool | true | **Not currently wired.** Field exists on SimulationConfig but is not passed to TemperatureCalculator. Interannual variation is always active regardless of this setting. |
+| `InterannualVariation` | bool | true | Enables/disables year-to-year temperature variation. When false, only seasonal, trend, and daily components affect temperature. |
 
 ### Temperature: Interannual Variation
 

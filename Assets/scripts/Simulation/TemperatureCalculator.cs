@@ -17,6 +17,7 @@ public class TemperatureCalculator
     public float WarmingBias = 1.5f;              // Warm years more likely
     public float BaseRandomness = 5f;             // Daily random range
     public float RandomnessGrowthRate = 0.5f;     // Daily randomness increases per year
+    public bool UseInterannualVariation = true;    // Year-to-year variation on/off
     public bool UseAutocorrelation = true;        // Smooth weather transitions
     public float MinTemp = -5f;                   // Hard floor
     public float MaxTemp = 40f;                   // Hard ceiling
@@ -81,6 +82,8 @@ public class TemperatureCalculator
     /// </summary>
     private float GetInterannualVariation(int day)
     {
+        if (!UseInterannualVariation) return 0f;
+
         int year = day / DAYS_PER_YEAR;
 
         if (!_yearVariations.ContainsKey(year))

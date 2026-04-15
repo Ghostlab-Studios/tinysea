@@ -2,6 +2,20 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// ============================================================================
+// LEGACY GAME CODE — Not used by the simulation.
+//
+// This is the interactive game's temperature generation model. It produces
+// one temperature per turn using: tBase (sinusoidal seasons) + tClimate
+// (linear warming) + tRand (uniform random noise). The static fields
+// (clim, yrRange, rand) are set by LevelLoader at level start.
+//
+// The simulation has its own standalone temperature model with richer
+// components: seasonal, climate trend, interannual variation, autocorrelated
+// daily noise, and configurable bounds.
+//
+// Simulation equivalent: Assets/scripts/Simulation/TemperatureCalculator.cs
+// ============================================================================
 public class TemperatureTrend : MonoBehaviour
 {
 
@@ -24,6 +38,7 @@ public class TemperatureTrend : MonoBehaviour
     /// 		- The name of this class is really awful I'm sorry
     /// </summary>
 
+    #region Active Temperature Model — shared concept, see TemperatureCalculator for simulation equivalent
 
     // the number of cycles or days it will take to get to the end of the desired temperature plot
     public float cycleTurnCount;
@@ -73,7 +88,9 @@ public class TemperatureTrend : MonoBehaviour
         return finalTemperature;
         */
     }
+    #endregion
 
+    #region Deprecated Gaussian Model — old unused code, not related to simulation
     // sets warming trend for the given day
     void SetTrend(float day)
     {
@@ -121,5 +138,6 @@ public class TemperatureTrend : MonoBehaviour
         return z * sigma + mu;
 
     }
+    #endregion
 
 }

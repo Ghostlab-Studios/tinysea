@@ -4,8 +4,32 @@ using System.Collections.Generic;
 using UnityEngine.UI;
 using UnityEngine.Events;
 
+// ============================================================================
+// LEGACY GAME CODE — Not used by the simulation.
+//
+// This is the interactive game's central controller. It manages the turn-based
+// gameplay loop: player presses Next Turn → temperature updates → performance
+// calculated → predation → reproduction/death → population cap. It also owns
+// the money system, buy/sell logic, ecosystem pyramid UI, and session recording.
+//
+// The simulation reimplements the ecosystem loop without any of the game/UI
+// concerns (no money, no shop, no animations, no player input):
+//   - SimulationController.cs  — entry point, runs scenarios via coroutine
+//   - SimulationRunner.cs      — pure C# loop over N days
+//   - EcosystemSimulator.cs    — 10-step biology sequence (vs 3 steps here)
+//
+// The game's Predation() method is conceptually similar to EcosystemSimulator's
+// feeding step, but the simulation uses Holling Type II functional response
+// instead of the simple proportional eating here.
+//
+// Simulation equivalents:
+//   Assets/scripts/Simulation/SimulationController.cs
+//   Assets/scripts/Simulation/SimulationRunner.cs
+//   Assets/scripts/Simulation/EcosystemSimulator.cs
+// ============================================================================
 public class PlayerManager : MonoBehaviour {
 
+    #region Game State & UI — game only, not used in simulation
 	/*
 	 *  Player's species
      *  Make sure that these are in the same order as the SwimmingHolder's prefabs!
@@ -61,7 +85,9 @@ public class PlayerManager : MonoBehaviour {
     public ParticleSystem eatenPart;
     public ParticleSystem starvedPart;
     public ParticleSystem reproducePart;
+    #endregion
 
+    #region Game Loop & Turn Processing — game only, see SimulationRunner for simulation equivalent
     /*
 	 * Initialize with three species at each level
 	 */
@@ -233,7 +259,9 @@ public class PlayerManager : MonoBehaviour {
 
         moneyText.text = "$" + Mathf.Floor(moneys).ToString();
     }
+    #endregion
 
+    #region Shop & Economy — game only, not used in simulation
     public void BuyCreatures(int index, float amount, bool money_access = true)
     {
         if(money_access)
@@ -281,7 +309,9 @@ public class PlayerManager : MonoBehaviour {
             }
         }
     }
+    #endregion
 
+    #region Population Queries — shared concept, simulation uses SimSpecies.Population directly
     //returns the total amount of all fish
     public float getTotalFishCount()
     {
@@ -343,7 +373,9 @@ public class PlayerManager : MonoBehaviour {
         }
         return list;
     }
+    #endregion
 
+    #region Predation — shared biology concept, see EcosystemSimulator feeding step (Holling Type II)
     //eats a certain amount of creatures sampled evenly within that level
     //negative things will happen if eatAmount is > the amount of creatures
     //^^^^^^^^ pun intended.
@@ -409,7 +441,9 @@ public class PlayerManager : MonoBehaviour {
             eatAtLevel(tier - 1, foodRequestAmount);
         }
     }
-    
+    #endregion
+
+    #region Session Recording — game only, not used in simulation
     public void RecordRoundData()
     {
         string linesToWrite = "Next Round Pressed,,,\n" +
@@ -429,4 +463,5 @@ public class PlayerManager : MonoBehaviour {
         linesToWrite = linesToWrite.Substring(0, linesToWrite.Length - 1);
         SessionRecorder.instance.WriteToSessionDataWithRound(linesToWrite);
     }
+    #endregion
 }

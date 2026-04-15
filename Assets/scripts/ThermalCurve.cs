@@ -1,8 +1,23 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+// ============================================================================
+// LEGACY GAME CODE — Not used by the simulation.
+//
+// This is the interactive game's thermal performance curve (MonoBehaviour,
+// attached to species GameObjects). The simulation reimplements the same
+// Arrhenius formula in EcosystemSimulator.cs (see CalculateThermalPerformance).
+//
+// Shared biology concept: Both use the Arrhenius equation with the same
+// parameters (optimalTemp, arrhenBreadth, arrhenLower, arrhenUpper, lowerBound,
+// upperBound) and a smooth lethal fade at CTmin/CTmax. The simulation version
+// adds Pmax clamping and condition-based death on top.
+//
+// Simulation equivalent: Assets/scripts/Simulation/EcosystemSimulator.cs
+// ============================================================================
 public class ThermalCurve : MonoBehaviour {
 
+    #region Thermal Parameters — shared biology concept, see SimSpecies for simulation equivalent
     public float interval = 0.1f;
     public float[] data;
     //public dataChart chart;
@@ -21,7 +36,9 @@ public class ThermalCurve : MonoBehaviour {
     public float ctMaxC = 40.0f;
 
     private const float LETHAL_TRANSITION_WIDTH = 2.0f; // Smooth fade width in degrees (same delta in K)
+    #endregion
 
+    #region Performance Calculation — shared biology concept, see EcosystemSimulator.CalculateThermalPerformance
     public float getCurve(float temp)
     {
         // Smooth lethal fade (convert Celsius to Kelvin for comparison)
@@ -84,7 +101,9 @@ public class ThermalCurve : MonoBehaviour {
         }
         return performance * fadeFactor * pmax;
     }
+    #endregion
 
+    #region Editor Visualization — game only, not used in simulation
     void OnDrawGizmos()
     {
         for (int i = 0; i < 40; i++)
@@ -93,4 +112,5 @@ public class ThermalCurve : MonoBehaviour {
                 transform.position + new Vector3(i + 1, (getCurve(i + 273 + 1) * 40) / 2));
         }
     }
+    #endregion
 }

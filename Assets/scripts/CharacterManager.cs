@@ -1,8 +1,34 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
+// ============================================================================
+// LEGACY GAME CODE — Not used by the simulation.
+//
+// This is the interactive game's per-species manager (MonoBehaviour, one per
+// species GameObject). It holds population, thermal curve reference, biology
+// stats, and handles reproduction/death with visual feedback (death/birth
+// queues drive SwimmingHolder animations).
+//
+// The simulation splits this into two separate concerns:
+//   - Species data:    SimSpecies.cs (plain C# class, no MonoBehaviour)
+//   - Biology logic:   EcosystemSimulator.cs (10-step sequence with
+//                      accumulators, condition system, natural death —
+//                      more detailed than the game's ReproduceOrDie)
+//
+// Key differences from simulation:
+//   - Game uses integer-ish populations with floor/ceil rounding inline;
+//     simulation uses float populations with explicit rounding at step 10.
+//   - Game has no condition system or natural death rate.
+//   - Game tracks death/birth causes via queues for animations;
+//     simulation tracks them via numeric accumulators for CSV output.
+//
+// Simulation equivalents:
+//   Assets/scripts/Simulation/SimSpecies.cs
+//   Assets/scripts/Simulation/EcosystemSimulator.cs
+// ============================================================================
 public class CharacterManager : MonoBehaviour {
 
+    #region Species Data — shared biology concept, see SimSpecies for simulation equivalent
     //species stats (these change during gameplay)
 	public float speciesAmount = 0;
 	public float performanceRate = 1;
@@ -24,7 +50,9 @@ public class CharacterManager : MonoBehaviour {
     public float deathThreashold = .3f; //if performance gets too low, you start dying
     public float deathRate = .5f; //if I'm dying, population drops by this ratio every day
     public float reproThreshold = .25f; // Only reproduce if above this threshold
+    #endregion
 
+    #region Game UI & Animation — game only, not used in simulation
     public int eatingStars = 5;
     public int reproductionStars = 5;
     public int deathThreasholdStars = 5;
@@ -42,7 +70,9 @@ public class CharacterManager : MonoBehaviour {
     public enum BirthCause { Reproduction, Bought};
     
     public Queue<BirthCause> birthList = new Queue<BirthCause>();
+    #endregion
 
+    #region Biology Logic — shared concept, see EcosystemSimulator for simulation equivalent
     private float lastTemp = 0;
 
     public void updatePerformance(float temperature)
@@ -151,7 +181,9 @@ public class CharacterManager : MonoBehaviour {
             deathList.Enqueue(DeathCause.Starve);
         }
     }
+    #endregion
 
+    #region Session Recording — game only, not used in simulation
     public string GetSessionRecorderText()
     {
         return "Tier " + foodChainLevel + " " + variant.ToString() + " " + GetGeneralistOrSpecialistType();
@@ -183,4 +215,5 @@ public class CharacterManager : MonoBehaviour {
         }
         return false;
     }
+    #endregion
 }

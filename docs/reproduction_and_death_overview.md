@@ -20,7 +20,7 @@ Condition is a value between 0 and 1 that represents the overall health of a spe
 - Good temperature (high thermal performance lets Condition recover)
 - Good feeding (T2 predators successfully hunting prey)
 
-Condition always drains *toward* the current environmental target, which is `ThermalPerformance x FedRate`. If the environment is good, Condition recovers. If the environment is poor, Condition drops. The drain is asymmetric: Condition drains faster than it recovers, and drain accelerates up to 5x near lethal temperatures.
+Condition always drains *toward* the current environmental target, which is `RawThermalPerformance x FedRate` (thermal performance without Pmax scaling). If the environment is good, Condition recovers. If the environment is poor, Condition drops. The drain is asymmetric: Condition drains faster than it recovers, and drain accelerates up to 5x near lethal temperatures.
 
 **Why Condition matters:** Condition acts as a buffer. It is a lagging indicator, not an instantaneous snapshot. A species that had a good summer enters winter with high Condition, even though winter temperatures are bad. This models **thermal acclimation**: the ability of organisms to tolerate short-term environmental stress using energy reserves built up during favorable periods. Condition doesn't change instantly with the weather. It takes time to drain, giving species a realistic window of resilience.
 
@@ -30,19 +30,28 @@ Condition is independent of population size. Fewer individuals does not cause Co
 
 ## Death
 
-There are three types of death in the simulation, applied in this order each day.
+There are four types of death in the simulation. Within the 10-step biology sequence, they occur in this order: Predation (step 2), Thermal Death (step 6), Condition Death (step 7), then Natural Death (step 9). Note that Reproduction (step 8) is interleaved between Condition Death and Natural Death.
 
 ### 1. Thermal Death (Instant Kill)
 
 If the temperature goes beyond a species' absolute survival range (CTmin or CTmax), the entire population dies instantly. This represents lethal temperature extremes. No buffer, no Condition, nothing can save the species.
 
-- **Trigger:** Temperature at or beyond CTmin/CTmax
+- **Trigger:** `RawThermalPerformance == 0`, which occurs when temperature reaches or exceeds CTmin/CTmax. Note: a smooth 2-degree cosine fade zone (`LETHAL_TRANSITION_WIDTH = 2.0`) exists just inside the CTmin/CTmax boundaries, where performance drops gradually toward zero. This fade causes Condition to drain before the lethal limit is reached, but the instant kill only fires when performance hits exactly zero.
 - **Result:** Entire population wiped out
-- **Example:** If CTmax = 40C and the temperature hits 41C, all individuals die
+- **Example:** If CTmax = 40C and the temperature hits 41C, all individuals die. At 39C (within the 2-degree fade zone), performance is reduced but not zero, so thermal death does not trigger — instead, Condition drains faster due to low performance.
 
 This is the only binary death type. It is all-or-nothing.
 
-### 2. Condition Death (Graduated, Threshold-Gated)
+### 2. Predation (Holling Type II)
+
+Higher-tier species consume lower-tier species via a **Holling Type II functional response**. This is a death mechanism for T1 prey — individuals are removed from the prey population when eaten by T2 predators.
+
+- **Trigger:** T2 predators exist and T1 prey are present
+- **Mechanism:** Hunting success scales with the prey:predator ratio. At the reference ratio (20:1), base `HuntingEfficiency` (default 0.75) applies. Below this ratio, hunting success decreases (prey scarcity). Above, it increases toward 1.0. Daily `HuntingVariance` (+/-0.15) adds stochasticity.
+- **Effect on prey:** Prey eaten = `predator_pop x eating_amount x hunting_success`. Uses a fractional accumulator (same as other death types).
+- **Effect on predators:** Predation does not directly kill predators, but poor hunting reduces their `FedRate`, which lowers the Condition drain target and eventually triggers condition death.
+
+### 3. Condition Death (Graduated, Threshold-Gated)
 
 When Condition drops below the **DeathThreshold** (default 0.3), individuals begin dying. This is **threshold-gated**, meaning deaths only occur once the threshold is crossed. Above the threshold, zero condition deaths happen.
 
@@ -78,7 +87,7 @@ new_condition = old_condition x old_population / new_population
 
 This is important because it prevents death spirals. As the weakest die off, the survivors become healthier, which slows down further deaths.
 
-### 3. Natural Death (Flat Rate, Always Active)
+### 4. Natural Death (Flat Rate, Always Active)
 
 A small, constant daily death rate that represents old age, disease, and accidents. This applies every single day, regardless of temperature, Condition, or any other factor. It is not gated by any threshold.
 
@@ -177,7 +186,8 @@ Where:
 After the base birth calculation, several additional factors are applied:
 
 - **No-Predator Penalty:** If no T2 predators exist in the ecosystem, T1 births are reduced by 15%. This prevents unchecked prey growth when predators go extinct.
-- **Carrying Capacity (T1 only):** Reproduction slows as T1 population approaches the cap (default 5000). This is a soft logistic limit, not a hard wall.
+- **Minimum Population:** A species needs at least 2 individuals to reproduce (`MIN_POPULATION_FOR_REPRODUCTION = 2`). This models the ecological requirement for a mate.
+- **Carrying Capacity (T1 only):** Reproduction slows as T1 population approaches the cap (default 5000). Uses a linear density factor: `growthFactor = max(0, 1 - tierPop/capacity)`. At 50% capacity, birth rate is halved. At 100%, births stop.
 - **Birth Accumulator:** Same as the death accumulators. Fractional births carry over between days. Even 0.02 births per day will accumulate to 1 whole birth over roughly 50 days.
 - **Newborn Condition Dilution:** Newborns enter at Condition = 0.5, which slightly lowers the group average. This creates natural self-regulation: each batch of births mildly suppresses the next by pulling Condition down. Condition then recovers, allowing more births. This is a gentle negative feedback loop.
 
@@ -222,9 +232,10 @@ This is consistent with **condition-dependent reproductive variation**, a well-e
 | System | Driver | Type | Threshold Role | Zero Only When |
 |--------|--------|------|---------------|---------------|
 | Thermal Death | Temperature vs CTmin/CTmax | Instant, binary | N/A | Temp within survival range |
+| Predation | Prey:predator ratio | Holling Type II + accumulator | N/A: always active when both tiers present | No predators or no prey |
 | Condition Death | Condition vs DeathThreshold | Graduated severity | **Gated**: only triggers below threshold | Condition above threshold |
 | Natural Death | Flat daily rate | Constant + accumulator | N/A: always applies | Never |
-| Reproduction | Condition vs ReproThreshold | Graduated, continuous | **Shaped**: inflection point, not a gate | Condition = 0 |
+| Reproduction | Condition vs ReproThreshold | Graduated, continuous | **Shaped**: inflection point, not a gate | Condition = 0 or population < 2 |
 
 **Key takeaways:**
 

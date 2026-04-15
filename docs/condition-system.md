@@ -75,31 +75,33 @@ Previously the simulation had 2 death types. Now there are 4, each with distinct
 
 ### 2. Condition Death (Chronic)
 - **Trigger:** `Condition < DeathThreshold` (default 0.3)
-- **Effect:** Deaths = `Population * DeathRate * BiologyStep` per day
+- **Effect:** Graduated severity: `severity = (DeathThreshold - Condition) / DeathThreshold`, then `Deaths = Population * severity * DeathRate * BiologyStep`. The further below the threshold, the more die. At exactly the threshold, severity is 0 (no deaths). At Condition = 0, severity is 1.0 (maximum death rate).
 - **Uses fractional accumulator** for gradual decline (no sudden jumps)
+- **Survivor fitness boost:** After deaths, surviving Condition is recalculated: `new_condition = old_condition * old_pop / new_pop`, preventing death spirals.
 - **Example:** Common species at 38C: Condition drains to 0.217 by day 2, condition deaths begin, extinct by day 8
 
 ### 3. Natural Death (Flat Rate)
 - **Trigger:** Always (every day, for all living species)
-- **Effect:** Flat 2% rate (`NaturalDeathRate`), independent of performance
+- **Effect:** Flat rate per day (`NaturalDeathRate`): 2% for T1 (+/-1% variance), 1% for T2 (+/-0.5% variance). Independent of performance.
 - **Change from before:** Previously scaled by `1/performance`, which double-punished struggling species. Now decoupled.
 
-### 4. Predation (Unchanged)
-- Higher-tier species eat lower-tier species proportionally
+### 4. Predation (Holling Type II)
+- Higher-tier species eat lower-tier species via a **Holling Type II functional response**. Hunting success scales with the prey:predator ratio (half-saturation reference at 20:1 ratio). Key parameters: `HuntingEfficiency` (default 0.75), `HuntingVariance` (+/-0.15). Predation uses a fractional accumulator, same as the other death types.
 
-## Biology Step Sequence (9 Steps)
+## Biology Step Sequence (10 Steps)
 
-Previously 7 steps, now expanded to 9:
+Previously 7 steps, now expanded to 10:
 
-1. **Thermal Performance** - Calculate RawThermalPerformance from Arrhenius curve
-2. **Feeding/Predation** - Predators eat prey, calculate FedRate
-3. **Final Performance** - RawThermalPerf x FedRate x Pmax
+1. **Thermal Performance** - Arrhenius formula with CTmin/CTmax cosine fade
+2. **Feeding/Predation** - Holling Type II functional response + predation accumulator
+3. **Raw Final Performance** - `RawThermalPerf x FedRate` (Condition drain target, without Pmax)
 4. **Update Condition** - Drain or recover toward RawFinalPerformance
-5. **Thermal Death** - Instant kill at lethal limits only
-6. **Condition Death** - Chronic death when Condition < DeathThreshold
-7. **Reproduction** - With birth accumulator, carrying capacity, and birth dilution
-8. **Natural Death** - Flat rate with accumulator
-9. **Population Rounding** - Floor fractional populations
+5. **Final Performance** - `ThermalPerf x FedRate` (includes Pmax; currently unused by later steps)
+6. **Thermal Death** - Instant kill when `RawThermalPerformance == 0`
+7. **Condition Death** - Graduated severity when `Condition < DeathThreshold`, with survivor fitness boost
+8. **Reproduction** - Condition-based graduated scale + birth accumulator + carrying capacity
+9. **Natural Death** - Flat rate + natural death accumulator
+10. **Population Rounding** - Round fractional populations to nearest integer (`Math.Round`, midpoint rounds away from zero)
 
 ## HasCrashed() Fix
 

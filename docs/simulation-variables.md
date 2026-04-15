@@ -60,7 +60,7 @@ Complete reference for every configurable parameter, runtime variable, constant,
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `ClimateTrend` | float | 1 | Degrees Celsius warming per year (linear climate change). |
-| `InterannualVariation` | bool | true | Enable year-to-year random temperature variation. |
+| `InterannualVariation` | bool | true | **Not currently wired.** Field exists on SimulationConfig but is not passed to TemperatureCalculator. Interannual variation is always active regardless of this setting. |
 
 ### Temperature: Interannual Variation
 
@@ -160,7 +160,7 @@ All temperature parameters stored in Kelvin internally. Celsius values are compu
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `Pmax` | float | 0.65 (Common), 0.85 (Arctic/Tropical), 1.0 (SimSpecies factory) | Maximum performance at optimal temperature (0-1). Scales the Arrhenius output. A Pmax of 0.65 means even at the perfect temperature, performance caps at 65%. |
+| `Pmax` | float | SpeciesDatabase: 0.65 (Common), 0.85 (Arctic/Tropical). SimSpecies factory: 0.9 (Common), 1.0 (Arctic/Tropical). | Maximum performance at optimal temperature (0-1). Scales the Arrhenius output. A Pmax of 0.65 means even at the perfect temperature, performance caps at 65%. |
 | `CTminC` | float | -5 to 0 (varies) | Critical thermal minimum in Celsius. At or below this temperature, performance = 0 (instant death). A smooth cosine fade of 2 degrees applies near the boundary. |
 | `CTmaxC` | float | 20 to 80 (varies) | Critical thermal maximum in Celsius. At or above this temperature, performance = 0 (instant death). Same cosine fade applies. |
 | `TemperatureDebuff` | float | 0 | Per-species temperature offset. Shifts the experienced temperature before thermal calculation. Positive = species "feels" warmer than ambient. |
@@ -174,8 +174,8 @@ These are set by `EcosystemSimulator` during the biology sequence. Not configura
 | `RawThermalPerformance` | float | | Arrhenius curve output with CTmin/CTmax cosine fade applied, WITHOUT Pmax scaling. Range: 0-1. |
 | `ThermalPerformance` | float | | `RawThermalPerformance * Pmax`. Used for reproduction calculations. |
 | `FedRate` | float | 1.0 | Feeding satisfaction (0-1). Tier 1 always 1.0. Tier 2 depends on hunting success and prey availability. |
-| `RawFinalPerformance` | float | | `RawThermalPerformance * FedRate`. Target for Condition drain/recovery. Used for death checks (without Pmax). |
-| `FinalPerformance` | float | | `ThermalPerformance * FedRate`. Used for reproduction threshold and birth calculations. |
+| `RawFinalPerformance` | float | | `RawThermalPerformance * FedRate`. Target for Condition drain/recovery (without Pmax). Not directly used in death checks — Condition death compares `Condition` against `DeathThreshold`. |
+| `FinalPerformance` | float | | `ThermalPerformance * FedRate`. Computed each step but currently unused by later steps (v8 switched reproduction to Condition-based). |
 | `CurrentHuntingSuccess` | float | | This step's actual hunting success rate after Holling Type II + variance. For tracking/output only. |
 | `Condition` | float | 1.0 | Health/energy reserves [0-1]. Starts at 1.0. Drains toward RawFinalPerformance when environment is poor, recovers when good. Drives both reproduction scaling and condition death. |
 
@@ -193,7 +193,7 @@ Formula: `T(day) = Base + Seasonal + Trend + InterannualVar + DailyVar`, then cl
 | `SeasonalAmplitude` | float | 10 | Seasonal swing via `sin(2*PI*day/365) * amplitude`. Coldest at day 0, warmest at day 182. |
 | `ClimateTrendPerYear` | float | 1 | Linear warming: `trend * (day / 365)`. |
 | `VariabilityMagnitude` | float | 2 | Year-to-year random offset range. Each year gets one value, constant for all 365 days. |
-| `WarmingBias` | float | 1.5 | Skews interannual variation warm. Formula: `(coldPart + warmPart*bias) / 2`. |
+| `WarmingBias` | float | 1.5 | Skews interannual variation warm. Bias is applied during warm-part generation (`warmPart = random * magnitude * bias`), then averaged with the cold part: `(coldPart + warmPart) / 2`. |
 | `BaseRandomness` | float | 5 | Daily random variation range in Celsius. |
 | `RandomnessGrowthRate` | float | 0.5 | Daily randomness increases per year: `currentRandomness = base + growth * yearNumber`. |
 | `UseAutocorrelation` | bool | true | When true: `variation = 0.7 * yesterday + 0.3 * newRandom` (smooth weather). When false: pure random each day. |
@@ -279,7 +279,7 @@ Executed each biology step in this order:
 7. **Condition Death** - Graduated severity when `Condition < DeathThreshold`, survivor fitness boost
 8. **Reproduction** - Condition-based graduated scale + birth accumulator + carrying capacity
 9. **Natural Death** - Flat rate + natural death accumulator
-10. **Population Rounding** - All populations become integers (floor)
+10. **Population Rounding** - All populations rounded to nearest integer (`Math.Round`, midpoint rounds away from zero)
 
 ---
 
@@ -411,8 +411,7 @@ Embedded as `#config:key,value` at the top of each scenario CSV. R's `read.csv()
 | `condition_recovery_rate` | Condition recovery rate |
 | `base_temperature` | Base temp (Celsius) |
 | `seasonal_amplitude` | Seasonal swing |
-| `climate_trend` | Warming per year |
-| `interannual_variation` | Year-to-year variation enabled |
+| `climate_trend_per_year` | Warming per year |
 | `variability_magnitude` | Interannual variation range |
 | `warming_bias` | Warm year bias |
 | `autocorrelated` | Smooth daily variation enabled |
@@ -698,7 +697,7 @@ All hardcoded constants across the simulation system.
 | Constant | Value | Description |
 |----------|-------|-------------|
 | `NO_PREDATOR_PENALTY` | 0.85 | T1 birth multiplier when no predators exist (15% reduction to prevent unchecked growth). |
-| `MIN_FINAL_PERF_FOR_NATURAL_DEATH` | 0.1 | Floor for FinalPerformance in natural death calculation to prevent division by zero. |
+| `MIN_FINAL_PERF_FOR_NATURAL_DEATH` | 0.1 | **Dead code.** Originally a floor for performance-scaled natural death, but natural death is now a flat rate and this constant is no longer referenced by `EcosystemSimulator`. |
 | `LETHAL_TRANSITION_WIDTH` | 2.0 | Width in Celsius of the smooth cosine fade at CTmin/CTmax boundaries. |
 
 ### TemperatureCalculator Constants

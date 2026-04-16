@@ -100,3 +100,4 @@ InitTestScene*.unity*
 /Test
 /.claude/worktrees
 /Tests
+claude_context/

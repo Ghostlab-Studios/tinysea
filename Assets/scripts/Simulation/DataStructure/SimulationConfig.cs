@@ -72,7 +72,7 @@ public class SimulationConfig : ScriptableObject
 
     [Header("=== TEMPERATURE: SEASONAL ===")]
     [Tooltip("Amplitude of seasonal variation (summer/winter swing)")]
-    public float SeasonalAmplitude = 10f;
+    public float SeasonalAmplitude = 5f;
 
     [Header("=== TEMPERATURE: CLIMATE TREND ===")]
     [Tooltip("°C warming per year (climate change)")]

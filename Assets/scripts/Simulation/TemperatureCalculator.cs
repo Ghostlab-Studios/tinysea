@@ -11,7 +11,7 @@ public class TemperatureCalculator
 {
     // Configuration (with defaults)
     public float BaseTemperature = 20f;           // Starting temperature in °C
-    public float SeasonalAmplitude = 10f;         // ±10°C seasonal swing
+    public float SeasonalAmplitude = 5f;          // ±5°C seasonal swing
     public float ClimateTrendPerYear = 1f;        // +1°C warming per year
     public float VariabilityMagnitude = 2f;       // Year-to-year variation range
     public float WarmingBias = 1.5f;              // Warm years more likely

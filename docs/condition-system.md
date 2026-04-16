@@ -24,55 +24,45 @@ Each day, for each species:
 target = RawFinalPerformance  (thermal_perf x fed_rate, no Pmax)
 
 If Condition > target (DRAINING):
-    effectiveDrain = ConditionDrainRate  (default 0.15)
-
-    // Acceleration near lethal temperatures (quadratic — Buckley et al. 2025)
-    If target < 0.2:
-        severity = 1 - target / 0.2    // 0 at perf=0.2, 1.0 at perf=0
-        severity = severity²           // quadratic: concentrated near perf=0
-        effectiveDrain *= 1 + severity * 4   // up to 5x at perf=0
-
-    Condition -= (Condition - target) * effectiveDrain
+    severity = (1 - target)²            // continuous: 0 at perf=1, 1 at perf=0
+    effectiveDrain = ConditionDrainRate × (1 + severity)   // 1x at optimal → 2x at lethal
+    Condition -= (Condition - target) × effectiveDrain
 
 If Condition < target (RECOVERING):
-    effectiveRecovery = ConditionRecoveryRate  (default 0.10)
-
-    // Acceleration at high performance (quadratic — Buckley et al. 2025)
-    If target > 0.7:
-        boost = (target - 0.7) / (1 - 0.7)    // 0 at perf=0.7, 1.0 at perf=1
-        boost = boost²                         // quadratic: concentrated near perf=1
-        effectiveRecovery *= 1 + boost * 4     // up to 5x at perf=1.0
-
-    Condition += (target - Condition) * effectiveRecovery
+    boost = target²                     // continuous: 0 at perf=0, 1 at perf=1
+    effectiveRecovery = ConditionRecoveryRate × (1 + boost)  // 1x at lethal → 2x at optimal
+    Condition += (target - Condition) × effectiveRecovery
 ```
 
 ### Drain Acceleration
 
-When thermal performance drops below 0.2 (near lethal limits), drain rate accelerates using a quadratic curve (Buckley et al. 2025):
+Drain rate accelerates continuously as performance drops, using a quadratic function `(1 - target)²` that approximates the Gaussian damage curve from Buckley et al. (2025). No arbitrary thresholds — the acceleration profile is derived directly from the thermal performance value (Arrhenius enzyme kinetics):
 
-| Performance | Drain Multiplier | Example |
+| Performance | Drain Multiplier | Note |
 |---|---|---|
-| 0.20 | 1.0x (normal) | Mildly stressed |
-| 0.15 | 1.3x | Moderately stressed |
-| 0.10 | 1.6x | Stressed |
-| 0.05 | 2.3x | Near lethal |
-| 0.00 | 5.0x | At lethal limit |
+| 1.00 | 1.00x | At optimal — base rate only |
+| 0.75 | 1.06x | Mild stress |
+| 0.50 | 1.25x | Moderate stress |
+| 0.25 | 1.56x | Significant stress |
+| 0.10 | 1.81x | Severe stress |
+| 0.00 | 2.00x | At lethal limit |
 
-The quadratic curve concentrates acceleration near the extreme — most of the 5x multiplier only kicks in very close to lethal limits, matching the biology where damage spikes near CTmax.
+The quadratic (x²) is the first-order Taylor expansion of a Gaussian, concentrating acceleration toward low performance. The 2x maximum is a mathematical consequence of the formula (`1 + 1² = 2`), not an arbitrary constant.
 
 ### Recovery Acceleration
 
-When thermal performance exceeds 0.7 (near optimal), recovery rate accelerates using a quadratic curve (Buckley et al. 2025):
+Recovery rate accelerates continuously as performance improves, using a quadratic function `target²` that approximates the Gaussian repair curve from Buckley et al. (2025). No arbitrary thresholds — mirrors the drain acceleration symmetrically:
 
-| Performance | Recovery Multiplier | Example |
+| Performance | Recovery Multiplier | Note |
 |---|---|---|
-| 0.70 | 1.0x (normal) | At threshold |
-| 0.80 | 1.4x | Good performance |
-| 0.85 | 1.7x | Strong performance |
-| 0.90 | 2.6x | Near optimal |
-| 1.00 | 5.0x | At optimal |
+| 0.00 | 1.00x | At lethal — base rate only |
+| 0.25 | 1.06x | Poor recovery |
+| 0.50 | 1.25x | Moderate recovery |
+| 0.75 | 1.56x | Good recovery |
+| 0.90 | 1.81x | Strong recovery |
+| 1.00 | 2.00x | At optimal |
 
-The quadratic curve concentrates recovery boost near optimal temperature — the big recovery multiplier only kicks in when the species is very close to its thermal optimum, matching the Gaussian repair function from Buckley et al. (2025). Combined with drain acceleration, this produces biologically realistic "boom and bust" dynamics.
+Combined with drain acceleration and asymmetric base rates (0.15 drain vs 0.10 recovery), this produces biologically realistic "boom and bust" dynamics. The base rate asymmetry means organisms damage faster than they repair, matching thermal biology (Buckley et al. 2025).
 
 ### Birth Dilution
 
@@ -147,10 +137,6 @@ This allows predators to starve after prey extinction as a valid outcome, rather
 | Constant | Value | Description |
 |---|---|---|
 | `NEWBORN_CONDITION` | 0.5 | Condition value for newborn individuals |
-| `DRAIN_ACCEL_THRESHOLD` | 0.2 | Performance below this triggers drain acceleration (quadratic) |
-| `DRAIN_ACCEL_MAX` | 4.0 | Max drain acceleration multiplier (5x total at perf=0) |
-| `RECOVERY_BOOST_THRESHOLD` | 0.7 | Performance above this triggers recovery acceleration (quadratic) |
-| `RECOVERY_BOOST_MAX` | 4.0 | Max recovery acceleration multiplier (5x total at perf=1.0) |
 
 ### Species-Level (unchanged)
 

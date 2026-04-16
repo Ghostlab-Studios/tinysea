@@ -54,7 +54,7 @@ public class SimulationConfig : ScriptableObject
     [Header("=== CONDITION (HEALTH) SYSTEM ===")]
     [Tooltip("How fast Condition drains toward poor performance.\n" +
              "0.15 = ~8 days from full health to death threshold at suboptimal temps.\n" +
-             "Drain accelerates up to 5x near lethal limits.")]
+             "Drain accelerates up to 2x near lethal limits.")]
     [Range(0.01f, 1.0f)]
     public float ConditionDrainRate = 0.15f;
 

@@ -45,7 +45,7 @@ Complete reference for every configurable parameter, runtime variable, constant,
 
 | Field | Type | Default | Range | Description |
 |-------|------|---------|-------|-------------|
-| `ConditionDrainRate` | float | 0.15 | 0.01-1.0 | How fast Condition drains toward poor performance. 0.15 = ~8 days from full health to death threshold at suboptimal temps. Drain accelerates up to 5x near lethal limits. |
+| `ConditionDrainRate` | float | 0.15 | 0.01-1.0 | How fast Condition drains toward poor performance. 0.15 = ~8 days from full health to death threshold at suboptimal temps. Drain accelerates up to 2x near lethal limits. |
 | `ConditionRecoveryRate` | float | 0.10 | 0.01-1.0 | How fast Condition recovers toward good performance. Intentionally slower than drain (asymmetric recovery). 0.10 = ~10 good days to fully recover. |
 
 ### Temperature: Base & Seasonal
@@ -683,8 +683,6 @@ All hardcoded constants across the simulation system.
 | Constant | Value | Description |
 |----------|-------|-------------|
 | `MIN_ALIVE_POP` | 1.0 | Minimum population to be considered alive. |
-| `DRAIN_ACCEL_THRESHOLD` | 0.2 | Performance below this accelerates Condition drain. |
-| `DRAIN_ACCEL_MAX` | 4.0 | Maximum drain acceleration multiplier (total 5x at perf=0, because it's `1 + severity * 4`). |
 | `NEWBORN_CONDITION` | 0.5 | Condition value for newborn individuals. Dilutes group average. |
 | `NORMAL_PREY_RATIO` | 20.0 | Prey:predator ratio where base hunting efficiency applies (Holling Type II half-saturation reference). |
 | `MIN_HUNTING_SUCCESS` | 0.0 | Floor for hunting success. Zero prey = zero hunting. |

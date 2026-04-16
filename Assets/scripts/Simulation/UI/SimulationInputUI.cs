@@ -37,7 +37,7 @@ public class SimulationInputUI : MonoBehaviour
 
     [Tooltip("How fast Condition drains toward poor performance.\n" +
          "0.15 = ~8 days from full health to death threshold at suboptimal temps.\n" +
-         "Drain accelerates up to 5x near lethal limits.")]
+         "Drain accelerates up to 2x near lethal limits.")]
     public TMP_InputField ConditionDrainRate;
 
     [Tooltip("How fast Condition recovers toward good performance.\n" +

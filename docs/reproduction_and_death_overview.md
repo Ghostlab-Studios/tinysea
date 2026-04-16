@@ -20,7 +20,7 @@ Condition is a value between 0 and 1 that represents the overall health of a spe
 - Good temperature (high thermal performance lets Condition recover)
 - Good feeding (T2 predators successfully hunting prey)
 
-Condition always drains *toward* the current environmental target, which is `RawThermalPerformance x FedRate` (thermal performance without Pmax scaling). If the environment is good, Condition recovers. If the environment is poor, Condition drops. The drain is asymmetric: Condition drains faster than it recovers, and drain accelerates up to 5x near lethal temperatures.
+Condition always drains *toward* the current environmental target, which is `RawThermalPerformance x FedRate` (thermal performance without Pmax scaling). If the environment is good, Condition recovers. If the environment is poor, Condition drops. The drain is asymmetric: Condition drains faster than it recovers, and drain accelerates up to 2x near lethal temperatures.
 
 **Why Condition matters:** Condition acts as a buffer. It is a lagging indicator, not an instantaneous snapshot. A species that had a good summer enters winter with high Condition, even though winter temperatures are bad. This models **thermal acclimation**: the ability of organisms to tolerate short-term environmental stress using energy reserves built up during favorable periods. Condition doesn't change instantly with the weather. It takes time to drain, giving species a realistic window of resilience.
 

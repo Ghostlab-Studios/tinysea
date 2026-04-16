@@ -132,6 +132,8 @@ public class EcosystemSimulator
     private const float MIN_ALIVE_POP = 1.0f;
     private const float DRAIN_ACCEL_THRESHOLD = 0.2f;      // Performance below this accelerates drain
     private const float DRAIN_ACCEL_MAX = 4f;               // Max acceleration multiplier (5x total at perf=0)
+    private const float RECOVERY_BOOST_THRESHOLD = 0.7f;    // Performance above this accelerates recovery
+    private const float RECOVERY_BOOST_MAX = 4f;            // Max acceleration multiplier (5x total at perf=1)
     private const float NEWBORN_CONDITION = 0.5f;           // Condition value for newborn individuals (vulnerable)
 
     // --- Holling Type II Functional Response (Holling 1959) ---
@@ -655,6 +657,7 @@ public class EcosystemSimulator
     /// Condition moves toward RawFinalPerformance asymmetrically:
     ///   - Drains faster than it recovers
     ///   - Drain accelerates up to 5x near lethal temperatures
+    ///   - Recovery accelerates at high performance (configurable threshold + max)
     ///   - Feeding contributes via FedRate (starving predators drain even at good temps)
     /// </summary>
     private void UpdateCondition(SimSpecies sp)
@@ -671,14 +674,22 @@ public class EcosystemSimulator
             if (target < DRAIN_ACCEL_THRESHOLD)
             {
                 float severity = 1f - target / DRAIN_ACCEL_THRESHOLD;  // 1.0 at perf=0, 0 at threshold
-                effectiveDrain *= 1f + severity * DRAIN_ACCEL_MAX;     // Linear: up to 5x at perf=0
+                severity *= severity;                                  // Quadratic: concentrated near perf=0 (Buckley et al. 2025)
+                effectiveDrain *= 1f + severity * DRAIN_ACCEL_MAX;     // Up to 5x at perf=0
             }
             sp.Condition -= (sp.Condition - target) * effectiveDrain;
         }
         else
         {
-            // Recovering — slower than drain
-            sp.Condition += (target - sp.Condition) * ConditionRecoveryRate;
+            // Recovering — calculate effective recovery rate with boost at high performance
+            float effectiveRecovery = ConditionRecoveryRate;
+            if (target > RECOVERY_BOOST_THRESHOLD)
+            {
+                float boost = (target - RECOVERY_BOOST_THRESHOLD) / (1f - RECOVERY_BOOST_THRESHOLD);  // 0 at threshold, 1.0 at perf=1
+                boost *= boost;                                            // Quadratic: concentrated near perf=1 (Buckley et al. 2025)
+                effectiveRecovery *= 1f + boost * RECOVERY_BOOST_MAX;     // Up to 5x at perf=1.0
+            }
+            sp.Condition += (target - sp.Condition) * effectiveRecovery;
         }
 
         sp.Condition = Math.Max(0f, Math.Min(1f, sp.Condition));

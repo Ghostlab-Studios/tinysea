@@ -6,7 +6,7 @@ flowchart LR
         S1["Step 1<br/>THERMAL PERFORMANCE<br/>RawPerf = Arrhenius temp<br/>ThermalPerf = RawPerf x Pmax"]
         S2["Step 2<br/>FEEDING / PREDATION<br/>Holling Type II hunting<br/>fedRate = eaten / demand<br/>· predation accumulator ·"]
         S3["Step 3<br/>RAW FINAL PERFORMANCE<br/>RawFinalPerf = RawPerf x FedRate"]
-        S4["Step 4<br/>UPDATE CONDITION<br/>Condition drifts toward RawFinalPerf"]
+        S4["Step 4<br/>UPDATE CONDITION<br/>Condition drifts toward RawFinalPerf<br/>drain accel near lethal · recovery accel near optimal"]
         S5["Step 5<br/>FINAL PERFORMANCE<br/>FinalPerf = ThermalPerf x FedRate"]
         S1 --> S2 --> S3 --> S4 --> S5
     end

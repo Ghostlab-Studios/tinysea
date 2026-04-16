@@ -36,8 +36,8 @@ flowchart LR
         direction LR
         S4TARGET["target = RawFinalPerf"]
         S4CHECK{{"Condition > target?"}}
-        S4DRAIN["DRAINING<br/>effectiveDrain = ConditionDrainRate<br/>if target less than 0.2:<br/>  severity = 1 - target / 0.2<br/>  effectiveDrain x= 1 + severity x 4<br/>condition -= condition - target x effectiveDrain"]
-        S4RECOVER["RECOVERING<br/>condition += target - condition<br/>x ConditionRecoveryRate"]
+        S4DRAIN["DRAINING<br/>effectiveDrain = ConditionDrainRate<br/>if target less than 0.2:<br/>  severity = 1 - target / 0.2<br/>  severity = severity squared<br/>  effectiveDrain x= 1 + severity x 4<br/>condition -= condition - target x effectiveDrain"]
+        S4RECOVER["RECOVERING<br/>effectiveRecovery = ConditionRecoveryRate<br/>if target greater than 0.7:<br/>  boost = target - 0.7 / 0.3<br/>  boost = boost squared<br/>  effectiveRecovery x= 1 + boost x 4<br/>condition += target - condition x effectiveRecovery"]
         S4CLAMP["Clamp condition to 0 · 1"]
         S4TARGET --> S4CHECK
         S4CHECK -- Yes --> S4DRAIN --> S4CLAMP

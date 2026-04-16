@@ -26,30 +26,53 @@ target = RawFinalPerformance  (thermal_perf x fed_rate, no Pmax)
 If Condition > target (DRAINING):
     effectiveDrain = ConditionDrainRate  (default 0.15)
 
-    // Acceleration near lethal temperatures
+    // Acceleration near lethal temperatures (quadratic — Buckley et al. 2025)
     If target < 0.2:
         severity = 1 - target / 0.2    // 0 at perf=0.2, 1.0 at perf=0
+        severity = severity²           // quadratic: concentrated near perf=0
         effectiveDrain *= 1 + severity * 4   // up to 5x at perf=0
 
     Condition -= (Condition - target) * effectiveDrain
 
 If Condition < target (RECOVERING):
-    Condition += (target - Condition) * ConditionRecoveryRate  (default 0.10)
+    effectiveRecovery = ConditionRecoveryRate  (default 0.10)
+
+    // Acceleration at high performance (quadratic — Buckley et al. 2025)
+    If target > 0.7:
+        boost = (target - 0.7) / (1 - 0.7)    // 0 at perf=0.7, 1.0 at perf=1
+        boost = boost²                         // quadratic: concentrated near perf=1
+        effectiveRecovery *= 1 + boost * 4     // up to 5x at perf=1.0
+
+    Condition += (target - Condition) * effectiveRecovery
 ```
 
 ### Drain Acceleration
 
-When thermal performance drops below 0.2 (near lethal limits), drain rate accelerates:
+When thermal performance drops below 0.2 (near lethal limits), drain rate accelerates using a quadratic curve (Buckley et al. 2025):
 
 | Performance | Drain Multiplier | Example |
 |---|---|---|
 | 0.20 | 1.0x (normal) | Mildly stressed |
-| 0.15 | 2.0x | Moderately stressed |
-| 0.10 | 3.0x | Heavily stressed |
-| 0.05 | 4.0x | Near lethal |
+| 0.15 | 1.3x | Moderately stressed |
+| 0.10 | 1.6x | Stressed |
+| 0.05 | 2.3x | Near lethal |
 | 0.00 | 5.0x | At lethal limit |
 
-This means species near lethal temperatures lose health much faster than those at mildly suboptimal temps.
+The quadratic curve concentrates acceleration near the extreme — most of the 5x multiplier only kicks in very close to lethal limits, matching the biology where damage spikes near CTmax.
+
+### Recovery Acceleration
+
+When thermal performance exceeds 0.7 (near optimal), recovery rate accelerates using a quadratic curve (Buckley et al. 2025):
+
+| Performance | Recovery Multiplier | Example |
+|---|---|---|
+| 0.70 | 1.0x (normal) | At threshold |
+| 0.80 | 1.4x | Good performance |
+| 0.85 | 1.7x | Strong performance |
+| 0.90 | 2.6x | Near optimal |
+| 1.00 | 5.0x | At optimal |
+
+The quadratic curve concentrates recovery boost near optimal temperature — the big recovery multiplier only kicks in when the species is very close to its thermal optimum, matching the Gaussian repair function from Buckley et al. (2025). Combined with drain acceleration, this produces biologically realistic "boom and bust" dynamics.
 
 ### Birth Dilution
 
@@ -124,8 +147,10 @@ This allows predators to starve after prey extinction as a valid outcome, rather
 | Constant | Value | Description |
 |---|---|---|
 | `NEWBORN_CONDITION` | 0.5 | Condition value for newborn individuals |
-| `DRAIN_ACCEL_THRESHOLD` | 0.2 | Performance below this triggers drain acceleration |
-| `DRAIN_ACCEL_MAX` | 4.0 | Maximum acceleration multiplier (5x total at perf=0) |
+| `DRAIN_ACCEL_THRESHOLD` | 0.2 | Performance below this triggers drain acceleration (quadratic) |
+| `DRAIN_ACCEL_MAX` | 4.0 | Max drain acceleration multiplier (5x total at perf=0) |
+| `RECOVERY_BOOST_THRESHOLD` | 0.7 | Performance above this triggers recovery acceleration (quadratic) |
+| `RECOVERY_BOOST_MAX` | 4.0 | Max recovery acceleration multiplier (5x total at perf=1.0) |
 
 ### Species-Level (unchanged)
 

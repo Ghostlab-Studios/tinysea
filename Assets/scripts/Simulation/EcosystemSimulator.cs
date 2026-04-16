@@ -27,7 +27,7 @@ using UnityEngine;
 /// CONDITION SYSTEM:
 /// - Per-species health value [0-1], starts at 1.0
 /// - Drains toward RawFinalPerformance (asymmetric: drains faster than recovers)
-/// - Drain accelerates up to 5x near lethal temperatures
+/// - Drain accelerates up to 2x near lethal temperatures (continuous quadratic)
 /// - Global drain/recovery rates on SimulationConfig
 ///
 /// ACCUMULATORS:
@@ -130,10 +130,6 @@ public class EcosystemSimulator
 
     // ==================== CONSTANTS ====================
     private const float MIN_ALIVE_POP = 1.0f;
-    private const float DRAIN_ACCEL_THRESHOLD = 0.2f;      // Performance below this accelerates drain
-    private const float DRAIN_ACCEL_MAX = 4f;               // Max acceleration multiplier (5x total at perf=0)
-    private const float RECOVERY_BOOST_THRESHOLD = 0.7f;    // Performance above this accelerates recovery
-    private const float RECOVERY_BOOST_MAX = 4f;            // Max acceleration multiplier (5x total at perf=1)
     private const float NEWBORN_CONDITION = 0.5f;           // Condition value for newborn individuals (vulnerable)
 
     // --- Holling Type II Functional Response (Holling 1959) ---
@@ -655,9 +651,10 @@ public class EcosystemSimulator
     /// <summary>
     /// Update Condition (health/energy reserves) for each species.
     /// Condition moves toward RawFinalPerformance asymmetrically:
-    ///   - Drains faster than it recovers
-    ///   - Drain accelerates up to 5x near lethal temperatures
-    ///   - Recovery accelerates at high performance (configurable threshold + max)
+    ///   - Drains faster than it recovers (base rates: 0.15 drain vs 0.10 recovery)
+    ///   - Both drain and recovery use continuous quadratic acceleration (Buckley et al. 2025)
+    ///   - Drain: multiplier = 1 + (1-target)², max 2x at perf=0
+    ///   - Recovery: multiplier = 1 + target², max 2x at perf=1
     ///   - Feeding contributes via FedRate (starving predators drain even at good temps)
     /// </summary>
     private void UpdateCondition(SimSpecies sp)
@@ -669,26 +666,22 @@ public class EcosystemSimulator
 
         if (sp.Condition > target)
         {
-            // Draining — calculate effective drain rate with acceleration near lethal temps
-            float effectiveDrain = ConditionDrainRate;
-            if (target < DRAIN_ACCEL_THRESHOLD)
-            {
-                float severity = 1f - target / DRAIN_ACCEL_THRESHOLD;  // 1.0 at perf=0, 0 at threshold
-                severity *= severity;                                  // Quadratic: concentrated near perf=0 (Buckley et al. 2025)
-                effectiveDrain *= 1f + severity * DRAIN_ACCEL_MAX;     // Up to 5x at perf=0
-            }
+            // Draining — continuous quadratic acceleration (Buckley et al. 2025)
+            // (1-target)² ranges from 0 at perf=1 to 1 at perf=0
+            // Effective multiplier: 1x at optimal → 2x at lethal
+            float severity = 1f - target;
+            severity *= severity;
+            float effectiveDrain = ConditionDrainRate * (1f + severity);
             sp.Condition -= (sp.Condition - target) * effectiveDrain;
         }
         else
         {
-            // Recovering — calculate effective recovery rate with boost at high performance
-            float effectiveRecovery = ConditionRecoveryRate;
-            if (target > RECOVERY_BOOST_THRESHOLD)
-            {
-                float boost = (target - RECOVERY_BOOST_THRESHOLD) / (1f - RECOVERY_BOOST_THRESHOLD);  // 0 at threshold, 1.0 at perf=1
-                boost *= boost;                                            // Quadratic: concentrated near perf=1 (Buckley et al. 2025)
-                effectiveRecovery *= 1f + boost * RECOVERY_BOOST_MAX;     // Up to 5x at perf=1.0
-            }
+            // Recovering — continuous quadratic acceleration (Buckley et al. 2025)
+            // target² ranges from 0 at perf=0 to 1 at perf=1
+            // Effective multiplier: 1x at lethal → 2x at optimal
+            float boost = target;
+            boost *= boost;
+            float effectiveRecovery = ConditionRecoveryRate * (1f + boost);
             sp.Condition += (target - sp.Condition) * effectiveRecovery;
         }
 

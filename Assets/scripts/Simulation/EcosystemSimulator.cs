@@ -4,17 +4,17 @@ using System.Linq;
 using UnityEngine;
 
 /// <summary>
-/// TinySea Ecosystem Simulator v7
+/// TinySea Ecosystem Simulator v9
 ///
 /// BIOLOGY SEQUENCE (10 steps):
 /// 1. Thermal Performance - Arrhenius formula
 /// 2. Feeding/Predation - Holling Type II functional response + PREDATION ACCUMULATOR
 /// 3. Raw Final Performance - RawThermalPerf x FedRate (Condition drain target)
-/// 4. Update Condition - Drain/recover toward RawFinalPerformance (health buffer)
-/// 5. Final Performance - ThermalPerf x FedRate (Condition NOT used in reproduction)
+/// 4. Update Condition - Drain/recover toward RawFinalPerformance; rates scaled by Pmax
+/// 5. Final Performance - ThermalPerf x FedRate (computed for logging; not a biology input)
 /// 6. Thermal Death - INSTANT kill at lethal limits (RawThermalPerf == 0)
 /// 7. Condition Death - GRADUATED: severity scales with how far below threshold + survivor fitness boost
-/// 8. Reproduction - CONDITION-BASED GRADUATED SCALE + BIRTH ACCUMULATOR + Tier 1 penalty
+/// 8. Reproduction - CONDITION-BASED GRADUATED SCALE x Pmax + BIRTH ACCUMULATOR + Tier 1 penalty
 /// 9. Natural Death - FLAT RATE + NATURAL DEATH ACCUMULATOR
 /// 10. Population Rounding - All populations become integers
 ///
@@ -28,6 +28,9 @@ using UnityEngine;
 /// - Per-species health value [0-1], starts at 1.0
 /// - Drains toward RawFinalPerformance (asymmetric: drains faster than recovers)
 /// - Drain accelerates up to 2x near lethal temperatures (continuous quadratic)
+/// - Pmax scales the rates: drain /= Pmax, recovery *= Pmax
+///   (specialists drain slower and recover faster than generalists)
+/// - Target (drain destination) is unchanged — Condition still peaks at 1.0 for all species
 /// - Global drain/recovery rates on SimulationConfig
 ///
 /// ACCUMULATORS:
@@ -54,6 +57,17 @@ using UnityEngine;
 /// - No hard cliff: below ReproThreshold gives diminished but non-zero reproduction
 /// - Continuous piecewise formula joined at STRUGGLING_REPRO_RATE (0.10)
 /// - Ecologically: animals with energy reserves reproduce in all seasons, just less in harsh conditions
+/// - Side effect (fixed in v9): Pmax dropped out of the reproduction/survival pathway
+///
+/// v9 CHANGES:
+/// - Wired Pmax back into the Condition pathway AFTER Condition is computed
+///   (rather than into Condition's drain target), so Condition semantics and 0-1
+///   scale are preserved and ReproThreshold/DeathThreshold need no retuning.
+/// - Reproduction: births *= Pmax (specialists convert health to offspring more efficiently)
+/// - Condition drain: /= Pmax (specialists resist chronic stress)
+/// - Condition recovery: *= Pmax (specialists rebound faster)
+/// - Biological framing: Condition = health (species-agnostic),
+///   Pmax = peak metabolic capacity (scales reproductive output and stress dynamics).
 /// </summary>
 public class EcosystemSimulator
 {
@@ -367,11 +381,11 @@ public class EcosystemSimulator
     /// 1. Thermal Performance - Arrhenius formula
     /// 2. Feeding/Predation - Holling Type II functional response + PREDATION ACCUMULATOR
     /// 3. Raw Final Performance - RawThermalPerf x FedRate (Condition drain target)
-    /// 4. Update Condition - Drain/recover toward RawFinalPerformance (health buffer)
-    /// 5. Final Performance - ThermalPerf x FedRate (Condition NOT used in reproduction)
+    /// 4. Update Condition - Drain/recover toward RawFinalPerformance; rates scaled by Pmax
+    /// 5. Final Performance - ThermalPerf x FedRate (computed for logging; not a biology input)
     /// 6. Thermal Death - INSTANT kill at lethal limits (RawThermalPerf == 0)
     /// 7. Condition Death - GRADUATED: severity scales with how far below threshold
-    /// 8. Reproduction - CONDITION-BASED GRADUATED SCALE + BIRTH ACCUMULATOR + Tier 1 penalty
+    /// 8. Reproduction - CONDITION-BASED GRADUATED SCALE x Pmax + BIRTH ACCUMULATOR + Tier 1 penalty
     /// 9. Natural Death - FLAT RATE + NATURAL DEATH ACCUMULATOR
     /// 10. Population Rounding - All populations become integers
     /// </summary>
@@ -656,22 +670,29 @@ public class EcosystemSimulator
     ///   - Drain: multiplier = 1 + (1-target)², max 2x at perf=0
     ///   - Recovery: multiplier = 1 + target², max 2x at perf=1
     ///   - Feeding contributes via FedRate (starving predators drain even at good temps)
+    ///   - Pmax scales the rates: drain /= Pmax, recovery *= Pmax.
+    ///     Specialists (high Pmax) drain slower and recover faster than generalists.
+    ///     Target (and hence Condition ceiling) is unchanged — still 0–1 for all species.
     /// </summary>
     private void UpdateCondition(SimSpecies sp)
     {
         if (sp.Population < MIN_ALIVE_POP) return;
 
-        float target = sp.RawFinalPerformance;  // thermal × fed, no Pmax
+        float target = sp.RawFinalPerformance;  // environmental target (thermal × fed); Pmax applied to rates, not target
         float oldCondition = sp.Condition;
+
+        // Safety: avoid divide-by-zero if Pmax is ever 0 for a species (clamp to small positive).
+        float pmaxSafe = Math.Max(sp.Pmax, 1e-4f);
 
         if (sp.Condition > target)
         {
             // Draining — continuous quadratic acceleration (Buckley et al. 2025)
             // (1-target)² ranges from 0 at perf=1 to 1 at perf=0
             // Effective multiplier: 1x at optimal → 2x at lethal
+            // Pmax scaling: generalists (low Pmax) drain faster; specialists drain slower.
             float severity = 1f - target;
             severity *= severity;
-            float effectiveDrain = ConditionDrainRate * (1f + severity);
+            float effectiveDrain = ConditionDrainRate * (1f + severity) / pmaxSafe;
             sp.Condition -= (sp.Condition - target) * effectiveDrain;
         }
         else
@@ -679,9 +700,10 @@ public class EcosystemSimulator
             // Recovering — continuous quadratic acceleration (Buckley et al. 2025)
             // target² ranges from 0 at perf=0 to 1 at perf=1
             // Effective multiplier: 1x at lethal → 2x at optimal
+            // Pmax scaling: specialists (high Pmax) recover faster; generalists slower.
             float boost = target;
             boost *= boost;
-            float effectiveRecovery = ConditionRecoveryRate * (1f + boost);
+            float effectiveRecovery = ConditionRecoveryRate * (1f + boost) * pmaxSafe;
             sp.Condition += (target - sp.Condition) * effectiveRecovery;
         }
 
@@ -796,10 +818,10 @@ public class EcosystemSimulator
     /// Apply reproduction with CONDITION-BASED GRADUATED SCALE, BIRTH ACCUMULATOR,
     /// Tier 1 penalty, and carrying capacity. CARRYING CAPACITY ONLY APPLIES TO TIER 1.
     ///
-    /// CONDITION-BASED REPRODUCTION (v8):
-    /// Reproduction is driven by Condition (species health), not FinalPerformance.
-    /// Condition integrates temperature, feeding, and history — a species with stored
-    /// health reserves can reproduce even in poor conditions, just at a reduced rate.
+    /// CONDITION-BASED REPRODUCTION (v8) + Pmax MULTIPLIER (v9):
+    /// Reproduction is driven by Condition (species health). Pmax then scales the
+    /// final birth count — a specialist with higher Pmax converts the same Condition
+    /// into more offspring than a generalist.
     ///
     /// Two regions, continuous at ReproThreshold:
     ///   Above threshold: reproScale = STRUGGLING_RATE + (1 - STRUGGLING_RATE) × (Cond - thresh) / (1 - thresh)
@@ -807,13 +829,20 @@ public class EcosystemSimulator
     ///   At threshold: both give STRUGGLING_RATE (0.10) — no discontinuity
     ///   At Condition = 0: reproScale = 0 (only truly dead species don't reproduce)
     ///
-    /// births = Population × reproScale × ReproMult × BiologyStep
+    /// births = Population × reproScale × ReproMult × Pmax × BiologyStep
     ///
     /// Why Condition, not FinalPerformance:
     /// - FinalPerformance is instantaneous (thermal × fed) — drops to near-zero in winter
     /// - Condition is lagged — drains gradually, preserving summer health into early winter
     /// - This prevents the "90-day zero reproduction" winter problem
     /// - No death spiral: Condition drains toward RawFinalPerf (environmental), not birth-dependent
+    ///
+    /// Why Pmax is multiplied here and not folded into Condition's drain target:
+    /// - Keeps Condition on a species-agnostic 0–1 scale (ReproThreshold/DeathThreshold
+    ///   stay semantically unchanged across specialists and generalists).
+    /// - Separates "health" (Condition) from "reproductive efficiency" (Pmax).
+    /// - Pmax also scales Condition drain/recovery rates (see UpdateCondition), so peak
+    ///   metabolism affects both survivability and reproduction without distorting thresholds.
     ///
     /// Newborn dilution still applies (newborns enter at NEWBORN_CONDITION = 0.5).
     /// </summary>
@@ -864,9 +893,10 @@ public class EcosystemSimulator
         if (sp.Tier == 1) LastReproScaleT1 = reproScale;
         else if (sp.Tier == 2) LastReproScaleT2 = reproScale;
 
-        // births = Population × reproScale × ReproMult × BiologyStep
+        // births = Population × reproScale × ReproMult × Pmax × BiologyStep
+        // Pmax (v9): specialists convert Condition into offspring more efficiently than generalists.
         // Newborn dilution still applies (newborns enter at NEWBORN_CONDITION).
-        float births = sp.Population * reproScale * sp.ReproductionMultiplier * BiologyStep;
+        float births = sp.Population * reproScale * sp.ReproductionMultiplier * sp.Pmax * BiologyStep;
 
         // Tier 1 penalty if no predators exist
         if (sp.Tier == 1)

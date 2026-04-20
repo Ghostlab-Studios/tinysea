@@ -54,10 +54,10 @@ public class SimSpecies
 
     // ==================== RUNTIME VALUES (calculated each step) ====================
     public float RawThermalPerformance;     // Arrhenius + CTmin/CTmax fade, WITHOUT Pmax
-    public float ThermalPerformance;        // RawThermalPerformance × Pmax (used for reproduction)
+    public float ThermalPerformance;        // RawThermalPerformance × Pmax (used for predator hunting demand and logging)
     public float FedRate = 1f;              // Feeding satisfaction (0-1), Tier 1 always 1.0
-    public float RawFinalPerformance;       // RawThermalPerformance × FedRate — used for death checks
-    public float FinalPerformance;          // ThermalPerf x FedRate (repro threshold + birth count; Condition NOT involved)
+    public float RawFinalPerformance;       // RawThermalPerformance × FedRate — Condition drain target
+    public float FinalPerformance;          // ThermalPerf × FedRate — computed for logging/CSV output only (not a biology input as of v8)
     public float CurrentHuntingSuccess;     // This step's hunting success (for tracking)
     public float Condition = 1.0f;          // Health/energy reserves [0-1], starts at 1.0
 

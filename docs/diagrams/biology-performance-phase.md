@@ -1,74 +1,47 @@
-flowchart LR
-    START(["Performance Phase · Steps 1-5"]) --> S1
+# Biology performance phase (Steps 1–5)
 
-    subgraph STEP1 ["Step 1 · Thermal Performance"]
-        direction LR
-        S1["RawThermalPerf = Arrhenius temp with cosine fade at CTmin/CTmax"]
-        S1B["ThermalPerf = RawThermalPerf x Pmax"]
-        S1C["Init FedRate = 1<br/>Init HuntingSuccess = 1"]
-        S1 --> S1B --> S1C
-    end
+Source: `SimSpecies.CalculatePerformance`, `EcosystemSimulator.ProcessFeeding`, `EcosystemSimulator.UpdateCondition` (v9 Pmax rate scaling).
 
-    S1C --> RATIO
+```mermaid
+flowchart TD
+    Temp["Temperature °C"] --> Offset["T_eff = T + sp.TemperatureDebuff"]
+    Offset --> Fade["Cosine fade over<br/>LETHAL_TRANSITION_WIDTH = 2°C<br/>near CTminC / CTmaxC"]
+    Fade --> Arr["Arrhenius in Kelvin:<br/>numerator = exp(B/OT − B/T) · (1 + exp(L/OT − L/LB) + exp(U/UB − U/OT))<br/>denominator = 1 + exp(L/T − L/LB) + exp(U/UB − U/T)<br/>perf = clamp(num/den, 0, 1)"]
+    Arr --> Raw["RawThermalPerformance<br/>= perf × fade"]
+    Raw --> TP["ThermalPerformance<br/>= Raw × Pmax"]
 
-    subgraph STEP2 ["Step 2 · Feeding / Predation"]
-        direction LR
-        RATIO["ratio = totalPreyPop / totalPredatorPop<br/>NORMAL_PREY_RATIO = 20"]
-        HALF["Per predator:<br/>halfSat = 20 x 1 - baseEff / baseEff"]
-        EFF["hollingEff = ratio / ratio + halfSat<br/>huntingSuccess = clamp hollingEff + randVariance · 0 · 1"]
-        DEMAND["rawDemand = pop x eatingAmount x thermalPerf x bioStep<br/>actualDemand = rawDemand x huntingSuccess"]
-        EATEN["totalEaten = min availablePrey · sum actualDemand<br/>fedRate = min 1 · totalEaten / sum rawDemand"]
-        PREY["Per prey species:<br/>share = preyPop / totalPreyPop<br/>preyLost = totalEaten x share"]
-        PACC["PREDATION ACCUMULATOR<br/>accum += preyLost<br/>wholeDeaths = floor accum<br/>accum -= wholeDeaths<br/>preyPop -= wholeDeaths"]
-        RATIO --> HALF --> EFF --> DEMAND --> EATEN --> PREY --> PACC
-    end
+    TP --> PredDemand["Predator rawDemand<br/>= Pop × EatingAmount × ThermalPerf × BiologyStep"]
+    PredDemand --> Holling["Holling II success<br/>holling = ratio / (ratio + halfSat)<br/>halfSat = NORMAL_PREY_RATIO · (1 − base) / base<br/>+ variance in [-HuntingVariance, +HuntingVariance]<br/>clamp to [0, 1]"]
+    Holling --> Actual["actualDemand = rawDemand × huntingSuccess"]
+    Actual --> Eaten["totalEaten = min(availablePrey, Σ actualDemand)"]
+    Eaten --> FedRate["FedRate (predator) = totalEaten / totalRawDemand<br/>FedRate (prey) = 1.0 always"]
 
-    PACC --> S3
+    Raw --> RFP["RawFinalPerformance<br/>= Raw × FedRate<br/>(Condition drain target)"]
+    FedRate --> RFP
 
-    subgraph STEP3 ["Step 3 · Raw Final Performance"]
-        direction LR
-        S3["RawFinalPerf = RawThermalPerf x FedRate"]
-    end
+    RFP --> CondStep{"Condition vs target<br/>(pmaxSafe = max(Pmax, 1e-4))"}
+    CondStep -- "Cond > target" --> Drain["severity = (1 - target)²<br/>effectiveDrain = ConditionDrainRate · (1 + severity) / pmaxSafe<br/>Condition -= (Condition - target) × effectiveDrain"]
+    CondStep -- "Cond < target" --> Recov["boost = target²<br/>effectiveRecovery = ConditionRecoveryRate · (1 + boost) × pmaxSafe<br/>Condition += (target - Condition) × effectiveRecovery"]
+    Drain --> Clamp["Condition = clamp(Condition, 0, 1)"]
+    Recov --> Clamp
+    Clamp --> FP["FinalPerformance<br/>= ThermalPerf × FedRate<br/>(logging only)"]
+```
 
-    S3 --> S4TARGET
+## Key invariants
 
-    subgraph STEP4 ["Step 4 · Update Condition"]
-        direction LR
-        S4TARGET["target = RawFinalPerf"]
-        S4CHECK{{"Condition > target?"}}
-        S4DRAIN["DRAINING<br/>severity = 1 - target squared<br/>effectiveDrain = drainRate x 1 + severity<br/>condition -= condition - target x effectiveDrain"]
-        S4RECOVER["RECOVERING<br/>boost = target squared<br/>effectiveRecovery = recoveryRate x 1 + boost<br/>condition += target - condition x effectiveRecovery"]
-        S4CLAMP["Clamp condition to 0 · 1"]
-        S4TARGET --> S4CHECK
-        S4CHECK -- Yes --> S4DRAIN --> S4CLAMP
-        S4CHECK -- No --> S4RECOVER --> S4CLAMP
-    end
+- `Pmax` does **not** enter `target`. Target stays at `Raw × FedRate`, so Condition ceiling is 1.0 for every species regardless of Pmax.
+- Drain is **asymmetric**: base drain `0.15` > base recovery `0.10` (per-day rates from `SimulationConfig`).
+- Quadratic acceleration:
+  - Drain multiplier = `1 + (1 − target)²` → reaches 2× at `target = 0`.
+  - Recovery multiplier = `1 + target²` → reaches 2× at `target = 1`.
+- Pmax rate scaling (v9):
+  - Specialists (high Pmax, e.g. 0.9) drain `1 / 0.9 ≈ 1.11×` the base rate (slower relative reduction because denominator is closer to 1).
+  - Generalists (low Pmax, e.g. 0.72) drain `1 / 0.72 ≈ 1.39×` the base rate (faster decline under stress).
+  - Recovery inverts: specialists recover `× 0.9` ≈ 10% slower; generalists `× 0.72` ≈ 28% slower. (Multiplier ≤ 1 means the recovery term is damped when Pmax < 1.)
 
-    S4CLAMP --> S5
+## Step 2 — feeding details
 
-    subgraph STEP5 ["Step 5 · Final Performance"]
-        direction LR
-        S5["FinalPerf = ThermalPerf x FedRate"]
-    end
-
-    S5 --> DONE(["To Death Phase · Steps 6-7"])
-
-    style START fill:#1d3557,color:#fff
-    style DONE fill:#1d3557,color:#fff
-    style S1 fill:#264653,color:#fff
-    style S1B fill:#264653,color:#fff
-    style S1C fill:#264653,color:#fff
-    style RATIO fill:#264653,color:#fff
-    style HALF fill:#264653,color:#fff
-    style EFF fill:#264653,color:#fff
-    style DEMAND fill:#264653,color:#fff
-    style EATEN fill:#457b9d,color:#fff
-    style PREY fill:#264653,color:#fff
-    style PACC fill:#6a4c93,color:#fff
-    style S3 fill:#264653,color:#fff
-    style S4TARGET fill:#264653,color:#fff
-    style S4CHECK fill:#457b9d,color:#fff
-    style S4DRAIN fill:#1d3557,color:#fff
-    style S4RECOVER fill:#1d3557,color:#fff
-    style S4CLAMP fill:#264653,color:#fff
-    style S5 fill:#264653,color:#fff
+- Runs only if `Species.Any(Tier == 1)` and `Species.Any(Tier == 2)` with non-zero populations.
+- `NORMAL_PREY_RATIO = 20` is the prey:predator ratio where Holling success equals the species' `HuntingEfficiency`.
+- Per-predator `FedRate` is the same `fedRate` (totalEaten / totalRawDemand) — not split by predator. Variance is on hunting success, not on feeding satisfaction.
+- Prey removals are distributed proportionally across prey variants via `_predationAccumulators[preyVariant.FullName]`.

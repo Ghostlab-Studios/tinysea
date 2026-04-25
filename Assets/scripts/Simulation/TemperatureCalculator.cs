@@ -3,9 +3,14 @@ using System.Collections.Generic;
 
 /// <summary>
 /// Calculates daily temperature with realistic climate components.
-/// 
+///
 /// Formula: T(day) = Base + Seasonal + Trend + InterannualVar + DailyVar
 /// Then clamped to bounds.
+///
+/// Trend ownership: ClimateTrendPerYear is the only component that contributes
+/// a non-zero long-term mean. Seasonal averages to 0 over a year. Daily and
+/// interannual variations are zero-mean by construction (see GetInterannualVariation
+/// for the WarmingBias-vs-mean separation).
 /// </summary>
 public class TemperatureCalculator
 {
@@ -77,8 +82,12 @@ public class TemperatureCalculator
     }
 
     /// <summary>
-    /// Interannual: each year gets a random offset (with warm bias)
-    /// Same value for entire year
+    /// Interannual: each year gets a zero-mean random offset that may be
+    /// asymmetric (warm tail wider than cold tail when WarmingBias > 1).
+    /// Same value for the entire year.
+    ///
+    /// WarmingBias controls the SHAPE of the distribution only, not its mean.
+    /// Long-term warming/cooling trends are expressed via ClimateTrendPerYear.
     /// </summary>
     private float GetInterannualVariation(int day)
     {
@@ -88,10 +97,17 @@ public class TemperatureCalculator
 
         if (!_yearVariations.ContainsKey(year))
         {
-            // Generate this year's variation
+            // Draw cold ~ uniform(-mag, 0) and warm ~ uniform(0, mag * bias),
+            // then average. The naive (cold + warm) / 2 has expected value
+            //     mag * (bias - 1) / 4
+            // which would leak a hidden warming trend (~0.25 °C/yr at
+            // mag = 2, bias = 1.5) on top of ClimateTrendPerYear. Subtract
+            // that mean so WarmingBias only skews the *shape* of the
+            // distribution; the trend is owned solely by ClimateTrendPerYear.
             float coldPart = (float)(_rng.NextDouble() * -VariabilityMagnitude);
             float warmPart = (float)(_rng.NextDouble() * VariabilityMagnitude * WarmingBias);
-            _yearVariations[year] = (coldPart + warmPart) / 2f;
+            float biasMean = VariabilityMagnitude * (WarmingBias - 1f) / 4f;
+            _yearVariations[year] = (coldPart + warmPart) / 2f - biasMean;
         }
 
         return _yearVariations[year];

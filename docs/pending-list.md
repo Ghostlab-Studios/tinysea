@@ -19,11 +19,11 @@ Source: Review §3, Marine (escalated to critical).
 **Fix**: `fedRate_i = min(1, huntingSuccess_i × (totalEaten / totalActualDemand))` so each predator keeps its own proportional share. Roughly a 10-line change in `ProcessFeedingWithAccumulator`.
 **Blocks**: any multi-predator run, including Phase II breadth factorial.
 
-### A2. Hidden warming trend from `WarmingBias > 1` `CRITICAL`
+### A2. ~~Hidden warming trend from `WarmingBias > 1`~~ `FIXED — commit e4119fe`
 Source: Review §12, Marine.
 [TemperatureCalculator.cs:92–94](../Assets/scripts/Simulation/TemperatureCalculator.cs). With `VariabilityMagnitude = 2`, `WarmingBias = 1.5`: `E[variation] = 2 × (1.5−1)/4 = 0.25 °C/year` of unattributed warming on top of `ClimateTrendPerYear`. Over 50 years: +12.5 °C hidden drift.
-**Fix**: re-center the distribution — subtract `VariabilityMagnitude × (WarmingBias − 1) / 4` from each year's draw so `WarmingBias` skews the *distribution* without changing the *mean*. Or redefine `WarmingBias` semantics and document explicitly.
-**Blocks**: any climate-trend figure; threatens interpretability of all long-horizon runs.
+**Resolution**: each year's draw now subtracts `biasMean = VariabilityMagnitude × (WarmingBias − 1) / 4` so the interannual variation is zero-mean by construction. `WarmingBias` controls only the *shape* of the distribution (warm tail wider than cold tail when `bias > 1`); long-term trend is owned solely by `ClimateTrendPerYear`. No change when `WarmingBias = 1.0`.
+**Doc updates also landed**: `simulation-spec.md` §3, `diagrams/temperature-model.md`, `csv-formats.md` `warming_bias` column.
 
 ### A3. Processing-order first-mover bias in carrying cap `HIGH`
 Source: Brian M8, Review §9.
@@ -199,11 +199,14 @@ The TINYSEA spec doc (now deleted) claimed reproduction uses FinalPerformance. N
 ## Quick priority ranking (by ship impact)
 
 1. **A1 Pooled FedRate** — changes multi-predator conclusions.
-2. **A2 WarmingBias hidden warming** — changes climate-trend conclusions.
+2. ~~**A2 WarmingBias hidden warming**~~ — **DONE** (commit `e4119fe`).
 3. **A3 Processing-order bug** — changes competitive-exclusion conclusions.
-4. **D1 Reply to Brian + D2 Monday meeting** — social gating.
-5. **B1 Acclimation methods statement** — cheap, expected by reviewers.
+4. **D1 Reply to Brian + D2 Monday (Apr 27) meeting** — social gating; meeting moved from Apr 20 to Apr 27.
+5. **B1 Acclimation methods statement** — cheap, expected by reviewers (manuscript text only, not code).
 6. **C1 Sensitivity analysis grid** — standard supplementary material.
 7. **A5 Validator for ReproThreshold > DeathThreshold** — one-liner.
 8. **A7 Delete NO_PREDATOR_PENALTY** — one-liner.
 9. Everything else.
+
+## Tier 2 carrying capacity — REJECTED
+Brian's Mail 9 asked whether predators should have an explicit cap as a fixed % of Tier 1 (10% Lindeman, 15–20% gameplay). **Decision: no.** Predators are limited via the food chain (Tier 1 → Holling II → FedRate → Condition → reproduction). Adding an explicit Tier 2 cap would double-count and obscure the emergent trophic dynamic. Reply this in the next email to Brian.

@@ -29,7 +29,7 @@ use_carrying_cap, carrying_cap_t1
 | `seasonal_amp` | float | — |
 | `climate_trend` | float | — |
 | `variability_mag` | float | — |
-| `warming_bias` | float | — |
+| `warming_bias` | float | Skews the *shape* of the per-year interannual draw — warm tail wider than cold tail when `> 1`. Distribution is zero-mean by construction (post-fix); does **not** add a long-term warming trend. Use `climate_trend` for that. |
 | `daily_var_range` | float | — |
 | `randomness_growth` | float | — |
 | `autocorrelated` | bool | Accepts `true`/`false`/`1`/`0`/`yes`/`no` (case-insensitive). |

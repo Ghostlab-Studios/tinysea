@@ -1,6 +1,6 @@
 # Pending List
 
-Running list of unfixed simulation issues, deferred decisions, documentation gaps, and manuscript-prep items. Items fixed in v9 (Pmax wired into reproduction, drain, recovery) are **not** listed here — this file is only things still to do.
+Running list of unfixed simulation issues, deferred decisions, documentation gaps, and manuscript-prep items. Items fixed in v9 (Pmax wired into reproduction, drain, recovery) and v10 (Tier 1 food-pool FedRate, soft-cap-on-births deleted, newborn = parent Condition) are **not** listed here as open items — this file is only things still to do. Resolved items are marked superseded/resolved in place rather than removed, so the history is traceable.
 
 Sources cited for each item:
 - **Brian M7** / **Brian M8** — from Brian's Apr 18 emails (`Tests/Brain/7/` and `Tests/Brain/8/`).
@@ -13,10 +13,11 @@ Each item tagged **CRITICAL / HIGH / MEDIUM / LOW** for ship priority toward the
 
 ## A. Simulation bugs — not yet fixed (code changes needed)
 
-### A1. Pooled FedRate across predators `CRITICAL`
+### A1. Pooled FedRate across predators `CRITICAL — RESERVED FOR v11`
 Source: Review §3, Marine (escalated to critical).
-[EcosystemSimulator.cs:586–596](../Assets/scripts/Simulation/EcosystemSimulator.cs) writes the same `fedRate = totalEaten / totalRawDemand` to every predator, regardless of per-predator `huntingSuccess`. Specialist and generalist predators with different hunting efficiencies end up with identical feeding satisfaction. Destroys the competitive signal.
-**Fix**: `fedRate_i = min(1, huntingSuccess_i × (totalEaten / totalActualDemand))` so each predator keeps its own proportional share. Roughly a 10-line change in `ProcessFeedingWithAccumulator`.
+[EcosystemSimulator.cs](../Assets/scripts/Simulation/EcosystemSimulator.cs) `ProcessFeedingWithAccumulator` (Tier 2 section) writes the same `fedRate = totalEaten / totalRawDemand` to every predator, regardless of per-predator `huntingSuccess`. Specialist and generalist predators with different hunting efficiencies end up with identical feeding satisfaction. Destroys the competitive signal.
+**Fix**: `fedRate_i = min(1, huntingSuccess_i × (totalEaten / totalActualDemand))` so each predator keeps its own proportional share. Roughly a 10-line change.
+**Status**: explicitly held back from v10 to keep the validation surface tractable. Implement immediately after local v10 testing passes.
 **Blocks**: any multi-predator run, including Phase II breadth factorial.
 
 ### A2. ~~Hidden warming trend from `WarmingBias > 1`~~ `FIXED — commit e4119fe`
@@ -25,11 +26,9 @@ Source: Review §12, Marine.
 **Resolution**: each year's draw now subtracts `biasMean = VariabilityMagnitude × (WarmingBias − 1) / 4` so the interannual variation is zero-mean by construction. `WarmingBias` controls only the *shape* of the distribution (warm tail wider than cold tail when `bias > 1`); long-term trend is owned solely by `ClimateTrendPerYear`. No change when `WarmingBias = 1.0`.
 **Doc updates also landed**: `simulation-spec.md` §3, `diagrams/temperature-model.md`, `csv-formats.md` `warming_bias` column.
 
-### A3. Processing-order first-mover bias in carrying cap `HIGH`
+### A3. ~~Processing-order first-mover bias in carrying cap~~ `SUPERSEDED BY v10`
 Source: Brian M8, Review §9.
-[EcosystemSimulator.cs:914–920](../Assets/scripts/Simulation/EcosystemSimulator.cs). `tierPop = GetTierPopulation(1)` is evaluated live inside the per-species reproduction loop, so species processed earlier see a smaller tier population and get a higher `growthFactor`. First-listed species compounds an advantage into competitive exclusion over long runs.
-**Fix**: snapshot `tierPop` once before the reproduction loop, **or** shuffle species order per day. Snapshot is simpler and deterministic; shuffle is closer to what Grimm & Railsback (2005) recommend for concurrent updates. Discuss on Monday with Brian + Tarik before committing to one.
-**Blocks**: any competitive-exclusion interpretation.
+The previous live-`tierPop` read inside `ApplyReproduction`'s carrying-cap-on-births block was the source of this bug. **v10 deleted the entire soft-cap-on-births block**: Tier 1 reproduction is now throttled indirectly through the Condition pathway (high pop → low food density → low FedRate → Condition drains → reproScale shrinks AND condition deaths fire). The bug doesn't have a place to live anymore. Neither snapshot nor shuffle was needed.
 
 ### A4. Euler overshoot in Condition update at `BiologyStep > 1` `MEDIUM`
 Source: Review §5, Marine (downgraded from ISSUE to CONCERN with validator check).
@@ -57,10 +56,10 @@ Source: Review §8, Marine.
 The "dead were weakest → redistribute health" boost fires in `ApplyConditionDeath` ([line 780](../Assets/scripts/Simulation/EcosystemSimulator.cs)) but not in `ApplyNaturalDeathWithAccumulator` or predation. If natural death is random w.r.t. Condition (defensible), no boost is correct — but then apply the same logic to condition death (also no boost). Inconsistency between death types leaves a quiet quantitative effect.
 **Fix**: marine scientist recommends removing the boost everywhere; the birth accumulator already prevents death spirals. Alternative: add it to natural death too (harder to justify biologically).
 
-### A9. Newborn condition hard-coded at 0.5 `LOW`
+### A9. ~~Newborn condition hard-coded at 0.5~~ `RESOLVED IN v10`
 Source: Review §9.
-`NEWBORN_CONDITION = 0.5` is arbitrary. A healthy parent's offspring enter at half the parent's Condition. Marine scientist suggests `min(parent × 0.8, 0.5)` as more biologically grounded (maternal effects, Mousseau & Fox 1998).
-**Fix**: make it configurable per species (add a field to `SimSpecies`) or compute as a function of parent Condition.
+`NEWBORN_CONDITION = 0.5` constant was removed. v10: newborns inherit the species' current group Condition. The parent's Condition already encodes recent food density / hunting success via lagged drain dynamics, so multiplying again would double-count. No fixed constant, no food-density multiplier — same logic for Tier 1 and Tier 2. Newborn vulnerability emerges from same-drain-no-head-start dynamics in subsequent days.
+**Watchpoint W3**: if observed regrowth from crashes is unrealistically rapid in v10 outputs, add `α < 1` baseline neonatal vulnerability in v11.
 
 ### A10. Autocorrelation coefficient hard-coded at 0.7/0.3 `LOW`
 Source: Review §12.
@@ -76,6 +75,25 @@ Source: Review §2.
 Source: Review §12, Marine (downgraded to MINOR).
 [TemperatureCalculator.cs:63–65](../Assets/scripts/Simulation/TemperatureCalculator.cs) comment says "coldest at day 0, warmest at day 182" but the formula peaks at day 91 and troughs at day 273. Formula is fine; comment is wrong.
 **Fix**: one-line comment edit.
+
+---
+
+## A.v10. Watchpoints introduced by v10 (observe in prototype)
+
+### W1. v9 Pmax-on-drain × v10 food-pool double-dip on generalists `MEDIUM`
+Drain rate already divides by Pmax (v9); the drain target now depends on food density too (v10). Generalists (low Pmax) in crowded conditions are hit on both axes — bigger gap from target AND faster drain rate. Biologically defensible (specialists *should* outperform generalists under stress) but the magnitude could be too aggressive.
+**Action**: run a generalist-dominant scenario; measure crash dynamics. If unrealistically aggressive, mitigation = soften v9's `/Pmax` to `/sqrt(Pmax)`.
+
+### W2. Tier 2 indirect oscillations (Lotka–Volterra cycles) `MEDIUM`
+Predators see new prey oscillation patterns under v10. Lotka–Volterra-flavour cycles may emerge that didn't before. Could produce realistic predator-prey cycles, or could produce repeated predator extinction.
+**Action**: run multi-tier scenarios. If predators repeatedly go extinct, may need a Tier 2 mortality dampener — but expect this is real ecology surfacing rather than a bug.
+
+### W3. Newborn dynamics under no-α formula `MEDIUM`
+Under `newborn = parent_condition` (v10), populations may regrow from crashes faster than realistic because newborns inherit full parent Condition rather than a vulnerability baseline.
+**Action**: observe regrowth dynamics. If too fast, add `α < 1` baseline (e.g. `newborn = α × parent_condition` with α ≈ 0.7–0.8) in v11.
+
+### W4. Initial-condition shock when pop > cap `LOW`
+Should resolve gracefully via Condition system over ~8–10 days (population drains via condition death as food density stays at 0). Verify in practice; the validator already warns at scenario init when over-cap.
 
 ---
 
@@ -108,10 +126,9 @@ Source: Marine.
 Over 20–50 year runs under warming, heritable shifts in thermal tolerance can be larger than the warming signal in fast-generation taxa (Kelly 2019).
 **Action**: state in methods as a scope limit.
 
-### B6. Prey `FedRate` is always 1.0 — no bottom-up limitation `MEDIUM`
+### B6. ~~Prey `FedRate` is always 1.0 — no bottom-up limitation~~ `RESOLVED IN v10`
 Source: Review §3, Marine.
-Prey feed from the environment, always satisfied. Carrying-capacity cap is the only implicit resource limit. Misses bottom-up control dynamics.
-**Action**: state explicitly as "closed top-down system" in methods. If the paper claims anything about bottom-up control, add a prey-resource axis.
+v10: Tier 1 FedRate is now density-dependent — `FedRate_T1 = min(1, HuntingEfficiency × food_density)`, where `food_density = max(0, 1 − tier1Pop/CarryingCapacityPerTier)`. Linear (not Holling II) because plankton-style passive extractors don't have search/handling phases. Bottom-up dynamics now flow through the simulator: high pop → low food density → low FedRate → Condition drains → reproScale shrinks AND condition deaths fire. Logistic-overshoot dynamics emerge naturally.
 
 ### B7. No prey-variant preference by predators `MEDIUM`
 Source: Review §3, Marine (escalated for specialist–generalist research goal).
@@ -134,7 +151,7 @@ Source: Marine.
 
 ### C1. Sensitivity analysis grid `HIGH`
 Source: Marine.
-MEE reviewer #2 will ask for SA on the load-bearing parameters: `ConditionDrainRate`/`ConditionRecoveryRate` ratio (currently 0.15/0.10 = 1.5×), `Pmax` scaling on/off, `NEWBORN_CONDITION`, `NO_PREDATOR_PENALTY` (if not deleted). Real empirical asymmetry varies widely (Sinclair et al. 2016; Ørsted et al. 2022).
+MEE reviewer #2 will ask for SA on the load-bearing parameters: `ConditionDrainRate`/`ConditionRecoveryRate` ratio (currently 0.15/0.10 = 1.5×), `Pmax` scaling on/off, `NO_PREDATOR_PENALTY` (if not deleted), and (new in v10) `CarryingCapacityPerTier` size, plus `HuntingEfficiency_T1` if we ever explore HE < 1. Real empirical asymmetry varies widely (Sinclair et al. 2016; Ørsted et al. 2022).
 **Action**: build a small factorial sensitivity-analysis bulk CSV and report results in supplementary.
 
 ### C2. ODD protocol methods section `HIGH`
@@ -198,15 +215,19 @@ The TINYSEA spec doc (now deleted) claimed reproduction uses FinalPerformance. N
 
 ## Quick priority ranking (by ship impact)
 
-1. **A1 Pooled FedRate** — changes multi-predator conclusions.
-2. ~~**A2 WarmingBias hidden warming**~~ — **DONE** (commit `e4119fe`).
-3. **A3 Processing-order bug** — changes competitive-exclusion conclusions.
-4. **D1 Reply to Brian + D2 Monday (Apr 27) meeting** — social gating; meeting moved from Apr 20 to Apr 27.
-5. **B1 Acclimation methods statement** — cheap, expected by reviewers (manuscript text only, not code).
-6. **C1 Sensitivity analysis grid** — standard supplementary material.
-7. **A5 Validator for ReproThreshold > DeathThreshold** — one-liner.
-8. **A7 Delete NO_PREDATOR_PENALTY** — one-liner.
-9. Everything else.
+1. **Local v10 testing** — open the build, run `Tests/Brain/7/TestRunApril18.csv` and `Tests/Brain/5/SixPreySpecies.csv`, verify CSV outputs and watchpoint behaviour.
+2. **A1 Pooled FedRate (v11)** — apply per-predator fix once v10 testing passes.
+3. ~~**A2 WarmingBias hidden warming**~~ — **DONE** (commit `e4119fe`).
+4. ~~**A3 Processing-order bug**~~ — **SUPERSEDED** by v10 (soft-cap-on-births deleted).
+5. ~~**B6 Prey FedRate always 1.0**~~ — **RESOLVED** in v10.
+6. ~~**A9 Newborn condition fixed at 0.5**~~ — **RESOLVED** in v10.
+7. **D1 Email to Brian + D2 Monday (Apr 27) meeting** — send link to v10 + v11 macOS build for validation.
+8. **B1 Acclimation methods statement** — cheap, expected by reviewers (manuscript text only, not code).
+9. **C1 Sensitivity analysis grid** — standard supplementary material.
+10. **A5 Validator for ReproThreshold > DeathThreshold** — one-liner.
+11. **A7 Delete NO_PREDATOR_PENALTY** — one-liner; or formally re-justify with citation.
+12. **W1–W4 watchpoints** — observe in v10 prototype, decide on follow-ups for v11.
+13. Everything else.
 
 ## Tier 2 carrying capacity — REJECTED
 Brian's Mail 9 asked whether predators should have an explicit cap as a fixed % of Tier 1 (10% Lindeman, 15–20% gameplay). **Decision: no.** Predators are limited via the food chain (Tier 1 → Holling II → FedRate → Condition → reproduction). Adding an explicit Tier 2 cap would double-count and obscure the emergent trophic dynamic. Reply this in the next email to Brian.

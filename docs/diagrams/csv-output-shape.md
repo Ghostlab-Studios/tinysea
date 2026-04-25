@@ -8,7 +8,7 @@ flowchart TD
     Run --> Agg["aggregate.csv<br/>(one per run)"]
     Run --> Cfg["config.csv<br/>(one per run)"]
 
-    PerScn --> PH["#config: header<br/>(19 lines: days, scenarios,<br/>seed, biology step, 11 temp params,<br/>carrying cap, drain/recovery rates)"]
+    PerScn --> PH["#config: header<br/>(20 lines: model_version (v10),<br/>days, scenarios, seed, biology step,<br/>11 temp params, carrying cap, drain/recovery)"]
     PerScn --> PS["#species: table<br/>(1 header row + 1 row per species<br/>with 26 columns inc. both K and C<br/>for temperature fields)"]
     PerScn --> PD["Daily data rows<br/>(StepRecord.CsvHeader/ToCsvLine)<br/>Day..ReproScaleT2 per day"]
     PerScn --> PSum["#summary: statistics block<br/>Mean/Max/Min/StdDev across days<br/>for each PopColumn"]
@@ -27,7 +27,7 @@ flowchart TD
     Cfg --> CSpc["=== SPECIES ===<br/>(same 26-column table as #species: in scenario CSV)"]
 
     Bulk[Bulk upload] --> BulkSum["bulk_summary.csv<br/>(ZIP root, one per bulk)"]
-    BulkSum --> BS1["=== TINYSEA BULK SUMMARY ===<br/># Total Runs, # Generated"]
+    BulkSum --> BS1["=== TINYSEA BULK SUMMARY ===<br/># Model Version (v10), # Total Runs, # Generated"]
     BulkSum --> BS2["=== PER-RUN RESULTS ===<br/>Run, Scenarios, Survived, Crashed,<br/>CrashRate, BaseTemp, ClimateTrend,<br/>per-species average populations"]
     BulkSum --> BS3["=== PER-SPECIES AGGREGATE (Across All Runs) ===<br/>Species, GrandMean, SurvivedMean,<br/>RunsExtinct, RunsSurvived, ExtinctionRate"]
 ```
@@ -45,7 +45,7 @@ flowchart TD
 
 ## Column lists (exact)
 
-### `StepRecord.CsvHeader()` daily columns (39 columns):
+### `StepRecord.CsvHeader()` daily columns (41 columns, v10):
 
 ```
 Day, Year, Temperature, BiologyCycle,
@@ -59,6 +59,7 @@ NaturalDeathsT1, NaturalDeathsT2,
 TotalDeaths,
 BirthsT1, BirthsT2,
 FedRateT2, AvgHuntingEff,
+FedRateT1, FoodDensityT1,            # NEW in v10
 AvgConditionT1, AvgConditionT2,
 BirthAccumT1, BirthAccumT2,
 NaturalDeathAccumT1, NaturalDeathAccumT2,
@@ -67,7 +68,7 @@ PredationAccumT1,
 ReproScaleT1, ReproScaleT2
 ```
 
-Populations use `long` to prevent overflow on large ecosystems.
+Populations use `long` to prevent overflow on large ecosystems. `FedRateT1` is the population-weighted average across live Tier 1 species; `FoodDensityT1` is the daily `1 − tier1Pop/cap` value (or `1.0` when carrying capacity is disabled).
 
 ### `#species:` / config-CSV species columns (26 columns):
 

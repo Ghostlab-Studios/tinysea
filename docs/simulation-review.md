@@ -383,3 +383,38 @@ If you want a short list of *must-address* items before the MEE manuscript, I'd 
 4. **Defaults `ReproThreshold < DeathThreshold`** (§8) — a validator check is cheap and avoids future confusion.
 
 Everything else is either a scope decision (Brian + Tarik to arbitrate) or a documentation fix.
+
+---
+
+## 17. v10 status update (annotation, not a rewrite of original review)
+
+Added after the v10 redesign was applied. The original review snapshot above is preserved as-is; this section maps each flagged item to its current state.
+
+| § | Item | Status after v10 |
+|---|------|------------------|
+| §3 | Pooled FedRate (A1) | **NOT YET FIXED.** Reserved for v11. Implementation will be a per-predator `fedRate_i = min(1, huntingSuccess_i × totalEaten / totalActualDemand)` in the same `ProcessFeedingWithAccumulator` function. |
+| §3 | No prey-variant preference (B7) | Still open. Scope statement only — no v10 work. |
+| §3 | Prey FedRate always 1.0 (B6) | **RESOLVED IN v10.** Tier 1 `FedRate = min(1, HuntingEfficiency × food_density)` from the shared resource pool, linear (not Holling II). The `HuntingEfficiency` field for Tier 1 now means "resource extraction efficiency" — default 1.0. |
+| §5 | Recovery multiplier < 1 for low Pmax (A6) | Still open. Watchpoint W3 will catch if it produces unrealistic dynamics. |
+| §5 | Euler overshoot at `BiologyStep > 1` (A4) | Still open. `BiologyStep = 1` remains the validated default. |
+| §5 | Recovery at very low target / no point of no return | Still open. Lower priority; Sokolova 2013 / Gosselin 2021 cite is in the spec doc but mechanism not implemented. |
+| §8 | Default `ReproThreshold < DeathThreshold` (A5) | Still open. One-liner validator pending. |
+| §8 | `NEWBORN_CONDITION = 0.5` arbitrary (A9) | **RESOLVED IN v10.** Newborns inherit the species' current group Condition. The constant was deleted; the parent's Condition already encodes recent food density / hunting success via lagged drain dynamics, so multiplying by today's FedRate would double-count. Same logic for Tier 1 and Tier 2. |
+| §8 | Survivor fitness boost only on condition death (A8) | Still open. Marine-scientist recommendation was to remove everywhere or apply consistently. Lower priority. |
+| §9 | First-mover bias in carrying cap (A3) | **SUPERSEDED IN v10.** The soft-cap-on-births block was deleted entirely; the bug doesn't have a place to live anymore. Tier 1 reproduction is now throttled indirectly through the Condition pathway. |
+| §9 | `NO_PREDATOR_PENALTY = 0.85` ecologically backwards (A7) | Still open. Discuss on Monday. |
+| §9 | Reproduction rates very fast (B8) | Still open. Methods-section taxon scoping. |
+| §12 | Hidden warming from `WarmingBias > 1` (A2) | **RESOLVED PRE-v10** in commit `e4119fe` — interannual draw is now zero-centred via subtracting `biasMean = mag × (bias−1)/4`. |
+| §12 | Seasonal-phase docstring wrong (A12) | Still open. Cosmetic. |
+| §12 | Autocorrelation hard-coded at 0.7 (A10) | Still open. Lower priority. |
+| §2 | `LETHAL_TRANSITION_WIDTH` global (A11) | Still open. Lower priority. |
+| §13 | Processing order RNG consumption | Still relevant: Step 2 hunting variance and Step 9 natural-death variance still draw RNG in species order. Not order-biased outcome-wise, but reordering species changes the realised draws under a fixed seed. Document; no fix. |
+
+### New watchpoints introduced by v10 (observe in prototype)
+
+- **W1.** v9 Pmax-on-drain × v10 food-pool double-dip on generalists. May produce too-aggressive crashes for low-Pmax species in crowded conditions.
+- **W2.** Tier 2 indirect Lotka–Volterra-flavour oscillations from new prey dynamics.
+- **W3.** Newborn dynamics under no-α formula — populations may regrow from crashes too fast. If observed, add `α < 1` baseline in v11.
+- **W4.** Initial-condition shock at over-cap seeds — should resolve gracefully via Condition system over ~8–10 days; verify in practice.
+
+Tracked in [pending-list.md](./pending-list.md) §A.v10.

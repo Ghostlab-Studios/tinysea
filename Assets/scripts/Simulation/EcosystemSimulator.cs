@@ -760,12 +760,12 @@ public class EcosystemSimulator
                 _predationAccumulators[p.FullName] += preyLost;
                 float accumulated = _predationAccumulators[p.FullName];
 
-                // Extract whole deaths
-                int wholeDeaths = (int)Math.Floor(accumulated);
+                // Extract whole deaths (long to avoid int32 overflow at large prey pops)
+                long wholeDeaths = (long)Math.Floor(accumulated);
                 _predationAccumulators[p.FullName] = accumulated - wholeDeaths;
 
                 // Apply deaths
-                wholeDeaths = Math.Min(wholeDeaths, (int)p.Population);
+                wholeDeaths = Math.Min(wholeDeaths, (long)p.Population);
                 float oldPop = p.Population;
                 p.Population = Math.Max(0f, p.Population - wholeDeaths);
                 LastEatenT1 += wholeDeaths;
@@ -935,12 +935,13 @@ public class EcosystemSimulator
         float severity = (sp.DeathThreshold - sp.Condition) / sp.DeathThreshold;
         float rawDeaths = sp.Population * severity * sp.DeathRate * BiologyStep;
 
-        // Accumulator pattern — fractional deaths carry over between days
+        // Accumulator pattern — fractional deaths carry over between days.
+        // long (not int) to avoid overflow at extreme populations.
         _conditionDeathAccumulators[sp.FullName] += rawDeaths;
         float accumulated = _conditionDeathAccumulators[sp.FullName];
-        int wholeDeaths = (int)Math.Floor(accumulated);
+        long wholeDeaths = (long)Math.Floor(accumulated);
         _conditionDeathAccumulators[sp.FullName] = accumulated - wholeDeaths;
-        wholeDeaths = Math.Min(wholeDeaths, (int)sp.Population);
+        wholeDeaths = Math.Min(wholeDeaths, (long)sp.Population);
 
         if (wholeDeaths > 0)
         {
@@ -1095,7 +1096,10 @@ public class EcosystemSimulator
         _birthAccumulators[sp.FullName] += births;
         float accumulated = _birthAccumulators[sp.FullName];
 
-        int wholeBirths = (int)Math.Floor(accumulated);
+        // long (not int) to avoid int32 overflow if a misconfigured scenario
+        // produces birth counts > 2.1B in a single step. With cap-always-on (v11.1)
+        // this should not happen in practice, but the safety guard is cheap.
+        long wholeBirths = (long)Math.Floor(accumulated);
         _birthAccumulators[sp.FullName] = accumulated - wholeBirths;
 
         float oldPop = sp.Population;
@@ -1153,11 +1157,12 @@ public class EcosystemSimulator
         _naturalDeathAccumulators[sp.FullName] += deaths;
         float accumulated = _naturalDeathAccumulators[sp.FullName];
 
-        int wholeDeaths = (int)Math.Floor(accumulated);
+        // long (not int) for overflow safety at extreme populations.
+        long wholeDeaths = (long)Math.Floor(accumulated);
         _naturalDeathAccumulators[sp.FullName] = accumulated - wholeDeaths;
 
         // Cap deaths at population
-        wholeDeaths = Math.Min(wholeDeaths, (int)sp.Population);
+        wholeDeaths = Math.Min(wholeDeaths, (long)sp.Population);
 
         if (wholeDeaths > 0)
         {

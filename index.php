@@ -1,6 +1,13 @@
 <?php
 $current_page = 'simulation';
 $page_title = 'Tiny Sea Simulation - Marine Ecosystem Research Platform';
+
+// Active build version (whitelisted; default v1)
+$version    = (($_GET['v'] ?? '1') === '2') ? 'v2' : 'v1';
+$versionNum = ($version === 'v2') ? '2' : '1';
+$buildBase  = "/builds/{$version}/TinySeaWebGL";
+$buildPath  = __DIR__ . "/builds/{$version}/TinySeaWebGL";
+
 include __DIR__ . '/includes/header.php';
 ?>
 
@@ -42,17 +49,17 @@ include __DIR__ . '/includes/header.php';
         <h3>Standalone Builds</h3>
         <p>For long simulation runs, download the desktop version.</p>
         <div class="download-buttons">
-            <a href="/builds/download.php?file=windows" class="download-btn windows">
+            <a href="/builds/download.php?file=windows&v=<?php echo $versionNum; ?>" class="download-btn windows">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M3 12V6.75l8-1.25V12H3zm0 .5h8v6.5l-8-1.25V12.5zM11.5 5.35l9.5-1.6V12h-9.5V5.35zM11.5 12.5H21v6.25l-9.5 1.6V12.5z"/></svg>
                 Windows
             </a>
-            <a href="/builds/download.php?file=macos" class="download-btn macos">
+            <a href="/builds/download.php?file=macos&v=<?php echo $versionNum; ?>" class="download-btn macos">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
                 macOS
             </a>
         </div>
         <div class="setup-guide-link">
-            <a href="/builds/download.php?file=macos-guide">macOS Setup Guide (PDF)</a>
+            <a href="/builds/download.php?file=macos-guide&v=<?php echo $versionNum; ?>">macOS Setup Guide (PDF)</a>
         </div>
     </div>
 
@@ -63,8 +70,8 @@ include __DIR__ . '/includes/header.php';
     </div>
 </section>
 
-<?php $buildVersion = (int)(filemtime(__DIR__ . '/build/TinySeaWebGL/Build/TinySeaWebGL.data.br') ?: time()); ?>
-<script src="/build/TinySeaWebGL/Build/TinySeaWebGL.loader.js?v=<?php echo $buildVersion; ?>"></script>
+<?php $buildVersion = (int)(@filemtime($buildPath . '/Build/TinySeaWebGL.data.br') ?: time()); ?>
+<script src="<?php echo $buildBase; ?>/Build/TinySeaWebGL.loader.js?v=<?php echo $buildVersion; ?>"></script>
 <script>
     var unityInstance = null;
     var canvas = document.querySelector("#unity-canvas");
@@ -149,7 +156,7 @@ include __DIR__ . '/includes/header.php';
 
     // ── Unity initialization ──
     var buildVersion = "<?php echo $buildVersion; ?>";
-    var buildUrl = "/build/TinySeaWebGL/Build";
+    var buildUrl = "<?php echo $buildBase; ?>/Build";
     var config = {
         dataUrl: buildUrl + "/TinySeaWebGL.data.br?v=" + buildVersion,
         frameworkUrl: buildUrl + "/TinySeaWebGL.framework.js.br?v=" + buildVersion,
@@ -187,7 +194,7 @@ include __DIR__ . '/includes/header.php';
         if (error.toString().includes('allocate')) {
             errorMsg += '<div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; margin-top: 20px;">';
             errorMsg += '<strong>Possible solutions:</strong><br>';
-            errorMsg += '1. Make sure .htaccess is in /build/TinySeaWebGL/Build/ folder<br>';
+            errorMsg += '1. Make sure .htaccess is in <?php echo $buildBase; ?>/Build/ folder<br>';
             errorMsg += '2. Clear your browser cache completely (Ctrl+Shift+Delete)<br>';
             errorMsg += '3. Try a different browser<br>';
             errorMsg += '4. The Unity build may need to be re-exported from Unity<br>';

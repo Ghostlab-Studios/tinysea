@@ -6,14 +6,17 @@
 .env.*
 
 # Unity WebGL build files (large binaries, built from Unity project)
-build/TinySeaWebGL/Build/*.br
-build/TinySeaWebGL/Build/*.wasm
-build/TinySeaWebGL/Build/*.data
-build/TinySeaWebGL/Build/*.js
-build/TinySeaWebGL/TemplateData/
+builds/v*/TinySeaWebGL/Build/*.br
+builds/v*/TinySeaWebGL/Build/*.wasm
+builds/v*/TinySeaWebGL/Build/*.data
+builds/v*/TinySeaWebGL/Build/*.js
+builds/v*/TinySeaWebGL/TemplateData/
 
 # Streaming assets
-build/TinySeaWebGL/StreamingAssets/
+builds/v*/TinySeaWebGL/StreamingAssets/
+
+# Standalone build archives (large binaries, uploaded directly via FileZilla)
+builds/v*/*.zip
 
 # OS files
 .DS_Store

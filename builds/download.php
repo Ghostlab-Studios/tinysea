@@ -2,7 +2,8 @@
 /**
  * Serves build ZIPs with proper headers to reduce browser download warnings.
  */
-$file = $_GET['file'] ?? '';
+$file    = $_GET['file'] ?? '';
+$version = (($_GET['v'] ?? '1') === '2') ? 'v2' : 'v1';
 
 $allowed = [
     'windows'     => 'TinySea-Windows.zip',
@@ -17,7 +18,7 @@ if (!isset($allowed[$file])) {
 }
 
 $filename = $allowed[$file];
-$path = __DIR__ . '/' . $filename;
+$path = __DIR__ . '/' . $version . '/' . $filename;
 
 if (!file_exists($path)) {
     http_response_code(404);

@@ -51,7 +51,7 @@ public class BulkBatchConfig
     public bool InterannualVariation;
     public float TempMin;
     public float TempMax;
-    public bool UseCarryingCap;
+    // UseCarryingCap field removed in v11.1 — carrying capacity is always on.
     public float CarryingCapT1;
     public float ConditionDrainRate = 0.15f;
     public float ConditionRecoveryRate = 0.10f;

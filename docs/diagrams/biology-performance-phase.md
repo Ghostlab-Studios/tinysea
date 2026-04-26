@@ -10,7 +10,7 @@ flowchart TD
     Arr --> Raw["RawThermalPerformance<br/>= perf × fade"]
     Raw --> TP["ThermalPerformance<br/>= Raw × Pmax"]
 
-    Pop1["tier1Pop = sum of Tier 1 populations"] --> FoodDensity["food_density = max(0, 1 − tier1Pop / cap)<br/>= 1.0 if !UseCarryingCapacity"]
+    Pop1["tier1Pop = sum of Tier 1 populations"] --> FoodDensity["food_density = max(0, 1 − tier1Pop / cap)<br/>cap always on (v11.1); cap floored at 1"]
     FoodDensity --> FedRateT1["FedRate (Tier 1, v10) = min(1, HE × food_density)<br/>linear extraction (NOT Holling II)"]
 
     TP --> PredDemand["Predator rawDemand<br/>= Pop × EatingAmount × ThermalPerf × BiologyStep"]
@@ -49,7 +49,7 @@ flowchart TD
 ### 2a. Tier 1 (food-pool, linear, v10)
 
 - Runs unconditionally — does not require predators to be present.
-- `food_density = max(0, 1 − tier1Pop / CarryingCapacityPerTier)`. When `UseCarryingCapacity = false` or `cap ≤ 0`, `food_density = 1.0` (legacy).
+- `food_density = max(0, 1 − tier1Pop / max(CarryingCapacityPerTier, 1))`. Carrying capacity is always on (v11.1); the previous toggle was removed because Tier 1 species without a resource ceiling grow without bound.
 - `FedRate = min(1, HuntingEfficiency × food_density)`. Default HE=1 gives `FedRate = food_density`.
 - **Linear, not Holling II.** Tier 1 represents passive extractors (plankton, filter feeders). No search/handling phases. Holling II would also collapse to 1 at HE=1, defeating the food-pool effect.
 - For Tier 1, `HuntingEfficiency` is semantically "resource extraction efficiency" — same field, dual meaning by tier.

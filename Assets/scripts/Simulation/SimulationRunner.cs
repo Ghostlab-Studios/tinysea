@@ -439,7 +439,7 @@ public class SimulationRunner
 
         // Embed configuration as comment lines (# is default comment char in R's read.csv)
         // Model version line first so downstream tools know which simulator produced this file.
-        sb.AppendLine($"#config:model_version,v11-per-predator-fedrate");
+        sb.AppendLine($"#config:model_version,v11.1-cap-always-on");
         sb.AppendLine($"#config:days_per_scenario,{TotalDays}");
         sb.AppendLine($"#config:number_of_scenarios,{numberOfScenarios}");
         sb.AppendLine($"#config:scenario_index,{scenarioIndex}");
@@ -455,7 +455,6 @@ public class SimulationRunner
         sb.AppendLine($"#config:autocorrelated,{TempCalc.UseAutocorrelation.ToString().ToLower()}");
         sb.AppendLine($"#config:temperature_bounds_min,{TempCalc.MinTemp}");
         sb.AppendLine($"#config:temperature_bounds_max,{TempCalc.MaxTemp}");
-        sb.AppendLine($"#config:use_carrying_capacity,{Ecosystem.UseCarryingCapacity.ToString().ToLower()}");
         sb.AppendLine($"#config:carrying_capacity_tier1,{Ecosystem.CarryingCapacityPerTier}");
         sb.AppendLine($"#config:condition_drain_rate,{Ecosystem.ConditionDrainRate}");
         sb.AppendLine($"#config:condition_recovery_rate,{Ecosystem.ConditionRecoveryRate}");

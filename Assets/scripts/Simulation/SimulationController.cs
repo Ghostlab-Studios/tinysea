@@ -132,8 +132,7 @@ public class SimulationController : MonoBehaviour
             BiologyStep = config.BiologyStep,
             RandomSeed = config.RandomSeed,
 
-            // Carrying capacity
-            UseCarryingCapacity = config.UseCarryingCapacity,
+            // Carrying capacity (always on as of v11.1)
             CarryingCapacity = config.CarryingCapacityTier1,
 
             // Condition system
@@ -305,7 +304,6 @@ public class SimulationController : MonoBehaviour
 
         runner.RunSpecies = tempSpecies;
 
-        runner.Ecosystem.UseCarryingCapacity = batch.UseCarryingCap;
         runner.Ecosystem.CarryingCapacityPerTier = batch.CarryingCapT1;
         runner.Ecosystem.ConditionDrainRate = batch.ConditionDrainRate;
         runner.Ecosystem.ConditionRecoveryRate = batch.ConditionRecoveryRate;
@@ -342,8 +340,7 @@ public class SimulationController : MonoBehaviour
         // Pass species list
         runner.RunSpecies = config.RunSpecies;
 
-        // Apply carrying capacity settings
-        runner.Ecosystem.UseCarryingCapacity = config.UseCarryingCapacity;
+        // Apply carrying capacity (always on as of v11.1)
         runner.Ecosystem.CarryingCapacityPerTier = config.CarryingCapacityTier1;
 
         // Apply condition system settings
@@ -416,7 +413,7 @@ public class SimulationController : MonoBehaviour
         Debug.Log($"Biology Step: {config.BiologyStep}");
         Debug.Log($"Base Temperature: {config.BaseTemperature}C");
         Debug.Log($"Climate Trend: {config.ClimateTrend}C/year");
-        Debug.Log($"Carrying Capacity: {config.UseCarryingCapacity} ({config.CarryingCapacityTier1})");
+        Debug.Log($"Carrying Capacity (always on): {config.CarryingCapacityTier1}");
         Debug.Log($"Random Seed: {config.RandomSeed}");
 
         if (config.RunSpecies != null)

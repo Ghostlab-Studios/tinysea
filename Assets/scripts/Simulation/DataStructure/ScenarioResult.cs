@@ -117,8 +117,7 @@ public class AggregateResults
     public int BiologyStep;
     public int RandomSeed;
 
-    // Carrying Capacity
-    public bool UseCarryingCapacity;
+    // Carrying Capacity (always on as of v11.1)
     public float CarryingCapacity;
 
     // Condition System
@@ -347,7 +346,7 @@ public class AggregateResults
         sb.AppendLine($"# Configuration,{DaysPerScenario} days x {TotalScenarios} scenarios");
         sb.AppendLine($"# Base Temp,{BaseTemperature}C");
         sb.AppendLine($"# Climate Trend,{ClimateTrend}C/year");
-        sb.AppendLine($"# Carrying Capacity,{(UseCarryingCapacity ? CarryingCapacity.ToString() : "Disabled")}");
+        sb.AppendLine($"# Carrying Capacity,{CarryingCapacity}");
         sb.AppendLine($"# Condition Drain Rate,{ConditionDrainRate}");
         sb.AppendLine($"# Condition Recovery Rate,{ConditionRecoveryRate}");
         sb.AppendLine();
@@ -503,7 +502,7 @@ public class AggregateResults
     {
         return ConfigExporter.BuildConfigJson(
             DaysPerScenario, TotalScenarios, BiologyStep, RandomSeed,
-            UseCarryingCapacity, CarryingCapacity,
+            CarryingCapacity,
             BaseTemperature, SeasonalAmplitude, ClimateTrend,
             InterannualVariation, VariabilityMagnitude, WarmingBias,
             Autocorrelated, DailyVariationRange, RandomnessGrowthRate,
@@ -520,7 +519,7 @@ public class AggregateResults
     {
         return ConfigExporter.BuildConfigCsv(
             DaysPerScenario, TotalScenarios, BiologyStep, RandomSeed,
-            UseCarryingCapacity, CarryingCapacity,
+            CarryingCapacity,
             BaseTemperature, SeasonalAmplitude, ClimateTrend,
             InterannualVariation, VariabilityMagnitude, WarmingBias,
             Autocorrelated, DailyVariationRange, RandomnessGrowthRate,
@@ -547,7 +546,7 @@ public static class ConfigExporter
 
         return BuildConfigJson(
             config.DaysPerScenario, config.NumberOfScenarios, config.BiologyStep, config.RandomSeed,
-            config.UseCarryingCapacity, config.CarryingCapacityTier1,
+            config.CarryingCapacityTier1,
             config.BaseTemperature, config.SeasonalAmplitude, config.ClimateTrend,
             config.InterannualVariation, config.VariabilityMagnitude, config.WarmingBias,
             config.Autocorrelated, config.DailyVariationRange, config.RandomnessGrowthRate,
@@ -566,7 +565,7 @@ public static class ConfigExporter
 
         return BuildConfigCsv(
             config.DaysPerScenario, config.NumberOfScenarios, config.BiologyStep, config.RandomSeed,
-            config.UseCarryingCapacity, config.CarryingCapacityTier1,
+            config.CarryingCapacityTier1,
             config.BaseTemperature, config.SeasonalAmplitude, config.ClimateTrend,
             config.InterannualVariation, config.VariabilityMagnitude, config.WarmingBias,
             config.Autocorrelated, config.DailyVariationRange, config.RandomnessGrowthRate,
@@ -581,7 +580,7 @@ public static class ConfigExporter
     /// </summary>
     public static string BuildConfigJson(
         int daysPerScenario, int numberOfScenarios, int biologyStep, int randomSeed,
-        bool useCarryingCapacity, float carryingCapacity,
+        float carryingCapacity,
         float baseTemperature, float seasonalAmplitude, float climateTrend,
         bool interannualVariation, float variabilityMagnitude, float warmingBias,
         bool autocorrelated, float dailyVariationRange, float randomnessGrowthRate,
@@ -603,9 +602,8 @@ public static class ConfigExporter
         sb.AppendLine("  },");
         sb.AppendLine();
 
-        // Carrying capacity
+        // Carrying capacity (always on as of v11.1)
         sb.AppendLine("  \"carryingCapacity\": {");
-        sb.AppendLine($"    \"enabled\": {useCarryingCapacity.ToString().ToLower()},");
         sb.AppendLine($"    \"tier1Limit\": {carryingCapacity}");
         sb.AppendLine("  },");
         sb.AppendLine();
@@ -690,7 +688,7 @@ public static class ConfigExporter
     /// </summary>
     public static string BuildConfigCsv(
         int daysPerScenario, int numberOfScenarios, int biologyStep, int randomSeed,
-        bool useCarryingCapacity, float carryingCapacity,
+        float carryingCapacity,
         float baseTemperature, float seasonalAmplitude, float climateTrend,
         bool interannualVariation, float variabilityMagnitude, float warmingBias,
         bool autocorrelated, float dailyVariationRange, float randomnessGrowthRate,
@@ -711,8 +709,7 @@ public static class ConfigExporter
         sb.AppendLine($"Random Seed,{randomSeed}");
         sb.AppendLine();
 
-        sb.AppendLine("=== CARRYING CAPACITY ===");
-        sb.AppendLine($"Enabled,{useCarryingCapacity.ToString().ToLower()}");
+        sb.AppendLine("=== CARRYING CAPACITY (always on as of v11.1) ===");
         sb.AppendLine($"Tier 1 Limit,{carryingCapacity}");
         sb.AppendLine();
 

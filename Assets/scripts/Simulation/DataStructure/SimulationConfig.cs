@@ -15,6 +15,10 @@ using UnityEngine;
 /// - IsValid emits a Debug.LogWarning (non-fatal) when initial Tier 1 pop exceeds
 ///   the cap — the simulation handles it, but unintentional over-seeding is a
 ///   common mistake worth flagging.
+///
+/// v11.1 CHANGES:
+/// - UseCarryingCapacity field removed. Carrying capacity is always on.
+///   CarryingCapacityTier1 must be > 0 (validated in IsValid).
 /// </summary>
 [CreateAssetMenu(fileName = "SimulationConfig", menuName = "TinySea/Simulation Config")]
 public class SimulationConfig : ScriptableObject
@@ -42,23 +46,15 @@ public class SimulationConfig : ScriptableObject
     // ==================== CARRYING CAPACITY (Shared Resource Pool, v10) ====================
 
     [Header("=== CARRYING CAPACITY (Shared Resource Pool — Tier 1 Only) ===")]
-    [Tooltip("Enable density-dependent Tier 1 feeding (v10).\n\n" +
-             "When ON: carrying capacity acts as a shared food/resource pool.\n" +
-             "  food_density = max(0, 1 - tier1Pop/CarryingCapacityTier1)\n" +
-             "  FedRate_T1   = min(1, HuntingEfficiency × food_density)\n" +
-             "Reproduction is throttled indirectly through the Condition pathway:\n" +
-             "  high pop → low food density → low FedRate → low Condition target →\n" +
-             "  Condition drains → reproScale shrinks AND condition deaths fire.\n\n" +
-             "When OFF: legacy behaviour. food_density forced to 1.0,\n" +
-             "  FedRate_T1 = HuntingEfficiency (= 1.0 by default), no density limit.")]
-    public bool UseCarryingCapacity = true;
-
-    [Tooltip("Tier 1 shared resource pool capacity (v10).\n\n" +
+    [Tooltip("Tier 1 shared resource pool capacity.\n\n" +
              "Represents the environmental food/resource pool that all Tier 1 species draw from.\n" +
-             "Feeds the FedRate calculation in Step 2: food_density = 1 - tier1Pop/capacity.\n" +
-             "NOTE: equilibrium populations under v10 may oscillate around 80-95% of this value\n" +
+             "Feeds the FedRate calculation in Step 2: food_density = max(0, 1 − tier1Pop/capacity).\n\n" +
+             "Always ON as of v11.1 — Tier 1 species without a resource ceiling grow without\n" +
+             "bound, which is biologically meaningless. The previous UseCarryingCapacity toggle\n" +
+             "was removed.\n\n" +
+             "NOTE: equilibrium populations under v10 may oscillate around 80–95% of this value\n" +
              "(logistic-overshoot dynamics) rather than sitting smoothly at it.\n" +
-             "Recommended: 1000-10000 depending on desired ecosystem size.")]
+             "Recommended: 1000–10000 depending on desired ecosystem size.")]
     [Range(100, 100000)]
     public float CarryingCapacityTier1 = 5000f;
 
@@ -160,27 +156,31 @@ public class SimulationConfig : ScriptableObject
             return false;
         }
 
-        // v10: warn (don't fail) if initial Tier 1 population exceeds the food-pool cap.
+        // v11.1: hard requirement that the cap is positive — carrying capacity is always on.
+        if (CarryingCapacityTier1 <= 0f)
+        {
+            errorMessage = "CarryingCapacityTier1 must be > 0 (carrying capacity is always on).";
+            return false;
+        }
+
+        // Warn (don't fail) if initial Tier 1 population exceeds the food-pool cap.
         // Over-cap starts are valid for studying crash dynamics; the Condition system
         // handles graceful decline over ~8-10 days. But it's a common mis-configuration
         // to forget the cap when seeding a high initial population, so log a heads-up.
-        if (UseCarryingCapacity && CarryingCapacityTier1 > 0f)
+        int tier1InitialPop = 0;
+        foreach (var sp in RunSpecies.speciesList)
         {
-            int tier1InitialPop = 0;
-            foreach (var sp in RunSpecies.speciesList)
-            {
-                // SpeciesData.tier is 0-based: 0 = Tier 1 prey, 1 = Tier 2 predator.
-                if (sp.tier == 0) tier1InitialPop += sp.count;
-            }
-            if (tier1InitialPop > CarryingCapacityTier1)
-            {
-                Debug.LogWarning(
-                    $"[SimulationConfig] Initial Tier 1 population ({tier1InitialPop}) exceeds " +
-                    $"CarryingCapacityTier1 ({CarryingCapacityTier1:F0}). " +
-                    "This is a valid scenario (the Condition system will produce a graceful " +
-                    "decline over ~8-10 days), but if it's unintentional, lower initial " +
-                    "populations or raise the capacity.");
-            }
+            // SpeciesData.tier is 0-based: 0 = Tier 1 prey, 1 = Tier 2 predator.
+            if (sp.tier == 0) tier1InitialPop += sp.count;
+        }
+        if (tier1InitialPop > CarryingCapacityTier1)
+        {
+            Debug.LogWarning(
+                $"[SimulationConfig] Initial Tier 1 population ({tier1InitialPop}) exceeds " +
+                $"CarryingCapacityTier1 ({CarryingCapacityTier1:F0}). " +
+                "This is a valid scenario (the Condition system will produce a graceful " +
+                "decline over ~8-10 days), but if it's unintentional, lower initial " +
+                "populations or raise the capacity.");
         }
 
         errorMessage = null;

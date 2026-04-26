@@ -174,7 +174,6 @@ public class BulkSimulationController : MonoBehaviour
                 DaysPerScenario = batch.Days,
                 BiologyStep = config.BiologyStep,
                 RandomSeed = config.RandomSeed,
-                UseCarryingCapacity = batch.UseCarryingCap,
                 CarryingCapacity = batch.CarryingCapT1,
                 ConditionDrainRate = batch.ConditionDrainRate,
                 ConditionRecoveryRate = batch.ConditionRecoveryRate,
@@ -388,7 +387,7 @@ public class BulkSimulationController : MonoBehaviour
         var sb = new System.Text.StringBuilder();
 
         sb.AppendLine("=== TINYSEA BULK SUMMARY (Across All Runs) ===");
-        sb.AppendLine($"# Model Version,v11-per-predator-fedrate");
+        sb.AppendLine($"# Model Version,v11.1-cap-always-on");
         sb.AppendLine($"# Total Runs,{summaries.Count}");
         sb.AppendLine($"# Generated,{DateTime.Now:yyyy-MM-dd HH:mm:ss}");
         sb.AppendLine();

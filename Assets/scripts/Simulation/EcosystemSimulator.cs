@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEngine;
 
 /// <summary>
-/// TinySea Ecosystem Simulator v11
+/// TinySea Ecosystem Simulator v11.1
 ///
 /// BIOLOGY SEQUENCE (10 steps):
 /// 1. Thermal Performance - Arrhenius formula
@@ -84,7 +84,8 @@ using UnityEngine;
 ///   - Tier 1 FedRate = min(1, HuntingEfficiency × food_density)  [linear, not Holling II]
 ///     (Plankton-style passive extractors don't have search/handling phases.)
 ///   - food_density = max(0, 1 - tier1Pop / CarryingCapacityPerTier).
-///   - When UseCarryingCapacity is false, food_density = 1.0 (legacy behaviour).
+///   - As of v11.1 carrying capacity is always on; the legacy off-mode that forced
+///     food_density to 1.0 has been removed (Tier 1 without a cap grows unbounded).
 /// - DELETED the soft-cap-on-births block in ApplyReproduction. Tier 1 reproduction
 ///   now throttles indirectly via Condition: high pop → low food density → low
 ///   FedRate → low RawFinalPerformance target → Condition drains → reproScale
@@ -116,6 +117,22 @@ using UnityEngine;
 /// - LastFedRateT2 is now a population-weighted average across predators rather
 ///   than a pooled scalar. CSV column name unchanged; semantic shifted slightly.
 /// - model_version in scenario CSV and bulk_summary.csv bumped to v11-per-predator-fedrate.
+///
+/// v11.1 CHANGES:
+/// - Removed the `UseCarryingCapacity` toggle. Carrying capacity is now always on.
+///   Rationale: Tier 1 species without a resource ceiling grow without bound,
+///   which is biologically meaningless and triggered integer-overflow in birth
+///   accumulators around day ~50 of any cap-off scenario.
+/// - `food_density = max(0, 1 − tier1Pop / max(cap, 1))` — no toggle, no fallback.
+/// - `CsvBatchParser` keeps `use_carrying_cap` as a deprecated optional column
+///   (logs a warning if present, value ignored). Old CSVs continue to parse;
+///   new ones from `GenerateTemplate()` no longer include the column.
+/// - `SimulationConfig.UseCarryingCapacity` field deleted.
+/// - `BulkBatchConfig.UseCarryingCap` field deleted.
+/// - `ScenarioResult.UseCarryingCapacity` field deleted; config CSV no longer
+///   reports a "Disabled" state for the cap.
+/// - `#config:use_carrying_capacity` line removed from scenario CSV header.
+/// - model_version bumped to v11.1-cap-always-on.
 /// </summary>
 public class EcosystemSimulator
 {
@@ -187,8 +204,10 @@ public class EcosystemSimulator
     public float AvgConditionT1 { get; private set; } = 1f;
     public float AvgConditionT2 { get; private set; } = 1f;
 
-    // ==================== CARRYING CAPACITY (Soft Limit - Tier 1 Only) ====================
-    public bool UseCarryingCapacity { get; set; } = true;
+    // ==================== CARRYING CAPACITY (Tier 1 Shared Resource Pool) ====================
+    // Always on as of v11.1 — Tier 1 species without a resource ceiling grow without
+    // bound, which is biologically meaningless. Cap drives the food-pool FedRate
+    // calculation in Step 2.
     public float CarryingCapacityPerTier { get; set; } = 5000f;
 
     // ==================== CONDITION (HEALTH) SYSTEM ====================
@@ -604,11 +623,10 @@ public class EcosystemSimulator
         // ====================================================================
         // TIER 1 FEDRATE (v10): density-dependent extraction from shared food pool
         // ====================================================================
-        // Carrying capacity acts as a shared food/resource pool, not a soft cap on
-        // births. food_density falls linearly with population pressure on the pool;
-        // each species' FedRate scales by its HuntingEfficiency (semantically:
-        // resource extraction efficiency for Tier 1 — passive extractors like
-        // plankton are at HE=1 by default).
+        // Carrying capacity acts as a shared food/resource pool. food_density falls
+        // linearly with population pressure on the pool; each species' FedRate
+        // scales by its HuntingEfficiency (semantically: resource extraction
+        // efficiency for Tier 1 — passive extractors like plankton are at HE=1).
         //
         // LINEAR, not Holling II: prey are passive extractors (filter feeding,
         // surface-area-driven uptake) — no search-time + handling-time structure
@@ -619,13 +637,13 @@ public class EcosystemSimulator
         // extraction biology directly. Tier 2 keeps Holling II below — active
         // predation does have search/handling phases that justify it.
         //
-        // When UseCarryingCapacity is false (or cap is 0): food_density forced
-        // to 1.0 → FedRate_T1 = HE = 1 by default (legacy "Tier 1 always
-        // satisfied" behaviour). HE < 1 still scales the result.
+        // v11.1: carrying capacity is always on. CarryingCapacityPerTier must be
+        // > 0 (validated at parse/inspect time). The previous off-mode is gone:
+        // unbounded Tier 1 growth is biologically meaningless and triggered
+        // integer-overflow accumulators.
         float tier1Pop = GetTierPopulation(1);
-        float foodDensity = (UseCarryingCapacity && CarryingCapacityPerTier > 0f)
-            ? Math.Max(0f, 1f - (tier1Pop / CarryingCapacityPerTier))
-            : 1f;
+        float capSafe = Math.Max(CarryingCapacityPerTier, 1f);    // floor of 1 to guard against misconfig
+        float foodDensity = Math.Max(0f, 1f - (tier1Pop / capSafe));
         LastFoodDensityT1 = foodDensity;
         float fedRateSumT1 = 0f;
         float fedRatePopT1 = 0f;

@@ -4,7 +4,19 @@ Authoritative description of the headless ecosystem simulator, generated from so
 
 Source files: `EcosystemSimulator.cs`, `SimSpecies.cs`, `TemperatureCalculator.cs`, `SimulationRunner.cs`.
 
-## v11 changes (current model version)
+## v11.1 changes (current model version)
+
+- **Removed `UseCarryingCapacity` toggle.** Carrying capacity is always on. Tier 1 species without a resource ceiling grow without bound, which is biologically meaningless and triggered integer-overflow accumulators in long runs.
+  - `SimulationConfig.UseCarryingCapacity`, `BulkBatchConfig.UseCarryingCap`, `EcosystemSimulator.UseCarryingCapacity`, `ScenarioResult.UseCarryingCapacity` all deleted.
+  - `food_density = max(0, 1 − tier1Pop / max(cap, 1))` — no toggle, no fallback.
+  - `IsValid()` now hard-rejects `CarryingCapacityTier1 ≤ 0`.
+  - `CsvBatchParser` keeps `use_carrying_cap` as an optional/deprecated column: if present in an old bulk CSV the value is read but ignored, and a `Debug.LogWarning` is emitted. New CSVs from `GenerateTemplate()` omit the column.
+  - `#config:use_carrying_capacity` line removed from scenario CSV header.
+  - `bulk_summary.csv` config-section line `# Carrying Capacity,...` no longer reports a "Disabled" state.
+- **`GenerateTemplate()` defaults updated**: `seasonal_amp = 5` (was 10), `condition_drain_rate = 0.15` (was 0.20, now matches `SimulationConfig` default), `use_carrying_cap` column omitted entirely.
+- **`model_version` bumped** to `v11.1-cap-always-on` in scenario CSV `#config:` header and in `bulk_summary.csv`.
+
+## v11 changes
 
 - **Per-predator FedRate (review item A1).** Tier 2 predators previously all received the same pooled `fedRate = totalEaten / totalRawDemand`, which erased the competitive signal between specialist and generalist hunters. Now each predator's FedRate is its own hunting success scaled by an overall scarcity factor:
   - `scarcityFactor = totalEaten / totalActualDemand` (1.0 when prey abundant; <1.0 when demand exceeds supply).
@@ -110,18 +122,18 @@ Then `ThermalPerformance = RawThermalPerformance · Pmax`.
 
 Two distinct sub-steps in `ProcessFeedingWithAccumulator`, computed in this order:
 
-#### 2a. Tier 1 FedRate from shared food-pool (v10, linear)
+#### 2a. Tier 1 FedRate from shared food-pool (v10, linear; cap always on as of v11.1)
 
 Runs unconditionally — does not depend on the presence of predators.
 
 ```
-food_density = max(0, 1 − tier1Pop / CarryingCapacityPerTier)         # if UseCarryingCapacity, else 1.0
+food_density = max(0, 1 − tier1Pop / max(CarryingCapacityPerTier, 1))
 FedRate_T1   = min(1, HuntingEfficiency · food_density)               # per Tier 1 species
 ```
 
 - **Linear, not Holling II.** Tier 1 species are passive extractors (filter feeding, surface-area-driven nutrient uptake) — no search-time + handling-time structure that motivates Holling II. Holling II also collapses to `1` at HE=1 default (halfSat → 0), which would defeat the food-pool effect. Linear matches plankton-style biology directly.
 - `HuntingEfficiency` for Tier 1 semantically = "resource extraction efficiency". Default `1.0` = perfect extraction.
-- When `UseCarryingCapacity = false` or `CarryingCapacityPerTier ≤ 0`, `food_density = 1.0` → `FedRate_T1 = HE` (legacy "Tier 1 always satisfied" behaviour at default HE=1).
+- **Carrying capacity is always on (v11.1)**. `CarryingCapacityPerTier > 0` is enforced at validation time. The previous `UseCarryingCapacity = false` mode was removed because Tier 1 species without a resource ceiling grow exponentially.
 
 #### 2b. Tier 2 feeding (Holling Type II + per-predator FedRate, v11)
 
@@ -304,6 +316,7 @@ Per-day snapshots of accumulator totals are written to the CSV via `BirthAccumT1
 | v9 | Re-wired Pmax into: reproduction birth multiplier, Condition drain divisor, Condition recovery multiplier. Condition target and thresholds unchanged. |
 | v10 | Carrying capacity reframed as a shared food/resource pool driving Tier 1 FedRate (linear: `min(1, HE × food_density)`). Soft-cap-on-births block deleted from `ApplyReproduction` (processing-order bug eliminated as side effect). `HuntingEfficiency` for Tier 1 now meaningful as resource-extraction efficiency. `NEWBORN_CONDITION` constant removed — newborns inherit parent group Condition. CSV adds `FedRateT1`, `FoodDensityT1`, `model_version`. Pooled Tier 2 FedRate intentionally untouched (v11). |
 | v11 | Per-predator Tier 2 FedRate (review item A1). `fedRate_i = min(1, huntingSuccess_i × scarcityFactor)` where `scarcityFactor = totalEaten / totalActualDemand`. Replaces the pooled `fedRate = totalEaten / totalRawDemand` that erased per-species competitive signal. `LastFedRateT2` is now a population-weighted average across predators. Reduces to v10 formula in single-predator-species runs. `model_version` bumped to `v11-per-predator-fedrate`. |
+| v11.1 | Removed `UseCarryingCapacity` toggle from `SimulationConfig`, `BulkBatchConfig`, `EcosystemSimulator`, `ScenarioResult`. Carrying capacity is always on. Old bulk CSVs that include `use_carrying_cap` parse with a deprecation warning and the value is ignored. `GenerateTemplate()` omits the column and uses `seasonal_amp = 5`, `condition_drain_rate = 0.15`. `IsValid()` hard-rejects non-positive cap. `model_version` bumped to `v11.1-cap-always-on`. |
 
 ## 9. Fallback defaults (used only if no `RunSpeciesList` is provided)
 

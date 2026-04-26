@@ -388,7 +388,7 @@ public class BulkSimulationController : MonoBehaviour
         var sb = new System.Text.StringBuilder();
 
         sb.AppendLine("=== TINYSEA BULK SUMMARY (Across All Runs) ===");
-        sb.AppendLine($"# Model Version,v10-food-pool");
+        sb.AppendLine($"# Model Version,v11-per-predator-fedrate");
         sb.AppendLine($"# Total Runs,{summaries.Count}");
         sb.AppendLine($"# Generated,{DateTime.Now:yyyy-MM-dd HH:mm:ss}");
         sb.AppendLine();

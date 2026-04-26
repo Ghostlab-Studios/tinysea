@@ -4,12 +4,12 @@ using System.Linq;
 using UnityEngine;
 
 /// <summary>
-/// TinySea Ecosystem Simulator v10
+/// TinySea Ecosystem Simulator v11
 ///
 /// BIOLOGY SEQUENCE (10 steps):
 /// 1. Thermal Performance - Arrhenius formula
-/// 2. Feeding/Predation - Tier 1 FedRate from shared food-pool density (linear) +
-///                        Tier 2 Holling Type II functional response + PREDATION ACCUMULATOR
+/// 2. Feeding/Predation - Tier 1 FedRate from shared food-pool density (linear, v10) +
+///                        Tier 2 Holling Type II with per-predator FedRate (v11) + PREDATION ACCUMULATOR
 /// 3. Raw Final Performance - RawThermalPerf x FedRate (Condition drain target)
 /// 4. Update Condition - Drain/recover toward RawFinalPerformance; rates scaled by Pmax
 ///                       (Tier 1 target now varies with food density too)
@@ -98,8 +98,24 @@ using UnityEngine;
 ///   capacity via lagged drain dynamics; multiplying by today's FedRate would
 ///   double-count). Same logic for Tier 1 and Tier 2.
 /// - New CSV columns: FedRateT1, FoodDensityT1. New #config: line: model_version,v10-food-pool.
-/// - Pooled FedRate bug for Tier 2 predators (review item A1) is NOT addressed in v10
-///   — kept for v11 to keep the validation surface tractable.
+/// - Pooled FedRate bug for Tier 2 predators (review item A1) intentionally deferred —
+///   addressed in v11 (see below).
+///
+/// v11 CHANGES:
+/// - Fixed the pooled-FedRate bug for Tier 2 predators (review item A1). Previously
+///   every predator species got the same `fedRate = totalEaten / totalRawDemand`
+///   regardless of its individual `huntingSuccess`, which erased the competitive
+///   signal between specialist and generalist hunters. Now each predator's FedRate
+///   is its own hunting success scaled by an overall scarcity factor:
+///     scarcityFactor = totalEaten / totalActualDemand   (1.0 when prey abundant)
+///     fedRate_i      = min(1, huntingSuccess_i × scarcityFactor)
+///   Reduces to the v10 pooled formula exactly when there is only one predator
+///   species (no behaviour change for single-species runs). Equal-HE multi-predator
+///   runs also unchanged by symmetry. Mixed-HE multi-predator runs now show
+///   specialist-vs-generalist competitive dynamics for the first time.
+/// - LastFedRateT2 is now a population-weighted average across predators rather
+///   than a pooled scalar. CSV column name unchanged; semantic shifted slightly.
+/// - model_version in scenario CSV and bulk_summary.csv bumped to v11-per-predator-fedrate.
 /// </summary>
 public class EcosystemSimulator
 {
@@ -419,8 +435,9 @@ public class EcosystemSimulator
     ///
     /// BIOLOGY SEQUENCE (10 steps):
     /// 1. Thermal Performance - Arrhenius formula
-    /// 2. Feeding/Predation - Tier 1 FedRate from food-pool density (linear) +
-    ///                        Tier 2 Holling II + PREDATION ACCUMULATOR (v10)
+    /// 2. Feeding/Predation - Tier 1 FedRate from food-pool density (linear, v10) +
+    ///                        Tier 2 Holling II with per-predator FedRate (v11) +
+    ///                        PREDATION ACCUMULATOR
     /// 3. Raw Final Performance - RawThermalPerf x FedRate (Condition drain target)
     /// 4. Update Condition - Drain/recover toward RawFinalPerformance; rates scaled by Pmax
     /// 5. Final Performance - ThermalPerf x FedRate (computed for logging; not a biology input)
@@ -552,7 +569,7 @@ public class EcosystemSimulator
 
     /// <summary>
     /// Process Tier 1 FedRate (v10 — density-dependent extraction from shared food pool)
-    /// AND Tier 2 feeding with Holling Type II functional response + PREDATION ACCUMULATOR.
+    /// AND Tier 2 feeding with Holling Type II + per-predator FedRate (v11) + PREDATION ACCUMULATOR.
     ///
     /// Tier 1 (passive extractors / plankton-style):
     ///   food_density = max(0, 1 - tier1Pop / CarryingCapacityPerTier)  [or 1.0 if cap disabled]
@@ -567,7 +584,14 @@ public class EcosystemSimulator
     ///   Above → efficiency increases toward 1.0 (abundance).
     ///   Below → efficiency decreases toward 0.0 (scarcity).
     /// Predator demand uses ThermalPerformance (with Pmax). Prey removal is proportional
-    /// across variants with fractional accumulation.
+    /// across prey variants with fractional accumulation (no per-predator preference yet).
+    ///
+    ///   Per-predator FedRate (v11):
+    ///     scarcityFactor = totalEaten / totalActualDemand   (1.0 when prey abundant)
+    ///     fedRate_i      = min(1, huntingSuccess_i × scarcityFactor)
+    ///   Each predator's feeding satisfaction reflects its own hunting effort,
+    ///   not a pooled group average. LastFedRateT2 is now a population-weighted
+    ///   average across predator species (semantic shift from pooled scalar).
     /// </summary>
     private void ProcessFeedingWithAccumulator()
     {
@@ -672,25 +696,36 @@ public class EcosystemSimulator
         float totalEaten = Math.Min(availablePrey, totalActualDemand);
         LastEatenT1 = 0f;  // Will be counted by actual removals
 
-        // FedRate = what was caught / what was NEEDED (not what was attempted)
-        // This is critical: Holling efficiency reduces actual demand, so predators catch less.
-        // But FedRate must reflect their true nutritional satisfaction — how much of their
-        // actual need was met. At ratio 5:1 with Holling efficiency 0.43, predators only
-        // catch 43% of what they need, so FedRate ≈ 0.43, not 1.0.
-        // This directly affects FinalPerformance, reproduction, and Condition drain.
-        float fedRate;
-        if (totalRawDemand <= 0f)
-            fedRate = 1f;
-        else
-            fedRate = Math.Min(1f, totalEaten / totalRawDemand);
+        // Per-predator FedRate (v11): each predator gets a share of the shared catch
+        // proportional to its own hunting effort. The previous pooled formula
+        // (totalEaten / totalRawDemand) erased the per-species competitive signal —
+        // good hunters and bad hunters ended up with identical feeding satisfaction
+        // regardless of HuntingEfficiency.
+        //
+        //   scarcityFactor = totalEaten / totalActualDemand
+        //                    (1.0 when prey abundant; <1.0 when demand exceeds supply)
+        //   fedRate_i      = min(1, huntingSuccess_i × scarcityFactor)
+        //
+        // Reduces to the previous pooled formula exactly when there is only one
+        // predator species (single-predator scenarios behave identically to v10).
+        // When all predators have equal HE, per-predator and pooled values match by
+        // symmetry. Specialist-vs-generalist competitive signals only emerge with
+        // mixed-HE multi-predator runs — that is the dynamic v11 restores.
+        float scarcityFactor = totalActualDemand > 0f
+            ? Math.Min(1f, totalEaten / totalActualDemand)
+            : 1f;
 
-        LastFedRateT2 = fedRate;
+        float fedRateSumWeighted = 0f;
+        float fedRatePopSum = 0f;
         foreach (var pred in predators)
         {
-            pred.FedRate = fedRate;
+            pred.FedRate = Math.Min(1f, pred.CurrentHuntingSuccess * scarcityFactor);
+            fedRateSumWeighted += pred.FedRate * pred.Population;
+            fedRatePopSum += pred.Population;
         }
+        LastFedRateT2 = fedRatePopSum > 0f ? fedRateSumWeighted / fedRatePopSum : 1f;
 
-        SimLog($"  Total Eaten: {totalEaten:F1}, FedRate: {fedRate:F3} (eaten/rawDemand = {totalEaten:F1}/{totalRawDemand:F1}, actualDemand={totalActualDemand:F1})");
+        SimLog($"  Total Eaten: {totalEaten:F1}, scarcityFactor={scarcityFactor:F3}, weighted-avg FedRateT2={LastFedRateT2:F3} (totalEaten/totalActualDemand={totalEaten:F1}/{totalActualDemand:F1})");
 
         // Remove prey PROPORTIONALLY with PREDATION ACCUMULATOR
         if (totalEaten > 0f && availablePrey > 0f)

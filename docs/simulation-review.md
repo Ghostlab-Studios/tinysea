@@ -392,7 +392,7 @@ Added after the v10 redesign was applied. The original review snapshot above is 
 
 | § | Item | Status after v10 |
 |---|------|------------------|
-| §3 | Pooled FedRate (A1) | **NOT YET FIXED.** Reserved for v11. Implementation will be a per-predator `fedRate_i = min(1, huntingSuccess_i × totalEaten / totalActualDemand)` in the same `ProcessFeedingWithAccumulator` function. |
+| §3 | Pooled FedRate (A1) | **RESOLVED IN v11.** Per-predator FedRate now reflects each species' own hunting effort. `scarcityFactor = totalEaten / totalActualDemand`; `fedRate_i = min(1, huntingSuccess_i × scarcityFactor)`. Reduces to v10 pooled formula in single-predator-species runs. Specialist-vs-generalist competitive dynamics now visible in mixed-HE multi-predator runs. |
 | §3 | No prey-variant preference (B7) | Still open. Scope statement only — no v10 work. |
 | §3 | Prey FedRate always 1.0 (B6) | **RESOLVED IN v10.** Tier 1 `FedRate = min(1, HuntingEfficiency × food_density)` from the shared resource pool, linear (not Holling II). The `HuntingEfficiency` field for Tier 1 now means "resource extraction efficiency" — default 1.0. |
 | §5 | Recovery multiplier < 1 for low Pmax (A6) | Still open. Watchpoint W3 will catch if it produces unrealistic dynamics. |
@@ -413,8 +413,32 @@ Added after the v10 redesign was applied. The original review snapshot above is 
 ### New watchpoints introduced by v10 (observe in prototype)
 
 - **W1.** v9 Pmax-on-drain × v10 food-pool double-dip on generalists. May produce too-aggressive crashes for low-Pmax species in crowded conditions.
-- **W2.** Tier 2 indirect Lotka–Volterra-flavour oscillations from new prey dynamics.
-- **W3.** Newborn dynamics under no-α formula — populations may regrow from crashes too fast. If observed, add `α < 1` baseline in v11.
+- **W2.** Tier 2 indirect Lotka–Volterra-flavour oscillations from new prey dynamics. **v11 may sharpen these** — predator differentiation makes a dominant specialist's prey-crash → predator-crash → prey-rebound cycle clearer than v10 produced.
+- **W3.** Newborn dynamics under no-α formula — populations may regrow from crashes too fast. If observed, add `α < 1` baseline in a future revision.
 - **W4.** Initial-condition shock at over-cap seeds — should resolve gracefully via Condition system over ~8–10 days; verify in practice.
 
 Tracked in [pending-list.md](./pending-list.md) §A.v10.
+
+---
+
+## 18. v11 status update (per-predator FedRate fix)
+
+Applied as a follow-up commit on `simulation-t1-refactor` after v10. Single concern in scope: review item A1 (pooled FedRate for Tier 2 predators).
+
+**What changed**: replaced the pooled `fedRate = totalEaten / totalRawDemand` assignment in `ProcessFeedingWithAccumulator` with a per-predator computation:
+```
+scarcityFactor = totalEaten / totalActualDemand   (1.0 when prey abundant)
+fedRate_i      = min(1, huntingSuccess_i × scarcityFactor)
+```
+
+**Reduces to v10 in legacy regimes**: single-predator-species runs are bit-identical to v10 (math reduces algebraically). Equal-HE multi-predator runs are also identical by symmetry.
+
+**New behaviour visible only in mixed-HE multi-predator runs**: specialist hunters (high `HuntingEfficiency`) walk away with higher FedRate and Condition than generalists in the same scenario. Per-individual reproduction differs accordingly. This is the competitive-exclusion signal that A1 was erasing.
+
+**Out of scope (still open)**: prey-side preference by predators (B7) — predators still take prey variants strictly proportional to prey population, not by predator-side preference. Untouched by v11.
+
+**`LastFedRateT2` semantic shift**: was a pooled scalar pre-v11. Now a population-weighted average across predator species. CSV column name unchanged. Per-species values are stored on `SimSpecies` runtime instances and visible in simulator logs (via `SimLog`) but not broken out into separate CSV columns.
+
+**`model_version`** in `#config:` and `bulk_summary.csv` bumped to `v11-per-predator-fedrate`.
+
+Spec, csv-formats, diagrams, and pending-list updated alongside the code in the same commit.

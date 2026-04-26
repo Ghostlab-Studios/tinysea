@@ -8,7 +8,7 @@ flowchart TD
     Run --> Agg["aggregate.csv<br/>(one per run)"]
     Run --> Cfg["config.csv<br/>(one per run)"]
 
-    PerScn --> PH["#config: header<br/>(20 lines: model_version (v10),<br/>days, scenarios, seed, biology step,<br/>11 temp params, carrying cap, drain/recovery)"]
+    PerScn --> PH["#config: header<br/>(20 lines: model_version (v11),<br/>days, scenarios, seed, biology step,<br/>11 temp params, carrying cap, drain/recovery)"]
     PerScn --> PS["#species: table<br/>(1 header row + 1 row per species<br/>with 26 columns inc. both K and C<br/>for temperature fields)"]
     PerScn --> PD["Daily data rows<br/>(StepRecord.CsvHeader/ToCsvLine)<br/>Day..ReproScaleT2 per day"]
     PerScn --> PSum["#summary: statistics block<br/>Mean/Max/Min/StdDev across days<br/>for each PopColumn"]
@@ -27,7 +27,7 @@ flowchart TD
     Cfg --> CSpc["=== SPECIES ===<br/>(same 26-column table as #species: in scenario CSV)"]
 
     Bulk[Bulk upload] --> BulkSum["bulk_summary.csv<br/>(ZIP root, one per bulk)"]
-    BulkSum --> BS1["=== TINYSEA BULK SUMMARY ===<br/># Model Version (v10), # Total Runs, # Generated"]
+    BulkSum --> BS1["=== TINYSEA BULK SUMMARY ===<br/># Model Version (v11), # Total Runs, # Generated"]
     BulkSum --> BS2["=== PER-RUN RESULTS ===<br/>Run, Scenarios, Survived, Crashed,<br/>CrashRate, BaseTemp, ClimateTrend,<br/>per-species average populations"]
     BulkSum --> BS3["=== PER-SPECIES AGGREGATE (Across All Runs) ===<br/>Species, GrandMean, SurvivedMean,<br/>RunsExtinct, RunsSurvived, ExtinctionRate"]
 ```

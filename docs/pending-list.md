@@ -13,12 +13,9 @@ Each item tagged **CRITICAL / HIGH / MEDIUM / LOW** for ship priority toward the
 
 ## A. Simulation bugs — not yet fixed (code changes needed)
 
-### A1. Pooled FedRate across predators `CRITICAL — RESERVED FOR v11`
+### A1. ~~Pooled FedRate across predators~~ `RESOLVED IN v11`
 Source: Review §3, Marine (escalated to critical).
-[EcosystemSimulator.cs](../Assets/scripts/Simulation/EcosystemSimulator.cs) `ProcessFeedingWithAccumulator` (Tier 2 section) writes the same `fedRate = totalEaten / totalRawDemand` to every predator, regardless of per-predator `huntingSuccess`. Specialist and generalist predators with different hunting efficiencies end up with identical feeding satisfaction. Destroys the competitive signal.
-**Fix**: `fedRate_i = min(1, huntingSuccess_i × (totalEaten / totalActualDemand))` so each predator keeps its own proportional share. Roughly a 10-line change.
-**Status**: explicitly held back from v10 to keep the validation surface tractable. Implement immediately after local v10 testing passes.
-**Blocks**: any multi-predator run, including Phase II breadth factorial.
+v11: per-predator FedRate now reflects each species' own hunting effort. `scarcityFactor = totalEaten / totalActualDemand` (1.0 when prey abundant; <1.0 when demand exceeds supply). `fedRate_i = min(1, huntingSuccess_i × scarcityFactor)`. Specialist hunters get higher FedRate than generalists in mixed-HE runs — competitive exclusion between predator species finally works as designed. `LastFedRateT2` (CSV column) is now a population-weighted average, semantically shifted from pooled scalar. Reduces to v10 pooled formula exactly when there's only one predator species (no regression).
 
 ### A2. ~~Hidden warming trend from `WarmingBias > 1`~~ `FIXED — commit e4119fe`
 Source: Review §12, Marine.
@@ -215,8 +212,8 @@ The TINYSEA spec doc (now deleted) claimed reproduction uses FinalPerformance. N
 
 ## Quick priority ranking (by ship impact)
 
-1. **Local v10 testing** — open the build, run `Tests/Brain/7/TestRunApril18.csv` and `Tests/Brain/5/SixPreySpecies.csv`, verify CSV outputs and watchpoint behaviour.
-2. **A1 Pooled FedRate (v11)** — apply per-predator fix once v10 testing passes.
+1. **Local v11 testing** — repeat single-species, equal-HE, and mixed-HE multi-predator regression / sanity / functional tests on the v11 build. Verify single-species and equal-HE scenarios are bit-identical to v10; mixed-HE runs now show specialist-vs-generalist signal.
+2. ~~**A1 Pooled FedRate**~~ — **RESOLVED** in v11.
 3. ~~**A2 WarmingBias hidden warming**~~ — **DONE** (commit `e4119fe`).
 4. ~~**A3 Processing-order bug**~~ — **SUPERSEDED** by v10 (soft-cap-on-births deleted).
 5. ~~**B6 Prey FedRate always 1.0**~~ — **RESOLVED** in v10.
@@ -226,7 +223,7 @@ The TINYSEA spec doc (now deleted) claimed reproduction uses FinalPerformance. N
 9. **C1 Sensitivity analysis grid** — standard supplementary material.
 10. **A5 Validator for ReproThreshold > DeathThreshold** — one-liner.
 11. **A7 Delete NO_PREDATOR_PENALTY** — one-liner; or formally re-justify with citation.
-12. **W1–W4 watchpoints** — observe in v10 prototype, decide on follow-ups for v11.
+12. **W1–W4 watchpoints** — observe in v10 + v11 prototype, decide on follow-ups for v12+.
 13. Everything else.
 
 ## Tier 2 carrying capacity — REJECTED

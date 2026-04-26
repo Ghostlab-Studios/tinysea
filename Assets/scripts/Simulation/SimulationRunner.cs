@@ -439,7 +439,7 @@ public class SimulationRunner
 
         // Embed configuration as comment lines (# is default comment char in R's read.csv)
         // Model version line first so downstream tools know which simulator produced this file.
-        sb.AppendLine($"#config:model_version,v10-food-pool");
+        sb.AppendLine($"#config:model_version,v11-per-predator-fedrate");
         sb.AppendLine($"#config:days_per_scenario,{TotalDays}");
         sb.AppendLine($"#config:number_of_scenarios,{numberOfScenarios}");
         sb.AppendLine($"#config:scenario_index,{scenarioIndex}");

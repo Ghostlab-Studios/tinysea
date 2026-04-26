@@ -17,7 +17,8 @@ flowchart TD
     PredDemand --> Holling["Holling II success<br/>holling = ratio / (ratio + halfSat)<br/>halfSat = NORMAL_PREY_RATIO · (1 − base) / base<br/>+ variance in [-HuntingVariance, +HuntingVariance]<br/>clamp to [0, 1]"]
     Holling --> Actual["actualDemand = rawDemand × huntingSuccess"]
     Actual --> Eaten["totalEaten = min(availablePrey, Σ actualDemand)"]
-    Eaten --> FedRateT2["FedRate (Tier 2) = totalEaten / totalRawDemand<br/>(currently pooled — per-predator fix v11)"]
+    Eaten --> ScarcityT2["scarcityFactor (v11)<br/>= totalEaten / totalActualDemand<br/>(1.0 when prey abundant)"]
+    ScarcityT2 --> FedRateT2["FedRate_i (Tier 2, v11)<br/>= min(1, huntingSuccess_i × scarcityFactor)<br/>(per-predator; LastFedRateT2 = pop-weighted avg)"]
 
     Raw --> RFP["RawFinalPerformance<br/>= Raw × FedRate<br/>(Condition drain target)"]
     FedRateT1 --> RFP
@@ -53,9 +54,9 @@ flowchart TD
 - **Linear, not Holling II.** Tier 1 represents passive extractors (plankton, filter feeders). No search/handling phases. Holling II would also collapse to 1 at HE=1, defeating the food-pool effect.
 - For Tier 1, `HuntingEfficiency` is semantically "resource extraction efficiency" — same field, dual meaning by tier.
 
-### 2b. Tier 2 (Holling II)
+### 2b. Tier 2 (Holling II + per-predator FedRate, v11)
 
 - Runs only if `Species.Any(Tier == 1)` and `Species.Any(Tier == 2)` with non-zero populations.
 - `NORMAL_PREY_RATIO = 20` is the prey:predator ratio where Holling success equals the species' `HuntingEfficiency`.
-- Per-predator `FedRate` is currently the same pooled value (`totalEaten / totalRawDemand`). Per-predator fix reserved for v11.
-- Prey removals are distributed proportionally across prey variants via `_predationAccumulators[preyVariant.FullName]`.
+- **Per-predator FedRate (v11)**: `scarcityFactor = totalEaten / totalActualDemand` (1.0 when prey abundant); `fedRate_i = min(1, huntingSuccess_i × scarcityFactor)`. Each predator's feeding satisfaction reflects its own hunting effort. `LastFedRateT2` (CSV column) is now a population-weighted average across predator species. Reduces to v10 pooled formula in single-predator-species runs.
+- Prey removals are distributed proportionally across prey variants via `_predationAccumulators[preyVariant.FullName]`. (No predator-side preference for prey variants — separate concern, B7 in pending list.)

@@ -524,7 +524,9 @@ public class EcosystemSimulator
         // ========== STEP 5: FINAL PERFORMANCE ==========
         // Condition is NOT included — it does not affect reproduction at all.
         // Condition only governs condition-death (below DeathThreshold → DeathRate kill).
-        // FinalPerformance = ThermalPerf × FedRate, used for reproduction threshold + birth count.
+        // FinalPerformance = ThermalPerf × FedRate. Computed for CSV/logging only —
+        // NOT consumed by any downstream step. Reproduction uses Condition (Step 8),
+        // not FinalPerformance. See spec §7 design invariants.
         SimLog("--- Step 5: Final Performance ---");
         foreach (var sp in Species)
         {

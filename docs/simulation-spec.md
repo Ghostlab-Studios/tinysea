@@ -261,6 +261,12 @@ For each species with `Pop > 0`:
 
 Independent of performance, condition, temperature, and predation — models background mortality (old age, accidents, disease).
 
+**Default rate per tier** ([SimSpecies.cs:195](../Assets/scripts/Simulation/SimSpecies.cs)):
+- Tier 1 (prey): `NaturalDeathRate = 0.02` (2% / day).
+- Tier 2 (predator): `NaturalDeathRate = 0.01` (1% / day) — allometric:
+  larger, longer-lived predators have lower background mortality.
+Both are user-overridable per species.
+
 ### Step 10 — Population rounding
 
 Each species: `Pop = Math.Round(Pop, MidpointRounding.AwayFromZero)`. Populations are integers from this point until the next step's biology runs.
@@ -273,9 +279,34 @@ Each species: `Pop = Math.Round(Pop, MidpointRounding.AwayFromZero)`. Population
 
 ## 5. Crash detection (`EcosystemSimulator.HasCrashed`)
 
-The simulator is considered crashed if the total population (Tier 1 + Tier 2) is below `MIN_ALIVE_POP` **and** at least one tier was populated at initialization (to avoid false crashes from scenarios that start with no predators).
+**Source of truth**: a scenario is crashed if and only if the **total population
+(Tier 1 + Tier 2) is exactly 0** ([EcosystemSimulator.cs:1252-1256](../Assets/scripts/Simulation/EcosystemSimulator.cs)):
 
-`GetCrashedTier()` returns `1`, `2`, or `0` depending on which tier is empty.
+```csharp
+public bool HasCrashed()
+{
+    float totalPop = GetTier1Population() + GetTier2Population();
+    return totalPop == 0;
+}
+```
+
+There is no `MIN_ALIVE_POP` threshold check and no "tier-was-populated-at-init"
+guard in the crash predicate itself. A scenario that starts with only one tier
+populated will report a crash as soon as that tier reaches zero — this is
+intentional and considered correct.
+
+`GetCrashedTier()` returns:
+- `1` — Tier 1 is empty (and Tier 1 was populated at init).
+- `2` — Tier 2 is empty (and Tier 2 was populated at init).
+- `0` — both tiers empty (or other ambiguous state).
+- `-1` — neither tier was populated at initialization (degenerate config).
+
+The fields `_tier1WasPopulated` / `_tier2WasPopulated` are tracked at init solely
+to drive `GetCrashedTier`'s tier attribution; they do not gate `HasCrashed`.
+
+`MIN_ALIVE_POP = 1.0f` ([EcosystemSimulator.cs:218](../Assets/scripts/Simulation/EcosystemSimulator.cs)) is used
+in Step 8 as the no-predator-penalty threshold (when computing Tier 1 births),
+**not** in crash detection.
 
 ## 6. Accumulators
 
@@ -291,6 +322,44 @@ Four `Dictionary<string, float>` keyed by `SimSpecies.FullName` (= `"{Name}_{Var
 `_thermalDeathAccumulators` exists as a field but is not used by the current thermal-death logic (which is binary/instant).
 
 Per-day snapshots of accumulator totals are written to the CSV via `BirthAccumT1/T2`, `NaturalDeathAccumT1/T2`, `ConditionDeathAccumT1/T2`, `PredationAccumT1`.
+
+### Per-day diagnostic fields (set by biology, read by CSV writer)
+
+`EcosystemSimulator` exposes the following `LastX` properties, all updated
+during `ProcessBiologyStep` and snapshotted into `StepRecord` for the CSV:
+
+| Field | Updated in | CSV column | Meaning |
+|-------|------------|------------|---------|
+| `LastFedRateT1` | Step 2a | `FedRateT1` | Tier-1 food-pool feeding rate (single value, all prey share food pool). |
+| `LastFoodDensityT1` | Step 2a | `FoodDensityT1` | `max(0, 1 − tier1Pop / cap)`. |
+| `LastFedRateT2` | Step 2b | `FedRateT2` | **Population-weighted average** of per-predator FedRate across Tier 2 (v11 semantic — was a pooled scalar pre-v11). |
+| `LastAvgHuntingEfficiency` | Step 2b | `AvgHuntingEff` | Arithmetic mean of `huntingSuccess_i` across all predators. |
+| `LastReproScaleT1` | Step 8 | `ReproScaleT1` | Reproduction throttle for Tier 1 (driven by Condition). Useful for diagnosing why births stalled. |
+| `LastReproScaleT2` | Step 8 | `ReproScaleT2` | Same for Tier 2. |
+
+These are not used by any biology step — purely for human/CSV inspection.
+
+### Predation: how prey are removed across variants
+
+When Tier 2 predators eat from a Tier 1 species that has multiple variants
+populated (Arctic / Common / Tropical / Custom), the per-day kill total is
+distributed **proportional to each variant's current population fraction**
+([EcosystemSimulator.cs:749-775](../Assets/scripts/Simulation/EcosystemSimulator.cs)).
+There is no per-variant prey preference yet (tracked as item B7 in pending list).
+
+### Carrying-capacity validation
+
+`SimulationConfig.IsValid()` hard-rejects `CarryingCapacityTier1 ≤ 0`
+([SimulationConfig.cs:160](../Assets/scripts/Simulation/DataStructure/SimulationConfig.cs)).
+Since v11.1 there is no fallback / "disabled" state — a config that fails
+this check will not run.
+
+### Backward compatibility for legacy bulk CSVs
+
+`CsvBatchParser` keeps `use_carrying_cap` as an optional, deprecated column.
+If an older bulk CSV still includes it the value is read but ignored, and a
+`Debug.LogWarning` is emitted. New CSVs from `GenerateTemplate()` omit the
+column entirely.
 
 ## 7. Design invariants
 

@@ -13,6 +13,7 @@ Coverage:
   - WebGL plugins (jslib for downloads/ZIP -- bulk results)
   - Species data (species.csv)
   - All documentation in docs/ (markdown, diagrams, screenshots, xlsx, etc.)
+  - Validation notes + test CSV fixtures from Tests/ (skipping run-output dirs)
   - Both CLAUDE.md files (parent project overview + Unity-side)
   - A generated _README_FOR_AI.md preface explaining project history + bundle scope
 
@@ -141,6 +142,9 @@ of the simulation's behavior or research output.
 - All WebGL `.jslib` plugins used by the simulation for browser file downloads.
 - All documentation under `docs/` -- the authoritative simulation spec,
   diagrams (mermaid), screenshots, and the simulation-variables spreadsheet.
+- Validation methodology notes and test CSV fixtures from `Tests/`
+  (`Tests_*.md`, `Tests_*.csv`). Run-output subfolders (`Brain/`,
+  `tinysea_bulk_*`) are excluded -- those are generated artifacts.
 - Both `CLAUDE.md` files (top-level project overview + Unity-side).
 - Game-side scripts that the simulation directly references, auto-detected
   by scanning Simulation/*.cs for their class names. In this bundle:
@@ -160,6 +164,8 @@ All files are flat (no subfolders) with prefixes to avoid collisions:
   - `DS_*`       -- data structures (from `Simulation/DataStructure/`)
   - `UI_*`       -- simulation UI (results screen, config editor)
   - `diagram_*`  -- mermaid diagrams from `docs/diagrams/`
+  - `Tests_*`    -- validation methodology notes + CSV fixtures
+  - `ProjectRoot_CLAUDE.md` / `Unity_CLAUDE.md` -- the two CLAUDE.md files
 """
     (output_dir / "_README_FOR_AI.md").write_text(content, encoding="utf-8")
 
@@ -228,7 +234,17 @@ def extract(output_dir: Path) -> None:
                 if flat_copy(f, output_dir, used, prefix):
                     count += 1
 
-    # 7. Both CLAUDE.md files
+    # 7a. Validation / test fixtures + notes (top-level Tests/ only;
+    #     skip subdirs which contain run outputs).
+    print("[7/8] Tests/ validation notes + fixtures ...")
+    tests_dir = UNITY_ROOT / "Tests"
+    if tests_dir.exists():
+        for f in sorted(tests_dir.glob("*")):
+            if f.is_file() and f.suffix in {".md", ".csv"}:
+                if flat_copy(f, output_dir, used, "Tests_"):
+                    count += 1
+
+    # 7b. Both CLAUDE.md files
     print("[7/8] CLAUDE.md (parent + Unity-side) ...")
     parent_claude = PROJECT_ROOT / "CLAUDE.md"
     if parent_claude.exists() and flat_copy(parent_claude, output_dir, used, "ProjectRoot_"):

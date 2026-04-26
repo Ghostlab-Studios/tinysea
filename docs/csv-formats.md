@@ -170,6 +170,8 @@ ReproScaleT1,ReproScaleT2
 
 One data row per simulated day. Formatting: `Temperature` and all float metrics are `F2`–`F3` formatted; integer fields use plain integer formatting. Population fields are written as `long` to avoid overflow on large ecosystems.
 
+> **Heads-up on `FedRateT2`** — column name unchanged since v10, but as of v11 this is a **population-weighted average across predators**, not a pooled scalar. See "v11 semantic change" below.
+
 **v10 columns:**
 
 - `FedRateT1` — population-weighted average FedRate across live Tier 1 species. With v10's food-pool model, this varies daily with population pressure on the shared resource pool. (Pre-v10 it was always 1.0, hence not previously logged.)

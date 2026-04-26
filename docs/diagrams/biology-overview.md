@@ -5,7 +5,7 @@ Source: `EcosystemSimulator.ProcessBiologyStep(float temperature)`.
 ```mermaid
 flowchart TD
     Start([ProcessBiologyStep temp]) --> S1["1. Thermal Performance<br/>SimSpecies.CalculatePerformance<br/>Arrhenius + CTmin/CTmax cosine fade<br/>RawThermalPerf; ThermalPerf = Raw × Pmax"]
-    S1 --> S2["2. Feeding / Predation<br/>Tier 1: FedRate = min(1, HE × food_density), linear (v10)<br/>Tier 2: Holling II demand + _predationAccumulators<br/>sets FedRate on Tier 1 AND Tier 2"]
+    S1 --> S2["2. Feeding / Predation<br/>Tier 1: FedRate = min(1, HE × food_density), linear (v10)<br/>Tier 2: Holling II + per-predator FedRate (v11)<br/>fedRate_i = min(1, huntingSuccess_i × scarcityFactor)<br/>_predationAccumulators on prey"]
     S2 --> S3["3. Raw Final Performance<br/>RawFinalPerf = Raw × FedRate<br/>(Condition drain target — varies with food density for Tier 1 in v10)"]
     S3 --> S4["4. Update Condition<br/>asymmetric drift toward target<br/>rates scaled by Pmax (pmaxSafe)"]
     S4 --> S5["5. Final Performance<br/>FinalPerf = ThermalPerf × FedRate<br/>(computed for logging; not read downstream)"]

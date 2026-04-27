@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>TinySea — macOS Setup Guide</title>
+<style>
+  @page { size: Letter; margin: 0.75in; }
+  body { font-family: "Helvetica Neue", Arial, sans-serif; font-size: 11pt; color: #222; line-height: 1.45; }
+  h1 { text-align: center; color: #1f6feb; font-size: 22pt; margin: 0 0 4px; }
+  .subtitle { text-align: center; color: #666; font-size: 10.5pt; margin-bottom: 14px; }
+  hr { border: none; border-top: 1px solid #d0d7de; margin: 6px 0 18px; }
+  h2 { color: #1f6feb; font-size: 14pt; margin: 18px 0 6px; }
+  h3 { font-size: 11.5pt; margin: 12px 0 4px; }
+  p, li { margin: 4px 0; }
+  ol, ul { margin: 4px 0 4px 22px; }
+  .indent { margin-left: 14px; }
+  .note { font-style: italic; color: #555; margin: 4px 0 8px; }
+  code, pre { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 10pt; }
+  pre { background: #f3f5f8; padding: 7px 10px; border-radius: 4px; margin: 4px 0 10px;
+        white-space: pre-wrap; word-break: break-all; }
+  .important { font-style: italic; color: #444; margin: 6px 0; }
+  .important b { font-style: normal; }
+</style>
+</head>
+<body>
+
+<h1>TinySea — macOS Setup Guide</h1>
+<div class="subtitle">For unsigned builds downloaded from the GhostLab cloud</div>
+<hr>
+
+<h2>Why is this needed?</h2>
+<p>macOS blocks apps that aren't signed through Apple's developer program. Since this build was created on Windows, macOS treats it as unverified. The steps below tell macOS it's safe to run.</p>
+
+<h2>What you need</h2>
+<ol>
+  <li>The TinySea macOS build (unzipped)</li>
+  <li>The <b>Terminal</b> app (already on your Mac — no install needed)</li>
+</ol>
+
+<h2>Step-by-step instructions</h2>
+
+<h3>Step 1 — Unzip the build</h3>
+<div class="indent">
+  <p>Download the Mac build from the GhostLab SharePoint link and unzip it. You should see a file called <b>TinySea-macOS.app</b>.</p>
+</div>
+
+<h3>Step 2 — Open Terminal</h3>
+<div class="indent">
+  <p>Press <b>Cmd + Space</b> to open Spotlight, type <b>Terminal</b>, and press <b>Enter</b>.</p>
+  <p class="note">A window with a text prompt will appear — this is where you'll paste the commands below.</p>
+</div>
+
+<h3>Step 3 — Run three commands</h3>
+<div class="indent">
+  <p>Copy and paste each command below into Terminal, one at a time, and press <b>Enter</b> after each.</p>
+  <p class="important"><b>Important:</b> If your app is not in the Downloads folder or has a different name, you'll need to adjust the path. The easiest way: type the command up to the path, then <b>drag the .app file from Finder into the Terminal window</b> — it will fill in the correct path automatically.</p>
+
+  <p>Command 1 — Make the app executable:</p>
+  <pre>chmod +x ~/Downloads/TinySea-macOS.app/Contents/MacOS/TinySea</pre>
+
+  <p>Command 2 — Make the libraries executable:</p>
+  <pre>chmod +x ~/Downloads/TinySea-macOS.app/Contents/Frameworks/*.dylib</pre>
+
+  <p>Command 3 — Remove the quarantine flag:</p>
+  <pre>xattr -cr ~/Downloads/TinySea-macOS.app</pre>
+
+  <p class="note">You won't see any output after each command — that's normal. No news is good news!</p>
+</div>
+
+<h3>Step 4 — Run TinySea</h3>
+<div class="indent">
+  <p>Double-click <b>TinySea-macOS.app</b> in Finder. It should now open normally.</p>
+</div>
+
+<hr>
+
+<h2>Troubleshooting</h2>
+<div class="indent">
+  <p><b>"TinySea-macOS.app" is damaged and can't be opened</b> — This means Step 3 (Command 3) didn't run correctly. Open Terminal and try the <code>xattr -cr</code> command again.</p>
+  <p><b>"Permission denied"</b> — Make sure you ran Commands 1 and 2 from Step 3. If the path has spaces, make sure it's wrapped in quotes.</p>
+  <p><b>Still not working?</b> — Reach out and we can set up a quick call to walk through it.</p>
+</div>
+
+</body>
+</html>

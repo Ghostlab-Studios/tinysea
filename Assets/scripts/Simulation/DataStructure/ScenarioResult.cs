@@ -726,98 +726,76 @@ public class AggregateResults
             }
         }
 
-        // Grand Mean across all runs
+        // Grand Mean across all runs — combined wide-format table.
+        // Columns: Tier1Pop, Tier2Pop, then one column per species (sanitized FullName)
+        // ordered alphabetically by FullName for stable output. Three header rows
+        // (Statistic / Variant / Tier) mirror the scenario-CSV summary block.
+        // Tier-rollup variant columns (Tier1Arctic, ...) are intentionally omitted —
+        // species are tracked individually so the variant rollup is redundant.
         bool hasPopStats = Scenarios.Any(s => s.PopMean != null);
         if (hasPopStats)
         {
+            var perSpeciesKeys = (PerSpeciesMetrics != null && PerSpeciesMetrics.Count > 0)
+                ? PerSpeciesMetrics.Keys.OrderBy(k => k).ToList()
+                : new List<string>();
+
+            double GrandMean(string statName, string col)
+            {
+                double sum = 0;
+                int count = 0;
+                foreach (var s in Scenarios)
+                {
+                    double val;
+                    switch (statName)
+                    {
+                        case "Mean":
+                            if (s.PopMean == null || !s.PopMean.ContainsKey(col)) continue;
+                            val = s.PopMean[col]; break;
+                        case "Max":
+                            if (s.PopMax == null || !s.PopMax.ContainsKey(col)) continue;
+                            val = s.PopMax[col]; break;
+                        case "Min":
+                            if (s.PopMin == null || !s.PopMin.ContainsKey(col)) continue;
+                            val = s.PopMin[col]; break;
+                        case "StdDev":
+                            if (s.PopStdDev == null || !s.PopStdDev.ContainsKey(col)) continue;
+                            val = s.PopStdDev[col]; break;
+                        default: continue;
+                    }
+                    sum += val;
+                    count++;
+                }
+                return count > 0 ? sum / count : 0;
+            }
+
             sb.AppendLine();
-            sb.AppendLine("=== SUMMARY STATISTICS - TIER ROLLUPS (Grand Mean Across All Scenarios) ===");
-            sb.AppendLine("Statistic," + string.Join(",", ScenarioResult.PopColumns));
+            sb.AppendLine("=== SUMMARY STATISTICS (Grand Mean Across All Scenarios) ===");
+
+            // Header row 1: Statistic + tier totals + per-species columns.
+            var headerCols = new List<string> { "Tier1Pop", "Tier2Pop" };
+            foreach (var key in perSpeciesKeys)
+                headerCols.Add(StepRecord.SanitizeColumnName(key));
+            sb.AppendLine("Statistic," + string.Join(",", headerCols));
+
+            // Header row 2: Variant (All for tier totals, actual variant per species).
+            sb.Append("Variant,All,All");
+            foreach (var key in perSpeciesKeys) sb.Append($",{GetVariant(key)}");
+            sb.AppendLine();
+
+            // Header row 3: Tier (1/2 for tier totals, actual tier per species).
+            sb.Append("Tier,1,2");
+            foreach (var key in perSpeciesKeys) sb.Append($",{GetTier(key)}");
+            sb.AppendLine();
 
             string[] statNames = { "Mean", "Max", "Min", "StdDev" };
             foreach (var statName in statNames)
             {
                 sb.Append($"GrandMean_{statName}");
-                foreach (var col in ScenarioResult.PopColumns)
-                {
-                    double sum = 0;
-                    int count = 0;
-                    foreach (var s in Scenarios)
-                    {
-                        double val;
-                        switch (statName)
-                        {
-                            case "Mean":
-                                if (s.PopMean == null) continue;
-                                val = s.PopMean.ContainsKey(col) ? s.PopMean[col] : 0; break;
-                            case "Max":
-                                if (s.PopMax == null) continue;
-                                val = s.PopMax.ContainsKey(col) ? s.PopMax[col] : 0; break;
-                            case "Min":
-                                if (s.PopMin == null) continue;
-                                val = s.PopMin.ContainsKey(col) ? s.PopMin[col] : 0; break;
-                            case "StdDev":
-                                if (s.PopStdDev == null) continue;
-                                val = s.PopStdDev.ContainsKey(col) ? s.PopStdDev[col] : 0; break;
-                            default: continue;
-                        }
-                        sum += val;
-                        count++;
-                    }
-                    double grandMean = count > 0 ? sum / count : 0;
-                    sb.Append($",{grandMean:F1}");
-                }
+                sb.Append($",{GrandMean(statName, "Tier1Pop"):F1}");
+                sb.Append($",{GrandMean(statName, "Tier2Pop"):F1}");
+                foreach (var key in perSpeciesKeys)
+                    sb.Append($",{GrandMean(statName, key):F1}");
                 sb.AppendLine();
-            }
-        }
-
-        // v12.2: Per-species version of SUMMARY STATISTICS — long format.
-        // Each row: (Statistic, Species, Variant, Tier, Value).
-        // Genuinely new data: each scenario's per-species pop stats (Mean/Max/Min/StdDev
-        // across days, computed in SimulationRunner.ComputePopulationStats) averaged
-        // across scenarios. Different from PER-SPECIES POPULATION STATS which uses
-        // final-day pops, not across-day means.
-        bool hasPerSpeciesPopStats = Scenarios.Any(s => s.PopMean != null
-            && PerSpeciesMetrics != null
-            && PerSpeciesMetrics.Keys.Any(k => s.PopMean.ContainsKey(k)));
-        if (hasPerSpeciesPopStats && PerSpeciesMetrics != null && PerSpeciesMetrics.Count > 0)
-        {
-            sb.AppendLine();
-            sb.AppendLine("=== SUMMARY STATISTICS - PER SPECIES (Grand Mean Across All Scenarios) ===");
-            sb.AppendLine("Statistic,Species,Variant,Tier,Value");
-
-            string[] perSpStatNames = { "Mean", "Max", "Min", "StdDev" };
-            foreach (var statName in perSpStatNames)
-            {
-                foreach (var key in PerSpeciesMetrics.Keys.OrderBy(k => k))
-                {
-                    double sum = 0;
-                    int count = 0;
-                    foreach (var s in Scenarios)
-                    {
-                        double val;
-                        switch (statName)
-                        {
-                            case "Mean":
-                                if (s.PopMean == null || !s.PopMean.ContainsKey(key)) continue;
-                                val = s.PopMean[key]; break;
-                            case "Max":
-                                if (s.PopMax == null || !s.PopMax.ContainsKey(key)) continue;
-                                val = s.PopMax[key]; break;
-                            case "Min":
-                                if (s.PopMin == null || !s.PopMin.ContainsKey(key)) continue;
-                                val = s.PopMin[key]; break;
-                            case "StdDev":
-                                if (s.PopStdDev == null || !s.PopStdDev.ContainsKey(key)) continue;
-                                val = s.PopStdDev[key]; break;
-                            default: continue;
-                        }
-                        sum += val;
-                        count++;
-                    }
-                    double grandMean = count > 0 ? sum / count : 0;
-                    sb.AppendLine($"GrandMean_{statName},{key},{GetVariant(key)},{GetTier(key)},{grandMean:F1}");
-                }
             }
         }
 

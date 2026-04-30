@@ -686,44 +686,49 @@ public class AggregateResults
             sb.AppendLine();
         }
 
-        sb.AppendLine("=== INDIVIDUAL SCENARIOS - TIER ROLLUPS ===");
-        sb.AppendLine("Scenario,Seed,Crashed,CrashDay,CrashTier,FinalT1,FinalT2,T1Arctic,T1Common,T1Tropical,T1Custom,T2Arctic,T2Common,T2Tropical,T2Custom,AvgTemp,MinTemp,MaxTemp");
-
-        foreach (var s in Scenarios)
+        // Combined wide-format scenario table. One row per scenario:
+        // scenario metadata + tier totals + temperatures + one FinalPop column
+        // per species (sanitized FullName, alpha-sorted). Two extra header rows
+        // annotate each species column with Variant and Tier; non-applicable
+        // meta columns get blank annotations. Variant-rollup columns
+        // (T1Arctic, ...) are dropped — per-species replaces them, and tier-total
+        // values still satisfy the per-species-sums-to-tier invariant.
+        var speciesCols = new List<string>();
         {
-            sb.AppendLine($"{s.ScenarioIndex},{s.RandomSeed},{s.Crashed},{s.CrashDay},{s.CrashTier}," +
-                         $"{s.FinalTier1Pop},{s.FinalTier2Pop}," +
-                         $"{s.FinalTier1Arctic},{s.FinalTier1Common},{s.FinalTier1Tropical},{s.FinalTier1Custom}," +
-                         $"{s.FinalTier2Arctic},{s.FinalTier2Common},{s.FinalTier2Tropical},{s.FinalTier2Custom}," +
-                         $"{s.AvgTemperature:F2},{s.MinTemperature:F2},{s.MaxTemperature:F2}");
-        }
-
-        // v12.2: Per-species per-scenario table (long format).
-        // One row per (scenario, species). Final pop comes from FinalSpeciesPopulations.
-        bool hasPerSpeciesData = Scenarios.Any(s => s.FinalSpeciesPopulations != null && s.FinalSpeciesPopulations.Count > 0);
-        if (hasPerSpeciesData)
-        {
-            sb.AppendLine();
-            sb.AppendLine("=== INDIVIDUAL SCENARIOS - PER SPECIES ===");
-            sb.AppendLine("Scenario,Seed,Crashed,CrashDay,Species,Variant,Tier,FinalPop");
-
-            // Build the union of all species names (sorted) so that even
-            // species absent in a particular scenario emit a row with FinalPop=0.
-            var allSpeciesKeys = new SortedSet<string>();
+            var keys = new SortedSet<string>();
             foreach (var s in Scenarios)
             {
                 if (s.FinalSpeciesPopulations == null) continue;
-                foreach (var k in s.FinalSpeciesPopulations.Keys) allSpeciesKeys.Add(k);
+                foreach (var k in s.FinalSpeciesPopulations.Keys) keys.Add(k);
             }
+            speciesCols.AddRange(keys);
+        }
 
-            foreach (var s in Scenarios)
+        sb.AppendLine("=== INDIVIDUAL SCENARIOS ===");
+
+        sb.Append("Scenario,Seed,Crashed,CrashDay,CrashTier,FinalT1,FinalT2,AvgTemp,MinTemp,MaxTemp");
+        foreach (var k in speciesCols) sb.Append($",{StepRecord.SanitizeColumnName(k)}");
+        sb.AppendLine();
+
+        sb.Append("Variant,,,,,All,All,,,");
+        foreach (var k in speciesCols) sb.Append($",{GetVariant(k)}");
+        sb.AppendLine();
+
+        sb.Append("Tier,,,,,1,2,,,");
+        foreach (var k in speciesCols) sb.Append($",{GetTier(k)}");
+        sb.AppendLine();
+
+        foreach (var s in Scenarios)
+        {
+            sb.Append($"{s.ScenarioIndex},{s.RandomSeed},{s.Crashed},{s.CrashDay},{s.CrashTier}");
+            sb.Append($",{s.FinalTier1Pop},{s.FinalTier2Pop}");
+            sb.Append($",{s.AvgTemperature:F2},{s.MinTemperature:F2},{s.MaxTemperature:F2}");
+            foreach (var k in speciesCols)
             {
-                foreach (var key in allSpeciesKeys)
-                {
-                    long pop = (s.FinalSpeciesPopulations != null && s.FinalSpeciesPopulations.TryGetValue(key, out var p)) ? p : 0L;
-                    sb.AppendLine($"{s.ScenarioIndex},{s.RandomSeed},{s.Crashed},{s.CrashDay},{key},{GetVariant(key)},{GetTier(key)},{pop}");
-                }
+                long pop = (s.FinalSpeciesPopulations != null && s.FinalSpeciesPopulations.TryGetValue(k, out var p)) ? p : 0L;
+                sb.Append($",{pop}");
             }
+            sb.AppendLine();
         }
 
         // Grand Mean across all runs — combined wide-format table.

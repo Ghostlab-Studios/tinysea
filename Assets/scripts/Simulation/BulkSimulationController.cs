@@ -43,6 +43,10 @@ public class BulkSimulationController : MonoBehaviour
         public Dictionary<string, float> SurvivedSpeciesPop; // avg pop only from survived scenarios
         // v12: Per-species rich aggregate snapshot for cross-run aggregation in GenerateBulkSummary.
         public Dictionary<string, PerSpeciesAggregate> PerSpeciesMetrics;
+        // v12.2: Per-species (Tier, Variant) lookup keyed by FullName. Populated in
+        // RunAllBatches from tempSpecies. Lets GenerateBulkSummary annotate every
+        // per-species row with explicit Variant + Tier columns.
+        public Dictionary<string, (int Tier, string Variant)> SpeciesInfo;
     }
 
     // ETA — recalculated once per minute, cached between updates
@@ -314,6 +318,23 @@ public class BulkSimulationController : MonoBehaviour
                 batchResults.CompletedAt = DateTime.Now;
                 batchResults.CalculateAggregates();
 
+                // v12.2: Build per-species (Tier, Variant) lookup from tempSpecies so
+                // GenerateBulkSummary can annotate per-species rows with explicit
+                // Variant + Tier columns.
+                var speciesInfo = new Dictionary<string, (int Tier, string Variant)>();
+                if (tempSpecies != null && tempSpecies.speciesList != null)
+                {
+                    foreach (var sp in tempSpecies.speciesList)
+                    {
+                        string name = !string.IsNullOrEmpty(sp.displayName)
+                            ? sp.displayName
+                            : sp.speciesName.ToString();
+                        string fullName = $"{name}_{sp.variant}";
+                        // SpeciesData.tier is 0/1; internal Tier is 1/2.
+                        speciesInfo[fullName] = (sp.tier + 1, sp.variant.ToString());
+                    }
+                }
+
                 _bulkSummaries.Add(new BulkRunSummary
                 {
                     BatchName = batch.BatchName,
@@ -330,7 +351,8 @@ public class BulkSimulationController : MonoBehaviour
                         : new Dictionary<string, float>(),
                     // v12: snapshot the rich aggregate. Reference is fine — batchResults
                     // is discarded after Scenarios.Clear() below; we keep the dict alive.
-                    PerSpeciesMetrics = batchResults.PerSpeciesMetrics ?? new Dictionary<string, PerSpeciesAggregate>()
+                    PerSpeciesMetrics = batchResults.PerSpeciesMetrics ?? new Dictionary<string, PerSpeciesAggregate>(),
+                    SpeciesInfo = speciesInfo
                 });
 
                 string aggCsv = batchResults.ToAggregateCsv();
@@ -390,6 +412,19 @@ public class BulkSimulationController : MonoBehaviour
     private string GenerateBulkSummary(List<BulkRunSummary> summaries)
     {
         var sb = new System.Text.StringBuilder();
+
+        // v12.2: Build a unified (Tier, Variant) lookup across all runs. Some
+        // species may appear only in some runs; merge all SpeciesInfo dicts
+        // into one for use in per-species CSV rows.
+        var bulkSpeciesMeta = new Dictionary<string, (int Tier, string Variant)>();
+        foreach (var run in summaries)
+        {
+            if (run.SpeciesInfo == null) continue;
+            foreach (var kv in run.SpeciesInfo)
+                bulkSpeciesMeta[kv.Key] = kv.Value; // last-write-wins; fine since species shared across runs have identical metadata
+        }
+        string GetVariant(string fn) => bulkSpeciesMeta.TryGetValue(fn, out var m) ? m.Variant : "Unknown";
+        string GetTier(string fn) => bulkSpeciesMeta.TryGetValue(fn, out var m) ? m.Tier.ToString() : "?";
 
         sb.AppendLine("=== TINYSEA BULK SUMMARY (Across All Runs) ===");
         sb.AppendLine($"# Model Version,v12-per-species-tracking");

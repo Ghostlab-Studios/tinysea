@@ -4,6 +4,16 @@ Authoritative description of the headless ecosystem simulator, generated from so
 
 Source files: `EcosystemSimulator.cs`, `SimSpecies.cs`, `TemperatureCalculator.cs`, `SimulationRunner.cs`.
 
+## v12.2 changes (CSV format consolidation)
+
+Pure CSV-format changes; simulation logic and `model_version` unchanged. See [`csv-formats.md`](./csv-formats.md) for the full layout.
+
+- **All per-species sections gain explicit `Variant` and `Tier` columns** (in `aggregate.csv` and `bulk_summary.csv`). Downstream tooling can group/filter by tier-context without re-parsing the FullName string.
+- **Aggregate `=== INDIVIDUAL SCENARIOS ===` is now a single wide-format table.** Was previously split into `… - TIER ROLLUPS` (one row per scenario, variant-rollup columns) and `… - PER SPECIES` (long format, one row per scenario × species). The merged table has one row per scenario with scenario metadata + tier totals + temperatures + one `FinalPop` column per species, plus two extra header rows (`Variant`, `Tier`) annotating each species column. Variant-rollup columns (`T1Arctic, …, T2Custom`) dropped — the per-species columns subsume them and the tier totals (`FinalT1`, `FinalT2`) preserve the rollup-invariant.
+- **Aggregate `=== SUMMARY STATISTICS (Grand Mean Across All Scenarios) ===` is now a single wide-format table** with the same three-header-row pattern (`Statistic` / `Variant` / `Tier`). Replaces the old `… - TIER ROLLUPS` + `… - PER SPECIES` split. Variant-rollup columns dropped here for the same reason.
+- **`bulk_summary.csv` `=== PER-RUN RESULTS ===` is split into `… - TIER LEVEL`** (wide; one row per run with per-species `AvgPop` columns appended) **and `… - PER SPECIES`** (long; one row per run × species with `AvgPop` and `SurvivedAvgPop`). Both retain the v12 metadata.
+- **Backward compatibility**: scenario CSV `#summary:` and `#extinction:` blocks were already updated to the wide / per-species format in v12.1. The aggregate updates here align with that. RNG sequence and biology unchanged.
+
 ## v12 changes (current model version)
 
 - **Per-species daily tracking added.** Every `StepRecord` now carries a `Dictionary<string, PerSpeciesStepData>` keyed by `SimSpecies.FullName`, holding population, condition, thermal performance, FedRate, hunting efficiency, daily event counts (births, eaten, all death types), per-capita birth rate, repro scale, and accumulator residuals — all per individual species.

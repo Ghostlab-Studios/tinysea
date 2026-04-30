@@ -560,15 +560,36 @@ public class AggregateResults
     }
 
     /// <summary>
-    /// Generate aggregate CSV for download (contains RESULTS)
+    /// Generate the per-run aggregate CSV (rolls up all scenarios within this run).
     /// </summary>
+    /// <remarks>
+    /// Section layout, in emitted order:
+    ///   1. Header block + run config
+    ///   2. <c>=== SUMMARY ===</c> — scenario counts, crash rate, optional avg crash day
+    ///   3. <c>=== POPULATION STATS (Survived Only) ===</c> — tier-total final pops
+    ///   4. <c>=== PER-SPECIES POPULATION STATS (All Scenarios) ===</c> — final-day pops, per species
+    ///   5. <c>=== CONDITION STATS ===</c> — tier-level means
+    ///   6. <c>=== PER-SPECIES FINAL YEAR METRICS ===</c> — last-365-day Condition / BirthRate / PopCv / MeanPop
+    ///   7. <c>=== PER-SPECIES FULL-RUN METRICS ===</c> — same metrics over the entire scenario
+    ///   8. <c>=== PER-SPECIES STABILITY METRICS ===</c> — Min/Max/Final pop, extinction &amp; crash timing
+    ///   9. <c>=== INDIVIDUAL SCENARIOS ===</c> — wide table, one row per scenario, three header rows
+    ///  10. <c>=== SUMMARY STATISTICS (Grand Mean Across All Scenarios) ===</c> — grand mean of per-scenario stats, three header rows
+    ///  11. <c>=== EXTINCTION TIMING - TIER VARIANTS (Across All Scenarios) ===</c>
+    ///  12. <c>=== EXTINCTION TIMING - PER SPECIES (Across All Scenarios) ===</c>
+    ///
+    /// Conventions:
+    /// - All per-species sections include separate <c>Species</c>, <c>Variant</c>, <c>Tier</c> columns.
+    /// - Wide-format sections (9, 10) carry three header rows: column names, <c>Variant</c>, <c>Tier</c>.
+    ///   They omit the <c>T1Arctic, …, T2Custom</c> variant-rollup columns because the per-species
+    ///   columns subsume them; tier totals (<c>Tier1Pop</c>, <c>Tier2Pop</c>) remain.
+    /// - Species columns are always sorted alphabetically by <c>FullName</c> for stable output.
+    /// </remarks>
     public string ToAggregateCsv()
     {
         var sb = new System.Text.StringBuilder();
 
-        // v12.2: Build (Tier, Variant) lookup keyed by FullName for use in
-        // per-species sections. Per-species dicts only carry FullName strings,
-        // so we resolve Variant and Tier from RunSpecies at write time.
+        // Per-species sections only carry FullName strings, so resolve Variant and
+        // Tier from RunSpecies once and look them up at write time.
         var speciesMeta = new Dictionary<string, (int Tier, string Variant)>();
         if (RunSpecies?.speciesList != null)
         {
@@ -578,7 +599,7 @@ public class AggregateResults
                     ? sp.displayName
                     : sp.speciesName.ToString();
                 string fullName = $"{name}_{sp.variant}";
-                // SpeciesData.tier is 0-based (0=prey, 1=predator); internal Tier is 1-based.
+                // SpeciesData.tier is 0-based (0=prey, 1=predator); CSV / internal Tier is 1-based.
                 speciesMeta[fullName] = (sp.tier + 1, sp.variant.ToString());
             }
         }
@@ -686,15 +707,20 @@ public class AggregateResults
             sb.AppendLine();
         }
 
-        // Combined wide-format scenario table. One row per scenario:
-        // scenario metadata + tier totals + temperatures + one FinalPop column
-        // per species (sanitized FullName, alpha-sorted). Two extra header rows
-        // annotate each species column with Variant and Tier; non-applicable
-        // meta columns get blank annotations. Variant-rollup columns
-        // (T1Arctic, ...) are dropped — per-species replaces them, and tier-total
-        // values still satisfy the per-species-sums-to-tier invariant.
+        // ── Section 9: INDIVIDUAL SCENARIOS ────────────────────────────────────
+        // One row per scenario. Wide format: scenario metadata + tier totals +
+        // temperatures + one FinalPop column per species (sanitized FullName,
+        // alpha-sorted). The two extra header rows below annotate each species
+        // column with its Variant and Tier; meta columns that aren't tier-bound
+        // (Seed, Crashed, CrashDay, CrashTier, AvgTemp, MinTemp, MaxTemp) get
+        // blank annotations, and FinalT1/FinalT2 carry Variant=All with their
+        // tier number. Variant-rollup columns (T1Arctic, …, T2Custom) are
+        // omitted: the per-species columns sum to the tier totals, so the
+        // variant intermediate level is redundant.
         var speciesCols = new List<string>();
         {
+            // Union of every species seen in any scenario, sorted alphabetically
+            // by FullName. SortedSet handles dedup and ordering in one step.
             var keys = new SortedSet<string>();
             foreach (var s in Scenarios)
             {
@@ -706,18 +732,27 @@ public class AggregateResults
 
         sb.AppendLine("=== INDIVIDUAL SCENARIOS ===");
 
+        // Header row 1 — column names. Sanitize species FullName so downstream
+        // R/pandas pipelines see clean ASCII identifiers.
         sb.Append("Scenario,Seed,Crashed,CrashDay,CrashTier,FinalT1,FinalT2,AvgTemp,MinTemp,MaxTemp");
         foreach (var k in speciesCols) sb.Append($",{StepRecord.SanitizeColumnName(k)}");
         sb.AppendLine();
 
+        // Header row 2 — Variant annotation. Empty cells under Seed/Crashed/
+        // CrashDay/CrashTier and AvgTemp/MinTemp/MaxTemp; "All" under tier totals.
         sb.Append("Variant,,,,,All,All,,,");
         foreach (var k in speciesCols) sb.Append($",{GetVariant(k)}");
         sb.AppendLine();
 
+        // Header row 3 — Tier annotation. Same blank pattern as Variant; tier
+        // totals carry their numeric tier (1 / 2).
         sb.Append("Tier,,,,,1,2,,,");
         foreach (var k in speciesCols) sb.Append($",{GetTier(k)}");
         sb.AppendLine();
 
+        // Data rows — one per scenario, columns aligned with header row 1.
+        // Species absent from a scenario emit FinalPop=0 so the table stays
+        // rectangular across runs even when species sets differ.
         foreach (var s in Scenarios)
         {
             sb.Append($"{s.ScenarioIndex},{s.RandomSeed},{s.Crashed},{s.CrashDay},{s.CrashTier}");
@@ -731,19 +766,32 @@ public class AggregateResults
             sb.AppendLine();
         }
 
-        // Grand Mean across all runs — combined wide-format table.
-        // Columns: Tier1Pop, Tier2Pop, then one column per species (sanitized FullName)
-        // ordered alphabetically by FullName for stable output. Three header rows
-        // (Statistic / Variant / Tier) mirror the scenario-CSV summary block.
-        // Tier-rollup variant columns (Tier1Arctic, ...) are intentionally omitted —
-        // species are tracked individually so the variant rollup is redundant.
+        // ── Section 10: SUMMARY STATISTICS (Grand Mean Across All Scenarios) ──
+        // Wide-format grand mean of the per-scenario population statistics
+        // (Mean / Max / Min / StdDev across days, computed in
+        // SimulationRunner.ComputePopulationStats). Mirrors the scenario CSV
+        // `#summary:` block in shape: three header rows (Statistic / Variant /
+        // Tier) above the data rows. Variant-rollup columns are dropped here too
+        // — Tier1Pop/Tier2Pop carry Variant=All; per-species columns carry their
+        // own Variant + Tier.
+        //
+        // Note: GrandMean_Min/Max are means-of-mins / means-of-maxes across
+        // scenarios — not real population values. Use the per-scenario rows in
+        // INDIVIDUAL SCENARIOS for genuine extrema.
         bool hasPopStats = Scenarios.Any(s => s.PopMean != null);
         if (hasPopStats)
         {
+            // Per-species column order matches PerSpeciesMetrics' alphabetical
+            // FullName order so this section lines up with the per-species
+            // sections above.
             var perSpeciesKeys = (PerSpeciesMetrics != null && PerSpeciesMetrics.Count > 0)
                 ? PerSpeciesMetrics.Keys.OrderBy(k => k).ToList()
                 : new List<string>();
 
+            // Per-scenario PopMean/Max/Min/StdDev dicts are keyed by both tier-
+            // total names ("Tier1Pop", "Tier2Pop") and per-species FullNames.
+            // PopMin/Max are stored as long; PopMean/StdDev as double. The
+            // switch handles all four with a single double accumulator.
             double GrandMean(string statName, string col)
             {
                 double sum = 0;
@@ -776,22 +824,25 @@ public class AggregateResults
             sb.AppendLine();
             sb.AppendLine("=== SUMMARY STATISTICS (Grand Mean Across All Scenarios) ===");
 
-            // Header row 1: Statistic + tier totals + per-species columns.
+            // Header row 1 — Statistic label + tier totals + per-species columns.
             var headerCols = new List<string> { "Tier1Pop", "Tier2Pop" };
             foreach (var key in perSpeciesKeys)
                 headerCols.Add(StepRecord.SanitizeColumnName(key));
             sb.AppendLine("Statistic," + string.Join(",", headerCols));
 
-            // Header row 2: Variant (All for tier totals, actual variant per species).
+            // Header row 2 — Variant: "All" for tier totals, the species'
+            // variant otherwise.
             sb.Append("Variant,All,All");
             foreach (var key in perSpeciesKeys) sb.Append($",{GetVariant(key)}");
             sb.AppendLine();
 
-            // Header row 3: Tier (1/2 for tier totals, actual tier per species).
+            // Header row 3 — Tier: tier number for tier totals, species' tier
+            // otherwise.
             sb.Append("Tier,1,2");
             foreach (var key in perSpeciesKeys) sb.Append($",{GetTier(key)}");
             sb.AppendLine();
 
+            // Data rows — one per statistic. Same column order as header row 1.
             string[] statNames = { "Mean", "Max", "Min", "StdDev" };
             foreach (var statName in statNames)
             {

@@ -213,24 +213,28 @@ Backward compatibility: existing tier-level columns (`Tier1Pop`...`ReproScaleT2`
 
 ### 2.3. Trailing summary section
 
-After the main data, `ToCsvInternal` appends (still within the same CSV):
+After the main data, `ToCsvInternal` appends (still within the same CSV). Three header lines (`Statistic` / `Variant` / `Tier`) annotate each column with its species' tier-context, mirroring the aggregate CSV's wide-format convention.
 
 ```
 #
-#summary:Statistic,<PopColumns...>
-#summary:Mean,<values...>
-#summary:Max,<values...>
-#summary:Min,<values...>
-#summary:StdDev,<values...>
+#summary:Statistic,Tier1Pop,Tier2Pop,<species cols…>
+#summary:Variant,All,All,<variant per species>
+#summary:Tier,1,2,<tier per species>
+#summary:Mean,<values…>
+#summary:Max,<values…>
+#summary:Min,<values…>
+#summary:StdDev,<values…>
 #
-#extinction:Variant,DayReachedZero
-#extinction:<variant>,<day or -1>
-... (one #extinction: line per VariantColumn)
+#extinction:Species,Variant,Tier,DayReachedZero
+#extinction:<sanitized_fullname>,<variant>,<tier>,<day or -1>
+... (one #extinction: line per species)
 #
 ```
 
-- `PopColumns` = `Tier1Pop, Tier2Pop, Tier1Arctic, Tier1Common, Tier1Tropical, Tier1Custom, Tier2Arctic, Tier2Common, Tier2Tropical, Tier2Custom` (from `ScenarioResult.PopColumns`).
-- Extinction day `-1` means the variant never reached zero during the scenario.
+- Summary columns are `Tier1Pop`, `Tier2Pop`, then one column per species (sanitized FullName, sorted by `(Tier asc, FullName asc)`).
+- Variant-rollup columns (`Tier1Arctic, …, Tier2Custom`) are intentionally omitted — per-species columns subsume them, and the tier-rollup invariant (per-species sums to tier total) holds.
+- `Min` and `Max` are integer (long) values; `Mean` and `StdDev` are formatted `:F1`.
+- Extinction day `-1` means the species never reached zero during the scenario.
 
 ## 3. Output: Aggregate CSV (one per run)
 
@@ -276,12 +280,12 @@ Max Final T2,<int>
 
 ### 3.4. Per-species population stats
 
-Emitted if any per-species data exists. Species listed alphabetically by `FullName`, which includes custom species individually.
+Emitted if any per-species data exists. Species listed alphabetically by `FullName`, which includes custom species individually. `Variant` and `Tier` are emitted as separate columns (added in v12.2) so downstream tools can group / filter without re-parsing the species name.
 
 ```
 === PER-SPECIES POPULATION STATS (All Scenarios) ===
-Species,Avg,SurvivedAvg,Min,Max,Extinct,Survived,ExtinctionRate
-<sp>,<avg>,<survived_avg>,<min>,<max>,<extinct_count>,<survived_count>,<pct>
+Species,Variant,Tier,Avg,SurvivedAvg,Min,Max,Extinct,Survived,ExtinctionRate
+<sp>,<variant>,<tier>,<avg>,<survived_avg>,<min>,<max>,<extinct_count>,<survived_count>,<pct>
 ...
 ```
 
@@ -305,14 +309,15 @@ Final year = last 365 days of the run. For runs shorter than 365 days, this equa
 
 ```
 === PER-SPECIES FINAL YEAR METRICS ===
-Species,N,NSurvived,MeanCondition,MeanCondition_StdDev,MeanCondition_SurvivedMean,MeanBirthRate,MeanBirthRate_StdDev,MeanBirthRate_SurvivedMean,PopCv,PopCv_StdDev,MeanPop,MeanPop_StdDev,MeanPop_SurvivedMean
-<sp>,<n>,<nSurvived>,<f3>,<f3>,<f3>,<f4>,<f4>,<f4>,<f3>,<f3>,<f1>,<f1>,<f1>
+Species,Variant,Tier,N,NSurvived,MeanCondition,MeanCondition_StdDev,MeanCondition_SurvivedMean,MeanBirthRate,MeanBirthRate_StdDev,MeanBirthRate_SurvivedMean,PopCv,PopCv_StdDev,MeanPop,MeanPop_StdDev,MeanPop_SurvivedMean
+<sp>,<variant>,<tier>,<n>,<nSurvived>,<f3>,<f3>,<f3>,<f4>,<f4>,<f4>,<f3>,<f3>,<f1>,<f1>,<f1>
 ... (one row per species, sorted alphabetically by FullName)
 ```
 
 - `MeanCondition` and `MeanBirthRate` (per-capita, `Births / max(StartPop,1)`) — averaged over the final 365 days of each scenario, then averaged across scenarios.
 - `PopCv` — population coefficient of variation (StdDev / Mean) over the final year. Returns 0 when mean is ~0.
 - `MeanPop` — population averaged over the final year (different from `FinalPop` snapshot).
+- `Variant` and `Tier` are emitted as separate columns (v12.2) so the species' tier-context is queryable without re-parsing the name.
 
 ### 3.5b. Per-species full-run metrics (v12)
 
@@ -320,8 +325,8 @@ Same metrics as 3.5a but averaged over the entire scenario (not just the final y
 
 ```
 === PER-SPECIES FULL-RUN METRICS ===
-Species,N,NSurvived,MeanCondition,MeanCondition_StdDev,MeanBirthRate,MeanBirthRate_StdDev,PopCv,PopCv_StdDev
-<sp>,<n>,<nSurvived>,<f3>,<f3>,<f4>,<f4>,<f3>,<f3>
+Species,Variant,Tier,N,NSurvived,MeanCondition,MeanCondition_StdDev,MeanBirthRate,MeanBirthRate_StdDev,PopCv,PopCv_StdDev
+<sp>,<variant>,<tier>,<n>,<nSurvived>,<f3>,<f3>,<f4>,<f4>,<f3>,<f3>
 ...
 ```
 
@@ -329,8 +334,8 @@ Species,N,NSurvived,MeanCondition,MeanCondition_StdDev,MeanBirthRate,MeanBirthRa
 
 ```
 === PER-SPECIES STABILITY METRICS ===
-Species,N,NSurvived,MinPop_Mean,MinPop_Min,MaxPop_Mean,MaxPop_Max,FinalPop_Mean,FinalPop_SurvivedMean,ExtinctionRate,MeanExtinctionDay,CrashRate,MeanCrashDay
-<sp>,<n>,<nSurvived>,<f1>,<f0>,<f1>,<f0>,<f1>,<f1>,<pct>,<f1>,<pct>,<f1>
+Species,Variant,Tier,N,NSurvived,MinPop_Mean,MinPop_Min,MaxPop_Mean,MaxPop_Max,FinalPop_Mean,FinalPop_SurvivedMean,ExtinctionRate,MeanExtinctionDay,CrashRate,MeanCrashDay
+<sp>,<variant>,<tier>,<n>,<nSurvived>,<f1>,<f0>,<f1>,<f0>,<f1>,<f1>,<pct>,<f1>,<pct>,<f1>
 ...
 ```
 
@@ -340,39 +345,64 @@ Species,N,NSurvived,MinPop_Mean,MinPop_Min,MaxPop_Mean,MaxPop_Max,FinalPop_Mean,
 - `MeanExtinctionDay` / `MeanCrashDay` — mean day among scenarios that experienced the event; `-1` if no scenario did.
 - A species is "crashed" on the first day its population drops below `max(10, 0.05 × StartPop)` (constants `CRASH_FLOOR` / `CRASH_FRACTION` in `SimulationRunner.cs`). Defaults are placeholders; tune as needed.
 
-### 3.6. Individual scenarios
+### 3.6. Individual scenarios (wide format)
+
+Combined wide-format table — one row per scenario, all species reported as additional columns. Three header rows (column name / Variant / Tier) annotate each species column with its taxonomic context. Variant-rollup columns (`T1Arctic, T1Common, …, T2Custom`) are intentionally omitted: the per-species columns sum to the tier totals, so the variant intermediate level is redundant.
 
 ```
 === INDIVIDUAL SCENARIOS ===
-Scenario,Seed,Crashed,CrashDay,CrashTier,FinalT1,FinalT2,T1Arctic,T1Common,T1Tropical,T1Custom,T2Arctic,T2Common,T2Tropical,T2Custom,AvgTemp,MinTemp,MaxTemp
-... (one row per scenario)
+Scenario,Seed,Crashed,CrashDay,CrashTier,FinalT1,FinalT2,AvgTemp,MinTemp,MaxTemp,<species cols…>
+Variant,,,,,All,All,,,,<variant per species>
+Tier,,,,,1,2,,,,<tier per species>
+<scenario_idx>,<seed>,<crashed>,<crash_day>,<crash_tier>,<finalT1>,<finalT2>,<avg_temp>,<min_temp>,<max_temp>,<finalPop per species…>
+... (one data row per scenario)
 ```
 
-### 3.7. Grand-mean summary statistics (optional)
+- Header row 1 carries column names; rows 2 and 3 are annotation rows (R/pandas treat them as data rows with leading-string cells — filter them by `Scenario` not parsing as numeric).
+- Empty cells under the scenario-meta columns (Seed, Crashed, CrashDay, CrashTier, AvgTemp, MinTemp, MaxTemp) in rows 2/3 indicate the column has no Variant/Tier annotation (it isn't a per-species or tier-total column).
+- `FinalT1` / `FinalT2` carry `Variant=All` and tier numbers (`1` / `2`).
+- Species columns are sanitized FullName (ASCII only — see [§2.2](#22-data-section-real-csv-rows)) sorted alphabetically. Species absent from a given scenario emit `FinalPop=0` so the table stays rectangular.
+- Tier-rollup invariant holds: per-species `FinalPop` values sum to `FinalT1` (Tier 1) and `FinalT2` (Tier 2).
 
-Emitted only if scenarios have per-day pop stats (they do when `ToScenarioResult` was used).
+### 3.7. Summary statistics (Grand Mean Across All Scenarios)
+
+Emitted only if scenarios have per-day pop stats. Wide format with the same three-header-row convention as §3.6.
 
 ```
-=== SUMMARY STATISTICS (Grand Mean Across All Runs) ===
-Statistic,<PopColumns...>
-GrandMean_Mean,<values...>
-GrandMean_Max,<values...>
-GrandMean_Min,<values...>
-GrandMean_StdDev,<values...>
+=== SUMMARY STATISTICS (Grand Mean Across All Scenarios) ===
+Statistic,Tier1Pop,Tier2Pop,<species cols…>
+Variant,All,All,<variant per species>
+Tier,1,2,<tier per species>
+GrandMean_Mean,<values…>
+GrandMean_Max,<values…>
+GrandMean_Min,<values…>
+GrandMean_StdDev,<values…>
 ```
 
-- `GrandMean_Mean` = average of per-scenario means. Note: this is a mean of averages, not a raw population value.
-- `GrandMean_Max`, etc. = same idea for each per-scenario statistic.
+- Header row 1's leading cell is the row-label column name (`Statistic`); rows 2 and 3 reuse the leading cell for their own labels (`Variant`, `Tier`). Subsequent data rows reuse the same leading-cell convention with `GrandMean_*` labels.
+- `GrandMean_Mean` = average of per-scenario means. **Mean of means, not a raw population value.**
+- `GrandMean_Max` / `GrandMean_Min` = mean of per-scenario maxes / mins. **Not real ecosystem extrema** — use the per-scenario rows in §3.6 for genuine extrema.
+- Variant-rollup columns dropped for the same reason as §3.6.
 
 ### 3.8. Extinction timing
 
+Two sections — tier-variant rollup followed by per-species detail.
+
 ```
-=== EXTINCTION TIMING (Across All Runs) ===
+=== EXTINCTION TIMING - TIER VARIANTS (Across All Scenarios) ===
 Variant,MinDays,MaxDays,AvgDays,NumExtinct,NumSurvived
 <variant>,<min>,<max>,<avg>,<num_extinct>,<num_survived>
 ```
 
-Values are `-1` if no scenario recorded that variant going extinct.
+Variant rows: `Tier1Arctic, Tier1Common, Tier1Tropical, Tier1Custom, Tier2Arctic, Tier2Common, Tier2Tropical, Tier2Custom`. Values are `-1` if no scenario recorded that variant going extinct.
+
+```
+=== EXTINCTION TIMING - PER SPECIES (Across All Scenarios) ===
+Species,Variant,Tier,MinDays,MaxDays,AvgDays,NumExtinct,NumSurvived
+<sp>,<variant>,<tier>,<min>,<max>,<avg>,<num_extinct>,<num_survived>
+```
+
+Per-species rows are sourced from `PerSpeciesMetrics[key].ExtinctionTiming`. Values are `-1`/`-1`/`-1` with `NumExtinct=0` for species that never went extinct in any scenario.
 
 ## 4. Output: Config CSV (one per run)
 
@@ -389,43 +419,66 @@ Generated by `BulkSimulationController.GenerateBulkSummary`. File: `bulk_summary
 # Model Version,v12-per-species-tracking
 # Total Runs,<n>
 # Generated,<yyyy-MM-dd HH:mm:ss>
+```
 
-=== PER-RUN RESULTS ===
-Run,Scenarios,Survived,Crashed,CrashRate,BaseTemp,ClimateTrend,<species columns...>
-<batch_name>,<scenarios>,<survived>,<crashed>,<pct>,<base_temp>,<trend>,<per-species averages...>
-... (one row per run; species columns are sorted alphabetically across all species seen)
+The body emits seven sections, summarised below. Per-species sections all carry separate `Species`, `Variant`, `Tier` columns (added in v12.2).
 
+### 5.1. Per-run results — tier level (wide)
+
+```
+=== PER-RUN RESULTS - TIER LEVEL ===
+Run,Scenarios,Survived,Crashed,CrashRate,BaseTemp,ClimateTrend,<species cols…>
+<batch_name>,<scenarios>,<survived>,<crashed>,<pct>,<base_temp>,<trend>,<per-species averages…>
+... (one row per run; species columns sorted alphabetically across all species seen)
+```
+
+Wide format. Each row = one run; per-species `AvgPop` columns are appended after the run-level columns. Convenient for at-a-glance comparison across runs in spreadsheets.
+
+### 5.2. Per-run results — per species (long)
+
+```
+=== PER-RUN RESULTS - PER SPECIES ===
+Run,Species,Variant,Tier,AvgPop,SurvivedAvgPop
+<batch_name>,<sp>,<variant>,<tier>,<f1>,<f1>
+... (one row per (run, species))
+```
+
+Long format of the same data as §5.1 plus `SurvivedAvgPop`. Database-friendly — joins cleanly with the long-format per-run-per-species sections below.
+
+### 5.3. Per-species aggregate (across all runs)
+
+```
 === PER-SPECIES AGGREGATE (Across All Runs) ===
-Species,GrandMean,SurvivedMean,RunsExtinct,RunsSurvived,ExtinctionRate
-<sp>,<grand_mean>,<survived_mean>,<extinct>,<survived>,<pct>
+Species,Variant,Tier,GrandMean,SurvivedMean,RunsExtinct,RunsSurvived,ExtinctionRate
+<sp>,<variant>,<tier>,<grand_mean>,<survived_mean>,<extinct>,<survived>,<pct>
 ... (one row per species)
 ```
 
 - `GrandMean` = mean of run-level averages (includes runs where the species was absent).
 - `SurvivedMean` = mean of run-level survived averages (runs where the species had positive population).
-- Min/Max are **not** present at this level — they would be min/max of averages, which is not a meaningful population value. Use the per-run table above for range information.
+- Min/Max are **not** present at this level — they would be min/max of averages, which is not a meaningful population value. Use the per-run table in §5.1 / §5.2 for range information.
 
-### 5.1. Per-run per-species final year (v12)
+### 5.4. Per-run per-species final year (v12)
 
 Detailed per-run × per-species final-year breakdown. Each row is one (run, species) pair.
 
 ```
 === PER-RUN PER-SPECIES FINAL YEAR ===
-Run,Species,N,NSurvived,MeanCondition,MeanBirthRate,PopCv,MeanPop
-<batch_name>,<sp>,<n>,<nSurvived>,<f3>,<f4>,<f3>,<f1>
+Run,Species,Variant,Tier,N,NSurvived,MeanCondition,MeanBirthRate,PopCv,MeanPop
+<batch_name>,<sp>,<variant>,<tier>,<n>,<nSurvived>,<f3>,<f4>,<f3>,<f1>
 ... (one row per (run, species) where the species had data)
 ```
 
 Use this for fine-grained analysis: e.g. plot `MeanCondition` vs `BaseTemp` across runs to visualize the Jensen shift per species.
 
-### 5.2. Cross-run per-species final year (v12)
+### 5.5. Cross-run per-species final year (v12)
 
-Summary across runs for each species. "GrandMean" = mean of per-run means (each run weighted equally, consistent with §5 legacy).
+Summary across runs for each species. "GrandMean" = mean of per-run means (each run weighted equally).
 
 ```
 === CROSS-RUN PER-SPECIES FINAL YEAR (Mean of per-run means) ===
-Species,Runs,RunsSurvived,GrandMeanCondition,GrandMeanCondition_StdDev,GrandMeanBirthRate,GrandMeanBirthRate_StdDev,GrandMeanPopCv,GrandMeanPop,GrandMeanPop_SurvivedMean
-<sp>,<runs>,<runsSurvived>,<f3>,<f3>,<f4>,<f4>,<f3>,<f1>,<f1>
+Species,Variant,Tier,Runs,RunsSurvived,GrandMeanCondition,GrandMeanCondition_StdDev,GrandMeanBirthRate,GrandMeanBirthRate_StdDev,GrandMeanPopCv,GrandMeanPop,GrandMeanPop_SurvivedMean
+<sp>,<variant>,<tier>,<runs>,<runsSurvived>,<f3>,<f3>,<f4>,<f4>,<f3>,<f1>,<f1>
 ...
 ```
 
@@ -433,12 +486,12 @@ Species,Runs,RunsSurvived,GrandMeanCondition,GrandMeanCondition_StdDev,GrandMean
 - `RunsSurvived` — runs where the species had at least one surviving scenario (`NSurvived > 0` in that run).
 - `StdDev` columns measure between-run variability of the per-run means.
 
-### 5.3. Cross-run stability (v12)
+### 5.6. Cross-run stability (v12)
 
 ```
 === CROSS-RUN STABILITY ===
-Species,Runs,RunsSurvived,MinPop_Mean,MaxPop_Mean,FinalPop_Mean,ExtinctionRate,MeanExtinctionDay,CrashRate,MeanCrashDay
-<sp>,<runs>,<runsSurvived>,<f1>,<f1>,<f1>,<pct>,<f1>,<pct>,<f1>
+Species,Variant,Tier,Runs,RunsSurvived,MinPop_Mean,MaxPop_Mean,FinalPop_Mean,ExtinctionRate,MeanExtinctionDay,CrashRate,MeanCrashDay
+<sp>,<variant>,<tier>,<runs>,<runsSurvived>,<f1>,<f1>,<f1>,<pct>,<f1>,<pct>,<f1>
 ...
 ```
 

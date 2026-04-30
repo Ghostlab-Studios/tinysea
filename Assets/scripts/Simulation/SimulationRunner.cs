@@ -728,9 +728,17 @@ public class SimulationRunner
                 spExtinctionDay[fn] = extinctionDay;
             }
 
-            // Summary statistics block — tier totals + per-species columns
+            // Summary statistics block — tier totals + per-species columns.
+            // TWO header rows: species name (Statistic) and variant (Variant).
+            // For tier-total columns (Tier1Pop, Tier2Pop) the variant row says "All".
             sb.AppendLine("#");
             sb.AppendLine("#summary:Statistic," + string.Join(",", summaryCols));
+
+            sb.Append("#summary:Variant");
+            sb.Append(",All,All");
+            foreach (var sp in orderedSpecies)
+                sb.Append($",Tier{sp.Tier}{sp.Variant}");
+            sb.AppendLine();
 
             sb.Append("#summary:Mean");
             sb.Append($",{stats.Mean["Tier1Pop"]:F1},{stats.Mean["Tier2Pop"]:F1}");
@@ -752,13 +760,14 @@ public class SimulationRunner
             foreach (var sp in orderedSpecies) sb.Append($",{spStdDev[sp.FullName]:F1}");
             sb.AppendLine();
 
-            // Extinction timing block — one row per species
+            // Extinction timing block — Species, Variant, DayReachedZero columns
             sb.AppendLine("#");
-            sb.AppendLine("#extinction:Species,DayReachedZero");
+            sb.AppendLine("#extinction:Species,Variant,DayReachedZero");
             foreach (var sp in orderedSpecies)
             {
                 string col = StepRecord.SanitizeColumnName(sp.FullName);
-                sb.AppendLine($"#extinction:{col},{spExtinctionDay[sp.FullName]}");
+                string variantStr = $"Tier{sp.Tier}{sp.Variant}";
+                sb.AppendLine($"#extinction:{col},{variantStr},{spExtinctionDay[sp.FullName]}");
             }
             sb.AppendLine("#");
         }

@@ -467,7 +467,7 @@ public class BulkSimulationController : MonoBehaviour
         // SurvivedMean = avg of run-level survived avgs (only scenarios where species lived).
         // Min/Max of averages are not meaningful population values — use the per-run table.
         sb.AppendLine("=== PER-SPECIES AGGREGATE (Across All Runs) ===");
-        sb.AppendLine("Species,GrandMean,SurvivedMean,RunsExtinct,RunsSurvived,ExtinctionRate");
+        sb.AppendLine("Species,Variant,Tier,GrandMean,SurvivedMean,RunsExtinct,RunsSurvived,ExtinctionRate");
 
         foreach (var sp in allSpecies)
         {
@@ -502,7 +502,7 @@ public class BulkSimulationController : MonoBehaviour
             float grandMean = count > 0 ? sum / count : 0;
             float survivedMean = survivedCount > 0 ? survivedSum / survivedCount : 0;
             float extinctionRate = count > 0 ? (float)runsExtinct / count : 0;
-            sb.AppendLine($"{sp},{grandMean:F1},{survivedMean:F1},{runsExtinct},{runsSurvived},{extinctionRate:P1}");
+            sb.AppendLine($"{sp},{GetVariant(sp)},{GetTier(sp)},{grandMean:F1},{survivedMean:F1},{runsExtinct},{runsSurvived},{extinctionRate:P1}");
         }
 
         // ====================================================================
@@ -523,14 +523,14 @@ public class BulkSimulationController : MonoBehaviour
             // Per-run × per-species final-year detail table
             sb.AppendLine();
             sb.AppendLine("=== PER-RUN PER-SPECIES FINAL YEAR ===");
-            sb.AppendLine("Run,Species,N,NSurvived,MeanCondition,MeanBirthRate,PopCv,MeanPop");
+            sb.AppendLine("Run,Species,Variant,Tier,N,NSurvived,MeanCondition,MeanBirthRate,PopCv,MeanPop");
             foreach (var run in summaries)
             {
                 if (run.PerSpeciesMetrics == null) continue;
                 foreach (var sp in allSpeciesRich)
                 {
                     if (!run.PerSpeciesMetrics.TryGetValue(sp, out var a)) continue;
-                    sb.AppendLine($"{run.BatchName},{sp},{a.N},{a.NSurvived}," +
+                    sb.AppendLine($"{run.BatchName},{sp},{GetVariant(sp)},{GetTier(sp)},{a.N},{a.NSurvived}," +
                         $"{a.MeanConditionFinalYear.Mean:F3}," +
                         $"{a.MeanBirthRateFinalYear.Mean:F4}," +
                         $"{a.PopCvFinalYear.Mean:F3}," +
@@ -542,7 +542,7 @@ public class BulkSimulationController : MonoBehaviour
             // Cross-run grand-mean (mean of per-run means — equal weight per run,
             // consistent with existing "GrandMean" semantics in the legacy table).
             sb.AppendLine("=== CROSS-RUN PER-SPECIES FINAL YEAR (Mean of per-run means) ===");
-            sb.AppendLine("Species,Runs,RunsSurvived,GrandMeanCondition,GrandMeanCondition_StdDev,GrandMeanBirthRate,GrandMeanBirthRate_StdDev,GrandMeanPopCv,GrandMeanPop,GrandMeanPop_SurvivedMean");
+            sb.AppendLine("Species,Variant,Tier,Runs,RunsSurvived,GrandMeanCondition,GrandMeanCondition_StdDev,GrandMeanBirthRate,GrandMeanBirthRate_StdDev,GrandMeanPopCv,GrandMeanPop,GrandMeanPop_SurvivedMean");
             foreach (var sp in allSpeciesRich)
             {
                 int runs = 0, runsSurvivedCount = 0;
@@ -587,7 +587,7 @@ public class BulkSimulationController : MonoBehaviour
                 float gmBrStd   = brVar > 0f ? (float)Math.Sqrt(brVar) : 0f;
                 float gmPopSurvived = popSurvivedCount > 0 ? popSurvivedSum / popSurvivedCount : 0f;
 
-                sb.AppendLine($"{sp},{runs},{runsSurvivedCount}," +
+                sb.AppendLine($"{sp},{GetVariant(sp)},{GetTier(sp)},{runs},{runsSurvivedCount}," +
                     $"{gmCond:F3},{gmCondStd:F3}," +
                     $"{gmBr:F4},{gmBrStd:F4}," +
                     $"{gmCv:F3}," +
@@ -597,7 +597,7 @@ public class BulkSimulationController : MonoBehaviour
 
             // Cross-run stability summary
             sb.AppendLine("=== CROSS-RUN STABILITY ===");
-            sb.AppendLine("Species,Runs,RunsSurvived,MinPop_Mean,MaxPop_Mean,FinalPop_Mean,ExtinctionRate,MeanExtinctionDay,CrashRate,MeanCrashDay");
+            sb.AppendLine("Species,Variant,Tier,Runs,RunsSurvived,MinPop_Mean,MaxPop_Mean,FinalPop_Mean,ExtinctionRate,MeanExtinctionDay,CrashRate,MeanCrashDay");
             foreach (var sp in allSpeciesRich)
             {
                 int runs = 0, runsSurvivedCount = 0;
@@ -646,7 +646,7 @@ public class BulkSimulationController : MonoBehaviour
                 float meanExtDay = extDayCount > 0 ? extDaySum / extDayCount : -1f;
                 float meanCrashDay = crashDayCount > 0 ? crashDaySum / crashDayCount : -1f;
 
-                sb.AppendLine($"{sp},{runs},{runsSurvivedCount}," +
+                sb.AppendLine($"{sp},{GetVariant(sp)},{GetTier(sp)},{runs},{runsSurvivedCount}," +
                     $"{minMean:F1},{maxMean:F1},{finalMean:F1}," +
                     $"{extinctionRate2:P1},{meanExtDay:F1}," +
                     $"{crashRate2:P1},{meanCrashDay:F1}");

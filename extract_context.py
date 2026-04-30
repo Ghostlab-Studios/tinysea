@@ -12,10 +12,18 @@ Coverage:
     scanning Simulation/*.cs for class-name occurrences (no hardcoded list).
   - WebGL plugins (jslib for downloads/ZIP -- bulk results)
   - Species data (species.csv)
+  - Simulation UI prefabs (YAML) -- inspector-set wiring not visible in C#.
+  - Unity package manifest + lock (dependency versions referenced by docs).
+  - ProjectSettings.asset -- build target, scripting defines, layers.
   - All documentation in docs/ (markdown, diagrams, screenshots, xlsx, etc.)
   - Validation notes + test CSV fixtures from Tests/ (skipping run-output dirs)
   - Both CLAUDE.md files (parent project overview + Unity-side)
   - A generated _README_FOR_AI.md preface explaining project history + bundle scope
+
+Intentionally excluded:
+  - simulation.unity scene file -- it's pure YAML but ~200% of the Claude web
+    app's context window, so it would crowd out the actual source. The prefabs
+    and the C# scripts together are enough to reconstruct the wiring.
 
 Usage:
     python extract_context.py                   # outputs to ./claude_context/
@@ -140,6 +148,12 @@ of the simulation's behavior or research output.
 - All ScriptableObject configs and species data (`SimulationConfig`,
   `SpeciesDatabase`, `RunSpeciesList`, `species.csv`).
 - All WebGL `.jslib` plugins used by the simulation for browser file downloads.
+- Simulation UI prefabs from `Assets/prefabs/Simulation/` (YAML). These hold
+  the inspector-set wiring between the simulation UI scripts and their visual
+  tree -- not visible from the C# alone.
+- Unity package manifest (`manifest.json`, `packages-lock.json`) so the AI
+  knows which Unity packages and versions are in play.
+- `ProjectSettings.asset` -- build target, scripting define symbols, layers.
 - All documentation under `docs/` -- the authoritative simulation spec,
   diagrams (mermaid), screenshots, and the simulation-variables spreadsheet.
 - Validation methodology notes and test CSV fixtures from `Tests/`
@@ -152,7 +166,10 @@ of the simulation's behavior or research output.
 
 ## What's NOT in this bundle
 
-- Unity scenes, prefabs, materials, animations, audio, sprites (binary).
+- `simulation.unity` scene file -- the YAML payload is too large for the
+  Claude web app's context window. The prefabs + the C# scripts together
+  reconstruct the wiring; the scene only adds positional / parenting data.
+- Unity materials, animations, audio, sprites (binary).
 - Game-only scripts the simulation never references (UI, scenes, shop, etc.).
 - The website (`Tinysea PHP webiste/`) -- separate concern.
 - Build outputs (`Builds/`, `Library/`, `Temp/`).
@@ -160,11 +177,14 @@ of the simulation's behavior or research output.
 ## File-naming convention
 
 All files are flat (no subfolders) with prefixes to avoid collisions:
-  - `Game_*`     -- game scripts referenced by the simulation
-  - `DS_*`       -- data structures (from `Simulation/DataStructure/`)
-  - `UI_*`       -- simulation UI (results screen, config editor)
-  - `diagram_*`  -- mermaid diagrams from `docs/diagrams/`
-  - `Tests_*`    -- validation methodology notes + CSV fixtures
+  - `Game_*`            -- game scripts referenced by the simulation
+  - `DS_*`              -- data structures (from `Simulation/DataStructure/`)
+  - `UI_*`              -- simulation UI scripts (results screen, config editor)
+  - `Prefab_*`          -- simulation UI prefabs (YAML)
+  - `Package_*`         -- Unity package manifest + lock
+  - `ProjectSettings_*` -- Unity project settings
+  - `diagram_*`         -- mermaid diagrams from `docs/diagrams/`
+  - `Tests_*`           -- validation methodology notes + CSV fixtures
   - `ProjectRoot_CLAUDE.md` / `Unity_CLAUDE.md` -- the two CLAUDE.md files
 """
     (output_dir / "_README_FOR_AI.md").write_text(content, encoding="utf-8")
@@ -181,14 +201,17 @@ def extract(output_dir: Path) -> None:
     count = 0
     PREFIXES = {"DataStructure": "DS_", "UI": "UI_"}
 
-    sim_dir       = UNITY_ROOT / "Assets" / "scripts" / "Simulation"
-    scripts_dir   = UNITY_ROOT / "Assets" / "scripts"
-    resources_dir = UNITY_ROOT / "Assets" / "Resources"
-    plugins_dir   = UNITY_ROOT / "Assets" / "plugins" / "WebGL"
-    docs_dir      = UNITY_ROOT / "docs"
+    sim_dir         = UNITY_ROOT / "Assets" / "scripts" / "Simulation"
+    scripts_dir     = UNITY_ROOT / "Assets" / "scripts"
+    resources_dir   = UNITY_ROOT / "Assets" / "Resources"
+    plugins_dir     = UNITY_ROOT / "Assets" / "plugins" / "WebGL"
+    sim_prefabs_dir = UNITY_ROOT / "Assets" / "prefabs" / "Simulation"
+    packages_dir    = UNITY_ROOT / "Packages"
+    settings_dir    = UNITY_ROOT / "ProjectSettings"
+    docs_dir        = UNITY_ROOT / "docs"
 
     # 1. Simulation/ scripts (everything, recursive)
-    print("[1/8] Simulation scripts ...")
+    print("[ 1/11] Simulation scripts ...")
     for f in sorted(sim_dir.rglob("*")):
         if f.is_file() and f.suffix not in SOURCE_SKIP_EXT:
             prefix = PREFIXES.get(f.parent.name, "")
@@ -196,15 +219,15 @@ def extract(output_dir: Path) -> None:
                 count += 1
 
     # 2. Game-side scripts referenced by simulation (auto-detected)
-    print("[2/8] Game scripts referenced by simulation (auto-detect) ...")
+    print("[ 2/11] Game scripts referenced by simulation (auto-detect) ...")
     referenced = detect_referenced_game_scripts(sim_dir, scripts_dir)
     for src in referenced:
         if flat_copy(src, output_dir, used, "Game_"):
             count += 1
-    print(f"      detected {len(referenced)} referenced game script(s)")
+    print(f"        detected {len(referenced)} referenced game script(s)")
 
     # 3. ScriptableObject assets
-    print("[3/8] ScriptableObject assets ...")
+    print("[ 3/11] ScriptableObject assets ...")
     if resources_dir.exists():
         for f in sorted(resources_dir.glob("*")):
             if f.is_file() and f.suffix in (".asset", ".json"):
@@ -212,21 +235,47 @@ def extract(output_dir: Path) -> None:
                     count += 1
 
     # 4. Species data
-    print("[4/8] Species data ...")
+    print("[ 4/11] Species data ...")
     species_csv = UNITY_ROOT / "Assets" / "textdata" / "species.csv"
     if species_csv.exists() and flat_copy(species_csv, output_dir, used):
         count += 1
 
     # 5. WebGL plugins
-    print("[5/8] WebGL plugins ...")
+    print("[ 5/11] WebGL plugins ...")
     if plugins_dir.exists():
         for f in sorted(plugins_dir.glob("*")):
             if f.is_file() and f.suffix not in SOURCE_SKIP_EXT:
                 if flat_copy(f, output_dir, used):
                     count += 1
 
-    # 6. Documentation -- keep PDFs, PNGs, xlsx, etc. (only skip .meta)
-    print("[6/8] Documentation (incl. images, xlsx, diagrams) ...")
+    # 6. Simulation UI prefabs (YAML). Captures inspector-set wiring between
+    #    sim UI scripts and their visual tree (sliders, input boxes, results
+    #    rows). simulation.unity itself is intentionally NOT bundled -- its
+    #    YAML payload is ~200% of the Claude web app's context window. The
+    #    prefabs + scripts together are enough to reconstruct the wiring.
+    print("[ 6/11] Simulation UI prefabs ...")
+    if sim_prefabs_dir.exists():
+        for f in sorted(sim_prefabs_dir.rglob("*.prefab")):
+            if flat_copy(f, output_dir, used, "Prefab_"):
+                count += 1
+
+    # 7. Unity package manifest + lock (dependency versions).
+    print("[ 7/11] Unity package manifest ...")
+    if packages_dir.exists():
+        for fname in ("manifest.json", "packages-lock.json"):
+            p = packages_dir / fname
+            if p.exists() and flat_copy(p, output_dir, used, "Package_"):
+                count += 1
+
+    # 8. ProjectSettings.asset (build target, scripting defines, layers).
+    print("[ 8/11] Project settings ...")
+    if settings_dir.exists():
+        ps = settings_dir / "ProjectSettings.asset"
+        if ps.exists() and flat_copy(ps, output_dir, used, "ProjectSettings_"):
+            count += 1
+
+    # 9. Documentation -- keep PDFs, PNGs, xlsx, etc. (only skip .meta)
+    print("[ 9/11] Documentation (incl. images, xlsx, diagrams) ...")
     if docs_dir.exists():
         for f in sorted(docs_dir.rglob("*")):
             if f.is_file() and f.suffix not in GLOBAL_SKIP_EXT:
@@ -234,9 +283,9 @@ def extract(output_dir: Path) -> None:
                 if flat_copy(f, output_dir, used, prefix):
                     count += 1
 
-    # 7a. Validation / test fixtures + notes (top-level Tests/ only;
-    #     skip subdirs which contain run outputs).
-    print("[7/8] Tests/ validation notes + fixtures ...")
+    # 10a. Validation / test fixtures + notes (top-level Tests/ only;
+    #      skip subdirs which contain run outputs).
+    print("[10/11] Tests/ validation notes + fixtures ...")
     tests_dir = UNITY_ROOT / "Tests"
     if tests_dir.exists():
         for f in sorted(tests_dir.glob("*")):
@@ -244,8 +293,8 @@ def extract(output_dir: Path) -> None:
                 if flat_copy(f, output_dir, used, "Tests_"):
                     count += 1
 
-    # 7b. Both CLAUDE.md files
-    print("[7/8] CLAUDE.md (parent + Unity-side) ...")
+    # 10b. Both CLAUDE.md files
+    print("[10/11] CLAUDE.md (parent + Unity-side) ...")
     parent_claude = PROJECT_ROOT / "CLAUDE.md"
     if parent_claude.exists() and flat_copy(parent_claude, output_dir, used, "ProjectRoot_"):
         count += 1
@@ -253,8 +302,8 @@ def extract(output_dir: Path) -> None:
     if unity_claude.exists() and flat_copy(unity_claude, output_dir, used, "Unity_"):
         count += 1
 
-    # 8. Generated preface README
-    print("[8/8] _README_FOR_AI.md preface ...")
+    # 11. Generated preface README
+    print("[11/11] _README_FOR_AI.md preface ...")
     write_readme(output_dir, referenced)
     count += 1
 

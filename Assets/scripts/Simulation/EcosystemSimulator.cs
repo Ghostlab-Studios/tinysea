@@ -204,6 +204,32 @@ public class EcosystemSimulator
     public float AvgConditionT1 { get; private set; } = 1f;
     public float AvgConditionT2 { get; private set; } = 1f;
 
+    // ==================== PER-SPECIES EVENT COUNTERS (v12) ====================
+    // Reset at the top of ProcessBiologyStep, populated as each event fires
+    // inside the biology steps. Read by SimulationRunner.RecordStep to populate
+    // StepRecord.SpeciesData. Keyed by SimSpecies.FullName.
+    //
+    // INVARIANT: Sum of per-species values == matching tier-level Last* counter.
+    public Dictionary<string, long>  LastBirthsBySpecies          { get; } = new Dictionary<string, long>();
+    public Dictionary<string, long>  LastTempDeathsBySpecies      { get; } = new Dictionary<string, long>();
+    public Dictionary<string, long>  LastConditionDeathsBySpecies { get; } = new Dictionary<string, long>();
+    public Dictionary<string, long>  LastNaturalDeathsBySpecies   { get; } = new Dictionary<string, long>();
+    public Dictionary<string, long>  LastEatenBySpecies           { get; } = new Dictionary<string, long>();
+    public Dictionary<string, float> LastReproScaleBySpecies      { get; } = new Dictionary<string, float>();
+    public Dictionary<string, float> LastFedRateBySpecies         { get; } = new Dictionary<string, float>();
+    public Dictionary<string, long>  StartPopBySpecies            { get; } = new Dictionary<string, long>();
+
+    // Accessors for accumulator residuals (private dicts above are not exposed directly).
+    // _thermalDeathAccumulators is unused dead code in v11.1 — no accessor.
+    public float GetBirthAccum(string fullName)
+        => _birthAccumulators.TryGetValue(fullName, out var v) ? v : 0f;
+    public float GetNaturalDeathAccum(string fullName)
+        => _naturalDeathAccumulators.TryGetValue(fullName, out var v) ? v : 0f;
+    public float GetConditionDeathAccum(string fullName)
+        => _conditionDeathAccumulators.TryGetValue(fullName, out var v) ? v : 0f;
+    public float GetPredationAccum(string fullName)
+        => _predationAccumulators.TryGetValue(fullName, out var v) ? v : 0f;
+
     // ==================== CARRYING CAPACITY (Tier 1 Shared Resource Pool) ====================
     // Always on as of v11.1 — Tier 1 species without a resource ceiling grow without
     // bound, which is biologically meaningless. Cap drives the food-pool FedRate
@@ -488,6 +514,28 @@ public class EcosystemSimulator
         LastReproScaleT1 = 0f;
         LastReproScaleT2 = 0f;
 
+        // v12: Reset per-species counters and snapshot start-of-step populations.
+        // StartPopBySpecies feeds per-capita BirthRate computation in SimulationRunner.RecordStep.
+        LastBirthsBySpecies.Clear();
+        LastTempDeathsBySpecies.Clear();
+        LastConditionDeathsBySpecies.Clear();
+        LastNaturalDeathsBySpecies.Clear();
+        LastEatenBySpecies.Clear();
+        LastReproScaleBySpecies.Clear();
+        LastFedRateBySpecies.Clear();
+        StartPopBySpecies.Clear();
+        foreach (var sp in Species)
+        {
+            LastBirthsBySpecies[sp.FullName]          = 0L;
+            LastTempDeathsBySpecies[sp.FullName]      = 0L;
+            LastConditionDeathsBySpecies[sp.FullName] = 0L;
+            LastNaturalDeathsBySpecies[sp.FullName]   = 0L;
+            LastEatenBySpecies[sp.FullName]           = 0L;
+            LastReproScaleBySpecies[sp.FullName]      = 0f;
+            LastFedRateBySpecies[sp.FullName]         = 0f;
+            StartPopBySpecies[sp.FullName]            = (long)Math.Round(sp.Population);
+        }
+
         SimLog($"=== Biology Step at {temperature:F2}°C (BiologyStep={BiologyStep}) ===");
         SimLog($"  START: T1={StartPopT1:F0}, T2={StartPopT2:F0}");
 
@@ -661,6 +709,8 @@ public class EcosystemSimulator
             {
                 sp.FedRate = 0f;
             }
+            // v12: per-species FedRate for CSV output (dead T1 species record 0)
+            LastFedRateBySpecies[sp.FullName] = sp.FedRate;
         }
         LastFedRateT1 = fedRatePopT1 > 0f ? fedRateSumT1 / fedRatePopT1 : 1f;
         SimLog($"  Tier 1 food: tier1Pop={tier1Pop:F0}, foodDensity={foodDensity:F3}, avgFedRateT1={LastFedRateT1:F3}");
@@ -742,6 +792,8 @@ public class EcosystemSimulator
             pred.FedRate = Math.Min(1f, pred.CurrentHuntingSuccess * scarcityFactor);
             fedRateSumWeighted += pred.FedRate * pred.Population;
             fedRatePopSum += pred.Population;
+            // v12: per-species FedRate for CSV output (variable is `pred`, not `sp`)
+            LastFedRateBySpecies[pred.FullName] = pred.FedRate;
         }
         LastFedRateT2 = fedRatePopSum > 0f ? fedRateSumWeighted / fedRatePopSum : 1f;
 
@@ -771,6 +823,8 @@ public class EcosystemSimulator
                 float oldPop = p.Population;
                 p.Population = Math.Max(0f, p.Population - wholeDeaths);
                 LastEatenT1 += wholeDeaths;
+                // v12: per-species predation deaths
+                LastEatenBySpecies[p.FullName] += wholeDeaths;
 
                 SimLog($"    {p.FullName}: share={share:F3}, lost={preyLost:F2}, accum={accumulated:F2}, deaths={wholeDeaths}, Pop {oldPop:F0} → {p.Population:F0}");
             }
@@ -897,6 +951,8 @@ public class EcosystemSimulator
 
         if (sp.Tier == 1) LastTempDeathsT1 += deaths;
         else if (sp.Tier == 2) LastTempDeathsT2 += deaths;
+        // v12: per-species thermal death count (cast to long; deaths is whole-pop kill)
+        LastTempDeathsBySpecies[sp.FullName] += (long)deaths;
     }
 
     /// <summary>
@@ -964,6 +1020,8 @@ public class EcosystemSimulator
 
             if (sp.Tier == 1) LastConditionDeathsT1 += wholeDeaths;
             else if (sp.Tier == 2) LastConditionDeathsT2 += wholeDeaths;
+            // v12: per-species condition death count
+            LastConditionDeathsBySpecies[sp.FullName] += wholeDeaths;
         }
         else
         {
@@ -1066,6 +1124,9 @@ public class EcosystemSimulator
         // Track reproScale per tier for CSV output and debugging
         if (sp.Tier == 1) LastReproScaleT1 = reproScale;
         else if (sp.Tier == 2) LastReproScaleT2 = reproScale;
+        // v12: per-species reproScale (captured here so non-reproducers — early-return
+        // above at MIN_POPULATION_FOR_REPRODUCTION — keep the 0f from the reset block)
+        LastReproScaleBySpecies[sp.FullName] = reproScale;
 
         // births = Population × reproScale × ReproMult × Pmax × BiologyStep
         // Pmax (v9): specialists convert Condition into offspring more efficiently.
@@ -1129,6 +1190,8 @@ public class EcosystemSimulator
             LastBirthsT1 += wholeBirths;
         else if (sp.Tier == 2)
             LastBirthsT2 += wholeBirths;
+        // v12: per-species birth count
+        LastBirthsBySpecies[sp.FullName] += wholeBirths;
     }
 
     /// <summary>
@@ -1177,6 +1240,8 @@ public class EcosystemSimulator
                 LastNaturalDeathsT1 += wholeDeaths;
             else if (sp.Tier == 2)
                 LastNaturalDeathsT2 += wholeDeaths;
+            // v12: per-species natural death count
+            LastNaturalDeathsBySpecies[sp.FullName] += wholeDeaths;
         }
         else
         {

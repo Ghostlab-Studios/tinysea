@@ -37,6 +37,11 @@ public class ScenarioResult
     // Per-species final populations (key = FullName like "Hexapod_Arctic" or "Coral_Custom")
     public Dictionary<string, long> FinalSpeciesPopulations;
 
+    // v12: Per-species rich metrics (final-year means, CV, min/max, extinction/crash day)
+    // Populated by SimulationRunner.ComputePerSpeciesScenarioMetrics().
+    // Key = FullName.
+    public Dictionary<string, PerSpeciesScenarioMetrics> SpeciesMetrics;
+
     // Population stats (across all days)
     public long MaxTier1Pop;
     public long MinTier1Pop;
@@ -97,6 +102,104 @@ public class ScenarioResult
     {
         return Crashed ? "X" : "OK";
     }
+}
+
+/// <summary>
+/// Per-species rich metrics for a single scenario (v12).
+///
+/// Computed by SimulationRunner.ComputePerSpeciesScenarioMetrics() at end of run
+/// by post-processing the per-day StepRecord.SpeciesData entries. These metrics
+/// are NOT clamped by carrying capacity (Condition, BirthRate are physiological
+/// signals), so they expose the "suboptimal is optimal" Jensen shift that
+/// final-day population masks.
+///
+/// Final year = last 365 days; if total run is shorter, final-year metrics
+/// equal full-run metrics (slice covers all days).
+/// </summary>
+[Serializable]
+public class PerSpeciesScenarioMetrics
+{
+    public string FullName;
+    public long  FinalPopulation;
+
+    // Mean Condition over the window (population-weighted equivalent — each day
+    // contributes one observation regardless of population size)
+    public float MeanConditionFullRun;
+    public float MeanConditionFinalYear;
+
+    // Mean per-capita birth rate (Births / max(StartOfDayPop, 1) per day)
+    public float MeanBirthRateFullRun;
+    public float MeanBirthRateFinalYear;
+
+    // Population coefficient of variation (StdDev / Mean) — instability signal
+    public float PopCvFullRun;
+    public float PopCvFinalYear;
+
+    // Mean population over final year — different from FinalPopulation (single-day snapshot)
+    public float MeanPopulationFinalYear;
+
+    // Population extremes during full sim
+    public long MinPopulation;
+    public long MaxPopulation;
+
+    // Timing events (-1 if event never occurred)
+    public int ExtinctionDay;     // First day Pop reaches 0 after being alive
+    public int CrashDay;          // First day Pop drops below max(CRASH_FLOOR, CRASH_FRACTION × StartPop)
+
+    public bool Survived => FinalPopulation > 0;
+}
+
+/// <summary>
+/// Per-metric Mean / StdDev / Min / Max stats with survived-only variants (v12).
+/// Used inside PerSpeciesAggregate for cross-scenario aggregation.
+/// </summary>
+[Serializable]
+public struct AggStat
+{
+    public float Mean;
+    public float StdDev;
+    public float Min;
+    public float Max;
+    public float SurvivedMean;
+    public float SurvivedStdDev;
+}
+
+/// <summary>
+/// Extinction/crash timing summary for a species across scenarios (v12).
+/// </summary>
+[Serializable]
+public struct ExtinctionStat
+{
+    public int   NEvents;       // # scenarios where event occurred (day != -1)
+    public int   NNonEvents;    // # scenarios where event did not occur (day == -1)
+    public float MinDay;        // Earliest day among events; -1 if no events
+    public float MaxDay;        // Latest day among events; -1 if no events
+    public float MeanDay;       // Mean day among events; -1 if no events
+}
+
+/// <summary>
+/// Per-species aggregate across all scenarios in a run (v12).
+/// Wraps the AggStat for each metric defined on PerSpeciesScenarioMetrics.
+/// </summary>
+[Serializable]
+public class PerSpeciesAggregate
+{
+    public string FullName;
+    public int N;             // # scenarios contributing
+    public int NSurvived;     // # scenarios where species final pop > 0
+
+    public AggStat MeanConditionFullRun;
+    public AggStat MeanConditionFinalYear;
+    public AggStat MeanBirthRateFullRun;
+    public AggStat MeanBirthRateFinalYear;
+    public AggStat PopCvFullRun;
+    public AggStat PopCvFinalYear;
+    public AggStat MeanPopulationFinalYear;
+    public AggStat MinPopulation;
+    public AggStat MaxPopulation;
+    public AggStat FinalPopulation;
+    public ExtinctionStat ExtinctionTiming;
+    public ExtinctionStat CrashTiming;
 }
 
 /// <summary>
@@ -175,6 +278,9 @@ public class AggregateResults
     public Dictionary<string, int> PerSpeciesExtinct;  // scenarios where final pop = 0
     public Dictionary<string, int> PerSpeciesSurvived; // scenarios where final pop > 0
     public Dictionary<string, float> PerSpeciesSurvivedAvg; // avg pop only across survived scenarios
+
+    // v12: Per-species rich aggregate (final-year means, CV, min/max, extinction/crash timing)
+    public Dictionary<string, PerSpeciesAggregate> PerSpeciesMetrics;
 
     // Individual results
     public List<ScenarioResult> Scenarios = new List<ScenarioResult>();
@@ -315,6 +421,125 @@ public class AggregateResults
             PerSpeciesSurvived[key] = survived;
             PerSpeciesSurvivedAvg[key] = survived > 0 ? survivedSum / survived : 0;
         }
+
+        // v12: Per-species rich aggregate (final-year means, CV, min/max, extinction/crash timing)
+        BuildPerSpeciesAggregate();
+    }
+
+    /// <summary>
+    /// v12: Build PerSpeciesMetrics dict by aggregating Scenarios[].SpeciesMetrics
+    /// across scenarios. Existing tier-level dicts (PerSpeciesAvg etc.) are NOT
+    /// touched — both old and new aggregates coexist for backward compatibility.
+    /// </summary>
+    private void BuildPerSpeciesAggregate()
+    {
+        PerSpeciesMetrics = new Dictionary<string, PerSpeciesAggregate>();
+        if (Scenarios == null || Scenarios.Count == 0) return;
+
+        // Union of species names across all scenarios
+        var allKeys = new HashSet<string>();
+        foreach (var s in Scenarios)
+        {
+            if (s.SpeciesMetrics == null) continue;
+            foreach (var k in s.SpeciesMetrics.Keys) allKeys.Add(k);
+        }
+
+        foreach (var key in allKeys)
+        {
+            var rows = new List<PerSpeciesScenarioMetrics>();
+            foreach (var s in Scenarios)
+            {
+                if (s.SpeciesMetrics == null) continue;
+                if (s.SpeciesMetrics.TryGetValue(key, out var m))
+                    rows.Add(m);
+            }
+            if (rows.Count == 0) continue;
+
+            var agg = new PerSpeciesAggregate
+            {
+                FullName  = key,
+                N         = rows.Count,
+                NSurvived = 0
+            };
+            foreach (var r in rows) if (r.Survived) agg.NSurvived++;
+
+            agg.MeanConditionFullRun    = ComputeAggStat(rows, r => r.MeanConditionFullRun);
+            agg.MeanConditionFinalYear  = ComputeAggStat(rows, r => r.MeanConditionFinalYear);
+            agg.MeanBirthRateFullRun    = ComputeAggStat(rows, r => r.MeanBirthRateFullRun);
+            agg.MeanBirthRateFinalYear  = ComputeAggStat(rows, r => r.MeanBirthRateFinalYear);
+            agg.PopCvFullRun            = ComputeAggStat(rows, r => r.PopCvFullRun);
+            agg.PopCvFinalYear          = ComputeAggStat(rows, r => r.PopCvFinalYear);
+            agg.MeanPopulationFinalYear = ComputeAggStat(rows, r => r.MeanPopulationFinalYear);
+            agg.MinPopulation           = ComputeAggStat(rows, r => (float)r.MinPopulation);
+            agg.MaxPopulation           = ComputeAggStat(rows, r => (float)r.MaxPopulation);
+            agg.FinalPopulation         = ComputeAggStat(rows, r => (float)r.FinalPopulation);
+            agg.ExtinctionTiming        = ComputeExtinctionStat(rows, r => r.ExtinctionDay);
+            agg.CrashTiming             = ComputeExtinctionStat(rows, r => r.CrashDay);
+
+            PerSpeciesMetrics[key] = agg;
+        }
+    }
+
+    private static AggStat ComputeAggStat(List<PerSpeciesScenarioMetrics> rows, Func<PerSpeciesScenarioMetrics, float> sel)
+    {
+        var stat = new AggStat();
+        if (rows == null || rows.Count == 0) return stat;
+        float sum = 0f, sqSum = 0f;
+        float sSum = 0f, sSqSum = 0f;
+        float min = float.MaxValue, max = float.MinValue;
+        int n = 0, nSurvived = 0;
+        foreach (var r in rows)
+        {
+            float v = sel(r);
+            sum += v; sqSum += v * v;
+            if (v < min) min = v;
+            if (v > max) max = v;
+            n++;
+            if (r.Survived)
+            {
+                sSum += v; sSqSum += v * v;
+                nSurvived++;
+            }
+        }
+        if (n > 0)
+        {
+            stat.Mean = sum / n;
+            float variance = (sqSum / n) - (stat.Mean * stat.Mean);
+            stat.StdDev = variance > 0f ? (float)Math.Sqrt(variance) : 0f;
+            stat.Min = min;
+            stat.Max = max;
+        }
+        if (nSurvived > 0)
+        {
+            stat.SurvivedMean = sSum / nSurvived;
+            float sVar = (sSqSum / nSurvived) - (stat.SurvivedMean * stat.SurvivedMean);
+            stat.SurvivedStdDev = sVar > 0f ? (float)Math.Sqrt(sVar) : 0f;
+        }
+        return stat;
+    }
+
+    private static ExtinctionStat ComputeExtinctionStat(List<PerSpeciesScenarioMetrics> rows, Func<PerSpeciesScenarioMetrics, int> selector)
+    {
+        var stat = new ExtinctionStat { MinDay = -1f, MaxDay = -1f, MeanDay = -1f };
+        if (rows == null || rows.Count == 0) return stat;
+        int sum = 0;
+        int min = int.MaxValue, max = int.MinValue;
+        foreach (var r in rows)
+        {
+            int day = selector(r);
+            if (day < 0) { stat.NNonEvents++; continue; }
+            stat.NEvents++;
+            sum += day;
+            if (day < min) min = day;
+            if (day > max) max = day;
+        }
+        if (stat.NEvents > 0)
+        {
+            stat.MinDay = min;
+            stat.MaxDay = max;
+            stat.MeanDay = (float)sum / stat.NEvents;
+        }
+        return stat;
     }
 
     /// <summary>
@@ -396,6 +621,51 @@ public class AggregateResults
         sb.AppendLine($"Avg Final Condition T1 (Survived),{AvgFinalConditionT1:F3}");
         sb.AppendLine($"Avg Final Condition T2 (Survived),{AvgFinalConditionT2:F3}");
         sb.AppendLine();
+
+        // v12: Per-species rich aggregate sections (final-year / full-run / stability)
+        if (PerSpeciesMetrics != null && PerSpeciesMetrics.Count > 0)
+        {
+            sb.AppendLine("=== PER-SPECIES FINAL YEAR METRICS ===");
+            sb.AppendLine("Species,N,NSurvived,MeanCondition,MeanCondition_StdDev,MeanCondition_SurvivedMean,MeanBirthRate,MeanBirthRate_StdDev,MeanBirthRate_SurvivedMean,PopCv,PopCv_StdDev,MeanPop,MeanPop_StdDev,MeanPop_SurvivedMean");
+            foreach (var key in PerSpeciesMetrics.Keys.OrderBy(k => k))
+            {
+                var a = PerSpeciesMetrics[key];
+                sb.AppendLine($"{key},{a.N},{a.NSurvived}," +
+                    $"{a.MeanConditionFinalYear.Mean:F3},{a.MeanConditionFinalYear.StdDev:F3},{a.MeanConditionFinalYear.SurvivedMean:F3}," +
+                    $"{a.MeanBirthRateFinalYear.Mean:F4},{a.MeanBirthRateFinalYear.StdDev:F4},{a.MeanBirthRateFinalYear.SurvivedMean:F4}," +
+                    $"{a.PopCvFinalYear.Mean:F3},{a.PopCvFinalYear.StdDev:F3}," +
+                    $"{a.MeanPopulationFinalYear.Mean:F1},{a.MeanPopulationFinalYear.StdDev:F1},{a.MeanPopulationFinalYear.SurvivedMean:F1}");
+            }
+            sb.AppendLine();
+
+            sb.AppendLine("=== PER-SPECIES FULL-RUN METRICS ===");
+            sb.AppendLine("Species,N,NSurvived,MeanCondition,MeanCondition_StdDev,MeanBirthRate,MeanBirthRate_StdDev,PopCv,PopCv_StdDev");
+            foreach (var key in PerSpeciesMetrics.Keys.OrderBy(k => k))
+            {
+                var a = PerSpeciesMetrics[key];
+                sb.AppendLine($"{key},{a.N},{a.NSurvived}," +
+                    $"{a.MeanConditionFullRun.Mean:F3},{a.MeanConditionFullRun.StdDev:F3}," +
+                    $"{a.MeanBirthRateFullRun.Mean:F4},{a.MeanBirthRateFullRun.StdDev:F4}," +
+                    $"{a.PopCvFullRun.Mean:F3},{a.PopCvFullRun.StdDev:F3}");
+            }
+            sb.AppendLine();
+
+            sb.AppendLine("=== PER-SPECIES STABILITY METRICS ===");
+            sb.AppendLine("Species,N,NSurvived,MinPop_Mean,MinPop_Min,MaxPop_Mean,MaxPop_Max,FinalPop_Mean,FinalPop_SurvivedMean,ExtinctionRate,MeanExtinctionDay,CrashRate,MeanCrashDay");
+            foreach (var key in PerSpeciesMetrics.Keys.OrderBy(k => k))
+            {
+                var a = PerSpeciesMetrics[key];
+                float extinctionRate = a.N > 0 ? (float)a.ExtinctionTiming.NEvents / a.N : 0f;
+                float crashRate      = a.N > 0 ? (float)a.CrashTiming.NEvents / a.N : 0f;
+                sb.AppendLine($"{key},{a.N},{a.NSurvived}," +
+                    $"{a.MinPopulation.Mean:F1},{a.MinPopulation.Min:F0}," +
+                    $"{a.MaxPopulation.Mean:F1},{a.MaxPopulation.Max:F0}," +
+                    $"{a.FinalPopulation.Mean:F1},{a.FinalPopulation.SurvivedMean:F1}," +
+                    $"{extinctionRate:P1},{a.ExtinctionTiming.MeanDay:F1}," +
+                    $"{crashRate:P1},{a.CrashTiming.MeanDay:F1}");
+            }
+            sb.AppendLine();
+        }
 
         sb.AppendLine("=== INDIVIDUAL SCENARIOS ===");
         sb.AppendLine("Scenario,Seed,Crashed,CrashDay,CrashTier,FinalT1,FinalT2,T1Arctic,T1Common,T1Tropical,T1Custom,T2Arctic,T2Common,T2Tropical,T2Custom,AvgTemp,MinTemp,MaxTemp");

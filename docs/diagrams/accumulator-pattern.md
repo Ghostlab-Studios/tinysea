@@ -37,12 +37,22 @@ Accumulators let fractional events build up across days. Death or birth only man
 
 Accumulator values are written to every daily row in the scenario CSV:
 
+**Tier-level (legacy, sums across the tier):**
+
 ```
 BirthAccumT1, BirthAccumT2,
 NaturalDeathAccumT1, NaturalDeathAccumT2,
 ConditionDeathAccumT1, ConditionDeathAccumT2,
 PredationAccumT1
 ```
+
+**Per-species (v12, residuals exposed via accessors):**
+
+```
+{S}_BirthAccum, {S}_NatDeathAccum, {S}_CondDeathAccum, {S}_PredAccum
+```
+
+The per-species accumulator residuals are read at CSV-write time via the public accessors `EcosystemSimulator.GetBirthAccum(fullName)`, `GetNaturalDeathAccum(fullName)`, `GetConditionDeathAccum(fullName)`, `GetPredationAccum(fullName)` (added in v12). For Tier 2 species, `{S}_PredAccum` is always 0 (predation accumulator is Tier 1 only).
 
 They can be non-zero even on days where `LastBirthsT1 == 0` — meaning the simulator has accumulated partial births but hasn't crossed the whole-integer threshold yet.
 

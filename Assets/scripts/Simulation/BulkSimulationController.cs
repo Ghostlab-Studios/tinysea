@@ -41,6 +41,8 @@ public class BulkSimulationController : MonoBehaviour
         public float ClimateTrend;
         public Dictionary<string, float> AvgSpeciesPop;
         public Dictionary<string, float> SurvivedSpeciesPop; // avg pop only from survived scenarios
+        // v12: Per-species rich aggregate snapshot for cross-run aggregation in GenerateBulkSummary.
+        public Dictionary<string, PerSpeciesAggregate> PerSpeciesMetrics;
     }
 
     // ETA — recalculated once per minute, cached between updates
@@ -325,7 +327,10 @@ public class BulkSimulationController : MonoBehaviour
                         : new Dictionary<string, float>(),
                     SurvivedSpeciesPop = batchResults.PerSpeciesSurvivedAvg != null
                         ? new Dictionary<string, float>(batchResults.PerSpeciesSurvivedAvg)
-                        : new Dictionary<string, float>()
+                        : new Dictionary<string, float>(),
+                    // v12: snapshot the rich aggregate. Reference is fine — batchResults
+                    // is discarded after Scenarios.Clear() below; we keep the dict alive.
+                    PerSpeciesMetrics = batchResults.PerSpeciesMetrics ?? new Dictionary<string, PerSpeciesAggregate>()
                 });
 
                 string aggCsv = batchResults.ToAggregateCsv();
@@ -387,7 +392,7 @@ public class BulkSimulationController : MonoBehaviour
         var sb = new System.Text.StringBuilder();
 
         sb.AppendLine("=== TINYSEA BULK SUMMARY (Across All Runs) ===");
-        sb.AppendLine($"# Model Version,v11.1-cap-always-on");
+        sb.AppendLine($"# Model Version,v12-per-species-tracking");
         sb.AppendLine($"# Total Runs,{summaries.Count}");
         sb.AppendLine($"# Generated,{DateTime.Now:yyyy-MM-dd HH:mm:ss}");
         sb.AppendLine();
@@ -463,6 +468,154 @@ public class BulkSimulationController : MonoBehaviour
             float survivedMean = survivedCount > 0 ? survivedSum / survivedCount : 0;
             float extinctionRate = count > 0 ? (float)runsExtinct / count : 0;
             sb.AppendLine($"{sp},{grandMean:F1},{survivedMean:F1},{runsExtinct},{runsSurvived},{extinctionRate:P1}");
+        }
+
+        // ====================================================================
+        // v12: Per-species rich aggregate sections — final-year metrics, full-run
+        // metrics, and stability across all runs in the bulk batch.
+        // ====================================================================
+
+        // Build the cross-run species union from PerSpeciesMetrics (richer than AvgSpeciesPop)
+        var allSpeciesRich = new SortedSet<string>();
+        foreach (var run in summaries)
+        {
+            if (run.PerSpeciesMetrics == null) continue;
+            foreach (var k in run.PerSpeciesMetrics.Keys) allSpeciesRich.Add(k);
+        }
+
+        if (allSpeciesRich.Count > 0)
+        {
+            // Per-run × per-species final-year detail table
+            sb.AppendLine();
+            sb.AppendLine("=== PER-RUN PER-SPECIES FINAL YEAR ===");
+            sb.AppendLine("Run,Species,N,NSurvived,MeanCondition,MeanBirthRate,PopCv,MeanPop");
+            foreach (var run in summaries)
+            {
+                if (run.PerSpeciesMetrics == null) continue;
+                foreach (var sp in allSpeciesRich)
+                {
+                    if (!run.PerSpeciesMetrics.TryGetValue(sp, out var a)) continue;
+                    sb.AppendLine($"{run.BatchName},{sp},{a.N},{a.NSurvived}," +
+                        $"{a.MeanConditionFinalYear.Mean:F3}," +
+                        $"{a.MeanBirthRateFinalYear.Mean:F4}," +
+                        $"{a.PopCvFinalYear.Mean:F3}," +
+                        $"{a.MeanPopulationFinalYear.Mean:F1}");
+                }
+            }
+            sb.AppendLine();
+
+            // Cross-run grand-mean (mean of per-run means — equal weight per run,
+            // consistent with existing "GrandMean" semantics in the legacy table).
+            sb.AppendLine("=== CROSS-RUN PER-SPECIES FINAL YEAR (Mean of per-run means) ===");
+            sb.AppendLine("Species,Runs,RunsSurvived,GrandMeanCondition,GrandMeanCondition_StdDev,GrandMeanBirthRate,GrandMeanBirthRate_StdDev,GrandMeanPopCv,GrandMeanPop,GrandMeanPop_SurvivedMean");
+            foreach (var sp in allSpeciesRich)
+            {
+                int runs = 0, runsSurvivedCount = 0;
+                float condSum = 0f, condSqSum = 0f;
+                float brSum = 0f, brSqSum = 0f;
+                float cvSum = 0f;
+                float popSum = 0f;
+                float popSurvivedSum = 0f;
+                int popSurvivedCount = 0;
+
+                foreach (var run in summaries)
+                {
+                    if (run.PerSpeciesMetrics == null) continue;
+                    if (!run.PerSpeciesMetrics.TryGetValue(sp, out var a)) continue;
+
+                    float cond = a.MeanConditionFinalYear.Mean;
+                    float br   = a.MeanBirthRateFinalYear.Mean;
+                    float cv   = a.PopCvFinalYear.Mean;
+                    float pop  = a.MeanPopulationFinalYear.Mean;
+
+                    condSum += cond; condSqSum += cond * cond;
+                    brSum   += br;   brSqSum   += br * br;
+                    cvSum   += cv;
+                    popSum  += pop;
+                    runs++;
+                    if (a.NSurvived > 0)
+                    {
+                        runsSurvivedCount++;
+                        popSurvivedSum += a.MeanPopulationFinalYear.SurvivedMean;
+                        popSurvivedCount++;
+                    }
+                }
+
+                if (runs == 0) continue;
+                float gmCond = condSum / runs;
+                float gmBr   = brSum / runs;
+                float gmCv   = cvSum / runs;
+                float gmPop  = popSum / runs;
+                float condVar = (condSqSum / runs) - (gmCond * gmCond);
+                float brVar   = (brSqSum / runs) - (gmBr * gmBr);
+                float gmCondStd = condVar > 0f ? (float)Math.Sqrt(condVar) : 0f;
+                float gmBrStd   = brVar > 0f ? (float)Math.Sqrt(brVar) : 0f;
+                float gmPopSurvived = popSurvivedCount > 0 ? popSurvivedSum / popSurvivedCount : 0f;
+
+                sb.AppendLine($"{sp},{runs},{runsSurvivedCount}," +
+                    $"{gmCond:F3},{gmCondStd:F3}," +
+                    $"{gmBr:F4},{gmBrStd:F4}," +
+                    $"{gmCv:F3}," +
+                    $"{gmPop:F1},{gmPopSurvived:F1}");
+            }
+            sb.AppendLine();
+
+            // Cross-run stability summary
+            sb.AppendLine("=== CROSS-RUN STABILITY ===");
+            sb.AppendLine("Species,Runs,RunsSurvived,MinPop_Mean,MaxPop_Mean,FinalPop_Mean,ExtinctionRate,MeanExtinctionDay,CrashRate,MeanCrashDay");
+            foreach (var sp in allSpeciesRich)
+            {
+                int runs = 0, runsSurvivedCount = 0;
+                float minSum = 0f, maxSum = 0f, finalSum = 0f;
+                int totalScenarios = 0;
+                int totalExtinctions = 0;
+                int totalCrashes = 0;
+                float extDaySum = 0f;
+                int extDayCount = 0;
+                float crashDaySum = 0f;
+                int crashDayCount = 0;
+
+                foreach (var run in summaries)
+                {
+                    if (run.PerSpeciesMetrics == null) continue;
+                    if (!run.PerSpeciesMetrics.TryGetValue(sp, out var a)) continue;
+
+                    minSum += a.MinPopulation.Mean;
+                    maxSum += a.MaxPopulation.Mean;
+                    finalSum += a.FinalPopulation.Mean;
+                    runs++;
+                    if (a.NSurvived > 0) runsSurvivedCount++;
+
+                    totalScenarios   += a.N;
+                    totalExtinctions += a.ExtinctionTiming.NEvents;
+                    totalCrashes     += a.CrashTiming.NEvents;
+
+                    if (a.ExtinctionTiming.NEvents > 0)
+                    {
+                        extDaySum   += a.ExtinctionTiming.MeanDay * a.ExtinctionTiming.NEvents;
+                        extDayCount += a.ExtinctionTiming.NEvents;
+                    }
+                    if (a.CrashTiming.NEvents > 0)
+                    {
+                        crashDaySum   += a.CrashTiming.MeanDay * a.CrashTiming.NEvents;
+                        crashDayCount += a.CrashTiming.NEvents;
+                    }
+                }
+
+                if (runs == 0) continue;
+                float minMean = minSum / runs;
+                float maxMean = maxSum / runs;
+                float finalMean = finalSum / runs;
+                float extinctionRate2 = totalScenarios > 0 ? (float)totalExtinctions / totalScenarios : 0f;
+                float crashRate2 = totalScenarios > 0 ? (float)totalCrashes / totalScenarios : 0f;
+                float meanExtDay = extDayCount > 0 ? extDaySum / extDayCount : -1f;
+                float meanCrashDay = crashDayCount > 0 ? crashDaySum / crashDayCount : -1f;
+
+                sb.AppendLine($"{sp},{runs},{runsSurvivedCount}," +
+                    $"{minMean:F1},{maxMean:F1},{finalMean:F1}," +
+                    $"{extinctionRate2:P1},{meanExtDay:F1}," +
+                    $"{crashRate2:P1},{meanCrashDay:F1}");
+            }
         }
 
         return sb.ToString();

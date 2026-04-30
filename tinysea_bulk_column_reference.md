@@ -191,3 +191,51 @@ All values below are in Celsius for the CSV. The simulation converts to Kelvin i
 - **Large batch warning**: Many batches with high scenario counts and long durations will take significant time. Start small
 - **Climate trend = 0**: Set `climate_trend` to 0 to test species in a stable climate (no warming). This isolates seasonal effects from long-term trends
 - **Optional columns**: Columns marked optional can be omitted entirely. The simulation will use default values. Old CSVs with removed columns (like `min_deaths`) will still work — unknown columns are ignored with a warning
+- **`use_carrying_cap` is deprecated (v11.1)**: Carrying capacity is always on. If an old bulk CSV includes the column, the parser logs a warning and ignores the value.
+
+---
+
+## Output: What's in the ZIP
+
+Each bulk run produces a ZIP with this structure:
+
+```
+bulk_summary.csv                          # Cross-batch summary
+<batch_name_1>/
+    scenario_1.csv ... scenario_N.csv     # One per scenario
+    aggregate.csv                         # Per-batch summary
+    config.csv                            # Per-batch config echo
+<batch_name_2>/
+    ...
+```
+
+### v12 bulk_summary.csv sections
+
+`bulk_summary.csv` at the root of the ZIP is a single multi-section CSV. Sections (in order):
+
+1. **`=== TINYSEA BULK SUMMARY (Across All Runs) ===`** — header metadata (Model Version, Total Runs, Generated timestamp).
+2. **`=== PER-RUN RESULTS ===`** — one row per batch with `Run, Scenarios, Survived, Crashed, CrashRate, BaseTemp, ClimateTrend` plus per-species average final populations.
+3. **`=== PER-SPECIES AGGREGATE (Across All Runs) ===`** — `Species, GrandMean, SurvivedMean, RunsExtinct, RunsSurvived, ExtinctionRate`.
+4. **`=== PER-RUN PER-SPECIES FINAL YEAR ===`** *(v12)* — `(Run, Species, N, NSurvived, MeanCondition, MeanBirthRate, PopCv, MeanPop)` rows. Final year = last 365 days of each scenario, averaged.
+5. **`=== CROSS-RUN PER-SPECIES FINAL YEAR ===`** *(v12)* — per-species mean of per-run means: `Species, Runs, RunsSurvived, GrandMeanCondition (+StdDev), GrandMeanBirthRate (+StdDev), GrandMeanPopCv, GrandMeanPop, GrandMeanPop_SurvivedMean`.
+6. **`=== CROSS-RUN STABILITY ===`** *(v12)* — `Species, Runs, RunsSurvived, MinPop_Mean, MaxPop_Mean, FinalPop_Mean, ExtinctionRate, MeanExtinctionDay, CrashRate, MeanCrashDay`. Pooled across all scenarios in the bulk.
+
+**Reading in R:**
+
+```R
+# Read just one section by skipping prior lines, or split file at "=== " markers.
+# Example: read PER-RUN RESULTS table
+lines <- readLines("bulk_summary.csv")
+start <- grep("^=== PER-RUN RESULTS ===", lines) + 1   # row after section header
+end   <- grep("^$", lines[start:length(lines)])[1] - 1  # blank line before next section
+df <- read.csv(text = paste(lines[start:(start+end)], collapse="\n"))
+```
+
+### v12 scenario CSV per-species columns
+
+Each `scenario_N.csv` has 17 additional columns per species, ordered by `(Tier asc, FullName asc)`:
+`{S}_Pop, {S}_Cond, {S}_ThermalPerf, {S}_FinalPerf, {S}_FedRate, {S}_HuntingEff, {S}_Births, {S}_TempDeaths, {S}_CondDeaths, {S}_NatDeaths, {S}_Eaten, {S}_BirthRate, {S}_ReproScale, {S}_BirthAccum, {S}_NatDeathAccum, {S}_CondDeathAccum, {S}_PredAccum`
+
+`{S}` = sanitized `FullName` (e.g. `Hexapod_Common`, `Coral_Custom`). Existing tier-level columns are preserved verbatim — all per-species columns are appended at the end.
+
+For full output schema details see [`docs/csv-formats.md`](docs/csv-formats.md).

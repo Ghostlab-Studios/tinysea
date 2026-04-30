@@ -113,7 +113,7 @@ Emitted by `SimulationRunner.ToCsvInternal`. One file per scenario: `scenario_{i
 ### 2.1. Header section (ignored by R's default `read.csv`)
 
 ```
-#config:model_version,v11.1-cap-always-on
+#config:model_version,v12-per-species-tracking
 #config:days_per_scenario,<value>
 #config:number_of_scenarios,<value>
 #config:scenario_index,<value>
@@ -139,7 +139,7 @@ Emitted by `SimulationRunner.ToCsvInternal`. One file per scenario: `scenario_{i
 #
 ```
 
-`model_version` is the first line so downstream tooling can identify which simulator produced the file at a glance. `v11.1-cap-always-on` corresponds to the spec changes in [`simulation-spec.md`](./simulation-spec.md) §v11 changes (which builds on v10's food-pool reframe).
+`model_version` is the first line so downstream tooling can identify which simulator produced the file at a glance. `v12-per-species-tracking` indicates the per-species daily columns and rich aggregate sections introduced in this version (builds on v11.1's cap-always-on, which built on v10's food-pool reframe). See [`simulation-spec.md`](./simulation-spec.md) §v12 changes.
 
 Both Kelvin and Celsius are emitted for temperature fields (`OptimalTempK` and `OptimalTempC`, etc.) for downstream analysis convenience.
 
@@ -181,7 +181,35 @@ Both columns are populated even on non-biology days (`BiologyStep > 1`) — they
 
 **v11 semantic change to existing column:**
 
-- `FedRateT2` — was a pooled scalar shared across all predators (`totalEaten / totalRawDemand`); is now a **population-weighted average** of per-predator FedRates. In single-predator-species runs the value is identical to the v10 pooled formula. In mixed-HE multi-predator runs the average reflects each predator's individual hunting effort; per-species values are stored on each `SimSpecies` runtime instance and are visible in simulator logs but not broken out into separate CSV columns.
+- `FedRateT2` — was a pooled scalar shared across all predators (`totalEaten / totalRawDemand`); is now a **population-weighted average** of per-predator FedRates. In single-predator-species runs the value is identical to the v10 pooled formula. In mixed-HE multi-predator runs the average reflects each predator's individual hunting effort.
+
+**v12 per-species daily columns (appended after `ReproScaleT2`):**
+
+For each species in the simulation, 17 additional columns are appended to every daily row, in the order `OrderBy(Tier).ThenBy(FullName)`. Column names are `{SanitizedFullName}_{Field}` where `SanitizedFullName` is the species' `FullName` ("Hexapod_Common", "Coral_Custom", etc.) with any non-`[A-Za-z0-9_]` characters replaced by `_` (and a leading `_` prefix added if it would otherwise start with a digit). On collision, `_2`, `_3`, ... are appended.
+
+Per-species columns:
+
+```
+{S}_Pop, {S}_Cond, {S}_ThermalPerf, {S}_FinalPerf,
+{S}_FedRate, {S}_HuntingEff,
+{S}_Births, {S}_TempDeaths, {S}_CondDeaths, {S}_NatDeaths, {S}_Eaten,
+{S}_BirthRate, {S}_ReproScale,
+{S}_BirthAccum, {S}_NatDeathAccum, {S}_CondDeathAccum, {S}_PredAccum
+```
+
+Semantics:
+- `Pop` is rounded to integer (matches `Tier1Pop` etc.). Sums to the matching tier-level column.
+- `Cond` is `[0,1]`, formatted `:F3`.
+- `ThermalPerf` is `RawThermalPerformance` (Arrhenius output, no Pmax). `FinalPerf = ThermalPerformance × FedRate` (logging only, not a biology input).
+- `HuntingEff` is `CurrentHuntingSuccess` for Tier 2 species; **always 0** for Tier 1.
+- `Eaten` is predation deaths suffered by Tier 1; **always 0** for Tier 2.
+- `BirthRate` is `Births / max(StartOfDayPop, 1)` — per-capita, formatted `:F4`.
+- `PredAccum` is fractional-death residual for Tier 1 only; **always 0** for Tier 2.
+- All event counters (`Births`, `TempDeaths`, `CondDeaths`, `NatDeaths`, `Eaten`) are **0 on non-biology days** when `BiologyStep > 1`. `Pop` and `Cond` continue to carry the most recent values across non-biology days.
+
+Backward compatibility: existing tier-level columns (`Tier1Pop`...`ReproScaleT2`) appear in their original positions and order. Per-species columns are pure additions at the end. R's `read.csv(comment.char="#")` and pandas handle the wider rows transparently.
+
+**Tier-rollup invariant** (verified at runtime by inspection): for any day, sum of `{S}_Pop` across Tier 1 species equals `Tier1Pop`; same for `BirthsT1 == sum({S}_Births)` etc.
 
 ### 2.3. Trailing summary section
 
@@ -271,6 +299,47 @@ Avg Final Condition T1 (Survived),<f3>
 Avg Final Condition T2 (Survived),<f3>
 ```
 
+### 3.5a. Per-species final-year metrics (v12)
+
+Final year = last 365 days of the run. For runs shorter than 365 days, this equals full-run metrics. Each metric reports `Mean / StdDev / SurvivedMean` across the run's scenarios. `SurvivedMean` filters to scenarios where the species' final population > 0.
+
+```
+=== PER-SPECIES FINAL YEAR METRICS ===
+Species,N,NSurvived,MeanCondition,MeanCondition_StdDev,MeanCondition_SurvivedMean,MeanBirthRate,MeanBirthRate_StdDev,MeanBirthRate_SurvivedMean,PopCv,PopCv_StdDev,MeanPop,MeanPop_StdDev,MeanPop_SurvivedMean
+<sp>,<n>,<nSurvived>,<f3>,<f3>,<f3>,<f4>,<f4>,<f4>,<f3>,<f3>,<f1>,<f1>,<f1>
+... (one row per species, sorted alphabetically by FullName)
+```
+
+- `MeanCondition` and `MeanBirthRate` (per-capita, `Births / max(StartPop,1)`) — averaged over the final 365 days of each scenario, then averaged across scenarios.
+- `PopCv` — population coefficient of variation (StdDev / Mean) over the final year. Returns 0 when mean is ~0.
+- `MeanPop` — population averaged over the final year (different from `FinalPop` snapshot).
+
+### 3.5b. Per-species full-run metrics (v12)
+
+Same metrics as 3.5a but averaged over the entire scenario (not just the final year). Useful for diagnosing whether final-year values are atypical or representative.
+
+```
+=== PER-SPECIES FULL-RUN METRICS ===
+Species,N,NSurvived,MeanCondition,MeanCondition_StdDev,MeanBirthRate,MeanBirthRate_StdDev,PopCv,PopCv_StdDev
+<sp>,<n>,<nSurvived>,<f3>,<f3>,<f4>,<f4>,<f3>,<f3>
+...
+```
+
+### 3.5c. Per-species stability metrics (v12)
+
+```
+=== PER-SPECIES STABILITY METRICS ===
+Species,N,NSurvived,MinPop_Mean,MinPop_Min,MaxPop_Mean,MaxPop_Max,FinalPop_Mean,FinalPop_SurvivedMean,ExtinctionRate,MeanExtinctionDay,CrashRate,MeanCrashDay
+<sp>,<n>,<nSurvived>,<f1>,<f0>,<f1>,<f0>,<f1>,<f1>,<pct>,<f1>,<pct>,<f1>
+...
+```
+
+- `MinPop_Mean` / `MaxPop_Mean` — per-scenario population extremes during the entire sim, averaged across scenarios.
+- `MinPop_Min` / `MaxPop_Max` — overall worst/best across all scenarios (the rare extreme).
+- `ExtinctionRate` — fraction of scenarios where the species reached 0 population mid-run.
+- `MeanExtinctionDay` / `MeanCrashDay` — mean day among scenarios that experienced the event; `-1` if no scenario did.
+- A species is "crashed" on the first day its population drops below `max(10, 0.05 × StartPop)` (constants `CRASH_FLOOR` / `CRASH_FRACTION` in `SimulationRunner.cs`). Defaults are placeholders; tune as needed.
+
 ### 3.6. Individual scenarios
 
 ```
@@ -317,7 +386,7 @@ Generated by `BulkSimulationController.GenerateBulkSummary`. File: `bulk_summary
 
 ```
 === TINYSEA BULK SUMMARY (Across All Runs) ===
-# Model Version,v11.1-cap-always-on
+# Model Version,v12-per-species-tracking
 # Total Runs,<n>
 # Generated,<yyyy-MM-dd HH:mm:ss>
 
@@ -335,6 +404,46 @@ Species,GrandMean,SurvivedMean,RunsExtinct,RunsSurvived,ExtinctionRate
 - `GrandMean` = mean of run-level averages (includes runs where the species was absent).
 - `SurvivedMean` = mean of run-level survived averages (runs where the species had positive population).
 - Min/Max are **not** present at this level — they would be min/max of averages, which is not a meaningful population value. Use the per-run table above for range information.
+
+### 5.1. Per-run per-species final year (v12)
+
+Detailed per-run × per-species final-year breakdown. Each row is one (run, species) pair.
+
+```
+=== PER-RUN PER-SPECIES FINAL YEAR ===
+Run,Species,N,NSurvived,MeanCondition,MeanBirthRate,PopCv,MeanPop
+<batch_name>,<sp>,<n>,<nSurvived>,<f3>,<f4>,<f3>,<f1>
+... (one row per (run, species) where the species had data)
+```
+
+Use this for fine-grained analysis: e.g. plot `MeanCondition` vs `BaseTemp` across runs to visualize the Jensen shift per species.
+
+### 5.2. Cross-run per-species final year (v12)
+
+Summary across runs for each species. "GrandMean" = mean of per-run means (each run weighted equally, consistent with §5 legacy).
+
+```
+=== CROSS-RUN PER-SPECIES FINAL YEAR (Mean of per-run means) ===
+Species,Runs,RunsSurvived,GrandMeanCondition,GrandMeanCondition_StdDev,GrandMeanBirthRate,GrandMeanBirthRate_StdDev,GrandMeanPopCv,GrandMeanPop,GrandMeanPop_SurvivedMean
+<sp>,<runs>,<runsSurvived>,<f3>,<f3>,<f4>,<f4>,<f3>,<f1>,<f1>
+...
+```
+
+- `Runs` — number of runs in which the species appeared at all.
+- `RunsSurvived` — runs where the species had at least one surviving scenario (`NSurvived > 0` in that run).
+- `StdDev` columns measure between-run variability of the per-run means.
+
+### 5.3. Cross-run stability (v12)
+
+```
+=== CROSS-RUN STABILITY ===
+Species,Runs,RunsSurvived,MinPop_Mean,MaxPop_Mean,FinalPop_Mean,ExtinctionRate,MeanExtinctionDay,CrashRate,MeanCrashDay
+<sp>,<runs>,<runsSurvived>,<f1>,<f1>,<f1>,<pct>,<f1>,<pct>,<f1>
+...
+```
+
+- `ExtinctionRate` here is computed across **all scenarios** in the bulk batch (sum of per-run `NEvents` / sum of per-run `N`), not a mean of per-run rates. Same for `CrashRate`.
+- `MeanExtinctionDay` / `MeanCrashDay` — pooled mean across all scenarios that experienced the event, weighted by per-run event counts. `-1` if no event occurred anywhere.
 
 ## 6. Line endings and encoding
 

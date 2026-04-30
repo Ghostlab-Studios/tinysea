@@ -6,6 +6,48 @@ using System.IO;
 using UnityEngine;
 
 /// <summary>
+/// Per-species data recorded each biology step.
+/// One instance per species per day, stored in StepRecord.SpeciesData
+/// keyed by SimSpecies.FullName (e.g., "Hexapod_Common", "Coral_Custom").
+///
+/// Designed to coexist with the tier-level fields on StepRecord — the per-species
+/// values are additive (new CSV columns) and must sum to the tier-level columns
+/// (used as a tier-rollup invariant in RecordStep).
+///
+/// struct (value type) chosen over class to avoid per-day heap allocation overhead
+/// at ~365 days × N species. ~80 bytes × N species per day is negligible.
+/// </summary>
+public struct PerSpeciesStepData
+{
+    // Population & physiology (carried across days regardless of biologyRan)
+    public long  Population;          // Rounded
+    public float Condition;           // [0,1]
+    public float ThermalPerf;         // RawThermalPerformance (no Pmax)
+    public float FinalPerf;           // FinalPerformance — logging only (ThermalPerf × FedRate × Pmax via ThermalPerformance)
+    public float FedRate;             // T1: density × HE; T2: huntingSuccess × scarcityFactor
+    public float HuntingEff;          // T2 only (CurrentHuntingSuccess); 0 for T1
+
+    // Daily events (zero on non-biology days)
+    public long  Births;
+    public long  TempDeaths;
+    public long  ConditionDeaths;
+    public long  NaturalDeaths;
+    public long  Eaten;               // T1 only (predation-driven); 0 for T2
+
+    // Per-capita rate (Births / max(StartOfDayPop, 1))
+    public float BirthRate;
+
+    // Reproduction internals
+    public float ReproScale;
+
+    // Accumulator residuals (carried between days; current values after this step)
+    public float BirthAccum;
+    public float NaturalDeathAccum;
+    public float ConditionDeathAccum;
+    public float PredationAccum;      // T1 only (T2 has none)
+}
+
+/// <summary>
 /// Data recorded each biology step.
 /// 
 /// CSV COLUMNS:
@@ -95,48 +137,142 @@ public class StepRecord
     public float ReproScaleT1;
     public float ReproScaleT2;
 
-    public string ToCsvLine()
+    // ==================== PER-SPECIES DATA ====================
+    // Keyed by SimSpecies.FullName (e.g., "Hexapod_Common", "Coral_Custom").
+    // Tier-level fields above are sums of these per-species values.
+    public Dictionary<string, PerSpeciesStepData> SpeciesData = new Dictionary<string, PerSpeciesStepData>();
+
+    /// <summary>
+    /// Build CSV row. Tier-level columns first (byte-identical to v11.1 layout),
+    /// then per-species columns appended in the same order as orderedSpecies (which
+    /// must be identical to the order used in CsvHeader for the same scenario).
+    ///
+    /// orderedSpecies may be null/empty — in that case only tier-level columns are emitted
+    /// (back-compat path; not used by SimulationRunner.ToCsvInternal anymore).
+    /// </summary>
+    public string ToCsvLine(IList<SimSpecies> orderedSpecies)
     {
-        return $"{Day},{Year},{Temperature:F2},{BiologyCycle}," +
-               $"{StartPop},{EndPop}," +
-               $"{Tier1Pop},{Tier2Pop}," +
-               $"{Tier1Arctic},{Tier1Common},{Tier1Tropical},{Tier1Custom}," +
-               $"{Tier2Arctic},{Tier2Common},{Tier2Tropical},{Tier2Custom}," +
-               $"{EatenT1},{TempDeathsT1},{TempDeathsT2}," +
-               $"{ConditionDeathsT1},{ConditionDeathsT2}," +
-               $"{NaturalDeathsT1},{NaturalDeathsT2}," +
-               $"{TotalDeaths}," +
-               $"{BirthsT1},{BirthsT2}," +
-               $"{FedRateT2:F3},{AvgHuntingEff:F3}," +
-               $"{FedRateT1:F3},{FoodDensityT1:F3}," +
-               $"{AvgConditionT1:F3},{AvgConditionT2:F3}," +
-               $"{BirthAccumT1:F3},{BirthAccumT2:F3}," +
-               $"{NaturalDeathAccumT1:F3},{NaturalDeathAccumT2:F3}," +
-               $"{ConditionDeathAccumT1:F3},{ConditionDeathAccumT2:F3}," +
-               $"{PredationAccumT1:F3}," +
-               $"{ReproScaleT1:F3},{ReproScaleT2:F3}";
+        var sb = new StringBuilder();
+        sb.Append($"{Day},{Year},{Temperature:F2},{BiologyCycle},");
+        sb.Append($"{StartPop},{EndPop},");
+        sb.Append($"{Tier1Pop},{Tier2Pop},");
+        sb.Append($"{Tier1Arctic},{Tier1Common},{Tier1Tropical},{Tier1Custom},");
+        sb.Append($"{Tier2Arctic},{Tier2Common},{Tier2Tropical},{Tier2Custom},");
+        sb.Append($"{EatenT1},{TempDeathsT1},{TempDeathsT2},");
+        sb.Append($"{ConditionDeathsT1},{ConditionDeathsT2},");
+        sb.Append($"{NaturalDeathsT1},{NaturalDeathsT2},");
+        sb.Append($"{TotalDeaths},");
+        sb.Append($"{BirthsT1},{BirthsT2},");
+        sb.Append($"{FedRateT2:F3},{AvgHuntingEff:F3},");
+        sb.Append($"{FedRateT1:F3},{FoodDensityT1:F3},");
+        sb.Append($"{AvgConditionT1:F3},{AvgConditionT2:F3},");
+        sb.Append($"{BirthAccumT1:F3},{BirthAccumT2:F3},");
+        sb.Append($"{NaturalDeathAccumT1:F3},{NaturalDeathAccumT2:F3},");
+        sb.Append($"{ConditionDeathAccumT1:F3},{ConditionDeathAccumT2:F3},");
+        sb.Append($"{PredationAccumT1:F3},");
+        sb.Append($"{ReproScaleT1:F3},{ReproScaleT2:F3}");
+
+        // Per-species columns (v12). Each species contributes 17 columns.
+        if (orderedSpecies != null)
+        {
+            foreach (var sp in orderedSpecies)
+            {
+                if (!SpeciesData.TryGetValue(sp.FullName, out var d))
+                    d = default;
+                sb.Append($",{d.Population},{d.Condition:F3},{d.ThermalPerf:F3},{d.FinalPerf:F3},");
+                sb.Append($"{d.FedRate:F3},{d.HuntingEff:F3},");
+                sb.Append($"{d.Births},{d.TempDeaths},{d.ConditionDeaths},{d.NaturalDeaths},{d.Eaten},");
+                sb.Append($"{d.BirthRate:F4},{d.ReproScale:F3},");
+                sb.Append($"{d.BirthAccum:F3},{d.NaturalDeathAccum:F3},{d.ConditionDeathAccum:F3},{d.PredationAccum:F3}");
+            }
+        }
+        return sb.ToString();
     }
 
-    public static string CsvHeader()
+    /// <summary>
+    /// Build CSV header. Tier-level columns first (byte-identical to v11.1 layout),
+    /// then per-species columns: each species in orderedSpecies contributes 17 columns
+    /// named "{SanitizedFullName}_{Field}", where Field is one of:
+    ///   Pop, Cond, ThermalPerf, FinalPerf, FedRate, HuntingEff,
+    ///   Births, TempDeaths, CondDeaths, NatDeaths, Eaten,
+    ///   BirthRate, ReproScale,
+    ///   BirthAccum, NatDeathAccum, CondDeathAccum, PredAccum.
+    ///
+    /// orderedSpecies must be a stable order — typically sort by Tier asc, FullName asc.
+    /// The SAME ordered list must be passed to CsvHeader and to every ToCsvLine call
+    /// in the same scenario; otherwise the row data will misalign with the header.
+    /// </summary>
+    public static string CsvHeader(IList<SimSpecies> orderedSpecies)
     {
-        return "Day,Year,Temperature,BiologyCycle," +
-               "StartPop,EndPop," +
-               "Tier1Pop,Tier2Pop," +
-               "Tier1Arctic,Tier1Common,Tier1Tropical,Tier1Custom," +
-               "Tier2Arctic,Tier2Common,Tier2Tropical,Tier2Custom," +
-               "EatenT1,TempDeathsT1,TempDeathsT2," +
-               "ConditionDeathsT1,ConditionDeathsT2," +
-               "NaturalDeathsT1,NaturalDeathsT2," +
-               "TotalDeaths," +
-               "BirthsT1,BirthsT2," +
-               "FedRateT2,AvgHuntingEff," +
-               "FedRateT1,FoodDensityT1," +
-               "AvgConditionT1,AvgConditionT2," +
-               "BirthAccumT1,BirthAccumT2," +
-               "NaturalDeathAccumT1,NaturalDeathAccumT2," +
-               "ConditionDeathAccumT1,ConditionDeathAccumT2," +
-               "PredationAccumT1," +
-               "ReproScaleT1,ReproScaleT2";
+        var sb = new StringBuilder();
+        sb.Append("Day,Year,Temperature,BiologyCycle,");
+        sb.Append("StartPop,EndPop,");
+        sb.Append("Tier1Pop,Tier2Pop,");
+        sb.Append("Tier1Arctic,Tier1Common,Tier1Tropical,Tier1Custom,");
+        sb.Append("Tier2Arctic,Tier2Common,Tier2Tropical,Tier2Custom,");
+        sb.Append("EatenT1,TempDeathsT1,TempDeathsT2,");
+        sb.Append("ConditionDeathsT1,ConditionDeathsT2,");
+        sb.Append("NaturalDeathsT1,NaturalDeathsT2,");
+        sb.Append("TotalDeaths,");
+        sb.Append("BirthsT1,BirthsT2,");
+        sb.Append("FedRateT2,AvgHuntingEff,");
+        sb.Append("FedRateT1,FoodDensityT1,");
+        sb.Append("AvgConditionT1,AvgConditionT2,");
+        sb.Append("BirthAccumT1,BirthAccumT2,");
+        sb.Append("NaturalDeathAccumT1,NaturalDeathAccumT2,");
+        sb.Append("ConditionDeathAccumT1,ConditionDeathAccumT2,");
+        sb.Append("PredationAccumT1,");
+        sb.Append("ReproScaleT1,ReproScaleT2");
+
+        if (orderedSpecies != null)
+        {
+            // Track sanitized names to detect collisions (e.g. two custom species with
+            // colliding names after sanitization). Append _2, _3, ... on collision.
+            var seen = new HashSet<string>();
+            foreach (var sp in orderedSpecies)
+            {
+                string baseName = SanitizeColumnName(sp.FullName);
+                string c = baseName;
+                int suffix = 2;
+                while (seen.Contains(c))
+                {
+                    c = $"{baseName}_{suffix}";
+                    suffix++;
+                }
+                seen.Add(c);
+
+                sb.Append($",{c}_Pop,{c}_Cond,{c}_ThermalPerf,{c}_FinalPerf,");
+                sb.Append($"{c}_FedRate,{c}_HuntingEff,");
+                sb.Append($"{c}_Births,{c}_TempDeaths,{c}_CondDeaths,{c}_NatDeaths,{c}_Eaten,");
+                sb.Append($"{c}_BirthRate,{c}_ReproScale,");
+                sb.Append($"{c}_BirthAccum,{c}_NatDeathAccum,{c}_CondDeathAccum,{c}_PredAccum");
+            }
+        }
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Sanitize a species FullName for safe use as a CSV column name.
+    /// ASCII-only — Unicode letters trip up downstream R/pandas pipelines.
+    /// Replaces any character outside [A-Za-z0-9_] with '_'. If the result starts
+    /// with a digit, prepends '_' (R/pandas handle digit-leading names but some
+    /// SQL exports don't).
+    /// </summary>
+    public static string SanitizeColumnName(string fullName)
+    {
+        if (string.IsNullOrEmpty(fullName)) return "Unknown";
+        var sb = new StringBuilder(fullName.Length);
+        foreach (char ch in fullName)
+        {
+            bool ascii = (ch >= 'a' && ch <= 'z') ||
+                         (ch >= 'A' && ch <= 'Z') ||
+                         (ch >= '0' && ch <= '9') ||
+                         ch == '_';
+            sb.Append(ascii ? ch : '_');
+        }
+        if (sb.Length > 0 && char.IsDigit(sb[0]))
+            sb.Insert(0, '_');
+        return sb.ToString();
     }
 }
 
@@ -333,8 +469,51 @@ public class SimulationRunner
             PredationAccumT1 = Ecosystem.PredationAccumT1
         };
 
+        // v12: Populate per-species data. Each species gets a PerSpeciesStepData
+        // entry keyed by FullName. Tier-level fields above are sums of these values.
+        foreach (var sp in Ecosystem.Species)
+        {
+            string fn = sp.FullName;
+            long startPop = GetOrZeroLong(Ecosystem.StartPopBySpecies, fn);
+            // Fall back to current rounded population if reset block didn't run
+            // (defensive — should not happen under normal flow).
+            if (startPop == 0L && sp.Population > 0f)
+                startPop = (long)Math.Round(sp.Population);
+
+            long births = biologyRan ? GetOrZeroLong(Ecosystem.LastBirthsBySpecies, fn) : 0L;
+
+            record.SpeciesData[fn] = new PerSpeciesStepData
+            {
+                Population          = (long)Math.Round(sp.Population),
+                Condition           = sp.Condition,
+                ThermalPerf         = sp.RawThermalPerformance,
+                FinalPerf           = sp.FinalPerformance,
+                FedRate             = GetOrFallbackFloat(Ecosystem.LastFedRateBySpecies, fn, sp.FedRate),
+                HuntingEff          = sp.Tier == 2 ? sp.CurrentHuntingSuccess : 0f,
+                Births              = births,
+                TempDeaths          = biologyRan ? GetOrZeroLong(Ecosystem.LastTempDeathsBySpecies, fn) : 0L,
+                ConditionDeaths     = biologyRan ? GetOrZeroLong(Ecosystem.LastConditionDeathsBySpecies, fn) : 0L,
+                NaturalDeaths       = biologyRan ? GetOrZeroLong(Ecosystem.LastNaturalDeathsBySpecies, fn) : 0L,
+                Eaten               = biologyRan ? GetOrZeroLong(Ecosystem.LastEatenBySpecies, fn) : 0L,
+                BirthRate           = startPop > 0L ? (float)births / startPop : 0f,
+                ReproScale          = biologyRan ? GetOrFallbackFloat(Ecosystem.LastReproScaleBySpecies, fn, 0f) : 0f,
+                BirthAccum          = Ecosystem.GetBirthAccum(fn),
+                NaturalDeathAccum   = Ecosystem.GetNaturalDeathAccum(fn),
+                ConditionDeathAccum = Ecosystem.GetConditionDeathAccum(fn),
+                PredationAccum      = Ecosystem.GetPredationAccum(fn)
+            };
+        }
+
         _records.Add(record);
     }
+
+    // ==================== Per-species dict accessor helpers (v12) ====================
+    // GetValueOrDefault is in netstandard 2.1 but not always exposed; use TryGetValue.
+    private static long GetOrZeroLong(IDictionary<string, long> d, string key)
+        => d != null && d.TryGetValue(key, out var v) ? v : 0L;
+
+    private static float GetOrFallbackFloat(IDictionary<string, float> d, string key, float fallback)
+        => d != null && d.TryGetValue(key, out var v) ? v : fallback;
 
     public List<StepRecord> GetRecords() => new List<StepRecord>(_records);
 
@@ -439,7 +618,7 @@ public class SimulationRunner
 
         // Embed configuration as comment lines (# is default comment char in R's read.csv)
         // Model version line first so downstream tools know which simulator produced this file.
-        sb.AppendLine($"#config:model_version,v11.1-cap-always-on");
+        sb.AppendLine($"#config:model_version,v12-per-species-tracking");
         sb.AppendLine($"#config:days_per_scenario,{TotalDays}");
         sb.AppendLine($"#config:number_of_scenarios,{numberOfScenarios}");
         sb.AppendLine($"#config:scenario_index,{scenarioIndex}");
@@ -485,10 +664,16 @@ public class SimulationRunner
         }
         sb.AppendLine("#");
 
-        sb.AppendLine(StepRecord.CsvHeader());
+        // v12: Build a stable species order once. The same list is passed to header
+        // and to every row so columns line up. Sort by Tier asc, FullName asc.
+        var orderedSpecies = (Ecosystem != null && Ecosystem.Species != null)
+            ? Ecosystem.Species.OrderBy(s => s.Tier).ThenBy(s => s.FullName).ToList()
+            : new List<SimSpecies>();
+
+        sb.AppendLine(StepRecord.CsvHeader(orderedSpecies));
         foreach (var record in _records)
         {
-            sb.AppendLine(record.ToCsvLine());
+            sb.AppendLine(record.ToCsvLine(orderedSpecies));
         }
 
         // Append summary statistics and extinction timing
@@ -612,6 +797,7 @@ public class SimulationRunner
     {
         var summary = GetSummary();
         var popStats = ComputePopulationStats();
+        var speciesMetrics = ComputePerSpeciesScenarioMetrics();
 
         return new ScenarioResult
         {
@@ -633,6 +819,7 @@ public class SimulationRunner
             FinalTier1Custom = summary?.FinalTier1Custom ?? 0,
             FinalTier2Custom = summary?.FinalTier2Custom ?? 0,
             FinalSpeciesPopulations = CaptureSpeciesPopulations(),
+            SpeciesMetrics = speciesMetrics,
             MaxTier1Pop = summary?.MaxTier1Pop ?? 0,
             MinTier1Pop = summary?.MinTier1Pop ?? 0,
             MaxTier2Pop = summary?.MaxTier2Pop ?? 0,
@@ -655,6 +842,135 @@ public class SimulationRunner
         foreach (var sp in Ecosystem.Species)
             pops[sp.FullName] = (long)Math.Round(sp.Population);
         return pops;
+    }
+
+    // ==================== PER-SPECIES SCENARIO METRICS (v12) ====================
+    // Final-year window (last 365 days) is the canonical metric for "suboptimal is
+    // optimal" — it gives the simulation time to settle past startup transients.
+    // For runs shorter than 365 days, the slice covers all days (i.e. final-year
+    // metrics equal full-run metrics).
+    private const int FINAL_YEAR_DAYS = 365;
+
+    // Crash threshold: a species is "crashed" on the first day it drops below
+    // max(CRASH_FLOOR, CRASH_FRACTION × StartPop). Placeholder defaults — Brian
+    // may want to tune these (e.g. 1% with floor 50, or rate-of-change-based).
+    private const float CRASH_FRACTION = 0.05f;
+    private const long  CRASH_FLOOR    = 10L;
+
+    private Dictionary<string, PerSpeciesScenarioMetrics> ComputePerSpeciesScenarioMetrics()
+    {
+        var result = new Dictionary<string, PerSpeciesScenarioMetrics>();
+        if (_records == null || _records.Count == 0 || Ecosystem == null || Ecosystem.Species == null)
+            return result;
+
+        int totalDays = _records.Count;
+        int finalYearStart = Math.Max(0, totalDays - FINAL_YEAR_DAYS);
+
+        foreach (var sp in Ecosystem.Species)
+        {
+            string fn = sp.FullName;
+
+            // Single-pass accumulators (avoid LINQ Skip().ToList() per species — see plan §3.5)
+            long minPop = long.MaxValue;
+            long maxPop = long.MinValue;
+            double condSumFull = 0.0;       int condCountFull = 0;
+            double brSumFull   = 0.0;       int brCountFull   = 0;
+            double popSumFull  = 0.0;       int popCountFull  = 0;
+            double popSqSumFull = 0.0;
+            double condSumYear = 0.0;       int condCountYear = 0;
+            double brSumYear   = 0.0;       int brCountYear   = 0;
+            double popSumYear  = 0.0;       int popCountYear  = 0;
+            double popSqSumYear = 0.0;
+
+            int extinctionDay = -1;
+            bool wasAlive = false;
+            int crashDay = -1;
+            long startPop = 0L;
+            long finalPop = 0L;
+
+            for (int i = 0; i < _records.Count; i++)
+            {
+                var rec = _records[i];
+                if (!rec.SpeciesData.TryGetValue(fn, out var d))
+                    continue;
+
+                if (i == 0) startPop = d.Population;
+                finalPop = d.Population;
+
+                // Min / Max population
+                if (d.Population < minPop) minPop = d.Population;
+                if (d.Population > maxPop) maxPop = d.Population;
+
+                // Extinction day: first day Pop reaches 0 after being alive
+                if (d.Population > 0L) wasAlive = true;
+                if (extinctionDay < 0 && wasAlive && d.Population == 0L)
+                    extinctionDay = rec.Day;
+
+                // Crash day: first day Pop drops below threshold
+                if (crashDay < 0 && startPop > 0L)
+                {
+                    long threshold = Math.Max(CRASH_FLOOR, (long)(startPop * CRASH_FRACTION));
+                    if (d.Population < threshold)
+                        crashDay = rec.Day;
+                }
+
+                // Full-run accumulators
+                condSumFull  += d.Condition;       condCountFull++;
+                brSumFull    += d.BirthRate;       brCountFull++;
+                popSumFull   += d.Population;      popSqSumFull += (double)d.Population * d.Population;
+                popCountFull++;
+
+                // Final-year accumulators (last 365 days)
+                if (i >= finalYearStart)
+                {
+                    condSumYear  += d.Condition;       condCountYear++;
+                    brSumYear    += d.BirthRate;       brCountYear++;
+                    popSumYear   += d.Population;      popSqSumYear += (double)d.Population * d.Population;
+                    popCountYear++;
+                }
+            }
+
+            // Defensive: if species never appeared in any StepRecord (shouldn't happen
+            // because RecordStep iterates Ecosystem.Species), skip it.
+            if (popCountFull == 0) continue;
+
+            float meanPopFull = (float)(popSumFull / popCountFull);
+            float meanPopYear = popCountYear > 0 ? (float)(popSumYear / popCountYear) : meanPopFull;
+
+            result[fn] = new PerSpeciesScenarioMetrics
+            {
+                FullName                = fn,
+                FinalPopulation         = finalPop,
+                MeanConditionFullRun    = condCountFull > 0 ? (float)(condSumFull / condCountFull) : 0f,
+                MeanConditionFinalYear  = condCountYear > 0 ? (float)(condSumYear / condCountYear) : (condCountFull > 0 ? (float)(condSumFull / condCountFull) : 0f),
+                MeanBirthRateFullRun    = brCountFull > 0 ? (float)(brSumFull / brCountFull) : 0f,
+                MeanBirthRateFinalYear  = brCountYear > 0 ? (float)(brSumYear / brCountYear) : (brCountFull > 0 ? (float)(brSumFull / brCountFull) : 0f),
+                PopCvFullRun            = ComputeCvFromSums(popSumFull, popSqSumFull, popCountFull),
+                PopCvFinalYear          = popCountYear > 0
+                                              ? ComputeCvFromSums(popSumYear, popSqSumYear, popCountYear)
+                                              : ComputeCvFromSums(popSumFull, popSqSumFull, popCountFull),
+                MeanPopulationFinalYear = meanPopYear,
+                MinPopulation           = minPop == long.MaxValue ? 0L : minPop,
+                MaxPopulation           = maxPop == long.MinValue ? 0L : maxPop,
+                ExtinctionDay           = extinctionDay,
+                CrashDay                = crashDay
+            };
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// Compute coefficient of variation (StdDev / Mean) from running sums.
+    /// Returns 0 when mean is ~0 (CV undefined for zero population).
+    /// </summary>
+    private static float ComputeCvFromSums(double sum, double sqSum, int count)
+    {
+        if (count <= 0) return 0f;
+        double mean = sum / count;
+        if (mean <= 1e-4) return 0f;   // CV undefined for ~zero mean
+        double variance = (sqSum / count) - (mean * mean);
+        if (variance <= 0.0) return 0f; // numerical guard against tiny negatives
+        return (float)(Math.Sqrt(variance) / mean);
     }
 }
 

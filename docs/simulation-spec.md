@@ -4,7 +4,20 @@ Authoritative description of the headless ecosystem simulator, generated from so
 
 Source files: `EcosystemSimulator.cs`, `SimSpecies.cs`, `TemperatureCalculator.cs`, `SimulationRunner.cs`.
 
-## v11.1 changes (current model version)
+## v12 changes (current model version)
+
+- **Per-species daily tracking added.** Every `StepRecord` now carries a `Dictionary<string, PerSpeciesStepData>` keyed by `SimSpecies.FullName`, holding population, condition, thermal performance, FedRate, hunting efficiency, daily event counts (births, eaten, all death types), per-capita birth rate, repro scale, and accumulator residuals — all per individual species.
+  - The scenario CSV header is now species-list-parameterized: existing tier columns appear first in their original order, and per-species columns (`{SanitizedFullName}_{Field}`) are appended at the end. ASCII-only sanitization (any non-`[A-Za-z0-9_]` becomes `_`); duplicate sanitized names get `_2`, `_3` suffixes.
+  - Tier-rollup invariant: per-species values sum to existing tier-level values (e.g. `Tier1Pop == sum({S}_Pop for S in T1)`).
+- **`EcosystemSimulator` exposes per-species event counters**: `LastBirthsBySpecies`, `LastTempDeathsBySpecies`, `LastConditionDeathsBySpecies`, `LastNaturalDeathsBySpecies`, `LastEatenBySpecies`, `LastReproScaleBySpecies`, `LastFedRateBySpecies`, `StartPopBySpecies`. All cleared and re-initialized at the top of `ProcessBiologyStep`. Plus public accessors `GetBirthAccum`, `GetNaturalDeathAccum`, `GetConditionDeathAccum`, `GetPredationAccum` for accumulator residuals.
+- **Final-year (last 365 days) and full-run rich metrics added** at the scenario level via `PerSpeciesScenarioMetrics`: mean Condition, mean per-capita birth rate, population CV, min/max population, mean population, extinction day, crash day. Computed by `SimulationRunner.ComputePerSpeciesScenarioMetrics()` in a single linear pass over `_records`.
+- **Aggregate CSV (per run) gains 3 sections**: `=== PER-SPECIES FINAL YEAR METRICS ===`, `=== PER-SPECIES FULL-RUN METRICS ===`, `=== PER-SPECIES STABILITY METRICS ===`. Each metric reports Mean / StdDev / SurvivedMean across scenarios.
+- **Bulk summary CSV gains 3 sections**: `=== PER-RUN PER-SPECIES FINAL YEAR ===`, `=== CROSS-RUN PER-SPECIES FINAL YEAR ===`, `=== CROSS-RUN STABILITY ===`. Cross-run grand means use mean-of-means (per-run weighted equally), consistent with existing legacy semantics.
+- **Crash threshold (placeholder defaults)**: a species "crashes" on the first day its population drops below `max(CRASH_FLOOR=10, CRASH_FRACTION=0.05 × StartPop)`. Constants live at the top of `ComputePerSpeciesScenarioMetrics`. Tune as needed.
+- **`model_version` bumped** to `v12-per-species-tracking` in scenario CSV `#config:` header and in `bulk_summary.csv`.
+- **Backward compatibility**: all existing tier-level / variant-level columns and aggregate sections preserved verbatim. New data is purely additive. RNG sequence unchanged, so byte-identical regression on tier columns is achievable for the same seed.
+
+## v11.1 changes
 
 - **Removed `UseCarryingCapacity` toggle.** Carrying capacity is always on. Tier 1 species without a resource ceiling grow without bound, which is biologically meaningless and triggered integer-overflow accumulators in long runs.
   - `SimulationConfig.UseCarryingCapacity`, `BulkBatchConfig.UseCarryingCap`, `EcosystemSimulator.UseCarryingCapacity`, `ScenarioResult.UseCarryingCapacity` all deleted.
@@ -321,7 +334,26 @@ Four `Dictionary<string, float>` keyed by `SimSpecies.FullName` (= `"{Name}_{Var
 
 `_thermalDeathAccumulators` exists as a field but is not used by the current thermal-death logic (which is binary/instant).
 
-Per-day snapshots of accumulator totals are written to the CSV via `BirthAccumT1/T2`, `NaturalDeathAccumT1/T2`, `ConditionDeathAccumT1/T2`, `PredationAccumT1`.
+Per-day snapshots of accumulator totals are written to the CSV via tier-level columns `BirthAccumT1/T2`, `NaturalDeathAccumT1/T2`, `ConditionDeathAccumT1/T2`, `PredationAccumT1`.
+
+**v12 accessors (per-species residuals):** `GetBirthAccum(fullName)`, `GetNaturalDeathAccum(fullName)`, `GetConditionDeathAccum(fullName)`, `GetPredationAccum(fullName)` expose the accumulator state for individual species. These are surfaced as per-day per-species CSV columns `{S}_BirthAccum`, `{S}_NatDeathAccum`, `{S}_CondDeathAccum`, `{S}_PredAccum`.
+
+### Per-species event counters (v12)
+
+In addition to the tier-level `Last*` properties below, `EcosystemSimulator` keeps per-species event counters as `Dictionary<string, long>` (or `<float>`) keyed by `FullName`:
+
+| Counter | Updated in | CSV column suffix |
+|---|---|---|
+| `LastBirthsBySpecies` | Step 8 (`ApplyReproduction`) | `{S}_Births` |
+| `LastTempDeathsBySpecies` | Step 6 (`ApplyThermalDeath`) | `{S}_TempDeaths` |
+| `LastConditionDeathsBySpecies` | Step 7 (`ApplyConditionDeath`) | `{S}_CondDeaths` |
+| `LastNaturalDeathsBySpecies` | Step 9 (`ApplyNaturalDeathWithAccumulator`) | `{S}_NatDeaths` |
+| `LastEatenBySpecies` | Step 2 predation block | `{S}_Eaten` |
+| `LastReproScaleBySpecies` | Step 8 | `{S}_ReproScale` |
+| `LastFedRateBySpecies` | Step 2a (T1) and Step 2b (T2) | `{S}_FedRate` |
+| `StartPopBySpecies` | Top of `ProcessBiologyStep` | (used to compute per-capita `BirthRate`) |
+
+All cleared and re-initialized to zero per species at the top of `ProcessBiologyStep`. The increments live alongside the tier-level `LastX += deaths` lines in the same conditional branch — invariant: sum of per-species values equals the tier-level value.
 
 ### Per-day diagnostic fields (set by biology, read by CSV writer)
 
@@ -386,6 +418,7 @@ column entirely.
 | v10 | Carrying capacity reframed as a shared food/resource pool driving Tier 1 FedRate (linear: `min(1, HE × food_density)`). Soft-cap-on-births block deleted from `ApplyReproduction` (processing-order bug eliminated as side effect). `HuntingEfficiency` for Tier 1 now meaningful as resource-extraction efficiency. `NEWBORN_CONDITION` constant removed — newborns inherit parent group Condition. CSV adds `FedRateT1`, `FoodDensityT1`, `model_version`. Pooled Tier 2 FedRate intentionally untouched (v11). |
 | v11 | Per-predator Tier 2 FedRate (review item A1). `fedRate_i = min(1, huntingSuccess_i × scarcityFactor)` where `scarcityFactor = totalEaten / totalActualDemand`. Replaces the pooled `fedRate = totalEaten / totalRawDemand` that erased per-species competitive signal. `LastFedRateT2` is now a population-weighted average across predators. Reduces to v10 formula in single-predator-species runs. `model_version` bumped to `v11-per-predator-fedrate`. |
 | v11.1 | Removed `UseCarryingCapacity` toggle from `SimulationConfig`, `BulkBatchConfig`, `EcosystemSimulator`, `ScenarioResult`. Carrying capacity is always on. Old bulk CSVs that include `use_carrying_cap` parse with a deprecation warning and the value is ignored. `GenerateTemplate()` omits the column and uses `seasonal_amp = 5`, `condition_drain_rate = 0.15`. `IsValid()` hard-rejects non-positive cap. `model_version` bumped to `v11.1-cap-always-on`. |
+| v12 | Per-species daily tracking added. `StepRecord.SpeciesData : Dictionary<string, PerSpeciesStepData>` keyed by `FullName`. Scenario CSV gains 17 per-species columns (Pop, Cond, ThermalPerf, FinalPerf, FedRate, HuntingEff, Births, TempDeaths, CondDeaths, NatDeaths, Eaten, BirthRate, ReproScale, BirthAccum, NatDeathAccum, CondDeathAccum, PredAccum). `EcosystemSimulator` exposes `LastXBySpecies` event counters and `GetXAccum(fullName)` accessors. `ScenarioResult.SpeciesMetrics` (PerSpeciesScenarioMetrics) holds final-365-day means, full-run means, population CV, min/max, extinction day, crash day. `AggregateResults.PerSpeciesMetrics` and `BulkRunSummary.PerSpeciesMetrics` aggregate across scenarios and runs. Aggregate CSV gains 3 sections (`PER-SPECIES FINAL YEAR METRICS`, `PER-SPECIES FULL-RUN METRICS`, `PER-SPECIES STABILITY METRICS`); bulk_summary CSV gains 3 sections (`PER-RUN PER-SPECIES FINAL YEAR`, `CROSS-RUN PER-SPECIES FINAL YEAR`, `CROSS-RUN STABILITY`). All existing tier columns and sections preserved verbatim. `model_version` bumped to `v12-per-species-tracking`. |
 
 ## 9. Fallback defaults (used only if no `RunSpeciesList` is provided)
 

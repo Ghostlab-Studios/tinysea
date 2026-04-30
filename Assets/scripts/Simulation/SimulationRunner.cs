@@ -681,36 +681,84 @@ public class SimulationRunner
         {
             var stats = populationStats ?? ComputePopulationStats();
 
-            // Summary statistics block
+            // v12.1: Per-species summary statistics block.
+            // Columns: Tier1Pop, Tier2Pop (tier totals), then one column per species
+            // by FullName, in the same (Tier asc, FullName asc) order as the daily
+            // header. Variant rollup columns (Tier1Arctic, Tier1Common, etc.) are no
+            // longer emitted here — species are tracked individually so the variant
+            // intermediate level is now redundant. Tier totals are kept because they
+            // are real ecosystem-level aggregates (not redundant with per-species).
+            var summaryCols = new List<string> { "Tier1Pop", "Tier2Pop" };
+            foreach (var sp in orderedSpecies)
+                summaryCols.Add(StepRecord.SanitizeColumnName(sp.FullName));
+
+            // Pre-compute per-species Mean/Max/Min/StdDev/ExtinctionDay in one pass.
+            int dayCount = _records.Count;
+            var spMean = new Dictionary<string, double>();
+            var spMax = new Dictionary<string, long>();
+            var spMin = new Dictionary<string, long>();
+            var spStdDev = new Dictionary<string, double>();
+            var spExtinctionDay = new Dictionary<string, int>();
+            foreach (var sp in orderedSpecies)
+            {
+                string fn = sp.FullName;
+                long mn = long.MaxValue;
+                long mx = long.MinValue;
+                double sum = 0.0;
+                double sqSum = 0.0;
+                int extinctionDay = -1;
+                bool wasAlive = false;
+                foreach (var rec in _records)
+                {
+                    long pop = rec.SpeciesData.TryGetValue(fn, out var d) ? d.Population : 0L;
+                    sum += pop;
+                    sqSum += (double)pop * pop;
+                    if (pop < mn) mn = pop;
+                    if (pop > mx) mx = pop;
+                    if (pop > 0L) wasAlive = true;
+                    if (extinctionDay < 0 && wasAlive && pop == 0L) extinctionDay = rec.Day;
+                }
+                double mean = dayCount > 0 ? sum / dayCount : 0.0;
+                double variance = dayCount > 0 ? (sqSum / dayCount) - (mean * mean) : 0.0;
+                if (variance < 0.0) variance = 0.0;
+                spMean[fn] = mean;
+                spMax[fn] = mx == long.MinValue ? 0L : mx;
+                spMin[fn] = mn == long.MaxValue ? 0L : mn;
+                spStdDev[fn] = Math.Sqrt(variance);
+                spExtinctionDay[fn] = extinctionDay;
+            }
+
+            // Summary statistics block — tier totals + per-species columns
             sb.AppendLine("#");
-            sb.AppendLine("#summary:Statistic," + string.Join(",", ScenarioResult.PopColumns));
+            sb.AppendLine("#summary:Statistic," + string.Join(",", summaryCols));
 
             sb.Append("#summary:Mean");
-            foreach (var col in ScenarioResult.PopColumns)
-                sb.Append($",{stats.Mean[col]:F1}");
+            sb.Append($",{stats.Mean["Tier1Pop"]:F1},{stats.Mean["Tier2Pop"]:F1}");
+            foreach (var sp in orderedSpecies) sb.Append($",{spMean[sp.FullName]:F1}");
             sb.AppendLine();
 
             sb.Append("#summary:Max");
-            foreach (var col in ScenarioResult.PopColumns)
-                sb.Append($",{stats.Max[col]}");
+            sb.Append($",{stats.Max["Tier1Pop"]},{stats.Max["Tier2Pop"]}");
+            foreach (var sp in orderedSpecies) sb.Append($",{spMax[sp.FullName]}");
             sb.AppendLine();
 
             sb.Append("#summary:Min");
-            foreach (var col in ScenarioResult.PopColumns)
-                sb.Append($",{stats.Min[col]}");
+            sb.Append($",{stats.Min["Tier1Pop"]},{stats.Min["Tier2Pop"]}");
+            foreach (var sp in orderedSpecies) sb.Append($",{spMin[sp.FullName]}");
             sb.AppendLine();
 
             sb.Append("#summary:StdDev");
-            foreach (var col in ScenarioResult.PopColumns)
-                sb.Append($",{stats.StdDev[col]:F1}");
+            sb.Append($",{stats.StdDev["Tier1Pop"]:F1},{stats.StdDev["Tier2Pop"]:F1}");
+            foreach (var sp in orderedSpecies) sb.Append($",{spStdDev[sp.FullName]:F1}");
             sb.AppendLine();
 
-            // Extinction timing block
+            // Extinction timing block — one row per species
             sb.AppendLine("#");
-            sb.AppendLine("#extinction:Variant,DayReachedZero");
-            foreach (var variant in ScenarioResult.VariantColumns)
+            sb.AppendLine("#extinction:Species,DayReachedZero");
+            foreach (var sp in orderedSpecies)
             {
-                sb.AppendLine($"#extinction:{variant},{stats.ExtinctionDay[variant]}");
+                string col = StepRecord.SanitizeColumnName(sp.FullName);
+                sb.AppendLine($"#extinction:{col},{spExtinctionDay[sp.FullName]}");
             }
             sb.AppendLine("#");
         }

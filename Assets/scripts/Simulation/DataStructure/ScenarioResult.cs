@@ -731,7 +731,7 @@ public class AggregateResults
         if (hasPopStats)
         {
             sb.AppendLine();
-            sb.AppendLine("=== SUMMARY STATISTICS (Grand Mean Across All Runs) ===");
+            sb.AppendLine("=== SUMMARY STATISTICS - TIER ROLLUPS (Grand Mean Across All Scenarios) ===");
             sb.AppendLine("Statistic," + string.Join(",", ScenarioResult.PopColumns));
 
             string[] statNames = { "Mean", "Max", "Min", "StdDev" };
@@ -771,12 +771,62 @@ public class AggregateResults
             }
         }
 
-        // Extinction timing across all runs
+        // v12.2: Per-species version of SUMMARY STATISTICS — long format.
+        // Each row: (Statistic, Species, Variant, Tier, Value).
+        // Genuinely new data: each scenario's per-species pop stats (Mean/Max/Min/StdDev
+        // across days, computed in SimulationRunner.ComputePopulationStats) averaged
+        // across scenarios. Different from PER-SPECIES POPULATION STATS which uses
+        // final-day pops, not across-day means.
+        bool hasPerSpeciesPopStats = Scenarios.Any(s => s.PopMean != null
+            && PerSpeciesMetrics != null
+            && PerSpeciesMetrics.Keys.Any(k => s.PopMean.ContainsKey(k)));
+        if (hasPerSpeciesPopStats && PerSpeciesMetrics != null && PerSpeciesMetrics.Count > 0)
+        {
+            sb.AppendLine();
+            sb.AppendLine("=== SUMMARY STATISTICS - PER SPECIES (Grand Mean Across All Scenarios) ===");
+            sb.AppendLine("Statistic,Species,Variant,Tier,Value");
+
+            string[] perSpStatNames = { "Mean", "Max", "Min", "StdDev" };
+            foreach (var statName in perSpStatNames)
+            {
+                foreach (var key in PerSpeciesMetrics.Keys.OrderBy(k => k))
+                {
+                    double sum = 0;
+                    int count = 0;
+                    foreach (var s in Scenarios)
+                    {
+                        double val;
+                        switch (statName)
+                        {
+                            case "Mean":
+                                if (s.PopMean == null || !s.PopMean.ContainsKey(key)) continue;
+                                val = s.PopMean[key]; break;
+                            case "Max":
+                                if (s.PopMax == null || !s.PopMax.ContainsKey(key)) continue;
+                                val = s.PopMax[key]; break;
+                            case "Min":
+                                if (s.PopMin == null || !s.PopMin.ContainsKey(key)) continue;
+                                val = s.PopMin[key]; break;
+                            case "StdDev":
+                                if (s.PopStdDev == null || !s.PopStdDev.ContainsKey(key)) continue;
+                                val = s.PopStdDev[key]; break;
+                            default: continue;
+                        }
+                        sum += val;
+                        count++;
+                    }
+                    double grandMean = count > 0 ? sum / count : 0;
+                    sb.AppendLine($"GrandMean_{statName},{key},{GetVariant(key)},{GetTier(key)},{grandMean:F1}");
+                }
+            }
+        }
+
+        // Extinction timing across all runs (tier-variant rollups)
         bool hasExtinction = Scenarios.Any(s => s.ExtinctionDay != null);
         if (hasExtinction)
         {
             sb.AppendLine();
-            sb.AppendLine("=== EXTINCTION TIMING (Across All Runs) ===");
+            sb.AppendLine("=== EXTINCTION TIMING - TIER VARIANTS (Across All Scenarios) ===");
             sb.AppendLine("Variant,MinDays,MaxDays,AvgDays,NumExtinct,NumSurvived");
 
             foreach (var variant in ScenarioResult.VariantColumns)
@@ -805,6 +855,28 @@ public class AggregateResults
                     int maxDays = extinctDays.Max();
                     double avgDays = extinctDays.Average();
                     sb.AppendLine($"{variant},{minDays},{maxDays},{avgDays:F1},{numExtinct},{numSurvived}");
+                }
+            }
+        }
+
+        // v12.2: Per-species extinction timing (Across All Scenarios).
+        // Source: PerSpeciesMetrics[key].ExtinctionTiming (already computed in CalculateAggregates).
+        if (PerSpeciesMetrics != null && PerSpeciesMetrics.Count > 0)
+        {
+            sb.AppendLine();
+            sb.AppendLine("=== EXTINCTION TIMING - PER SPECIES (Across All Scenarios) ===");
+            sb.AppendLine("Species,Variant,Tier,MinDays,MaxDays,AvgDays,NumExtinct,NumSurvived");
+
+            foreach (var key in PerSpeciesMetrics.Keys.OrderBy(k => k))
+            {
+                var et = PerSpeciesMetrics[key].ExtinctionTiming;
+                if (et.NEvents == 0)
+                {
+                    sb.AppendLine($"{key},{GetVariant(key)},{GetTier(key)},-1,-1,-1,0,{et.NNonEvents}");
+                }
+                else
+                {
+                    sb.AppendLine($"{key},{GetVariant(key)},{GetTier(key)},{et.MinDay:F0},{et.MaxDay:F0},{et.MeanDay:F1},{et.NEvents},{et.NNonEvents}");
                 }
             }
         }

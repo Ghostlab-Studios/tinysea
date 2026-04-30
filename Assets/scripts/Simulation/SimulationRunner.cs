@@ -604,6 +604,43 @@ public class SimulationRunner
             stats.ExtinctionDay[variant] = extinctionDay;
         }
 
+        // v12.2: Also compute per-species Mean/Max/Min/StdDev across days, keyed
+        // by SimSpecies.FullName. Same calculation as the tier-variant block above
+        // but pulls per-species population from record.SpeciesData. Lets the
+        // aggregate writer's "SUMMARY STATISTICS - PER SPECIES" section consume
+        // this from the same dicts.
+        if (Ecosystem != null && Ecosystem.Species != null)
+        {
+            foreach (var sp in Ecosystem.Species)
+            {
+                string fn = sp.FullName;
+                long max = long.MinValue;
+                long min = long.MaxValue;
+                double sum = 0;
+                foreach (var r in _records)
+                {
+                    long val = r.SpeciesData.TryGetValue(fn, out var d) ? d.Population : 0L;
+                    if (val > max) max = val;
+                    if (val < min) min = val;
+                    sum += val;
+                }
+                double mean = sum / _records.Count;
+                double varianceSum = 0;
+                foreach (var r in _records)
+                {
+                    long val = r.SpeciesData.TryGetValue(fn, out var d) ? d.Population : 0L;
+                    double diff = val - mean;
+                    varianceSum += diff * diff;
+                }
+                double stddev = Math.Sqrt(varianceSum / _records.Count);
+
+                stats.Mean[fn] = mean;
+                stats.Max[fn] = max == long.MinValue ? 0L : max;
+                stats.Min[fn] = min == long.MaxValue ? 0L : min;
+                stats.StdDev[fn] = stddev;
+            }
+        }
+
         return stats;
     }
 

@@ -4,6 +4,19 @@ Authoritative description of the headless ecosystem simulator, generated from so
 
 Source files: `EcosystemSimulator.cs`, `SimSpecies.cs`, `TemperatureCalculator.cs`, `SimulationRunner.cs`.
 
+## v12.3 changes (aggregation bug fix — Brian's TPC sweep finding)
+
+Pure aggregation / reporting fix. Simulation logic and `model_version` unchanged. Two related bugs in how per-species final-year metrics are averaged:
+
+- **Per-scenario `MeanConditionFinalYear` / `MeanBirthRateFinalYear` were averaging over every day**, including days where `Population == 0`. Once a species is extinct, biology no longer updates `sp.Condition`, so the recorded per-day Condition stays at either its initial `1.0` (species never recruited) or its last pre-extinction value. Including those samples polluted the per-scenario mean. **Fix:** only accumulate Condition / BirthRate on days where `Population > 0`. Population accumulators still include zeros (zero is a real datum for population statistics).
+- **Cross-run `GrandMeanCondition` / `GrandMeanBirthRate` / `GrandMeanPopCv` were averaging over every run**, including runs where the species had `NSurvived == 0`. Those runs contribute the per-run mean computed above (post-fix: 0; pre-fix: ~1.0 sentinel). **Fix:** filter the cross-run aggregator to runs where `NSurvived > 0`, and use each run's per-run `SurvivedMean` (not `Mean`) so partial-survival runs contribute their cleanest representative value. `GrandMeanPop` is still averaged across all runs (population includes zeros). `GrandMeanPop_SurvivedMean` continues to use `RunsSurvived` denominator.
+
+Net effect: `GrandMeanCondition` for a species like `Golgi_Arctic` (12 surviving runs out of 78) drops from ~0.88 (mostly sentinel 1.0s) to its real value (~0.30). `StdDev` also tightens because the inflated variance from mixing real and sentinel values goes away.
+
+No change to the `aggregate.csv` `MeanCondition_SurvivedMean` column — that one was already correctly filtered at the per-run level.
+
+Source: discovered by Brian Helmuth running constant-temperature TPC sweeps where the bulk batch deliberately spans lethal temperatures, producing a high ratio of zero-pop runs.
+
 ## v12.2 changes (CSV format consolidation)
 
 Pure CSV-format changes; simulation logic and `model_version` unchanged. See [`csv-formats.md`](./csv-formats.md) for the full layout.

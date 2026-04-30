@@ -314,9 +314,9 @@ Species,Variant,Tier,N,NSurvived,MeanCondition,MeanCondition_StdDev,MeanConditio
 ... (one row per species, sorted alphabetically by FullName)
 ```
 
-- `MeanCondition` and `MeanBirthRate` (per-capita, `Births / max(StartPop,1)`) — averaged over the final 365 days of each scenario, then averaged across scenarios.
-- `PopCv` — population coefficient of variation (StdDev / Mean) over the final year. Returns 0 when mean is ~0.
-- `MeanPop` — population averaged over the final year (different from `FinalPop` snapshot).
+- `MeanCondition` and `MeanBirthRate` (per-capita, `Births / max(StartPop,1)`) — averaged over the final 365 days of each scenario **only on days the species had `Population > 0`** (v12.3 fix), then averaged across scenarios. The alive-only filter avoids the per-scenario `MeanCondition` getting polluted by post-extinction days where `sp.Condition` is stuck at its initial 1.0 (or last pre-extinction value) because biology no longer updates it.
+- `PopCv` — population coefficient of variation (StdDev / Mean) over the final year. Returns 0 when mean is ~0. Includes all days (zeros are biologically real for population stats).
+- `MeanPop` — population averaged over the final year (different from `FinalPop` snapshot). Includes all days.
 - `Variant` and `Tier` are emitted as separate columns (v12.2) so the species' tier-context is queryable without re-parsing the name.
 
 ### 3.5b. Per-species full-run metrics (v12)
@@ -484,7 +484,10 @@ Species,Variant,Tier,Runs,RunsSurvived,GrandMeanCondition,GrandMeanCondition_Std
 
 - `Runs` — number of runs in which the species appeared at all.
 - `RunsSurvived` — runs where the species had at least one surviving scenario (`NSurvived > 0` in that run).
-- `StdDev` columns measure between-run variability of the per-run means.
+- `GrandMeanCondition`, `GrandMeanBirthRate`, `GrandMeanPopCv` — averaged across **surviving runs only** (`RunsSurvived` denominator). Each run's contribution is its per-run `SurvivedMean` (not the unfiltered `Mean`). Pre-v12.3 these averaged across all runs and contained sentinel `Condition=1.0` values from non-surviving runs — that contamination is fixed.
+- `GrandMeanPop` — averaged across **all runs** (`Runs` denominator). Zero-pop runs contribute a real 0; that's biologically meaningful for population statistics.
+- `GrandMeanPop_SurvivedMean` — averaged across surviving runs only, using each run's per-run `SurvivedMean`.
+- `StdDev` columns measure between-run variability of the per-run survived-means.
 
 ### 5.6. Cross-run stability (v12)
 

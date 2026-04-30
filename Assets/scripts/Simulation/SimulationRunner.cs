@@ -1013,17 +1013,32 @@ public class SimulationRunner
                         crashDay = rec.Day;
                 }
 
-                // Full-run accumulators
-                condSumFull  += d.Condition;       condCountFull++;
-                brSumFull    += d.BirthRate;       brCountFull++;
+                // Full-run accumulators.
+                // Condition / BirthRate are only meaningful on days the species was alive.
+                // Once Population hits 0, biology no longer updates sp.Condition, so the
+                // recorded Condition value sticks at either its initial 1.0 (species
+                // never recruited) or its last pre-extinction value. Including those
+                // dead-day samples inflates / distorts the mean. Same logic for
+                // BirthRate (already 0 on dead days because StartPop == 0). Population
+                // accumulators include zeros — those are biologically meaningful for
+                // population statistics (zero is a real datum for an extinct species).
+                if (d.Population > 0L)
+                {
+                    condSumFull += d.Condition; condCountFull++;
+                    brSumFull   += d.BirthRate; brCountFull++;
+                }
                 popSumFull   += d.Population;      popSqSumFull += (double)d.Population * d.Population;
                 popCountFull++;
 
-                // Final-year accumulators (last 365 days)
+                // Final-year accumulators (last 365 days). Same alive-only filter for
+                // condition / birth rate; population includes all days.
                 if (i >= finalYearStart)
                 {
-                    condSumYear  += d.Condition;       condCountYear++;
-                    brSumYear    += d.BirthRate;       brCountYear++;
+                    if (d.Population > 0L)
+                    {
+                        condSumYear += d.Condition; condCountYear++;
+                        brSumYear   += d.BirthRate; brCountYear++;
+                    }
                     popSumYear   += d.Population;      popSqSumYear += (double)d.Population * d.Population;
                     popCountYear++;
                 }

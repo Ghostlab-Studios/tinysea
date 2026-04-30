@@ -557,8 +557,20 @@ public class BulkSimulationController : MonoBehaviour
             }
             sb.AppendLine();
 
-            // Cross-run grand-mean (mean of per-run means — equal weight per run,
-            // consistent with existing "GrandMean" semantics in the legacy table).
+            // Cross-run grand-mean (mean of per-run means — equal weight per run).
+            //
+            // Population is averaged across ALL runs for GrandMeanPop (zero-pop runs
+            // contribute a real 0 — meaningful for "typical population including
+            // failures") and across surviving runs only for GrandMeanPop_SurvivedMean.
+            //
+            // Condition / BirthRate / PopCv are averaged across surviving runs ONLY
+            // (NSurvived > 0). For non-surviving runs the per-run "mean" of these
+            // metrics is either 0 (post-fix, when no day had Population > 0) or a
+            // sentinel value (Condition stuck at its initial 1.0 because biology
+            // never updated it). Including those samples produced misleading aggregates
+            // — fixed in v12.3. We also use the per-run SurvivedMean (not Mean) for
+            // these three so partial-survival runs contribute their cleanest
+            // representative value.
             sb.AppendLine("=== CROSS-RUN PER-SPECIES FINAL YEAR (Mean of per-run means) ===");
             sb.AppendLine("Species,Variant,Tier,Runs,RunsSurvived,GrandMeanCondition,GrandMeanCondition_StdDev,GrandMeanBirthRate,GrandMeanBirthRate_StdDev,GrandMeanPopCv,GrandMeanPop,GrandMeanPop_SurvivedMean");
             foreach (var sp in allSpeciesRich)
@@ -576,33 +588,43 @@ public class BulkSimulationController : MonoBehaviour
                     if (run.PerSpeciesMetrics == null) continue;
                     if (!run.PerSpeciesMetrics.TryGetValue(sp, out var a)) continue;
 
-                    float cond = a.MeanConditionFinalYear.Mean;
-                    float br   = a.MeanBirthRateFinalYear.Mean;
-                    float cv   = a.PopCvFinalYear.Mean;
-                    float pop  = a.MeanPopulationFinalYear.Mean;
-
-                    condSum += cond; condSqSum += cond * cond;
-                    brSum   += br;   brSqSum   += br * br;
-                    cvSum   += cv;
-                    popSum  += pop;
+                    // Population: include every run (zero is a real datum here).
+                    popSum += a.MeanPopulationFinalYear.Mean;
                     runs++;
+
+                    // Condition / BirthRate / PopCv: only include runs where the
+                    // species had at least one surviving scenario, and use the
+                    // per-run SurvivedMean (cleaned of dead-scenario samples).
                     if (a.NSurvived > 0)
                     {
                         runsSurvivedCount++;
+                        float cond = a.MeanConditionFinalYear.SurvivedMean;
+                        float br   = a.MeanBirthRateFinalYear.SurvivedMean;
+                        float cv   = a.PopCvFinalYear.SurvivedMean;
+                        condSum += cond; condSqSum += cond * cond;
+                        brSum   += br;   brSqSum   += br * br;
+                        cvSum   += cv;
                         popSurvivedSum += a.MeanPopulationFinalYear.SurvivedMean;
                         popSurvivedCount++;
                     }
                 }
 
                 if (runs == 0) continue;
-                float gmCond = condSum / runs;
-                float gmBr   = brSum / runs;
-                float gmCv   = cvSum / runs;
+
+                // Grand means for condition / birth-rate / popCv are over surviving
+                // runs only; if no runs survived, emit 0 (consistent with how
+                // GrandMeanPop_SurvivedMean handles the same edge case).
+                float gmCond = runsSurvivedCount > 0 ? condSum / runsSurvivedCount : 0f;
+                float gmBr   = runsSurvivedCount > 0 ? brSum   / runsSurvivedCount : 0f;
+                float gmCv   = runsSurvivedCount > 0 ? cvSum   / runsSurvivedCount : 0f;
                 float gmPop  = popSum / runs;
-                float condVar = (condSqSum / runs) - (gmCond * gmCond);
-                float brVar   = (brSqSum / runs) - (gmBr * gmBr);
+
+                // StdDev across the same surviving-run sample.
+                float condVar = runsSurvivedCount > 0 ? (condSqSum / runsSurvivedCount) - (gmCond * gmCond) : 0f;
+                float brVar   = runsSurvivedCount > 0 ? (brSqSum   / runsSurvivedCount) - (gmBr   * gmBr)   : 0f;
                 float gmCondStd = condVar > 0f ? (float)Math.Sqrt(condVar) : 0f;
-                float gmBrStd   = brVar > 0f ? (float)Math.Sqrt(brVar) : 0f;
+                float gmBrStd   = brVar   > 0f ? (float)Math.Sqrt(brVar)   : 0f;
+
                 float gmPopSurvived = popSurvivedCount > 0 ? popSurvivedSum / popSurvivedCount : 0f;
 
                 sb.AppendLine($"{sp},{GetVariant(sp)},{GetTier(sp)},{runs},{runsSurvivedCount}," +

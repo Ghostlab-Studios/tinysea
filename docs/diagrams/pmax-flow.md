@@ -1,6 +1,8 @@
-# Where Pmax enters the pipeline (v9)
+# Where Pmax enters the pipeline (v9; v10 doesn't change Pmax's entry points)
 
 Source: `SimSpecies.Pmax`, `EcosystemSimulator.ProcessBiologyStep` lines covering Steps 1, 2, 4, 8.
+
+> **v10 note:** Pmax still enters the pipeline at the same four places as in v9. What v10 changes is the broader picture of what *drives Condition*: in addition to thermal performance and feeding, Tier 1's Condition target now also depends on **food density** (via the FedRate computed from the shared resource pool). So the full "what determines Condition" picture is wider than just temperature, but Pmax's role is unchanged.
 
 ```mermaid
 flowchart LR
@@ -23,9 +25,9 @@ flowchart LR
 - **Step 5** — `FinalPerformance = ThermalPerf × FedRate` includes Pmax via ThermalPerf, but FinalPerformance is **only logged** — it does not feed any biology step.
 - **Step 6 — Thermal death**: Triggered by `RawThermalPerf == 0`. No Pmax involvement.
 - **Step 7 — Condition death**: `severity = (DeathThreshold − Condition) / DeathThreshold`. `rawDeaths = Pop × severity × DeathRate × BiologyStep`. No Pmax term.
-- **Step 8 — No-predator penalty** (`NO_PREDATOR_PENALTY = 0.85`) and **soft carrying cap** (`1 − tierPop / cap`) are both Pmax-blind modifiers applied after the `Pmax` multiplication.
+- **Step 8 — No-predator penalty** (`NO_PREDATOR_PENALTY = 0.85`) is Pmax-blind, applied after the `Pmax` multiplication. The soft carrying-cap-on-births modifier was deleted in v10; reproduction is now throttled via the Condition pathway, where Pmax already enters via Step 4 rates and the Step 8 birth multiplier.
 - **Step 9 — Natural death**: `rate = NaturalDeathRate ± NaturalDeathVariance`. No Pmax.
-- **Newborn dilution**: newborns enter at the constant `NEWBORN_CONDITION = 0.5`, not at a Pmax-scaled value.
+- **Newborn Condition (v10)**: newborns inherit the species' current group Condition. Pmax doesn't enter directly here either, but the parent's Condition is itself affected by Pmax (via Step 4 rate scaling), so Pmax shapes newborn starting Condition indirectly through the parent.
 
 ## Net effect for a specialist vs generalist
 

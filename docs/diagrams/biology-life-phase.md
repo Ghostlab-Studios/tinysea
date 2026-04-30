@@ -1,6 +1,6 @@
 # Biology life phase (Steps 8–9)
 
-Source: `EcosystemSimulator.ApplyReproduction` (v9: Pmax multiplier), `EcosystemSimulator.ApplyNaturalDeathWithAccumulator`.
+Source: `EcosystemSimulator.ApplyReproduction` (v9: Pmax multiplier; v10: soft-cap-on-births deleted, newborns inherit parent Condition), `EcosystemSimulator.ApplyNaturalDeathWithAccumulator`.
 
 ```mermaid
 flowchart TD
@@ -18,17 +18,11 @@ flowchart TD
     Clamp --> Births["births = Pop × reproScale × ReproductionMultiplier × Pmax × BiologyStep"]
     Births --> T1NoPred{"Tier == 1 AND<br/>GetTierPopulation(2) &lt; MIN_ALIVE_POP?"}
     T1NoPred -- yes --> NPP["births *= NO_PREDATOR_PENALTY (0.85)"]
-    T1NoPred -- no --> Cap{"Tier == 1 AND<br/>UseCarryingCapacity?"}
-    NPP --> Cap
-    Cap -- yes --> SoftCap["tierPop = GetTierPopulation(1)  (live — includes prior species' births)<br/>growthFactor = max(0, 1 − tierPop / CarryingCapacityPerTier)<br/>births *= growthFactor"]
-    Cap -- no --> BAcc
-    SoftCap --> BAcc["_birthAccumulators[sp.FullName] += births<br/>accumulated = _birthAccumulators[sp.FullName]"]
+    T1NoPred -- no --> BAcc
+    NPP --> BAcc["_birthAccumulators[sp.FullName] += births<br/>accumulated = _birthAccumulators[sp.FullName]"]
     BAcc --> Whole["wholeBirths = floor(accumulated)<br/>residual = accumulated − wholeBirths<br/>_birthAccumulators[sp.FullName] = residual"]
-    Whole --> AddPop["sp.Population += wholeBirths"]
-    AddPop --> Dilute{"wholeBirths > 0 AND<br/>Pop > 0?"}
-    Dilute -- yes --> NewCond["newCond = (oldPop × oldCond + wholeBirths × NEWBORN_CONDITION) / newPop<br/>(NEWBORN_CONDITION = 0.5)"]
-    Dilute -- no --> S9
-    NewCond --> S9
+    Whole --> AddPop["sp.Population += wholeBirths<br/>(newborns inherit group Condition; v10 — no explicit dilution step,<br/>population-weighted average is unchanged when newborns match group)"]
+    AddPop --> S9
     SkipRepro --> S9
     S9["Step 9: Natural Death<br/>rate = NaturalDeathRate ± uniform(-NaturalDeathVariance, +NaturalDeathVariance)<br/>rate = max(0, rate)<br/>rawDeaths = Pop × rate × BiologyStep"] --> NAcc["_naturalDeathAccumulators[sp.FullName] += rawDeaths<br/>apply floor(accum) whole deaths"]
     NAcc --> Next[next species]
@@ -38,10 +32,10 @@ flowchart TD
 
 - **Two-region piecewise formula** for `reproScale`, continuous at `ReproThreshold` (both halves meet at `STRUGGLING_REPRO_RATE = 0.10`).
 - **Pmax multiplier (v9)**: `births *= sp.Pmax`. A specialist (Pmax = 0.9) produces 25% more births at the same Condition as a generalist (Pmax = 0.72).
-- **No predator penalty** is 0.85 — Tier 1 gets 15% fewer births when no predators exist, modelling ecosystem imbalance.
-- **Soft carrying cap**: `growthFactor = max(0, 1 − tierPop / CarryingCapacityPerTier)`. Tier 1 only. `tierPop` is evaluated live, so the first species processed sees a slightly lower `tierPop` than the last — a known first-mover artefact.
+- **No-predator penalty** is 0.85 — Tier 1 gets 15% fewer births when no predators exist, modelling ecosystem imbalance.
+- **(v10) Soft cap on births DELETED.** Tier 1 is now throttled indirectly via the Condition pathway: high pop → low food density (Step 2a) → low FedRate → low RawFinalPerformance target → Condition drains → reproScale shrinks AND condition deaths fire. The processing-order bug from the live `tierPop` read is gone with this code path.
 - **Birth accumulator** carries fractional births. Matters at low `reproScale` or low population, where daily births < 1.
-- **Newborn dilution**: adding offspring at `NEWBORN_CONDITION = 0.5` pulls the group's average Condition down toward 0.5 if many newborns enter at once.
+- **(v10) Newborn Condition = parent group Condition.** No fixed `NEWBORN_CONDITION = 0.5` constant. Parent's Condition already encodes recent food / hunting history via lagged drain dynamics, so multiplying again by today's FedRate would double-count. Mathematically: the population-weighted average is unchanged when newborns match the group, so no explicit Condition update step is needed. Newborn vulnerability emerges from same-drain-no-head-start dynamics in subsequent days.
 
 ## Natural death key invariants
 

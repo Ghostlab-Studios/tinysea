@@ -74,6 +74,10 @@ public class StepRecord
     public float FedRateT2;
     public float AvgHuntingEff;
 
+    // v10: Tier 1 feeding from shared resource pool
+    public float FedRateT1;        // Population-weighted average across live Tier 1 species
+    public float FoodDensityT1;    // Daily food density (1 - tier1Pop/cap), or 1.0 if cap disabled
+
     // Condition tracking
     public float AvgConditionT1;
     public float AvgConditionT2;
@@ -104,6 +108,7 @@ public class StepRecord
                $"{TotalDeaths}," +
                $"{BirthsT1},{BirthsT2}," +
                $"{FedRateT2:F3},{AvgHuntingEff:F3}," +
+               $"{FedRateT1:F3},{FoodDensityT1:F3}," +
                $"{AvgConditionT1:F3},{AvgConditionT2:F3}," +
                $"{BirthAccumT1:F3},{BirthAccumT2:F3}," +
                $"{NaturalDeathAccumT1:F3},{NaturalDeathAccumT2:F3}," +
@@ -125,6 +130,7 @@ public class StepRecord
                "TotalDeaths," +
                "BirthsT1,BirthsT2," +
                "FedRateT2,AvgHuntingEff," +
+               "FedRateT1,FoodDensityT1," +
                "AvgConditionT1,AvgConditionT2," +
                "BirthAccumT1,BirthAccumT2," +
                "NaturalDeathAccumT1,NaturalDeathAccumT2," +
@@ -307,6 +313,11 @@ public class SimulationRunner
             // Feeding tracking
             FedRateT2 = biologyRan ? Ecosystem.LastFedRateT2 : 0f,
             AvgHuntingEff = biologyRan ? Ecosystem.LastAvgHuntingEfficiency : 0f,
+            // v10: Tier 1 feeding from shared resource pool. On non-biology days,
+            // we still want valid values — use the last computed values rather than
+            // zeroing, since food density itself doesn't change in skipped-biology days.
+            FedRateT1 = Ecosystem.LastFedRateT1,
+            FoodDensityT1 = Ecosystem.LastFoodDensityT1,
 
             // Condition tracking
             AvgConditionT1 = Ecosystem.AvgConditionT1,
@@ -427,6 +438,8 @@ public class SimulationRunner
         var sb = new StringBuilder();
 
         // Embed configuration as comment lines (# is default comment char in R's read.csv)
+        // Model version line first so downstream tools know which simulator produced this file.
+        sb.AppendLine($"#config:model_version,v11.1-cap-always-on");
         sb.AppendLine($"#config:days_per_scenario,{TotalDays}");
         sb.AppendLine($"#config:number_of_scenarios,{numberOfScenarios}");
         sb.AppendLine($"#config:scenario_index,{scenarioIndex}");
@@ -442,7 +455,6 @@ public class SimulationRunner
         sb.AppendLine($"#config:autocorrelated,{TempCalc.UseAutocorrelation.ToString().ToLower()}");
         sb.AppendLine($"#config:temperature_bounds_min,{TempCalc.MinTemp}");
         sb.AppendLine($"#config:temperature_bounds_max,{TempCalc.MaxTemp}");
-        sb.AppendLine($"#config:use_carrying_capacity,{Ecosystem.UseCarryingCapacity.ToString().ToLower()}");
         sb.AppendLine($"#config:carrying_capacity_tier1,{Ecosystem.CarryingCapacityPerTier}");
         sb.AppendLine($"#config:condition_drain_rate,{Ecosystem.ConditionDrainRate}");
         sb.AppendLine($"#config:condition_recovery_rate,{Ecosystem.ConditionRecoveryRate}");

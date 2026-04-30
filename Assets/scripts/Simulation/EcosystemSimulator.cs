@@ -4,17 +4,21 @@ using System.Linq;
 using UnityEngine;
 
 /// <summary>
-/// TinySea Ecosystem Simulator v9
+/// TinySea Ecosystem Simulator v11.1
 ///
 /// BIOLOGY SEQUENCE (10 steps):
 /// 1. Thermal Performance - Arrhenius formula
-/// 2. Feeding/Predation - Holling Type II functional response + PREDATION ACCUMULATOR
+/// 2. Feeding/Predation - Tier 1 FedRate from shared food-pool density (linear, v10) +
+///                        Tier 2 Holling Type II with per-predator FedRate (v11) + PREDATION ACCUMULATOR
 /// 3. Raw Final Performance - RawThermalPerf x FedRate (Condition drain target)
 /// 4. Update Condition - Drain/recover toward RawFinalPerformance; rates scaled by Pmax
+///                       (Tier 1 target now varies with food density too)
 /// 5. Final Performance - ThermalPerf x FedRate (computed for logging; not a biology input)
 /// 6. Thermal Death - INSTANT kill at lethal limits (RawThermalPerf == 0)
 /// 7. Condition Death - GRADUATED: severity scales with how far below threshold + survivor fitness boost
 /// 8. Reproduction - CONDITION-BASED GRADUATED SCALE x Pmax + BIRTH ACCUMULATOR + Tier 1 penalty
+///                   (no more soft-cap-on-births — throttling is via Condition pathway in v10)
+///                   (newborns inherit parent group Condition — no fixed constant)
 /// 9. Natural Death - FLAT RATE + NATURAL DEATH ACCUMULATOR
 /// 10. Population Rounding - All populations become integers
 ///
@@ -30,7 +34,10 @@ using UnityEngine;
 /// - Drain accelerates up to 2x near lethal temperatures (continuous quadratic)
 /// - Pmax scales the rates: drain /= Pmax, recovery *= Pmax
 ///   (specialists drain slower and recover faster than generalists)
-/// - Target (drain destination) is unchanged — Condition still peaks at 1.0 for all species
+/// - In v10, Tier 1 target depends on BOTH temperature AND food density (via FedRate),
+///   so Tier 1 Condition no longer plateaus at 1.0 even at perfect temperature when
+///   the shared resource pool is depleted. Tier 2 target depends on temperature AND
+///   hunting success (FedRate from Holling II) as before.
 /// - Global drain/recovery rates on SimulationConfig
 ///
 /// ACCUMULATORS:
@@ -68,6 +75,64 @@ using UnityEngine;
 /// - Condition recovery: *= Pmax (specialists rebound faster)
 /// - Biological framing: Condition = health (species-agnostic),
 ///   Pmax = peak metabolic capacity (scales reproductive output and stress dynamics).
+///
+/// v10 CHANGES:
+/// - Reframed carrying capacity as a SHARED FOOD/RESOURCE POOL that drives Tier 1
+///   FedRate directly. The pool is the same as before (CarryingCapacityPerTier);
+///   the change is what it does: it now feeds the FedRate calculation in Step 2
+///   instead of multiplying births in Step 8.
+///   - Tier 1 FedRate = min(1, HuntingEfficiency × food_density)  [linear, not Holling II]
+///     (Plankton-style passive extractors don't have search/handling phases.)
+///   - food_density = max(0, 1 - tier1Pop / CarryingCapacityPerTier).
+///   - As of v11.1 carrying capacity is always on; the legacy off-mode that forced
+///     food_density to 1.0 has been removed (Tier 1 without a cap grows unbounded).
+/// - DELETED the soft-cap-on-births block in ApplyReproduction. Tier 1 reproduction
+///   now throttles indirectly via Condition: high pop → low food density → low
+///   FedRate → low RawFinalPerformance target → Condition drains → reproScale
+///   shrinks AND condition deaths fire. Logistic-overshoot dynamics emerge naturally.
+/// - PROCESSING-ORDER BUG (Brian Mail 8) ELIMINATED as a side effect of the above:
+///   the live-tierPop read inside the per-species reproduction loop is gone.
+/// - HuntingEfficiency for Tier 1 is now meaningful — semantically "resource
+///   extraction efficiency". Default 1.0 = perfect plankton-style extraction.
+/// - NEWBORN_CONDITION constant REMOVED. Newborns inherit the species' current
+///   group Condition (parent's Condition already encodes recent provisioning
+///   capacity via lagged drain dynamics; multiplying by today's FedRate would
+///   double-count). Same logic for Tier 1 and Tier 2.
+/// - New CSV columns: FedRateT1, FoodDensityT1. New #config: line: model_version,v10-food-pool.
+/// - Pooled FedRate bug for Tier 2 predators (review item A1) intentionally deferred —
+///   addressed in v11 (see below).
+///
+/// v11 CHANGES:
+/// - Fixed the pooled-FedRate bug for Tier 2 predators (review item A1). Previously
+///   every predator species got the same `fedRate = totalEaten / totalRawDemand`
+///   regardless of its individual `huntingSuccess`, which erased the competitive
+///   signal between specialist and generalist hunters. Now each predator's FedRate
+///   is its own hunting success scaled by an overall scarcity factor:
+///     scarcityFactor = totalEaten / totalActualDemand   (1.0 when prey abundant)
+///     fedRate_i      = min(1, huntingSuccess_i × scarcityFactor)
+///   Reduces to the v10 pooled formula exactly when there is only one predator
+///   species (no behaviour change for single-species runs). Equal-HE multi-predator
+///   runs also unchanged by symmetry. Mixed-HE multi-predator runs now show
+///   specialist-vs-generalist competitive dynamics for the first time.
+/// - LastFedRateT2 is now a population-weighted average across predators rather
+///   than a pooled scalar. CSV column name unchanged; semantic shifted slightly.
+/// - model_version in scenario CSV and bulk_summary.csv bumped to v11-per-predator-fedrate.
+///
+/// v11.1 CHANGES:
+/// - Removed the `UseCarryingCapacity` toggle. Carrying capacity is now always on.
+///   Rationale: Tier 1 species without a resource ceiling grow without bound,
+///   which is biologically meaningless and triggered integer-overflow in birth
+///   accumulators around day ~50 of any cap-off scenario.
+/// - `food_density = max(0, 1 − tier1Pop / max(cap, 1))` — no toggle, no fallback.
+/// - `CsvBatchParser` keeps `use_carrying_cap` as a deprecated optional column
+///   (logs a warning if present, value ignored). Old CSVs continue to parse;
+///   new ones from `GenerateTemplate()` no longer include the column.
+/// - `SimulationConfig.UseCarryingCapacity` field deleted.
+/// - `BulkBatchConfig.UseCarryingCap` field deleted.
+/// - `ScenarioResult.UseCarryingCapacity` field deleted; config CSV no longer
+///   reports a "Disabled" state for the cap.
+/// - `#config:use_carrying_capacity` line removed from scenario CSV header.
+/// - model_version bumped to v11.1-cap-always-on.
 /// </summary>
 public class EcosystemSimulator
 {
@@ -111,6 +176,11 @@ public class EcosystemSimulator
     public float LastFedRateT2 { get; private set; } = 1f;
     public float LastAvgHuntingEfficiency { get; private set; } = 1f;
 
+    // Tier 1 feeding (v10): population-weighted average FedRate and the daily
+    // shared-resource food density that drove it. Both written to scenario CSV.
+    public float LastFedRateT1 { get; private set; } = 1f;
+    public float LastFoodDensityT1 { get; private set; } = 1f;
+
     // Reproduction scale tracking (graduated reproduction)
     public float LastReproScaleT1 { get; private set; } = 0f;
     public float LastReproScaleT2 { get; private set; } = 0f;
@@ -134,8 +204,10 @@ public class EcosystemSimulator
     public float AvgConditionT1 { get; private set; } = 1f;
     public float AvgConditionT2 { get; private set; } = 1f;
 
-    // ==================== CARRYING CAPACITY (Soft Limit - Tier 1 Only) ====================
-    public bool UseCarryingCapacity { get; set; } = true;
+    // ==================== CARRYING CAPACITY (Tier 1 Shared Resource Pool) ====================
+    // Always on as of v11.1 — Tier 1 species without a resource ceiling grow without
+    // bound, which is biologically meaningless. Cap drives the food-pool FedRate
+    // calculation in Step 2.
     public float CarryingCapacityPerTier { get; set; } = 5000f;
 
     // ==================== CONDITION (HEALTH) SYSTEM ====================
@@ -144,7 +216,10 @@ public class EcosystemSimulator
 
     // ==================== CONSTANTS ====================
     private const float MIN_ALIVE_POP = 1.0f;
-    private const float NEWBORN_CONDITION = 0.5f;           // Condition value for newborn individuals (vulnerable)
+    // NEWBORN_CONDITION constant removed in v10: newborns inherit the species'
+    // current group Condition rather than entering at a fixed value. See the
+    // ApplyReproduction docblock and the comment in the births-application
+    // block for rationale.
 
     // --- Holling Type II Functional Response (Holling 1959) ---
     // "The Components of Predation as Revealed by a Study of Small-Mammal Predation
@@ -379,13 +454,16 @@ public class EcosystemSimulator
     ///
     /// BIOLOGY SEQUENCE (10 steps):
     /// 1. Thermal Performance - Arrhenius formula
-    /// 2. Feeding/Predation - Holling Type II functional response + PREDATION ACCUMULATOR
+    /// 2. Feeding/Predation - Tier 1 FedRate from food-pool density (linear, v10) +
+    ///                        Tier 2 Holling II with per-predator FedRate (v11) +
+    ///                        PREDATION ACCUMULATOR
     /// 3. Raw Final Performance - RawThermalPerf x FedRate (Condition drain target)
     /// 4. Update Condition - Drain/recover toward RawFinalPerformance; rates scaled by Pmax
     /// 5. Final Performance - ThermalPerf x FedRate (computed for logging; not a biology input)
     /// 6. Thermal Death - INSTANT kill at lethal limits (RawThermalPerf == 0)
     /// 7. Condition Death - GRADUATED: severity scales with how far below threshold
     /// 8. Reproduction - CONDITION-BASED GRADUATED SCALE x Pmax + BIRTH ACCUMULATOR + Tier 1 penalty
+    ///                   (no soft-cap-on-births; throttling via Condition pathway, v10)
     /// 9. Natural Death - FLAT RATE + NATURAL DEATH ACCUMULATOR
     /// 10. Population Rounding - All populations become integers
     /// </summary>
@@ -446,7 +524,9 @@ public class EcosystemSimulator
         // ========== STEP 5: FINAL PERFORMANCE ==========
         // Condition is NOT included — it does not affect reproduction at all.
         // Condition only governs condition-death (below DeathThreshold → DeathRate kill).
-        // FinalPerformance = ThermalPerf × FedRate, used for reproduction threshold + birth count.
+        // FinalPerformance = ThermalPerf × FedRate. Computed for CSV/logging only —
+        // NOT consumed by any downstream step. Reproduction uses Condition (Step 8),
+        // not FinalPerformance. See spec §7 design invariants.
         SimLog("--- Step 5: Final Performance ---");
         foreach (var sp in Species)
         {
@@ -509,14 +589,30 @@ public class EcosystemSimulator
     }
 
     /// <summary>
-    /// Process feeding with Holling Type II functional response and PREDATION ACCUMULATOR.
-    /// Prey removal is proportional across variants with fractional accumulation.
+    /// Process Tier 1 FedRate (v10 — density-dependent extraction from shared food pool)
+    /// AND Tier 2 feeding with Holling Type II + per-predator FedRate (v11) + PREDATION ACCUMULATOR.
     ///
-    /// Hunting efficiency is determined by the Holling Type II curve:
-    ///   efficiency = ratio / (ratio + halfSaturation)
-    /// At NORMAL_PREY_RATIO (20:1), efficiency equals the species' base value.
-    /// Above → efficiency increases toward 1.0 (abundance).
-    /// Below → efficiency decreases toward 0.0 (scarcity).
+    /// Tier 1 (passive extractors / plankton-style):
+    ///   food_density = max(0, 1 - tier1Pop / CarryingCapacityPerTier)  [or 1.0 if cap disabled]
+    ///   FedRate_T1   = min(1, HuntingEfficiency × food_density)
+    /// LINEAR, not Holling II — see in-code comment block for biological reasoning.
+    /// Tier 1 FedRate is computed before the predator section so it is available to
+    /// downstream Steps 3 (Raw Final Performance) and 4 (Update Condition).
+    ///
+    /// Tier 2 (active predators):
+    ///   Holling Type II: hunting efficiency scales with prey:predator ratio.
+    ///   At NORMAL_PREY_RATIO (20:1), efficiency equals the species' base value.
+    ///   Above → efficiency increases toward 1.0 (abundance).
+    ///   Below → efficiency decreases toward 0.0 (scarcity).
+    /// Predator demand uses ThermalPerformance (with Pmax). Prey removal is proportional
+    /// across prey variants with fractional accumulation (no per-predator preference yet).
+    ///
+    ///   Per-predator FedRate (v11):
+    ///     scarcityFactor = totalEaten / totalActualDemand   (1.0 when prey abundant)
+    ///     fedRate_i      = min(1, huntingSuccess_i × scarcityFactor)
+    ///   Each predator's feeding satisfaction reflects its own hunting effort,
+    ///   not a pooled group average. LastFedRateT2 is now a population-weighted
+    ///   average across predator species (semantic shift from pooled scalar).
     /// </summary>
     private void ProcessFeedingWithAccumulator()
     {
@@ -526,12 +622,55 @@ public class EcosystemSimulator
         SimLog($"  Predators: {predators.Count} species, {predators.Sum(p => p.Population):F0} total");
         SimLog($"  Prey: {prey.Count} species, {prey.Sum(p => p.Population):F0} total");
 
+        // ====================================================================
+        // TIER 1 FEDRATE (v10): density-dependent extraction from shared food pool
+        // ====================================================================
+        // Carrying capacity acts as a shared food/resource pool. food_density falls
+        // linearly with population pressure on the pool; each species' FedRate
+        // scales by its HuntingEfficiency (semantically: resource extraction
+        // efficiency for Tier 1 — passive extractors like plankton are at HE=1).
+        //
+        // LINEAR, not Holling II: prey are passive extractors (filter feeding,
+        // surface-area-driven uptake) — no search-time + handling-time structure
+        // that motivates Holling II. Holling II also collapses at HE=1 default
+        // (halfSat = REF × (1-HE)/HE = 0 when HE=1, so FedRate → 1 whenever any
+        // food exists), defeating the food-pool effect entirely at the common
+        // setting. Linear avoids both problems and matches plankton-style
+        // extraction biology directly. Tier 2 keeps Holling II below — active
+        // predation does have search/handling phases that justify it.
+        //
+        // v11.1: carrying capacity is always on. CarryingCapacityPerTier must be
+        // > 0 (validated at parse/inspect time). The previous off-mode is gone:
+        // unbounded Tier 1 growth is biologically meaningless and triggered
+        // integer-overflow accumulators.
+        float tier1Pop = GetTierPopulation(1);
+        float capSafe = Math.Max(CarryingCapacityPerTier, 1f);    // floor of 1 to guard against misconfig
+        float foodDensity = Math.Max(0f, 1f - (tier1Pop / capSafe));
+        LastFoodDensityT1 = foodDensity;
+        float fedRateSumT1 = 0f;
+        float fedRatePopT1 = 0f;
+        foreach (var sp in Species.Where(s => s.Tier == 1))
+        {
+            if (sp.Population >= MIN_ALIVE_POP)
+            {
+                sp.FedRate = Math.Min(1f, sp.HuntingEfficiency * foodDensity);
+                fedRateSumT1 += sp.FedRate * sp.Population;
+                fedRatePopT1 += sp.Population;
+            }
+            else
+            {
+                sp.FedRate = 0f;
+            }
+        }
+        LastFedRateT1 = fedRatePopT1 > 0f ? fedRateSumT1 / fedRatePopT1 : 1f;
+        SimLog($"  Tier 1 food: tier1Pop={tier1Pop:F0}, foodDensity={foodDensity:F3}, avgFedRateT1={LastFedRateT1:F3}");
+
         if (predators.Count == 0 || prey.Count == 0)
         {
             foreach (var p in predators) p.FedRate = 0f;
             LastFedRateT2 = predators.Count > 0 ? 0f : 1f;
             LastAvgHuntingEfficiency = 1f;
-            SimLog($"  No feeding (predators={predators.Count}, prey={prey.Count})");
+            SimLog($"  No predator feeding (predators={predators.Count}, prey={prey.Count})");
             return;
         }
 
@@ -577,25 +716,36 @@ public class EcosystemSimulator
         float totalEaten = Math.Min(availablePrey, totalActualDemand);
         LastEatenT1 = 0f;  // Will be counted by actual removals
 
-        // FedRate = what was caught / what was NEEDED (not what was attempted)
-        // This is critical: Holling efficiency reduces actual demand, so predators catch less.
-        // But FedRate must reflect their true nutritional satisfaction — how much of their
-        // actual need was met. At ratio 5:1 with Holling efficiency 0.43, predators only
-        // catch 43% of what they need, so FedRate ≈ 0.43, not 1.0.
-        // This directly affects FinalPerformance, reproduction, and Condition drain.
-        float fedRate;
-        if (totalRawDemand <= 0f)
-            fedRate = 1f;
-        else
-            fedRate = Math.Min(1f, totalEaten / totalRawDemand);
+        // Per-predator FedRate (v11): each predator gets a share of the shared catch
+        // proportional to its own hunting effort. The previous pooled formula
+        // (totalEaten / totalRawDemand) erased the per-species competitive signal —
+        // good hunters and bad hunters ended up with identical feeding satisfaction
+        // regardless of HuntingEfficiency.
+        //
+        //   scarcityFactor = totalEaten / totalActualDemand
+        //                    (1.0 when prey abundant; <1.0 when demand exceeds supply)
+        //   fedRate_i      = min(1, huntingSuccess_i × scarcityFactor)
+        //
+        // Reduces to the previous pooled formula exactly when there is only one
+        // predator species (single-predator scenarios behave identically to v10).
+        // When all predators have equal HE, per-predator and pooled values match by
+        // symmetry. Specialist-vs-generalist competitive signals only emerge with
+        // mixed-HE multi-predator runs — that is the dynamic v11 restores.
+        float scarcityFactor = totalActualDemand > 0f
+            ? Math.Min(1f, totalEaten / totalActualDemand)
+            : 1f;
 
-        LastFedRateT2 = fedRate;
+        float fedRateSumWeighted = 0f;
+        float fedRatePopSum = 0f;
         foreach (var pred in predators)
         {
-            pred.FedRate = fedRate;
+            pred.FedRate = Math.Min(1f, pred.CurrentHuntingSuccess * scarcityFactor);
+            fedRateSumWeighted += pred.FedRate * pred.Population;
+            fedRatePopSum += pred.Population;
         }
+        LastFedRateT2 = fedRatePopSum > 0f ? fedRateSumWeighted / fedRatePopSum : 1f;
 
-        SimLog($"  Total Eaten: {totalEaten:F1}, FedRate: {fedRate:F3} (eaten/rawDemand = {totalEaten:F1}/{totalRawDemand:F1}, actualDemand={totalActualDemand:F1})");
+        SimLog($"  Total Eaten: {totalEaten:F1}, scarcityFactor={scarcityFactor:F3}, weighted-avg FedRateT2={LastFedRateT2:F3} (totalEaten/totalActualDemand={totalEaten:F1}/{totalActualDemand:F1})");
 
         // Remove prey PROPORTIONALLY with PREDATION ACCUMULATOR
         if (totalEaten > 0f && availablePrey > 0f)
@@ -612,12 +762,12 @@ public class EcosystemSimulator
                 _predationAccumulators[p.FullName] += preyLost;
                 float accumulated = _predationAccumulators[p.FullName];
 
-                // Extract whole deaths
-                int wholeDeaths = (int)Math.Floor(accumulated);
+                // Extract whole deaths (long to avoid int32 overflow at large prey pops)
+                long wholeDeaths = (long)Math.Floor(accumulated);
                 _predationAccumulators[p.FullName] = accumulated - wholeDeaths;
 
                 // Apply deaths
-                wholeDeaths = Math.Min(wholeDeaths, (int)p.Population);
+                wholeDeaths = Math.Min(wholeDeaths, (long)p.Population);
                 float oldPop = p.Population;
                 p.Population = Math.Max(0f, p.Population - wholeDeaths);
                 LastEatenT1 += wholeDeaths;
@@ -669,10 +819,16 @@ public class EcosystemSimulator
     ///   - Both drain and recovery use continuous quadratic acceleration (Buckley et al. 2025)
     ///   - Drain: multiplier = 1 + (1-target)², max 2x at perf=0
     ///   - Recovery: multiplier = 1 + target², max 2x at perf=1
-    ///   - Feeding contributes via FedRate (starving predators drain even at good temps)
+    ///   - Feeding contributes via FedRate (starving predators drain even at good temps;
+    ///     in v10 Tier 1 also drains when food density is low even at good temps).
     ///   - Pmax scales the rates: drain /= Pmax, recovery *= Pmax.
     ///     Specialists (high Pmax) drain slower and recover faster than generalists.
-    ///     Target (and hence Condition ceiling) is unchanged — still 0–1 for all species.
+    ///     Pmax does NOT enter the target — Condition's [0, 1] semantics are preserved
+    ///     across species, so ReproThreshold/DeathThreshold need no per-species tuning.
+    /// In v10, Tier 1's RawFinalPerformance = RawThermalPerf × FedRate now varies with
+    /// food density too (FedRate is no longer hardcoded to 1 for prey), so Tier 1
+    /// Condition no longer plateaus at 1.0 even at perfect temperature when the
+    /// shared resource pool is depleted.
     /// </summary>
     private void UpdateCondition(SimSpecies sp)
     {
@@ -781,12 +937,13 @@ public class EcosystemSimulator
         float severity = (sp.DeathThreshold - sp.Condition) / sp.DeathThreshold;
         float rawDeaths = sp.Population * severity * sp.DeathRate * BiologyStep;
 
-        // Accumulator pattern — fractional deaths carry over between days
+        // Accumulator pattern — fractional deaths carry over between days.
+        // long (not int) to avoid overflow at extreme populations.
         _conditionDeathAccumulators[sp.FullName] += rawDeaths;
         float accumulated = _conditionDeathAccumulators[sp.FullName];
-        int wholeDeaths = (int)Math.Floor(accumulated);
+        long wholeDeaths = (long)Math.Floor(accumulated);
         _conditionDeathAccumulators[sp.FullName] = accumulated - wholeDeaths;
-        wholeDeaths = Math.Min(wholeDeaths, (int)sp.Population);
+        wholeDeaths = Math.Min(wholeDeaths, (long)sp.Population);
 
         if (wholeDeaths > 0)
         {
@@ -816,9 +973,10 @@ public class EcosystemSimulator
 
     /// <summary>
     /// Apply reproduction with CONDITION-BASED GRADUATED SCALE, BIRTH ACCUMULATOR,
-    /// Tier 1 penalty, and carrying capacity. CARRYING CAPACITY ONLY APPLIES TO TIER 1.
+    /// Tier 1 penalty, and BIRTH ACCUMULATOR. (Soft cap on births was REMOVED in v10 —
+    /// see Tier 1 throttling note below.)
     ///
-    /// CONDITION-BASED REPRODUCTION (v8) + Pmax MULTIPLIER (v9):
+    /// CONDITION-BASED REPRODUCTION (v8) + Pmax MULTIPLIER (v9) + parent-condition newborn (v10):
     /// Reproduction is driven by Condition (species health). Pmax then scales the
     /// final birth count — a specialist with higher Pmax converts the same Condition
     /// into more offspring than a generalist.
@@ -844,7 +1002,23 @@ public class EcosystemSimulator
     /// - Pmax also scales Condition drain/recovery rates (see UpdateCondition), so peak
     ///   metabolism affects both survivability and reproduction without distorting thresholds.
     ///
-    /// Newborn dilution still applies (newborns enter at NEWBORN_CONDITION = 0.5).
+    /// Tier 1 throttling via Condition (v10):
+    /// The carrying-capacity soft cap on Tier 1 births was removed. Reproduction is now
+    /// throttled indirectly through the Condition pathway: high population → low food
+    /// density (computed in Step 2) → low Tier 1 FedRate → low RawFinalPerformance
+    /// target → Condition drains → reproScale shrinks AND condition deaths fire.
+    /// This eliminates the live-tierPop read that previously caused the processing-order
+    /// bug (first-listed species reproducing against a smaller pool than later-listed).
+    ///
+    /// Newborn Condition (v10):
+    /// Newborns inherit the species' current group Condition. No fixed constant, no
+    /// food-density multiplier — the parent's Condition is itself a lagged integral of
+    /// recent food density / hunting success, so it already encodes recent provisioning
+    /// capacity. Multiplying by today's FedRate would double-count the same signal.
+    /// Newborn vulnerability emerges from same-drain-no-head-start dynamics, not from
+    /// a starting-Condition penalty. Mathematically the population-weighted average is
+    /// unchanged when newborns match the group, so no explicit Condition update is
+    /// needed in the births-application step. Same logic for Tier 1 and Tier 2.
     /// </summary>
     private void ApplyReproduction(SimSpecies sp)
     {
@@ -894,8 +1068,9 @@ public class EcosystemSimulator
         else if (sp.Tier == 2) LastReproScaleT2 = reproScale;
 
         // births = Population × reproScale × ReproMult × Pmax × BiologyStep
-        // Pmax (v9): specialists convert Condition into offspring more efficiently than generalists.
-        // Newborn dilution still applies (newborns enter at NEWBORN_CONDITION).
+        // Pmax (v9): specialists convert Condition into offspring more efficiently.
+        // Newborns inherit group Condition (v10) — see comment block below the births
+        // application; no separate dilution step.
         float births = sp.Population * reproScale * sp.ReproductionMultiplier * sp.Pmax * BiologyStep;
 
         // Tier 1 penalty if no predators exist
@@ -909,16 +1084,12 @@ public class EcosystemSimulator
             }
         }
 
-        // Carrying capacity (soft limit) - ONLY for Tier 1
-        // This represents the resource limit of the environment
-        if (UseCarryingCapacity && sp.Tier == 1)
-        {
-            float tierPop = GetTierPopulation(1);
-            float growthFactor = Math.Max(0f, 1f - (tierPop / CarryingCapacityPerTier));
-            float oldBirths = births;
-            births *= growthFactor;
-            SimLog($"  {sp.FullName}: Carrying capacity - tierPop={tierPop:F0}, factor={growthFactor:F3}, births {oldBirths:F2} → {births:F2}");
-        }
+        // Carrying-capacity soft cap on births was REMOVED in v10. Tier 1 reproduction
+        // is now throttled indirectly through the Condition pathway: high population →
+        // low food density (in Step 2) → low FedRate → low RawFinalPerformance target →
+        // Condition drains → reproScale shrinks AND condition deaths fire. This removes
+        // the live-tierPop read that caused the processing-order bug (first-listed
+        // species reproducing against a smaller pool than later-listed ones).
 
         // BIRTH ACCUMULATOR
         if (!_birthAccumulators.ContainsKey(sp.FullName))
@@ -927,19 +1098,29 @@ public class EcosystemSimulator
         _birthAccumulators[sp.FullName] += births;
         float accumulated = _birthAccumulators[sp.FullName];
 
-        int wholeBirths = (int)Math.Floor(accumulated);
+        // long (not int) to avoid int32 overflow if a misconfigured scenario
+        // produces birth counts > 2.1B in a single step. With cap-always-on (v11.1)
+        // this should not happen in practice, but the safety guard is cheap.
+        long wholeBirths = (long)Math.Floor(accumulated);
         _birthAccumulators[sp.FullName] = accumulated - wholeBirths;
 
         float oldPop = sp.Population;
         sp.Population += wholeBirths;
 
-        // Dilute Condition: newborns drag down group average
-        if (wholeBirths > 0 && sp.Population > 0)
-        {
-            float oldCondition = sp.Condition;
-            sp.Condition = (oldPop * oldCondition + wholeBirths * NEWBORN_CONDITION) / sp.Population;
-            SimLog($"  {sp.FullName}: Condition diluted {oldCondition:F3} → {sp.Condition:F3} ({wholeBirths} newborns at {NEWBORN_CONDITION:F2})");
-        }
+        // Newborn Condition (v10): newborns inherit the species' current group
+        // Condition. No fixed constant, no food-density multiplier.
+        //
+        // Rationale: parent's current Condition is itself a lagged integral of
+        // recent food density (Tier 1) or hunting success (Tier 2), so it
+        // already encodes recent provisioning capacity. Multiplying by today's
+        // FedRate would double-count the same signal — the egg/larva's reserves
+        // were determined by past conditions, not by the moment of birth.
+        // Newborn vulnerability emerges from same-drain-no-head-start dynamics
+        // in subsequent days, not from a starting-condition penalty.
+        //
+        // The population-weighted average is mathematically unchanged when
+        // newborns match the group, so no explicit Condition update is needed.
+        // Same logic for Tier 1 and Tier 2.
 
         SimLog($"  {sp.FullName}: reproScale={reproScale:F3} (Condition={sp.Condition:F3}, thresh={sp.ReproThreshold}), +{births:F2} raw, accum={accumulated:F2}, actual={wholeBirths}, Pop {oldPop:F0} → {sp.Population:F0}");
 
@@ -978,11 +1159,12 @@ public class EcosystemSimulator
         _naturalDeathAccumulators[sp.FullName] += deaths;
         float accumulated = _naturalDeathAccumulators[sp.FullName];
 
-        int wholeDeaths = (int)Math.Floor(accumulated);
+        // long (not int) for overflow safety at extreme populations.
+        long wholeDeaths = (long)Math.Floor(accumulated);
         _naturalDeathAccumulators[sp.FullName] = accumulated - wholeDeaths;
 
         // Cap deaths at population
-        wholeDeaths = Math.Min(wholeDeaths, (int)sp.Population);
+        wholeDeaths = Math.Min(wholeDeaths, (long)sp.Population);
 
         if (wholeDeaths > 0)
         {

@@ -1,6 +1,6 @@
 # Biology performance phase (Steps 1–5)
 
-Source: `SimSpecies.CalculatePerformance`, `EcosystemSimulator.ProcessFeeding`, `EcosystemSimulator.UpdateCondition` (v9 Pmax rate scaling).
+Source: `SimSpecies.CalculatePerformance`, `EcosystemSimulator.ProcessFeedingWithAccumulator`, `EcosystemSimulator.UpdateCondition` (v9 Pmax rate scaling, v10 Tier 1 food-pool FedRate).
 
 ```mermaid
 flowchart TD
@@ -10,14 +10,19 @@ flowchart TD
     Arr --> Raw["RawThermalPerformance<br/>= perf × fade"]
     Raw --> TP["ThermalPerformance<br/>= Raw × Pmax"]
 
+    Pop1["tier1Pop = sum of Tier 1 populations"] --> FoodDensity["food_density = max(0, 1 − tier1Pop / cap)<br/>cap always on (v11.1); cap floored at 1"]
+    FoodDensity --> FedRateT1["FedRate (Tier 1, v10) = min(1, HE × food_density)<br/>linear extraction (NOT Holling II)"]
+
     TP --> PredDemand["Predator rawDemand<br/>= Pop × EatingAmount × ThermalPerf × BiologyStep"]
     PredDemand --> Holling["Holling II success<br/>holling = ratio / (ratio + halfSat)<br/>halfSat = NORMAL_PREY_RATIO · (1 − base) / base<br/>+ variance in [-HuntingVariance, +HuntingVariance]<br/>clamp to [0, 1]"]
     Holling --> Actual["actualDemand = rawDemand × huntingSuccess"]
     Actual --> Eaten["totalEaten = min(availablePrey, Σ actualDemand)"]
-    Eaten --> FedRate["FedRate (predator) = totalEaten / totalRawDemand<br/>FedRate (prey) = 1.0 always"]
+    Eaten --> ScarcityT2["scarcityFactor (v11)<br/>= totalEaten / totalActualDemand<br/>(1.0 when prey abundant)"]
+    ScarcityT2 --> FedRateT2["FedRate_i (Tier 2, v11)<br/>= min(1, huntingSuccess_i × scarcityFactor)<br/>(per-predator; LastFedRateT2 = pop-weighted avg)"]
 
     Raw --> RFP["RawFinalPerformance<br/>= Raw × FedRate<br/>(Condition drain target)"]
-    FedRate --> RFP
+    FedRateT1 --> RFP
+    FedRateT2 --> RFP
 
     RFP --> CondStep{"Condition vs target<br/>(pmaxSafe = max(Pmax, 1e-4))"}
     CondStep -- "Cond > target" --> Drain["severity = (1 - target)²<br/>effectiveDrain = ConditionDrainRate · (1 + severity) / pmaxSafe<br/>Condition -= (Condition - target) × effectiveDrain"]
@@ -41,7 +46,17 @@ flowchart TD
 
 ## Step 2 — feeding details
 
+### 2a. Tier 1 (food-pool, linear, v10)
+
+- Runs unconditionally — does not require predators to be present.
+- `food_density = max(0, 1 − tier1Pop / max(CarryingCapacityPerTier, 1))`. Carrying capacity is always on (v11.1); the previous toggle was removed because Tier 1 species without a resource ceiling grow without bound.
+- `FedRate = min(1, HuntingEfficiency × food_density)`. Default HE=1 gives `FedRate = food_density`.
+- **Linear, not Holling II.** Tier 1 represents passive extractors (plankton, filter feeders). No search/handling phases. Holling II would also collapse to 1 at HE=1, defeating the food-pool effect.
+- For Tier 1, `HuntingEfficiency` is semantically "resource extraction efficiency" — same field, dual meaning by tier.
+
+### 2b. Tier 2 (Holling II + per-predator FedRate, v11)
+
 - Runs only if `Species.Any(Tier == 1)` and `Species.Any(Tier == 2)` with non-zero populations.
 - `NORMAL_PREY_RATIO = 20` is the prey:predator ratio where Holling success equals the species' `HuntingEfficiency`.
-- Per-predator `FedRate` is the same `fedRate` (totalEaten / totalRawDemand) — not split by predator. Variance is on hunting success, not on feeding satisfaction.
-- Prey removals are distributed proportionally across prey variants via `_predationAccumulators[preyVariant.FullName]`.
+- **Per-predator FedRate (v11)**: `scarcityFactor = totalEaten / totalActualDemand` (1.0 when prey abundant); `fedRate_i = min(1, huntingSuccess_i × scarcityFactor)`. Each predator's feeding satisfaction reflects its own hunting effort. `LastFedRateT2` (CSV column) is now a population-weighted average across predator species. Reduces to v10 pooled formula in single-predator-species runs.
+- Prey removals are distributed proportionally across prey variants via `_predationAccumulators[preyVariant.FullName]`. (No predator-side preference for prey variants — separate concern, B7 in pending list.)

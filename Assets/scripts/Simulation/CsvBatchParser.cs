@@ -23,13 +23,19 @@ public static class CsvBatchParser
         "daily_var_range", "randomness_growth", "autocorrelated",
         "interannual_variation",
         "temp_min", "temp_max",
-        "use_carrying_cap", "carrying_cap_t1"
+        "carrying_cap_t1"
     };
 
-    // Optional global columns with defaults (backward compatible)
+    // Optional global columns with defaults (backward compatible).
+    // `use_carrying_cap` is deprecated as of v11.1 — carrying capacity is always on
+    // (Tier 1 species without a resource limit grow without bound, which is biologically
+    // meaningless and triggers integer-overflow accumulators). Old CSVs that still
+    // include the column parse fine; the column's value is logged as a warning and
+    // ignored. New CSVs should omit it entirely.
     private static readonly string[] OPTIONAL_GLOBAL_COLUMNS =
     {
-        "condition_drain_rate", "condition_recovery_rate"
+        "condition_drain_rate", "condition_recovery_rate",
+        "use_carrying_cap"
     };
 
     private static readonly string[] SPECIES_COLUMNS =
@@ -176,12 +182,21 @@ public static class CsvBatchParser
             batch.InterannualVariation = GetBool(fields, columnIndex, "interannual_variation", rowNum, errors);
             batch.TempMin = GetFloat(fields, columnIndex, "temp_min", rowNum, errors);
             batch.TempMax = GetFloat(fields, columnIndex, "temp_max", rowNum, errors);
-            batch.UseCarryingCap = GetBool(fields, columnIndex, "use_carrying_cap", rowNum, errors);
             batch.CarryingCapT1 = GetFloat(fields, columnIndex, "carrying_cap_t1", rowNum, errors);
 
             // Optional global columns (backward compatible — missing columns use defaults)
             batch.ConditionDrainRate = GetFloatOptional(fields, columnIndex, "condition_drain_rate", 0.15f);
             batch.ConditionRecoveryRate = GetFloatOptional(fields, columnIndex, "condition_recovery_rate", 0.10f);
+
+            // v11.1 deprecation: use_carrying_cap column is deprecated. Carrying capacity
+            // is always on. Log a warning if the column is present in the CSV but do not
+            // alter behaviour. The bulk loader will treat every row as if it were `true`.
+            if (columnIndex.ContainsKey("use_carrying_cap"))
+            {
+                Debug.LogWarning(
+                    $"Row {rowNum}: 'use_carrying_cap' column is deprecated and will be ignored. " +
+                    "Carrying capacity is always on as of v11.1. Remove the column from new CSV files.");
+            }
 
             // Parse species (dynamic N species — skip if name is empty)
             for (int s = 1; s <= speciesCount; s++)
@@ -267,8 +282,9 @@ public static class CsvBatchParser
         if (batch.TempMax <= batch.TempMin)
             errors.Add($"Row {rowNum}: temp_max ({batch.TempMax}) must be greater than temp_min ({batch.TempMin}).");
 
-        if (batch.UseCarryingCap && batch.CarryingCapT1 <= 0)
-            errors.Add($"Row {rowNum}: carrying_cap_t1 must be positive when use_carrying_cap is true.");
+        // Carrying capacity is always on (v11.1) — cap value must always be positive.
+        if (batch.CarryingCapT1 <= 0)
+            errors.Add($"Row {rowNum}: carrying_cap_t1 must be positive (carrying capacity is always on).");
 
         for (int s = 0; s < batch.Species.Count; s++)
             ValidateSpecies(batch.Species[s], $"sp{s + 1}", rowNum, errors);
@@ -392,17 +408,24 @@ public static class CsvBatchParser
     /// Generate a downloadable template CSV with headers and one example row.
     /// Uses the same column definitions as TryParse so they stay in sync.
     /// Example row uses default Hexapod/Sheplik species (6 species: 3 prey + 3 predators).
+    ///
+    /// Note: the deprecated `use_carrying_cap` column is intentionally omitted from the
+    /// template. Old CSVs that still include it will parse (with a deprecation warning),
+    /// but new ones generated from this template will not have it.
     /// </summary>
     public static string GenerateTemplate()
     {
         const int TEMPLATE_SPECIES = 6;
         var sb = new StringBuilder();
 
-        // Header row
+        // Header row — skip the deprecated `use_carrying_cap` optional column.
         foreach (var col in GLOBAL_COLUMNS)
             sb.Append(col).Append(',');
         foreach (var col in OPTIONAL_GLOBAL_COLUMNS)
+        {
+            if (col == "use_carrying_cap") continue; // deprecated — omit from new templates
             sb.Append(col).Append(',');
+        }
         for (int s = 1; s <= TEMPLATE_SPECIES; s++)
         {
             string prefix = $"sp{s}_";
@@ -415,9 +438,16 @@ public static class CsvBatchParser
         sb.Length--;
         sb.AppendLine();
 
-        // Example data row (matches default 6-species ecosystem)
-        // Global params
-        sb.Append("example_batch,3650,5,20,10,0,2,1.5,5,0.5,true,true,-5,50,true,5000,0.20,0.10,");
+        // Example data row (matches default 6-species ecosystem).
+        // Global params (16 values, matching the columns above):
+        //   batch_name=example_batch, days=3650 (10 yr), num_scenarios=5,
+        //   base_temp=20, seasonal_amp=5, climate_trend=0,
+        //   variability_mag=2, warming_bias=1.5,
+        //   daily_var_range=5, randomness_growth=0.5,
+        //   autocorrelated=true, interannual_variation=true,
+        //   temp_min=-5, temp_max=50, carrying_cap_t1=5000,
+        //   condition_drain_rate=0.15, condition_recovery_rate=0.10.
+        sb.Append("example_batch,3650,5,20,5,0,2,1.5,5,0.5,true,true,-5,50,5000,0.15,0.10,");
 
         // Species: Hexapod Common, Arctic, Tropical (Tier 0 = prey)
         string[] hexVariants = { "Common", "Arctic", "Tropical" };

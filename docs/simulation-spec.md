@@ -4,6 +4,35 @@ Authoritative description of the headless ecosystem simulator, generated from so
 
 Source files: `EcosystemSimulator.cs`, `SimSpecies.cs`, `TemperatureCalculator.cs`, `SimulationRunner.cs`.
 
+## v11.1 changes (current model version)
+
+- **Removed `UseCarryingCapacity` toggle.** Carrying capacity is always on. Tier 1 species without a resource ceiling grow without bound, which is biologically meaningless and triggered integer-overflow accumulators in long runs.
+  - `SimulationConfig.UseCarryingCapacity`, `BulkBatchConfig.UseCarryingCap`, `EcosystemSimulator.UseCarryingCapacity`, `ScenarioResult.UseCarryingCapacity` all deleted.
+  - `food_density = max(0, 1 − tier1Pop / max(cap, 1))` — no toggle, no fallback.
+  - `IsValid()` now hard-rejects `CarryingCapacityTier1 ≤ 0`.
+  - `CsvBatchParser` keeps `use_carrying_cap` as an optional/deprecated column: if present in an old bulk CSV the value is read but ignored, and a `Debug.LogWarning` is emitted. New CSVs from `GenerateTemplate()` omit the column.
+  - `#config:use_carrying_capacity` line removed from scenario CSV header.
+  - `bulk_summary.csv` config-section line `# Carrying Capacity,...` no longer reports a "Disabled" state.
+- **`GenerateTemplate()` defaults updated**: `seasonal_amp = 5` (was 10), `condition_drain_rate = 0.15` (was 0.20, now matches `SimulationConfig` default), `use_carrying_cap` column omitted entirely.
+- **`model_version` bumped** to `v11.1-cap-always-on` in scenario CSV `#config:` header and in `bulk_summary.csv`.
+
+## v11 changes
+
+- **Per-predator FedRate (review item A1).** Tier 2 predators previously all received the same pooled `fedRate = totalEaten / totalRawDemand`, which erased the competitive signal between specialist and generalist hunters. Now each predator's FedRate is its own hunting success scaled by an overall scarcity factor:
+  - `scarcityFactor = totalEaten / totalActualDemand` (1.0 when prey abundant; <1.0 when demand exceeds supply).
+  - `fedRate_i = min(1, huntingSuccess_i × scarcityFactor)`.
+- Reduces to the v10 pooled formula exactly when there is only one predator species. Equal-HE multi-predator runs unchanged by symmetry. Mixed-HE multi-predator runs now show competitive exclusion between predator species for the first time.
+- `LastFedRateT2` is now a population-weighted average across predators (was a pooled scalar pre-v11). CSV column name unchanged.
+- `#config:model_version` and `bulk_summary.csv` `# Model Version` lines bumped to `v11-per-predator-fedrate`.
+
+## v10 changes
+
+- **Carrying capacity reframed as a shared food/resource pool.** The same parameter (`CarryingCapacityPerTier`) now drives Tier 1's `FedRate` directly via a linear food-density curve in Step 2, instead of multiplying births in Step 8. Tier 1 reproduction now throttles indirectly through the Condition pathway (high pop → low food density → low FedRate → Condition drains → fewer births and condition deaths fire). Logistic-overshoot dynamics emerge naturally — populations oscillate around cap rather than approaching it smoothly. Cite: Lotka 1925, Volterra 1926, Krebs 1996 *Population Cycles*.
+- **Soft-cap-on-births block deleted from `ApplyReproduction`.** The previous live-`tierPop` read was the source of the processing-order bug (first-listed Tier 1 species reproducing against a smaller pool than later-listed species). Eliminated as a side effect of the reframe.
+- **`HuntingEfficiency` for Tier 1 is now meaningful** — semantically "resource extraction efficiency". Default `1.0` = perfect plankton-style passive extraction.
+- **`NEWBORN_CONDITION = 0.5` constant removed.** Newborns inherit the species' current group Condition; the parent's Condition already encodes recent provisioning capacity via lagged drain dynamics, so multiplying by today's FedRate would double-count. Same logic for Tier 1 and Tier 2.
+- **CSV columns added**: `FedRateT1`, `FoodDensityT1`. **`#config:` line added**: `model_version` (initially `v10-food-pool`, bumped to `v11-per-predator-fedrate`).
+
 ## 1. Execution model
 
 The simulator is pure C# (not a MonoBehaviour). Unity-side entry points are:
@@ -54,7 +83,7 @@ then clamped to `[MinTemp, MaxTemp]`.
 |-----------|---------|-------|
 | Seasonal | `sin(2π · day / 365) · SeasonalAmplitude` | Coldest at `day = 0`, warmest at `day ≈ 182`. `DAYS_PER_YEAR` is a constant 365. |
 | Climate trend | `ClimateTrendPerYear · (day / 365)` | Linear in simulated years. |
-| Interannual variation | Per-year random offset, cached in `_yearVariations`. Same value for all days of that year. Formula: `(cold + warm) / 2`, where `cold = uniform(−VariabilityMagnitude, 0)` and `warm = uniform(0, VariabilityMagnitude · WarmingBias)`. Disabled if `UseInterannualVariation = false`. |
+| Interannual variation | Per-year random offset, cached in `_yearVariations`. Same value for all days of that year. Formula: `(cold + warm) / 2 − biasMean`, where `cold = uniform(−VariabilityMagnitude, 0)`, `warm = uniform(0, VariabilityMagnitude · WarmingBias)`, and `biasMean = VariabilityMagnitude · (WarmingBias − 1) / 4`. The `biasMean` subtraction zero-centers the distribution so `WarmingBias` only controls the *shape* (warm tail wider when `bias > 1`); long-term warming/cooling trend is owned solely by `ClimateTrendPerYear`. Disabled if `UseInterannualVariation = false`. |
 | Daily variation | `R = BaseRandomness + RandomnessGrowthRate · year`; raw draw `uniform(−R, +R)`. If `UseAutocorrelation` (default true): `v_today = 0.7 · v_yesterday + 0.3 · v_new`; stored in `_previousDayVariation`. |
 
 ### Year numbering
@@ -89,22 +118,44 @@ For each species:
 
 Then `ThermalPerformance = RawThermalPerformance · Pmax`.
 
-### Step 2 — Feeding / Predation (Holling Type II)
+### Step 2 — Feeding / Predation
 
-Only runs if prey (Tier 1) and predators (Tier 2) are both present.
+Two distinct sub-steps in `ProcessFeedingWithAccumulator`, computed in this order:
+
+#### 2a. Tier 1 FedRate from shared food-pool (v10, linear; cap always on as of v11.1)
+
+Runs unconditionally — does not depend on the presence of predators.
+
+```
+food_density = max(0, 1 − tier1Pop / max(CarryingCapacityPerTier, 1))
+FedRate_T1   = min(1, HuntingEfficiency · food_density)               # per Tier 1 species
+```
+
+- **Linear, not Holling II.** Tier 1 species are passive extractors (filter feeding, surface-area-driven nutrient uptake) — no search-time + handling-time structure that motivates Holling II. Holling II also collapses to `1` at HE=1 default (halfSat → 0), which would defeat the food-pool effect. Linear matches plankton-style biology directly.
+- `HuntingEfficiency` for Tier 1 semantically = "resource extraction efficiency". Default `1.0` = perfect extraction.
+- **Carrying capacity is always on (v11.1)**. `CarryingCapacityPerTier > 0` is enforced at validation time. The previous `UseCarryingCapacity = false` mode was removed because Tier 1 species without a resource ceiling grow exponentially.
+
+#### 2b. Tier 2 feeding (Holling Type II + per-predator FedRate, v11)
+
+Runs only if prey (Tier 1) and predators (Tier 2) are both present (otherwise predator `FedRate = 0` and the function returns early).
 
 1. For each predator: `rawDemand = Pop · EatingAmount · ThermalPerformance · BiologyStep`.
-2. Hunting success per predator: `holling = ratio / (ratio + halfSat)` where `halfSat = NORMAL_PREY_RATIO · (1 − baseEff) / baseEff` and `baseEff = HuntingEfficiency`. Add `variance = uniform(−HuntingVariance, +HuntingVariance)`. Clamp to `[MIN_HUNTING_SUCCESS, MAX_HUNTING_SUCCESS] = [0, 1]`.
+2. Hunting success per predator: `holling = ratio / (ratio + halfSat)` where `halfSat = NORMAL_PREY_RATIO · (1 − baseEff) / baseEff` and `baseEff = HuntingEfficiency`. Add `variance = uniform(−HuntingVariance, +HuntingVariance)`. Clamp to `[MIN_HUNTING_SUCCESS, MAX_HUNTING_SUCCESS] = [0, 1]`. Stored on `pred.CurrentHuntingSuccess`.
 3. `actualDemand = rawDemand · huntingSuccess`.
 4. `totalEaten = min(availablePrey, sum(actualDemand))`.
-5. `fedRate = totalEaten / totalRawDemand` (or 1 if demand is 0). Assigned to every predator's `FedRate`.
-6. Distribute removals across prey variants proportional to their population. Track fractional deaths via `_predationAccumulators[prey.FullName]`; whole-integer deaths are subtracted from prey populations.
-
-Prey always have `FedRate = 1.0` (they feed from the environment, not from each other).
+5. **Per-predator FedRate (v11)**: each predator gets a share of the catch proportional to its own hunting effort.
+   - `scarcityFactor = totalEaten / totalActualDemand` (capped at 1.0; defaults to 1.0 if `totalActualDemand = 0`).
+   - `fedRate_i = min(1, huntingSuccess_i × scarcityFactor)`.
+   - When prey is abundant, each predator's FedRate equals its hunting success. When prey is scarce, every predator is scaled down by the same factor — the relative gap between specialist and generalist persists.
+   - Reduces exactly to the v10 pooled formula `fedRate = totalEaten / totalRawDemand` when there is only one predator species (no behaviour change for single-species runs).
+   - `LastFedRateT2` (CSV column) is the population-weighted average across predator species.
+6. Distribute removals across prey variants proportional to their population. Track fractional deaths via `_predationAccumulators[prey.FullName]`; whole-integer deaths are subtracted from prey populations. (No predator-side preference for prey variants — separate concern, item B7 in pending list.)
 
 ### Step 3 — Raw final performance
 
 For each species: `RawFinalPerformance = RawThermalPerformance · FedRate`. This is the target for Condition drift. **No Pmax.**
+
+Note: in v10 Tier 1 `FedRate` varies with food density (no longer hardcoded to 1.0), so Tier 1 `RawFinalPerformance` — and therefore the Condition drain target — now depends on both temperature and density. Tier 2 already had density-dependent `FedRate` via Holling II.
 
 ### Step 4 — Update Condition
 
@@ -184,21 +235,20 @@ reproScale = clamp(reproScale, 0, 1)
 - `Condition = 1.0` → `reproScale = 1.0` (full reproduction).
 - `Condition = 0` → `reproScale = 0`.
 
-**Births** (v9):
+**Births** (v9 + v10):
 
 ```
 births = Pop · reproScale · ReproductionMultiplier · Pmax · BiologyStep
 ```
 
-Modifiers applied to `births` (in order):
+Modifiers applied to `births`:
 
 1. **Tier 1 no-predator penalty**: if `Tier == 1` and `GetTierPopulation(2) < MIN_ALIVE_POP`, `births *= NO_PREDATOR_PENALTY = 0.85`.
-2. **Tier 1 carrying capacity (soft cap)**: if `Tier == 1` and `UseCarryingCapacity`, `births *= max(0, 1 − tierPop / CarryingCapacityPerTier)`.
-   - Note: `tierPop` is evaluated live mid-step, so species processed earlier in the list see a slightly lower `tierPop` than species processed later. This is a known first-mover artefact, not corrected in v9.
+2. **(removed in v10)** ~~Tier 1 carrying-capacity soft cap on births.~~ The previous `births *= max(0, 1 − tierPop/cap)` block was deleted. Reproduction is now throttled indirectly through the Condition pathway: high pop → low food density (Step 2a) → low Tier 1 `FedRate` → low `RawFinalPerformance` target (Step 3) → Condition drains (Step 4) → reproScale shrinks AND condition deaths fire (Step 7). The processing-order bug that came from the live `tierPop` read is gone with this code path.
 
 **Birth accumulator**: `_birthAccumulators[sp.FullName] += births`. Emit `floor(accumulated)` as whole births, keep the residual for the next day.
 
-**Condition dilution**: after whole births are added, `Condition = (oldPop · oldCondition + wholeBirths · NEWBORN_CONDITION) / newPop`, with `NEWBORN_CONDITION = 0.5`.
+**Newborn Condition (v10)**: newborns inherit the species' current group Condition. No fixed constant, no food-density multiplier. Rationale: parent's current Condition is already a lagged integral of recent food density (Tier 1) or hunting success (Tier 2), so it encodes recent provisioning capacity; multiplying by today's `FedRate` would double-count the same signal. The egg/larva's reserves were determined by past conditions, not by the moment of birth. Newborn vulnerability emerges from same-drain-no-head-start dynamics, not from a starting-Condition penalty. The population-weighted average is mathematically unchanged when newborns match the group, so no explicit Condition update is needed in this step. Same logic applies symmetrically for Tier 1 and Tier 2.
 
 ### Step 9 — Natural death (flat rate)
 
@@ -210,6 +260,12 @@ For each species with `Pop > 0`:
 - Accumulate via `_naturalDeathAccumulators[sp.FullName]`. Apply floor to population.
 
 Independent of performance, condition, temperature, and predation — models background mortality (old age, accidents, disease).
+
+**Default rate per tier** ([SimSpecies.cs:195](../Assets/scripts/Simulation/SimSpecies.cs)):
+- Tier 1 (prey): `NaturalDeathRate = 0.02` (2% / day).
+- Tier 2 (predator): `NaturalDeathRate = 0.01` (1% / day) — allometric:
+  larger, longer-lived predators have lower background mortality.
+Both are user-overridable per species.
 
 ### Step 10 — Population rounding
 
@@ -223,9 +279,34 @@ Each species: `Pop = Math.Round(Pop, MidpointRounding.AwayFromZero)`. Population
 
 ## 5. Crash detection (`EcosystemSimulator.HasCrashed`)
 
-The simulator is considered crashed if the total population (Tier 1 + Tier 2) is below `MIN_ALIVE_POP` **and** at least one tier was populated at initialization (to avoid false crashes from scenarios that start with no predators).
+**Source of truth**: a scenario is crashed if and only if the **total population
+(Tier 1 + Tier 2) is exactly 0** ([EcosystemSimulator.cs:1252-1256](../Assets/scripts/Simulation/EcosystemSimulator.cs)):
 
-`GetCrashedTier()` returns `1`, `2`, or `0` depending on which tier is empty.
+```csharp
+public bool HasCrashed()
+{
+    float totalPop = GetTier1Population() + GetTier2Population();
+    return totalPop == 0;
+}
+```
+
+There is no `MIN_ALIVE_POP` threshold check and no "tier-was-populated-at-init"
+guard in the crash predicate itself. A scenario that starts with only one tier
+populated will report a crash as soon as that tier reaches zero — this is
+intentional and considered correct.
+
+`GetCrashedTier()` returns:
+- `1` — Tier 1 is empty (and Tier 1 was populated at init).
+- `2` — Tier 2 is empty (and Tier 2 was populated at init).
+- `0` — both tiers empty (or other ambiguous state).
+- `-1` — neither tier was populated at initialization (degenerate config).
+
+The fields `_tier1WasPopulated` / `_tier2WasPopulated` are tracked at init solely
+to drive `GetCrashedTier`'s tier attribution; they do not gate `HasCrashed`.
+
+`MIN_ALIVE_POP = 1.0f` ([EcosystemSimulator.cs:218](../Assets/scripts/Simulation/EcosystemSimulator.cs)) is used
+in Step 8 as the no-predator-penalty threshold (when computing Tier 1 births),
+**not** in crash detection.
 
 ## 6. Accumulators
 
@@ -242,6 +323,44 @@ Four `Dictionary<string, float>` keyed by `SimSpecies.FullName` (= `"{Name}_{Var
 
 Per-day snapshots of accumulator totals are written to the CSV via `BirthAccumT1/T2`, `NaturalDeathAccumT1/T2`, `ConditionDeathAccumT1/T2`, `PredationAccumT1`.
 
+### Per-day diagnostic fields (set by biology, read by CSV writer)
+
+`EcosystemSimulator` exposes the following `LastX` properties, all updated
+during `ProcessBiologyStep` and snapshotted into `StepRecord` for the CSV:
+
+| Field | Updated in | CSV column | Meaning |
+|-------|------------|------------|---------|
+| `LastFedRateT1` | Step 2a | `FedRateT1` | Tier-1 food-pool feeding rate (single value, all prey share food pool). |
+| `LastFoodDensityT1` | Step 2a | `FoodDensityT1` | `max(0, 1 − tier1Pop / cap)`. |
+| `LastFedRateT2` | Step 2b | `FedRateT2` | **Population-weighted average** of per-predator FedRate across Tier 2 (v11 semantic — was a pooled scalar pre-v11). |
+| `LastAvgHuntingEfficiency` | Step 2b | `AvgHuntingEff` | Arithmetic mean of `huntingSuccess_i` across all predators. |
+| `LastReproScaleT1` | Step 8 | `ReproScaleT1` | Reproduction throttle for Tier 1 (driven by Condition). Useful for diagnosing why births stalled. |
+| `LastReproScaleT2` | Step 8 | `ReproScaleT2` | Same for Tier 2. |
+
+These are not used by any biology step — purely for human/CSV inspection.
+
+### Predation: how prey are removed across variants
+
+When Tier 2 predators eat from a Tier 1 species that has multiple variants
+populated (Arctic / Common / Tropical / Custom), the per-day kill total is
+distributed **proportional to each variant's current population fraction**
+([EcosystemSimulator.cs:749-775](../Assets/scripts/Simulation/EcosystemSimulator.cs)).
+There is no per-variant prey preference yet (tracked as item B7 in pending list).
+
+### Carrying-capacity validation
+
+`SimulationConfig.IsValid()` hard-rejects `CarryingCapacityTier1 ≤ 0`
+([SimulationConfig.cs:160](../Assets/scripts/Simulation/DataStructure/SimulationConfig.cs)).
+Since v11.1 there is no fallback / "disabled" state — a config that fails
+this check will not run.
+
+### Backward compatibility for legacy bulk CSVs
+
+`CsvBatchParser` keeps `use_carrying_cap` as an optional, deprecated column.
+If an older bulk CSV still includes it the value is read but ignored, and a
+`Debug.LogWarning` is emitted. New CSVs from `GenerateTemplate()` omit the
+column entirely.
+
 ## 7. Design invariants
 
 - **Condition is species-agnostic on [0, 1].** The drain target omits Pmax so thresholds (`ReproThreshold`, `DeathThreshold`) mean the same thing for every species.
@@ -252,7 +371,8 @@ Per-day snapshots of accumulator totals are written to the CSV via `BirthAccumT1
   4. Birth multiplier in Step 8.
 - **FinalPerformance is dead code path in biology.** Still computed for CSV output; not consumed by any downstream step. Pre-v8 history preserved for continuity.
 - **All random draws use the seeded `_rng`** in `EcosystemSimulator` (for hunting/natural-death variance) or `TemperatureCalculator._rng` (for temperature noise). Reproducibility depends on `BaseSeed + scenarioIndex`.
-- **First-mover bias** in Step 8 carrying capacity — known, untouched in v9.
+- **First-mover bias in Step 8 carrying capacity** — eliminated in v10 by deleting the soft-cap-on-births block (the live `tierPop` read no longer exists).
+- **Per-predator Tier 2 FedRate** (v11): each predator's FedRate reflects its own hunting effort (scaled by overall scarcity), not a pooled group average. Specialist hunters get higher FedRate than generalists in mixed-HE runs. Reduces to v10 pooled formula in single-predator-species runs.
 - **Thermal death is terminal.** Suboptimal-but-survivable temperatures channel through Condition; the lethal cliff is binary.
 
 ## 8. Version history recorded in source comments
@@ -263,6 +383,9 @@ Per-day snapshots of accumulator totals are written to the CSV via `BirthAccumT1
 | v7 | Replaced dual hunting system with single Holling Type II. FedRate has no floor (zero prey = zero efficiency). |
 | v8 | Reproduction moved off `FinalPerformance` onto `Condition`. Two-region continuous formula around `ReproThreshold`. Side effect: Pmax dropped out of reproduction and Condition pathways. |
 | v9 | Re-wired Pmax into: reproduction birth multiplier, Condition drain divisor, Condition recovery multiplier. Condition target and thresholds unchanged. |
+| v10 | Carrying capacity reframed as a shared food/resource pool driving Tier 1 FedRate (linear: `min(1, HE × food_density)`). Soft-cap-on-births block deleted from `ApplyReproduction` (processing-order bug eliminated as side effect). `HuntingEfficiency` for Tier 1 now meaningful as resource-extraction efficiency. `NEWBORN_CONDITION` constant removed — newborns inherit parent group Condition. CSV adds `FedRateT1`, `FoodDensityT1`, `model_version`. Pooled Tier 2 FedRate intentionally untouched (v11). |
+| v11 | Per-predator Tier 2 FedRate (review item A1). `fedRate_i = min(1, huntingSuccess_i × scarcityFactor)` where `scarcityFactor = totalEaten / totalActualDemand`. Replaces the pooled `fedRate = totalEaten / totalRawDemand` that erased per-species competitive signal. `LastFedRateT2` is now a population-weighted average across predators. Reduces to v10 formula in single-predator-species runs. `model_version` bumped to `v11-per-predator-fedrate`. |
+| v11.1 | Removed `UseCarryingCapacity` toggle from `SimulationConfig`, `BulkBatchConfig`, `EcosystemSimulator`, `ScenarioResult`. Carrying capacity is always on. Old bulk CSVs that include `use_carrying_cap` parse with a deprecation warning and the value is ignored. `GenerateTemplate()` omits the column and uses `seasonal_amp = 5`, `condition_drain_rate = 0.15`. `IsValid()` hard-rejects non-positive cap. `model_version` bumped to `v11.1-cap-always-on`. |
 
 ## 9. Fallback defaults (used only if no `RunSpeciesList` is provided)
 

@@ -29,9 +29,16 @@ public class SimSpecies
     public float NaturalDeathRate = 0.02f;      // Base natural death rate (all species: 2%)
     public float NaturalDeathVariance = 0.01f;  // Random variance range (±1%)
 
-    // ==================== HUNTING EFFICIENCY (Tier 2 only) ====================
-    public float HuntingEfficiency = 0.75f;     // Base hunting success rate (75%)
-    public float HuntingVariance = 0.15f;       // Random variance range (±15%)
+    // ==================== HUNTING / EXTRACTION EFFICIENCY ====================
+    // Dual semantic by tier (v10):
+    //   Tier 2 (predators): base hunting success at NORMAL_PREY_RATIO; feeds Holling II.
+    //   Tier 1 (prey):       resource extraction efficiency from the shared food pool.
+    //                        Default 1.0 = perfect plankton-style passive extraction.
+    //                        Lower values represent imperfect foragers.
+    // Used by EcosystemSimulator.ProcessFeedingWithAccumulator in two distinct
+    // formulas: linear for Tier 1 (FedRate = HE × food_density), Holling II for Tier 2.
+    public float HuntingEfficiency = 0.75f;     // Base extraction/hunting success (Tier 2 default; Tier 1 uses 1.0 by convention)
+    public float HuntingVariance = 0.15f;       // Random variance range (±15%) — applied to Tier 2 only
 
     // ==================== CONSTANTS ====================
     public const float NO_PREDATOR_PENALTY = 0.85f;           // 15% birth reduction when no predators
@@ -55,7 +62,7 @@ public class SimSpecies
     // ==================== RUNTIME VALUES (calculated each step) ====================
     public float RawThermalPerformance;     // Arrhenius + CTmin/CTmax fade, WITHOUT Pmax
     public float ThermalPerformance;        // RawThermalPerformance × Pmax (used for predator hunting demand and logging)
-    public float FedRate = 1f;              // Feeding satisfaction (0-1), Tier 1 always 1.0
+    public float FedRate = 1f;              // Feeding satisfaction (0-1). Tier 1: density-dependent from food pool (v10). Tier 2: from Holling II.
     public float RawFinalPerformance;       // RawThermalPerformance × FedRate — Condition drain target
     public float FinalPerformance;          // ThermalPerf × FedRate — computed for logging/CSV output only (not a biology input as of v8)
     public float CurrentHuntingSuccess;     // This step's hunting success (for tracking)
@@ -130,7 +137,7 @@ public class SimSpecies
             ReproThreshold = 0.25f,
             NaturalDeathRate = 0.02f,       // 2% base
             NaturalDeathVariance = 0.01f,   // ±1%
-            HuntingEfficiency = 1.0f,       // Ignored for Tier 1
+            HuntingEfficiency = 1.0f,       // Tier 1 (v10): perfect resource extraction from shared food pool
             HuntingVariance = 0f,
             ArrhenBreadth = 5273.15f,
             ArrhenLower = 10273.15f,

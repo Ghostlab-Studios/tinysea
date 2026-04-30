@@ -17,8 +17,10 @@ variability_mag, warming_bias,
 daily_var_range, randomness_growth, autocorrelated,
 interannual_variation,
 temp_min, temp_max,
-use_carrying_cap, carrying_cap_t1
+carrying_cap_t1
 ```
+
+`use_carrying_cap` is **deprecated** as of v11.1 — carrying capacity is always on. If an old bulk CSV includes the column, the parser logs a warning and ignores the value. New CSVs from `GenerateTemplate()` no longer emit it.
 
 | Column | Type | Validation |
 |--------|------|------------|
@@ -29,25 +31,24 @@ use_carrying_cap, carrying_cap_t1
 | `seasonal_amp` | float | — |
 | `climate_trend` | float | — |
 | `variability_mag` | float | — |
-| `warming_bias` | float | — |
+| `warming_bias` | float | Skews the *shape* of the per-year interannual draw — warm tail wider than cold tail when `> 1`. Distribution is zero-mean by construction (post-fix); does **not** add a long-term warming trend. Use `climate_trend` for that. |
 | `daily_var_range` | float | — |
 | `randomness_growth` | float | — |
 | `autocorrelated` | bool | Accepts `true`/`false`/`1`/`0`/`yes`/`no` (case-insensitive). |
 | `interannual_variation` | bool | Same tokens. |
 | `temp_min` | float | — |
 | `temp_max` | float | Must be `> temp_min`. |
-| `use_carrying_cap` | bool | If true, `carrying_cap_t1 > 0` is required. |
-| `carrying_cap_t1` | float | See above. |
+| `carrying_cap_t1` | float | Must be `> 0`. Carrying capacity is always on as of v11.1. |
 
 ### 1.2. Global columns (optional)
 
 From `OPTIONAL_GLOBAL_COLUMNS`:
 
 ```
-condition_drain_rate, condition_recovery_rate
+condition_drain_rate, condition_recovery_rate, use_carrying_cap (deprecated)
 ```
 
-Missing column or empty value → defaults (0.15 and 0.10 respectively).
+Missing column or empty value → defaults (0.15 and 0.10 respectively). `use_carrying_cap` is deprecated and ignored if present (v11.1).
 
 ### 1.3. Per-species columns (required, prefix `sp{N}_`)
 
@@ -78,7 +79,7 @@ Per-species validation (see `ValidateSpecies`):
 | `spK_repro_mult` | `≥ 0`. |
 | `spK_natural_death_rate` | `≥ 0`. |
 | `spK_natural_death_var` | `≥ 0`. |
-| `spK_hunt_eff` | `[0, 1]`. |
+| `spK_hunt_eff` | `[0, 1]`. **Dual semantic by tier (v10):** Tier 2 = base hunting success at `NORMAL_PREY_RATIO` (Holling II); Tier 1 = resource-extraction efficiency from the shared food pool (default 1.0 = perfect plankton-style passive extraction). |
 | `spK_hunt_var` | `≥ 0`. |
 | `spK_upper_bound_c` | `> spK_lower_bound_c`. |
 
@@ -112,6 +113,7 @@ Emitted by `SimulationRunner.ToCsvInternal`. One file per scenario: `scenario_{i
 ### 2.1. Header section (ignored by R's default `read.csv`)
 
 ```
+#config:model_version,v11.1-cap-always-on
 #config:days_per_scenario,<value>
 #config:number_of_scenarios,<value>
 #config:scenario_index,<value>
@@ -127,7 +129,6 @@ Emitted by `SimulationRunner.ToCsvInternal`. One file per scenario: `scenario_{i
 #config:autocorrelated,<value>
 #config:temperature_bounds_min,<value>
 #config:temperature_bounds_max,<value>
-#config:use_carrying_capacity,<value>
 #config:carrying_capacity_tier1,<value>
 #config:condition_drain_rate,<value>
 #config:condition_recovery_rate,<value>
@@ -137,6 +138,8 @@ Emitted by `SimulationRunner.ToCsvInternal`. One file per scenario: `scenario_{i
 ... (one #species: line per species)
 #
 ```
+
+`model_version` is the first line so downstream tooling can identify which simulator produced the file at a glance. `v11.1-cap-always-on` corresponds to the spec changes in [`simulation-spec.md`](./simulation-spec.md) §v11 changes (which builds on v10's food-pool reframe).
 
 Both Kelvin and Celsius are emitted for temperature fields (`OptimalTempK` and `OptimalTempC`, etc.) for downstream analysis convenience.
 
@@ -156,6 +159,7 @@ NaturalDeathsT1,NaturalDeathsT2,
 TotalDeaths,
 BirthsT1,BirthsT2,
 FedRateT2,AvgHuntingEff,
+FedRateT1,FoodDensityT1,
 AvgConditionT1,AvgConditionT2,
 BirthAccumT1,BirthAccumT2,
 NaturalDeathAccumT1,NaturalDeathAccumT2,
@@ -165,6 +169,19 @@ ReproScaleT1,ReproScaleT2
 ```
 
 One data row per simulated day. Formatting: `Temperature` and all float metrics are `F2`–`F3` formatted; integer fields use plain integer formatting. Population fields are written as `long` to avoid overflow on large ecosystems.
+
+> **Heads-up on `FedRateT2`** — column name unchanged since v10, but as of v11 this is a **population-weighted average across predators**, not a pooled scalar. See "v11 semantic change" below.
+
+**v10 columns:**
+
+- `FedRateT1` — population-weighted average FedRate across live Tier 1 species. With v10's food-pool model, this varies daily with population pressure on the shared resource pool. (Pre-v10 it was always 1.0, hence not previously logged.)
+- `FoodDensityT1` — daily food density driving the Tier 1 FedRate calculation. Computed as `max(0, 1 − tier1Pop / CarryingCapacityPerTier)` when carrying capacity is enabled, else `1.0`. Useful for diagnosing logistic-overshoot dynamics around the cap.
+
+Both columns are populated even on non-biology days (`BiologyStep > 1`) — they reflect the most recent computed values rather than zeroes, since food density itself doesn't change on skipped-biology days.
+
+**v11 semantic change to existing column:**
+
+- `FedRateT2` — was a pooled scalar shared across all predators (`totalEaten / totalRawDemand`); is now a **population-weighted average** of per-predator FedRates. In single-predator-species runs the value is identical to the v10 pooled formula. In mixed-HE multi-predator runs the average reflects each predator's individual hunting effort; per-species values are stored on each `SimSpecies` runtime instance and are visible in simulator logs but not broken out into separate CSV columns.
 
 ### 2.3. Trailing summary section
 
@@ -300,6 +317,7 @@ Generated by `BulkSimulationController.GenerateBulkSummary`. File: `bulk_summary
 
 ```
 === TINYSEA BULK SUMMARY (Across All Runs) ===
+# Model Version,v11.1-cap-always-on
 # Total Runs,<n>
 # Generated,<yyyy-MM-dd HH:mm:ss>
 

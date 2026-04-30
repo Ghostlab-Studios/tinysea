@@ -441,8 +441,9 @@ public class BulkSimulationController : MonoBehaviour
                     allSpecies.Add(key);
         }
 
-        // Per-run results table
-        sb.AppendLine("=== PER-RUN RESULTS ===");
+        // Per-run results table — TIER LEVEL (kept wide-format, includes per-species
+        // average columns for backward compatibility with existing analysis scripts).
+        sb.AppendLine("=== PER-RUN RESULTS - TIER LEVEL ===");
         sb.Append("Run,Scenarios,Survived,Crashed,CrashRate,BaseTemp,ClimateTrend");
         foreach (var sp in allSpecies)
             sb.Append($",{sp}");
@@ -459,6 +460,23 @@ public class BulkSimulationController : MonoBehaviour
                 sb.Append($",{val:F1}");
             }
             sb.AppendLine();
+        }
+        sb.AppendLine();
+
+        // v12.2: Per-run per-species long-format table. One row per (run, species)
+        // with explicit Variant + Tier columns. Easier to consume than the wide
+        // format above, especially when there are many species.
+        sb.AppendLine("=== PER-RUN RESULTS - PER SPECIES ===");
+        sb.AppendLine("Run,Species,Variant,Tier,AvgPop,SurvivedAvgPop");
+        foreach (var run in summaries)
+        {
+            if (run.AvgSpeciesPop == null) continue;
+            foreach (var sp in allSpecies)
+            {
+                float avgPop = run.AvgSpeciesPop.TryGetValue(sp, out var av) ? av : 0f;
+                float survivedAvgPop = run.SurvivedSpeciesPop != null && run.SurvivedSpeciesPop.TryGetValue(sp, out var sv) ? sv : 0f;
+                sb.AppendLine($"{run.BatchName},{sp},{GetVariant(sp)},{GetTier(sp)},{avgPop:F1},{survivedAvgPop:F1}");
+            }
         }
         sb.AppendLine();
 

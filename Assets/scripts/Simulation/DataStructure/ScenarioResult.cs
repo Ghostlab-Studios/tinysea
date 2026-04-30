@@ -566,6 +566,25 @@ public class AggregateResults
     {
         var sb = new System.Text.StringBuilder();
 
+        // v12.2: Build (Tier, Variant) lookup keyed by FullName for use in
+        // per-species sections. Per-species dicts only carry FullName strings,
+        // so we resolve Variant and Tier from RunSpecies at write time.
+        var speciesMeta = new Dictionary<string, (int Tier, string Variant)>();
+        if (RunSpecies?.speciesList != null)
+        {
+            foreach (var sp in RunSpecies.speciesList)
+            {
+                string name = !string.IsNullOrEmpty(sp.displayName)
+                    ? sp.displayName
+                    : sp.speciesName.ToString();
+                string fullName = $"{name}_{sp.variant}";
+                // SpeciesData.tier is 0-based (0=prey, 1=predator); internal Tier is 1-based.
+                speciesMeta[fullName] = (sp.tier + 1, sp.variant.ToString());
+            }
+        }
+        string GetVariant(string fn) => speciesMeta.TryGetValue(fn, out var m) ? m.Variant : "Unknown";
+        string GetTier(string fn) => speciesMeta.TryGetValue(fn, out var m) ? m.Tier.ToString() : "?";
+
         sb.AppendLine("=== TINYSEA AGGREGATE RESULTS ===");
         sb.AppendLine($"# Generated,{CompletedAt:yyyy-MM-dd HH:mm:ss}");
         sb.AppendLine($"# Configuration,{DaysPerScenario} days x {TotalScenarios} scenarios");
@@ -599,7 +618,7 @@ public class AggregateResults
         if (PerSpeciesAvg != null && PerSpeciesAvg.Count > 0)
         {
             sb.AppendLine("=== PER-SPECIES POPULATION STATS (All Scenarios) ===");
-            sb.AppendLine("Species,Avg,SurvivedAvg,Min,Max,Extinct,Survived,ExtinctionRate");
+            sb.AppendLine("Species,Variant,Tier,Avg,SurvivedAvg,Min,Max,Extinct,Survived,ExtinctionRate");
             foreach (var key in PerSpeciesAvg.Keys.OrderBy(k => k))
             {
                 float avg = PerSpeciesAvg[key];
@@ -610,7 +629,7 @@ public class AggregateResults
                 int survived = PerSpeciesSurvived != null && PerSpeciesSurvived.ContainsKey(key) ? PerSpeciesSurvived[key] : 0;
                 int total = extinct + survived;
                 float extinctionRate = total > 0 ? (float)extinct / total : 0;
-                sb.AppendLine($"{key},{avg:F1},{survivedAvg:F1},{min},{max},{extinct},{survived},{extinctionRate:P1}");
+                sb.AppendLine($"{key},{GetVariant(key)},{GetTier(key)},{avg:F1},{survivedAvg:F1},{min},{max},{extinct},{survived},{extinctionRate:P1}");
             }
             sb.AppendLine();
         }
@@ -626,11 +645,11 @@ public class AggregateResults
         if (PerSpeciesMetrics != null && PerSpeciesMetrics.Count > 0)
         {
             sb.AppendLine("=== PER-SPECIES FINAL YEAR METRICS ===");
-            sb.AppendLine("Species,N,NSurvived,MeanCondition,MeanCondition_StdDev,MeanCondition_SurvivedMean,MeanBirthRate,MeanBirthRate_StdDev,MeanBirthRate_SurvivedMean,PopCv,PopCv_StdDev,MeanPop,MeanPop_StdDev,MeanPop_SurvivedMean");
+            sb.AppendLine("Species,Variant,Tier,N,NSurvived,MeanCondition,MeanCondition_StdDev,MeanCondition_SurvivedMean,MeanBirthRate,MeanBirthRate_StdDev,MeanBirthRate_SurvivedMean,PopCv,PopCv_StdDev,MeanPop,MeanPop_StdDev,MeanPop_SurvivedMean");
             foreach (var key in PerSpeciesMetrics.Keys.OrderBy(k => k))
             {
                 var a = PerSpeciesMetrics[key];
-                sb.AppendLine($"{key},{a.N},{a.NSurvived}," +
+                sb.AppendLine($"{key},{GetVariant(key)},{GetTier(key)},{a.N},{a.NSurvived}," +
                     $"{a.MeanConditionFinalYear.Mean:F3},{a.MeanConditionFinalYear.StdDev:F3},{a.MeanConditionFinalYear.SurvivedMean:F3}," +
                     $"{a.MeanBirthRateFinalYear.Mean:F4},{a.MeanBirthRateFinalYear.StdDev:F4},{a.MeanBirthRateFinalYear.SurvivedMean:F4}," +
                     $"{a.PopCvFinalYear.Mean:F3},{a.PopCvFinalYear.StdDev:F3}," +
@@ -639,11 +658,11 @@ public class AggregateResults
             sb.AppendLine();
 
             sb.AppendLine("=== PER-SPECIES FULL-RUN METRICS ===");
-            sb.AppendLine("Species,N,NSurvived,MeanCondition,MeanCondition_StdDev,MeanBirthRate,MeanBirthRate_StdDev,PopCv,PopCv_StdDev");
+            sb.AppendLine("Species,Variant,Tier,N,NSurvived,MeanCondition,MeanCondition_StdDev,MeanBirthRate,MeanBirthRate_StdDev,PopCv,PopCv_StdDev");
             foreach (var key in PerSpeciesMetrics.Keys.OrderBy(k => k))
             {
                 var a = PerSpeciesMetrics[key];
-                sb.AppendLine($"{key},{a.N},{a.NSurvived}," +
+                sb.AppendLine($"{key},{GetVariant(key)},{GetTier(key)},{a.N},{a.NSurvived}," +
                     $"{a.MeanConditionFullRun.Mean:F3},{a.MeanConditionFullRun.StdDev:F3}," +
                     $"{a.MeanBirthRateFullRun.Mean:F4},{a.MeanBirthRateFullRun.StdDev:F4}," +
                     $"{a.PopCvFullRun.Mean:F3},{a.PopCvFullRun.StdDev:F3}");
@@ -651,13 +670,13 @@ public class AggregateResults
             sb.AppendLine();
 
             sb.AppendLine("=== PER-SPECIES STABILITY METRICS ===");
-            sb.AppendLine("Species,N,NSurvived,MinPop_Mean,MinPop_Min,MaxPop_Mean,MaxPop_Max,FinalPop_Mean,FinalPop_SurvivedMean,ExtinctionRate,MeanExtinctionDay,CrashRate,MeanCrashDay");
+            sb.AppendLine("Species,Variant,Tier,N,NSurvived,MinPop_Mean,MinPop_Min,MaxPop_Mean,MaxPop_Max,FinalPop_Mean,FinalPop_SurvivedMean,ExtinctionRate,MeanExtinctionDay,CrashRate,MeanCrashDay");
             foreach (var key in PerSpeciesMetrics.Keys.OrderBy(k => k))
             {
                 var a = PerSpeciesMetrics[key];
                 float extinctionRate = a.N > 0 ? (float)a.ExtinctionTiming.NEvents / a.N : 0f;
                 float crashRate      = a.N > 0 ? (float)a.CrashTiming.NEvents / a.N : 0f;
-                sb.AppendLine($"{key},{a.N},{a.NSurvived}," +
+                sb.AppendLine($"{key},{GetVariant(key)},{GetTier(key)},{a.N},{a.NSurvived}," +
                     $"{a.MinPopulation.Mean:F1},{a.MinPopulation.Min:F0}," +
                     $"{a.MaxPopulation.Mean:F1},{a.MaxPopulation.Max:F0}," +
                     $"{a.FinalPopulation.Mean:F1},{a.FinalPopulation.SurvivedMean:F1}," +

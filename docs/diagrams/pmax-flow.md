@@ -1,13 +1,13 @@
-# Where Pmax enters the pipeline (v9; v10 doesn't change Pmax's entry points)
+# Where Pmax enters the pipeline (v9; v10/v11/v11.1/v12 don't change Pmax's entry points)
 
-Source: `SimSpecies.Pmax`, `EcosystemSimulator.ProcessBiologyStep` lines covering Steps 1, 2, 4, 8.
+Source: `SimSpecies.Pmax`, `EcosystemSimulator.cs` lines 547 (Step 1), 905 (Step 4 drain), 916 (Step 4 recovery), and 1135 (Step 8 births).
 
-> **v10 note:** Pmax still enters the pipeline at the same four places as in v9. What v10 changes is the broader picture of what *drives Condition*: in addition to thermal performance and feeding, Tier 1's Condition target now also depends on **food density** (via the FedRate computed from the shared resource pool). So the full "what determines Condition" picture is wider than just temperature, but Pmax's role is unchanged.
+> **Freshness note (verified through v12):** Pmax still enters the pipeline at the same four places as in v9. v10 (food-pool FedRate), v11 (per-predator FedRate), v11.1 (cap always-on), and v12 (per-species event tracking) all leave the four Pmax entry points untouched. What v10 *did* widen is the picture of what drives Condition — Tier 1's Condition target now depends on food density too via FedRate — but Pmax's role is unchanged.
 
 ```mermaid
 flowchart LR
     Pmax["sp.Pmax<br/>(peak metabolic capacity)"] --> S1["Step 1: ThermalPerformance = RawThermalPerf × Pmax"]
-    Pmax --> S4a["Step 4: effectiveDrain<br/>= DrainRate × (1 + severity²) / pmaxSafe"]
+    Pmax --> S4a["Step 4: effectiveDrain<br/>= DrainRate × (1 + (1−target)²) / pmaxSafe"]
     Pmax --> S4b["Step 4: effectiveRecovery<br/>= RecoveryRate × (1 + target²) × pmaxSafe"]
     Pmax --> S8["Step 8: births<br/>= Pop × reproScale × ReproMult × Pmax × BiologyStep"]
 

@@ -4,17 +4,17 @@ Source: `EcosystemSimulator.ApplyThermalDeath`, `EcosystemSimulator.ApplyConditi
 
 ```mermaid
 flowchart TD
-    Start([Start death phase]) --> Pop{"sp.Population < MIN_ALIVE_POP?"}
+    Start([Start death phase]) --> Pop{"sp.Population &lt; MIN_ALIVE_POP?"}
     Pop -- yes --> Skip[already extinct; skip]
     Pop -- no --> S6{"Step 6: Thermal Death<br/>sp.RawThermalPerformance == 0?"}
-    S6 -- yes --> Wipe["Pop → 0<br/>Condition → 0<br/>LastTempDeaths += deaths"]
-    S6 -- no --> S7{"Step 7: Condition Death<br/>sp.Condition < sp.DeathThreshold?"}
+    S6 -- yes --> Wipe["Pop → 0<br/>Condition → 0<br/>LastTempDeaths += deaths<br/>v12: LastTempDeathsBySpecies[FullName] += deaths"]
+    S6 -- no --> S7{"Step 7: Condition Death<br/>sp.Condition &lt; sp.DeathThreshold?"}
     S7 -- no --> NoDeaths[no condition deaths]
     S7 -- yes --> Sev["severity = (DeathThreshold - Condition) / DeathThreshold<br/>rawDeaths = Pop × severity × DeathRate × BiologyStep"]
-    Sev --> Accum["_conditionDeathAccumulators[sp.FullName] += rawDeaths<br/>whole = floor(accum)<br/>cap at int(Pop)"]
-    Accum --> WholeCheck{"whole > 0?"}
+    Sev --> Accum["_conditionDeathAccumulators[sp.FullName] += rawDeaths<br/>whole = (long)floor(accum)<br/>cap at (long)Pop"]
+    Accum --> WholeCheck{"whole &gt; 0?"}
     WholeCheck -- no --> Fractional[keep fractional residual<br/>for next day]
-    WholeCheck -- yes --> Kill["Pop = max(0, Pop - wholeDeaths)"]
+    WholeCheck -- yes --> Kill["Pop = max(0, Pop - wholeDeaths)<br/>LastConditionDeaths += wholeDeaths<br/>v12: LastConditionDeathsBySpecies[FullName] += wholeDeaths"]
     Kill --> Boost["Survivor fitness boost:<br/>Condition = min(1, oldCond × oldPop / newPop)"]
     Boost --> Next[next species]
     Wipe --> Next

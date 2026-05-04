@@ -1,14 +1,15 @@
 # Accumulator pattern
 
-Source: `_birthAccumulators`, `_predationAccumulators`, `_naturalDeathAccumulators`, `_conditionDeathAccumulators`, `_thermalDeathAccumulators` (declared in `EcosystemSimulator.cs`).
+Source: `_birthAccumulators`, `_predationAccumulators`, `_naturalDeathAccumulators`, `_conditionDeathAccumulators` declared in `EcosystemSimulator.cs:150-154`. (A fifth dictionary `_thermalDeathAccumulators` is also declared but never written or read — see the table below.) v12 added per-species residual accessors `GetBirthAccum(fullName)`, `GetNaturalDeathAccum(fullName)`, `GetConditionDeathAccum(fullName)`, `GetPredationAccum(fullName)` at `EcosystemSimulator.cs:222-231` so the per-species CSV columns can read them at write time without making the private dictionaries public.
 
 ```mermaid
 flowchart LR
     Raw["rawEvents<br/>= Pop × rate × BiologyStep<br/>(float, fractional)"] --> Add["accumulator[sp.FullName] += rawEvents"]
-    Add --> Floor["whole = (int)Math.Floor(accumulator[sp.FullName])"]
+    Add --> Floor["whole = (long)Math.Floor(accumulator[sp.FullName])"]
     Floor --> Apply["apply 'whole' integer events<br/>(to Pop: births or deaths)"]
     Floor --> Residual["accumulator[sp.FullName] -= whole<br/>(keep the fractional residual)"]
-    Residual -.carries to next day.-> Add
+    Residual -. carries to next day .-> Add
+    Residual -. read at CSV-write time .-> Accessor["v12 public accessors:<br/>GetBirthAccum(fullName)<br/>GetNaturalDeathAccum(fullName)<br/>GetConditionDeathAccum(fullName)<br/>GetPredationAccum(fullName)"]
 ```
 
 ## Why
@@ -19,13 +20,13 @@ Accumulators let fractional events build up across days. Death or birth only man
 
 ## Users of this pattern
 
-| Accumulator | Step | Event type | Key |
-|-------------|------|-----------|-----|
-| `_birthAccumulators` | 8 | Births (adds to `Population`) | `sp.FullName` |
-| `_predationAccumulators` | 2 | Prey removals (distributed across prey variants) | `sp.FullName` |
-| `_naturalDeathAccumulators` | 9 | Natural deaths | `sp.FullName` |
-| `_conditionDeathAccumulators` | 7 | Condition-driven deaths | `sp.FullName` |
-| `_thermalDeathAccumulators` | declared, unused | — | thermal death is binary/instant (Step 6), so fractional accumulation is unnecessary |
+| Accumulator | Step | Event type | Key | Public accessor (v12) |
+|-------------|------|-----------|-----|------------------------|
+| `_birthAccumulators` | 8 | Births (adds to `Population`) | `sp.FullName` | `GetBirthAccum(fullName)` |
+| `_predationAccumulators` | 2 | Prey removals (distributed across prey variants) | `sp.FullName` | `GetPredationAccum(fullName)` (Tier 1 only; Tier 2 returns 0) |
+| `_naturalDeathAccumulators` | 9 | Natural deaths | `sp.FullName` | `GetNaturalDeathAccum(fullName)` |
+| `_conditionDeathAccumulators` | 7 | Condition-driven deaths | `sp.FullName` | `GetConditionDeathAccum(fullName)` |
+| `_thermalDeathAccumulators` | declared, never written, never read | — | thermal death is whole-population binary at Step 6, so fractional accumulation is unnecessary | — (no accessor; field is dead code as of v11.1; cleared/initialised in `ClearAccumulators`/`InitializeAccumulators` only for symmetry) |
 
 ## Accumulator lifecycle
 

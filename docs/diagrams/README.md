@@ -4,6 +4,28 @@ One Mermaid diagram per file, each focused on a single flow. Render inline in Gi
 
 All diagrams are derived from the C# source in `Assets/scripts/Simulation/`. If the code changes, update the diagram — do not rely on external references.
 
+## Combined PDF (v12)
+
+A single combined PDF of all 10 diagrams (rendered via Mermaid CLI 11.14 at 2× scale, identical visual style to mermaid.live's default theme) is at:
+
+- **[`rendered/v12/TinySea-Simulation-Diagrams.pdf`](./rendered/v12/TinySea-Simulation-Diagrams.pdf)** — 13 pages: title + TOC + 10 diagram pages + sources page.
+
+To regenerate after editing any `.md`:
+
+```bash
+# From repo root, render each .md to a high-res PNG (one-time, also after edits):
+for f in tinysea/docs/diagrams/*.md; do
+  name=$(basename "$f" .md)
+  [ "$name" = "README.md" ] && continue
+  node_modules/.bin/mmdc.cmd -i "$f" -o "tinysea/docs/diagrams/rendered/v12/${name}.png" \
+    -w 1800 -s 2 --backgroundColor white -t default --quiet
+done
+# Then bundle into the combined PDF:
+python tinysea/docs/build_diagrams_pdf.py
+```
+
+The build script lives at [`tinysea/docs/build_diagrams_pdf.py`](../build_diagrams_pdf.py) and reads the rendered PNGs from `rendered/v12/`.
+
 ## Diagram index
 
 | File | Covers | Primary source |
@@ -22,6 +44,7 @@ All diagrams are derived from the C# source in `Assets/scripts/Simulation/`. If 
 ## Conventions
 
 - **Tier 1** = prey; **Tier 2** = predator.
-- **Species order** is the order species appear in `RunSpeciesList`. Many biology steps iterate in this order.
-- **Pmax** is clamped to `max(Pmax, 1e-4)` before any divisions in the Condition update (`pmaxSafe`) to guard against divide-by-zero.
-- **BiologyStep** controls how many simulated days elapse per biology evaluation (default 1). All rate formulas multiply by `BiologyStep`.
+- **Species order** in CSV columns is `(Tier asc, FullName asc)` (`SimulationRunner.cs:706-708`); inside the biology pipeline iteration follows `Species` insertion order from `RunSpeciesList`. The biology steps are order-independent in v10+.
+- **Pmax** is clamped to `max(Pmax, 1e-4)` before any divisions in the Condition update (`pmaxSafe`) to guard against divide-by-zero (`EcosystemSimulator.cs:895`).
+- **BiologyStep** controls how many simulated days elapse per biology evaluation (default 1). When `BiologyStep > 1`, biology runs only on `dayIndex == 0` or when `(dayIndex + 1) % BiologyStep == 0` — temperature still advances every day, and a row is recorded every day; on skipped days, all event/birth/death/accumulator counters are 0. All rate formulas inside biology multiply by `BiologyStep` so multi-day cycles produce equivalent expected events.
+- **Model version**: as of v12.2, the value emitted in `#config:model_version` is `v12-per-species-tracking`. The CSV-section split (PER-RUN RESULTS - TIER LEVEL / PER SPECIES, three-header-row INDIVIDUAL SCENARIOS / SUMMARY STATISTICS) is a v12.2 sub-revision; the simulator version string is unchanged.

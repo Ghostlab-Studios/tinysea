@@ -26,14 +26,14 @@ Every step iterates `Species` in the order they were added to `RunSpeciesList`. 
 | Step | Writes | Notes |
 |------|--------|-------|
 | 1 | `RawThermalPerformance`, `ThermalPerformance` | Per species. |
-| 2 | `FedRate` (Tier 1 AND Tier 2), `CurrentHuntingSuccess`, `LastFedRateT1`, `LastFedRateT2`, `LastFoodDensityT1`, `LastAvgHuntingEfficiency`, `LastEatenT1`, accumulator updates on prey | v10: Tier 1 FedRate = min(1, HE × food_density), no longer hardcoded to 1.0. |
+| 2 | `FedRate` (Tier 1 AND Tier 2), `CurrentHuntingSuccess`, `LastFedRateT1`, `LastFedRateT2`, `LastFoodDensityT1`, `LastAvgHuntingEfficiency`, `LastEatenT1`, accumulator updates on prey, **v12: `LastFedRateBySpecies`, `LastEatenBySpecies`** | v10: Tier 1 FedRate = min(1, HE × food_density), no longer hardcoded to 1.0. |
 | 3 | `RawFinalPerformance` | Per species. |
 | 4 | `Condition` (clamped 0–1), `AvgConditionT1`/`AvgConditionT2` later | `oldCondition` logged. |
 | 5 | `FinalPerformance` | Never read again in this pipeline. |
-| 6 | `Population → 0`, `Condition → 0` when lethal | Also increments `LastTempDeathsT1`/`T2`. |
-| 7 | `Population -= wholeDeaths`, `Condition` boosted, `LastConditionDeathsT1`/`T2`, `_conditionDeathAccumulators` | Survivor boost caps Condition at 1.0. |
-| 8 | `Population += wholeBirths`, `LastBirthsT1`/`T2`, `_birthAccumulators`, `LastReproScaleT1`/`T2` | v10: only Tier 1 modifier left is `NO_PREDATOR_PENALTY` (carrying-cap-on-births deleted). Newborns inherit group Condition (no explicit dilution step). |
-| 9 | `Population -= wholeNaturalDeaths`, `LastNaturalDeathsT1`/`T2`, `_naturalDeathAccumulators` | No Condition effect. |
+| 6 | `Population → 0`, `Condition → 0` when lethal, `LastTempDeathsT1`/`T2`, **v12: `LastTempDeathsBySpecies`** | Whole-population kill, no accumulator. |
+| 7 | `Population -= wholeDeaths`, `Condition` boosted, `LastConditionDeathsT1`/`T2`, `_conditionDeathAccumulators`, **v12: `LastConditionDeathsBySpecies`** | Survivor boost caps Condition at 1.0. |
+| 8 | `Population += wholeBirths`, `LastBirthsT1`/`T2`, `_birthAccumulators`, `LastReproScaleT1`/`T2`, **v12: `LastBirthsBySpecies`, `LastReproScaleBySpecies`** | v10: only Tier 1 modifier left is `NO_PREDATOR_PENALTY` (`EcosystemSimulator.cs:1138-1146`); the carrying-cap-on-births block was deleted. Newborns inherit group Condition (no explicit dilution step). |
+| 9 | `Population -= wholeNaturalDeaths`, `LastNaturalDeathsT1`/`T2`, `_naturalDeathAccumulators`, **v12: `LastNaturalDeathsBySpecies`** | No Condition effect. |
 | 10 | `Population = Math.Round(Population, AwayFromZero)` | All populations integer-valued between days. |
 
-After Step 10, `ComputeAverageCondition()` + `UpdateAccumulatorTotals()` + `EndPopT1/T2` are updated for the CSV record.
+After Step 10, `ComputeAverageCondition()` + `UpdateAccumulatorTotals()` + `EndPopT1/T2` are updated for the CSV record. Per-species counter dictionaries are reset and re-seeded at the top of the next `ProcessBiologyStep` (`EcosystemSimulator.cs:519-537`); their values are read by `SimulationRunner.RecordStep` to populate the v12 per-species columns. Tier-rollup invariant: per-species counters sum to the matching `Last*T1`/`Last*T2` value.

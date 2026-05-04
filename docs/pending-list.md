@@ -29,7 +29,7 @@ The previous live-`tierPop` read inside `ApplyReproduction`'s carrying-cap-on-bi
 
 ### A4. Euler overshoot in Condition update at `BiologyStep > 1` `MEDIUM`
 Source: Review §5, Marine (downgraded from ISSUE to CONCERN with validator check).
-[EcosystemSimulator.cs:687–708](../Assets/scripts/Simulation/EcosystemSimulator.cs). At `BiologyStep = 5` with drain rate 0.15 and generalist Pmax 0.72, per-step factor can exceed 2, causing `Condition -= (Cond − target) × factor` to overshoot the target.
+[EcosystemSimulator.cs:887–922](../Assets/scripts/Simulation/EcosystemSimulator.cs). Still uses Euler step: `sp.Condition -= (sp.Condition - target) * effectiveDrain` (line 906) and `+= (target - sp.Condition) * effectiveRecovery` (line 917). At `BiologyStep = 5` with drain rate 0.15 and generalist Pmax 0.72, the effective drain (`0.15 × (1 + severity²) / 0.72 × 5 ≈ 1.04 to 2.08`) can exceed 1 and overshoot the target.
 **Fix**: either add a validator that `BiologyStep == 1` (if that's the only supported setting), or switch to exact-exponential update: `Cond = target + (Cond − target) × exp(−rate × step)`.
 **Blocks**: nothing at default settings; matters only if we ever use `BiologyStep > 1`.
 
@@ -40,17 +40,17 @@ Fallback factory defaults create an interval `(0.25, 0.30)` where a species is d
 
 ### A6. Recovery multiplier can drop below 1.0 for low-Pmax species `MEDIUM`
 Source: Review §5.
-`effectiveRecovery = RecoveryRate × (1 + target²) × Pmax`. At `target = 0.5`, `Pmax = 0.72`: multiplier = `1.25 × 0.72 = 0.9`, so recovery is slower than base rate. The quadratic "boost" no longer guarantees at-least-base-rate for generalists.
+[EcosystemSimulator.cs:914–917](../Assets/scripts/Simulation/EcosystemSimulator.cs). Still: `effectiveRecovery = RecoveryRate × (1 + target²) × Pmax`. At `target = 0.5`, `Pmax = 0.72`: multiplier = `1.25 × 0.72 = 0.9`, so recovery is slower than base rate. The quadratic "boost" no longer guarantees at-least-base-rate for generalists.
 **Fix**: clamp the multiplier to `≥ 1` (`max(1, (1 + target²) × Pmax)`), or document that low-Pmax species recover sub-linearly as an intended property.
 
 ### A7. `NO_PREDATOR_PENALTY = 0.85` is ecologically backwards `MEDIUM`
 Source: Review §9, Marine.
-[SimSpecies.cs:37](../Assets/scripts/Simulation/SimSpecies.cs). When Tier 2 is absent, Tier 1 birth rate is multiplied by 0.85. Real trophic-cascade literature (Crooks & Soulé 1999; Estes et al. 2011) shows the opposite — prey release, not suppression. Also double-counts with carrying-capacity cap.
+[SimSpecies.cs:44](../Assets/scripts/Simulation/SimSpecies.cs) declares `public const float NO_PREDATOR_PENALTY = 0.85f`; applied at [EcosystemSimulator.cs:1143](../Assets/scripts/Simulation/EcosystemSimulator.cs) inside `ApplyReproduction`. When Tier 2 is absent, Tier 1 birth rate is multiplied by 0.85. Real trophic-cascade literature (Crooks & Soulé 1999; Estes et al. 2011) shows the opposite — prey release, not suppression. Also double-counts with carrying-capacity cap.
 **Fix**: delete the penalty (simplest), or explicitly motivate with a cited mechanism. Removing it changes `SimSpecies.NO_PREDATOR_PENALTY` and the branch in `ApplyReproduction` that uses it.
 
 ### A8. Survivor fitness boost applied only to condition death `MEDIUM`
 Source: Review §8, Marine.
-The "dead were weakest → redistribute health" boost fires in `ApplyConditionDeath` ([line 780](../Assets/scripts/Simulation/EcosystemSimulator.cs)) but not in `ApplyNaturalDeathWithAccumulator` or predation. If natural death is random w.r.t. Condition (defensible), no boost is correct — but then apply the same logic to condition death (also no boost). Inconsistency between death types leaves a quiet quantitative effect.
+The "dead were weakest → redistribute health" boost fires in `ApplyConditionDeath` ([EcosystemSimulator.cs:1010–1017](../Assets/scripts/Simulation/EcosystemSimulator.cs): `sp.Condition = oldCondition * oldPop / sp.Population; sp.Condition = Math.Min(1f, sp.Condition);`) but not in `ApplyNaturalDeathWithAccumulator` (lines 1201–1250) or predation. If natural death is random w.r.t. Condition (defensible), no boost is correct — but then apply the same logic to condition death (also no boost). Inconsistency between death types leaves a quiet quantitative effect.
 **Fix**: marine scientist recommends removing the boost everywhere; the birth accumulator already prevents death spirals. Alternative: add it to natural death too (harder to justify biologically).
 
 ### A9. ~~Newborn condition hard-coded at 0.5~~ `RESOLVED IN v10`
@@ -60,18 +60,40 @@ Source: Review §9.
 
 ### A10. Autocorrelation coefficient hard-coded at 0.7/0.3 `LOW`
 Source: Review §12.
-[TemperatureCalculator.cs:114–115](../Assets/scripts/Simulation/TemperatureCalculator.cs). `v = 0.7 × v_yesterday + 0.3 × v_new`. Environmental autocorrelation (noise colour) is a first-order parameter of climate-variability ecology (Vasseur & Yodzis 2004; Ripa & Lundberg 1996). Currently fixed; users can't tune it.
+[TemperatureCalculator.cs:131](../Assets/scripts/Simulation/TemperatureCalculator.cs). `variation = _previousDayVariation * 0.7f + newRandom * 0.3f`. Environmental autocorrelation (noise colour) is a first-order parameter of climate-variability ecology (Vasseur & Yodzis 2004; Ripa & Lundberg 1996). Currently fixed; users can't tune it.
 **Fix**: expose as a `SimulationConfig` parameter and a bulk CSV column, with 0.7 as default.
 
 ### A11. `LETHAL_TRANSITION_WIDTH` global, not per-species `LOW`
 Source: Review §2.
-[SimSpecies.cs:39](../Assets/scripts/Simulation/SimSpecies.cs). 2 °C cosine fade near CTmin/CTmax is compile-time global. Real thermal-tolerance plasticity varies across species (Schulte et al. 2011).
+[SimSpecies.cs:46](../Assets/scripts/Simulation/SimSpecies.cs). `private const float LETHAL_TRANSITION_WIDTH = 2.0f;` — 2 °C cosine fade near CTmin/CTmax is compile-time global. Real thermal-tolerance plasticity varies across species (Schulte et al. 2011).
 **Fix**: promote to a per-species field, with current 2.0 as default. Low priority.
 
 ### A12. Seasonal-phase docstring wrong `LOW`
 Source: Review §12, Marine (downgraded to MINOR).
-[TemperatureCalculator.cs:63–65](../Assets/scripts/Simulation/TemperatureCalculator.cs) comment says "coldest at day 0, warmest at day 182" but the formula peaks at day 91 and troughs at day 273. Formula is fine; comment is wrong.
+[TemperatureCalculator.cs:67–73](../Assets/scripts/Simulation/TemperatureCalculator.cs) comment says "coldest at day 0, warmest at day 182" but the formula `sin(2π·day/365)` is zero at day 0, peaks at day 91, and troughs at day 273. Formula is fine; comment is wrong.
 **Fix**: one-line comment edit.
+
+### A13. `AvgConditionT1`/`T2` and `FinalConditionT1`/`T2` read but never written `MEDIUM` (data-integrity bug)
+Source: Code audit 2026-05-01.
+[ScenarioResult.cs:57–60](../Assets/scripts/Simulation/DataStructure/ScenarioResult.cs) declares the four condition fields on `ScenarioResult`; `AggregateResults.AvgConditionT1/T2/AvgFinalConditionT1/T2` (lines 268–271) accumulate them in `CalculateAggregates` (lines 314–315, 331–332) and emit them in the aggregate CSV's `=== CONDITION STATS ===` section (lines 658–662). But [SimulationRunner.cs:895–936](../Assets/scripts/Simulation/SimulationRunner.cs) `ToScenarioResult` never populates these fields — they remain at C# default `0f`. The `EcosystemSimulator` already exposes `AvgConditionT1`/`AvgConditionT2` (line 204–205) which `StepRecord` captures per day at SimulationRunner.cs:459–460, but those are *daily snapshot* values, not the scenario-level mean / final.
+**Effect**: every `aggregate.csv`'s `=== CONDITION STATS ===` block currently emits four zeros. Downstream R/pandas pipelines reading those four cells get garbage.
+**Fix**: in `ToScenarioResult`, populate from `_records` (e.g. mean of `r.AvgConditionT1` across the run, last-day value for `FinalConditionT1`). One block, ~10 lines.
+
+### A14. `BulkSpeciesConfig.CTmaxC` default `50.0f` is inconsistent with global default `LOW` (unreachable but confusing)
+Source: Code audit 2026-05-01.
+[BulkBatchConfig.cs:30](../Assets/scripts/Simulation/BulkBatchConfig.cs) declares `public float CTmaxC = 50.0f` while [SimSpecies.cs:59](../Assets/scripts/Simulation/SimSpecies.cs) declares `CTmaxC = 40.0f` and [SpeciesDatabase.cs:106/111/116](../Assets/scripts/Simulation/DataStructure/SpeciesDatabase.cs) `GetVariantThermalDefaults` returns 40.0 for every variant. The 50.0 default never reaches users because the parser path at [CsvBatchParser.cs:261–265](../Assets/scripts/Simulation/CsvBatchParser.cs) overrides it with the variant default — but it is misleading for code readers and a footgun if a future call path skips the parser.
+**Fix**: change to `40.0f` to match. Trivial.
+
+### A15. `SpeciesData.GetVariantThermalDefaults` returns identical Pmax for Tropical and Arctic `LOW` (semantics)
+Source: Code audit 2026-05-01.
+[SpeciesDatabase.cs:103–117](../Assets/scripts/Simulation/DataStructure/SpeciesDatabase.cs) returns `pmax=0.85, ctMin=0, ctMax=40` for both **Tropical** and **Arctic**, and `pmax=0.65, ctMin=0, ctMax=40` for **Common** and **Custom**. CTmin/CTmax are also identical across all four variants. Variant differentiation comes only from Arrhenius optimal-temp parameters, not from Pmax or thermal lethal limits.
+**Question**: is this intentional ("specialists with same Pmax, different Topt") or a copy-paste leftover from when Tropical had its own value? The doc tables in [csv-formats.md](../docs/csv-formats.md) and the `SimSpecies.CreateHexapod`/`CreateSheplik` factories (which set CTmin=-30/CTmax=20 for Arctic, CTmin=0/CTmax=80 for Tropical) imply per-variant differentiation.
+**Fix**: review intent. Either set explicit Pmax and CT-limits per variant in `GetVariantThermalDefaults`, or document that the Pmax/CT values are deliberately uniform here while only Arrhenius params differ.
+
+### A16. `SimulationRunner.GetSummary` excludes zero values from `MinTier1Pop`/`MinTier2Pop` `LOW` (semantic surprise)
+Source: Code audit 2026-05-01.
+[SimulationRunner.cs:876–878](../Assets/scripts/Simulation/SimulationRunner.cs): `if (r.Tier1Pop < minT1 && r.Tier1Pop >= 1) minT1 = r.Tier1Pop;` — when a tier hits zero the day count is excluded from the min calculation, so a tier that crashes still reports `MinTier*Pop` as the lowest *non-zero* day's population, not the actual minimum. The condition `>= 1` was likely intended to skip pre-population days but it also skips post-extinction days.
+**Fix**: either accept the semantic and rename the column to `MinNonZeroPop`, or drop the `>= 1` guard so zeros count and let downstream code distinguish "pre-init" from "extinct" via other signals. Either is fine; the current behaviour is undocumented.
 
 ---
 
@@ -175,22 +197,17 @@ Brian's current CSVs use 50 scenarios/run; reviewers may push for 100+ depending
 
 ## D. Social / meeting items
 
-### D1. Reply to Brian Mail 6 `URGENT`
-Draft written earlier this session, not yet sent. Confirms Monday 2 PM meeting, acknowledges Pmax finding, commits to applying `* Pmax` after Condition.
+### D1. ~~Reply to Brian Mail 6~~ `STALE — historical only`
+Originally `URGENT`. Dated April 2025; obsolete relative to current date (2026-05-01). Resolved by time — see commit history for the actual reply / v9 Pmax fix landing.
 
-### D2. Monday meeting with Brian + Tarik Gouhier `URGENT`
-Agenda items to bring:
-- Pmax fix landed in v9 (can show).
-- Processing-order bug (A3) — decision needed on snapshot vs shuffle.
-- Pooled-FedRate finding (A1) — new since last conversation, needs Brian's awareness.
-- Hidden-warming issue (A2) — affects how we interpret existing Phase I data.
-- Phase I–VI runs may need re-running post-fixes.
+### D2. ~~Monday meeting with Brian + Tarik Gouhier (Apr 27)~~ `STALE — historical only`
+Originally `URGENT`. Apr 27, 2025 has passed; agenda items have either been resolved (Pmax in v9, A1 pooled FedRate in v11, A2 WarmingBias in commit `e4119fe`, A3 superseded by v10) or rolled into D3.
 
 ### D3. Decide which Phase I–VI runs to re-run post-fixes `HIGH`
-After A1, A2, A3 are fixed, some earlier runs' interpretations may shift. Need to decide: all of Phase I–VI, or only the phases where multi-predator / climate-trend / large-N-species interactions dominate?
+After A1, A2, A3 are fixed, some earlier runs' interpretations may shift. Need to decide: all of Phase I–VI, or only the phases where multi-predator / climate-trend / large-N-species interactions dominate? Now that A1/A2/A3 are all resolved (v10/v11/commit `e4119fe`), this is unblocked but still open.
 
-### D4. Commit the two review documents `LOW`
-[`docs/simulation-review.md`](./simulation-review.md) and [`docs/simulation-review-marine-feedback.md`](./simulation-review-marine-feedback.md) are still uncommitted. Separate follow-up commit from the v9 Pmax fix.
+### D4. ~~Commit the two review documents~~ `RESOLVED — commit 04db349`
+Both `docs/simulation-review.md` and `docs/simulation-review-marine-feedback.md` are committed (commit `04db349`, "Add simulation review, marine-scientist feedback, and pending list").
 
 ---
 
@@ -202,29 +219,52 @@ No automated tests anywhere in the simulator. Property-based tests would catch r
 **Action**: Unity Test Framework package is already included. Add a small test class.
 
 ### E2. Remove `_thermalDeathAccumulators` dead field
-Declared at [EcosystemSimulator.cs:88](../Assets/scripts/Simulation/EcosystemSimulator.cs), never used (thermal death is binary, no fractional accumulation needed).
-**Action**: delete the field. Trivial.
+Declared at [EcosystemSimulator.cs:153](../Assets/scripts/Simulation/EcosystemSimulator.cs), cleared at line 438, initialized per species at line 447. Never written or read elsewhere — thermal death is binary, no fractional accumulation needed. Comment at line 223 already calls it dead code: "_thermalDeathAccumulators is unused dead code in v11.1 — no accessor."
+**Action**: delete the field, the clear, and the per-species init. Trivial.
 
 ### E3. Align spec doc with code for FinalPerformance use
 The TINYSEA spec doc (now deleted) claimed reproduction uses FinalPerformance. New [`docs/simulation-spec.md`](./simulation-spec.md) already reflects v8/v9 reality, but if any external reference docs still claim the old behaviour, they need updating.
+
+### E4. Remove `SimSpecies.MIN_FINAL_PERF_FOR_NATURAL_DEATH` dead constant `LOW`
+Source: Code audit 2026-05-01.
+[SimSpecies.cs:45](../Assets/scripts/Simulation/SimSpecies.cs) declares `public const float MIN_FINAL_PERF_FOR_NATURAL_DEATH = 0.1f;` with the comment "Floor to prevent division by zero". A repo-wide grep finds zero references to it anywhere else. Stale relic from before v6, when natural death was performance-scaled. v6 changed natural death to flat-rate (see [EcosystemSimulator.cs:1212](../Assets/scripts/Simulation/EcosystemSimulator.cs) "Flat rate — natural death is independent of performance"), so the floor became dead.
+**Action**: delete the constant. Trivial.
+
+### E5. `SimulationRunner.SaveToFile` hardcodes `tinysea_v6_` filename prefix `LOW`
+Source: Code audit 2026-05-01.
+[SimulationRunner.cs:829](../Assets/scripts/Simulation/SimulationRunner.cs) writes `string filename = $"tinysea_v6_{timestamp}{crashSuffix}.csv";` — the prefix is the literal string `tinysea_v6_` despite the simulator now being at v12. A repo-wide grep finds `SaveToFile` is declared but never called: main flows (`SimulationController` and `BulkSimulationController`) all go through `ToCsvInternal` + `WebGLZipDownload`/`ServerUpload`, so the path is unused.
+**Action**: either delete `SaveToFile` (after confirming no offline editor scripts call it) or update the prefix to `tinysea_` (no version) so it stops lying. Trivial.
+
+### E6. v11.1 left `_thermalDeathAccumulators` referenced in code despite being dead `LOW` (consolidates with E2)
+Same field as E2. Declared at [EcosystemSimulator.cs:153](../Assets/scripts/Simulation/EcosystemSimulator.cs); cleared in `ClearAccumulators` (line ~438); initialized per species in `InitializeAccumulators` (line ~447). Comment at line 223 acknowledges it's dead. Listed as a separate item only because the dead-code reference is surfaced via initializer wiring, not just declaration; eliminating it requires touching three sites, not one. Resolves with E2.
 
 ---
 
 ## Quick priority ranking (by ship impact)
 
-1. **Local v11 testing** — repeat single-species, equal-HE, and mixed-HE multi-predator regression / sanity / functional tests on the v11 build. Verify single-species and equal-HE scenarios are bit-identical to v10; mixed-HE runs now show specialist-vs-generalist signal.
-2. ~~**A1 Pooled FedRate**~~ — **RESOLVED** in v11.
-3. ~~**A2 WarmingBias hidden warming**~~ — **DONE** (commit `e4119fe`).
-4. ~~**A3 Processing-order bug**~~ — **SUPERSEDED** by v10 (soft-cap-on-births deleted).
-5. ~~**B6 Prey FedRate always 1.0**~~ — **RESOLVED** in v10.
-6. ~~**A9 Newborn condition fixed at 0.5**~~ — **RESOLVED** in v10.
-7. **D1 Email to Brian + D2 Monday (Apr 27) meeting** — send link to v10 + v11 macOS build for validation.
-8. **B1 Acclimation methods statement** — cheap, expected by reviewers (manuscript text only, not code).
-9. **C1 Sensitivity analysis grid** — standard supplementary material.
-10. **A5 Validator for ReproThreshold > DeathThreshold** — one-liner.
-11. **A7 Delete NO_PREDATOR_PENALTY** — one-liner; or formally re-justify with citation.
-12. **W1–W4 watchpoints** — observe in v10 + v11 prototype, decide on follow-ups for v12+.
-13. Everything else.
+1. **A13 AvgCondition fields never written** — `MEDIUM` data-integrity bug; `=== CONDITION STATS ===` block in every aggregate.csv is currently zeros. Fix before next bulk run handed off for analysis.
+2. **B1 Acclimation methods statement** — cheap, expected by reviewers (manuscript text only, not code).
+3. **C1 Sensitivity analysis grid** — standard supplementary material.
+4. **A5 Validator for ReproThreshold > DeathThreshold** — one-liner.
+5. **A7 Delete NO_PREDATOR_PENALTY** — one-liner; or formally re-justify with citation.
+6. **D3 Decide which Phase I–VI runs to re-run** — unblocked now that A1/A2/A3 are resolved; needs a call.
+7. **W1–W4 watchpoints** — observe in v10 + v11 prototype, decide on follow-ups for v12+.
+8. **C2 ODD protocol methods section** — required by MEE for simulation papers.
+9. **B2 / B3 / B7 design statements** — methods-section text only.
+10. **E2 / E4 / E5 / E6 hygiene** — trivial dead-code deletions; bundle into one cleanup commit.
+11. **A14 / A15 / A16** — `LOW`, defer to a sweep with E-section cleanup.
+12. **A4 / A6 / A10 / A11** — `MEDIUM` / `LOW` simulator-internals; address only if observed in runs.
+13. **A12 docstring fix** — one-line edit when next touching `TemperatureCalculator.cs`.
+14. **D4 commit review documents** — bookkeeping.
+
+### Resolved (kept here for traceability)
+- ~~**A1 Pooled FedRate**~~ — **RESOLVED** in v11.
+- ~~**A2 WarmingBias hidden warming**~~ — **DONE** (commit `e4119fe`).
+- ~~**A3 Processing-order bug**~~ — **SUPERSEDED** by v10 (soft-cap-on-births deleted).
+- ~~**B6 Prey FedRate always 1.0**~~ — **RESOLVED** in v10.
+- ~~**A9 Newborn condition fixed at 0.5**~~ — **RESOLVED** in v10.
+- ~~**D1 Reply to Brian Mail 6**~~ — stale (Apr 2025).
+- ~~**D2 Monday meeting (Apr 27)**~~ — stale (Apr 2025).
 
 ## Tier 2 carrying capacity — REJECTED
 Brian's Mail 9 asked whether predators should have an explicit cap as a fixed % of Tier 1 (10% Lindeman, 15–20% gameplay). **Decision: no.** Predators are limited via the food chain (Tier 1 → Holling II → FedRate → Condition → reproduction). Adding an explicit Tier 2 cap would double-count and obscure the emergent trophic dynamic. Reply this in the next email to Brian.

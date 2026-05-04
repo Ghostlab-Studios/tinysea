@@ -21,7 +21,7 @@ flowchart LR
 
 | Component | Formula | Behavior |
 |-----------|---------|----------|
-| Seasonal | `sin(2·π · day / 365) · SeasonalAmplitude` | Coldest at `day = 0`, warmest around `day = 182`. |
+| Seasonal | `sin(2·π · day / 365) · SeasonalAmplitude` | Zero offset at `day = 0` (mean temperature). Warmest around `day ≈ 91`; zero again at `day ≈ 182`; coldest around `day ≈ 273`. (The inline `// coldest at day 0, warmest at day 182` comment in `TemperatureCalculator.cs:68` is stale — see pending-list A12.) |
 | Climate trend | `ClimateTrendPerYear × (day / 365f)` | Linear in simulated years. Cast to float before multiplication. |
 | Interannual | `cold = uniform(-VariabilityMagnitude, 0)`; `warm = uniform(0, VariabilityMagnitude × WarmingBias)`; `biasMean = VariabilityMagnitude × (WarmingBias − 1) / 4`; `variation = (cold + warm) / 2 − biasMean`; cached by year in `_yearVariations`. | Same value used for every day in a given year. **Zero-mean by construction**: `WarmingBias` controls only the *shape* of the distribution (warm tail wider than cold tail when `bias > 1`); long-term trend is owned solely by `ClimateTrendPerYear`. |
 | Daily raw | `newRandom = uniform(-1, +1) × currentRandomness` where `currentRandomness = BaseRandomness + RandomnessGrowthRate × year`. | Growing noise over time. |

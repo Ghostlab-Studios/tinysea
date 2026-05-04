@@ -18,15 +18,15 @@ flowchart TD
     Holling --> Actual["actualDemand = rawDemand × huntingSuccess"]
     Actual --> Eaten["totalEaten = min(availablePrey, Σ actualDemand)"]
     Eaten --> ScarcityT2["scarcityFactor (v11)<br/>= totalEaten / totalActualDemand<br/>(1.0 when prey abundant)"]
-    ScarcityT2 --> FedRateT2["FedRate_i (Tier 2, v11)<br/>= min(1, huntingSuccess_i × scarcityFactor)<br/>(per-predator; LastFedRateT2 = pop-weighted avg)"]
+    ScarcityT2 --> FedRateT2["FedRate_i (Tier 2, v11)<br/>= min(1, huntingSuccess_i × scarcityFactor)<br/>(per-predator; LastFedRateT2 = pop-weighted avg)<br/>v12: LastFedRateBySpecies[FullName] = FedRate_i,<br/>LastEatenBySpecies[preyFullName] += wholeDeaths"]
 
     Raw --> RFP["RawFinalPerformance<br/>= Raw × FedRate<br/>(Condition drain target)"]
     FedRateT1 --> RFP
     FedRateT2 --> RFP
 
     RFP --> CondStep{"Condition vs target<br/>(pmaxSafe = max(Pmax, 1e-4))"}
-    CondStep -- "Cond > target" --> Drain["severity = (1 - target)²<br/>effectiveDrain = ConditionDrainRate · (1 + severity) / pmaxSafe<br/>Condition -= (Condition - target) × effectiveDrain"]
-    CondStep -- "Cond < target" --> Recov["boost = target²<br/>effectiveRecovery = ConditionRecoveryRate · (1 + boost) × pmaxSafe<br/>Condition += (target - Condition) × effectiveRecovery"]
+    CondStep -- "Cond &gt; target" --> Drain["severity = (1 − target)²<br/>effectiveDrain = ConditionDrainRate · (1 + severity) / pmaxSafe<br/>Condition −= (Condition − target) × effectiveDrain"]
+    CondStep -- "Cond ≤ target" --> Recov["boost = target²<br/>effectiveRecovery = ConditionRecoveryRate · (1 + boost) × pmaxSafe<br/>Condition += (target − Condition) × effectiveRecovery"]
     Drain --> Clamp["Condition = clamp(Condition, 0, 1)"]
     Recov --> Clamp
     Clamp --> FP["FinalPerformance<br/>= ThermalPerf × FedRate<br/>(logging only)"]

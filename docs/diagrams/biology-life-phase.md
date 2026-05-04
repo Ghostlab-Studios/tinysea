@@ -21,10 +21,10 @@ flowchart TD
     T1NoPred -- no --> BAcc
     NPP --> BAcc["_birthAccumulators[sp.FullName] += births<br/>accumulated = _birthAccumulators[sp.FullName]"]
     BAcc --> Whole["wholeBirths = floor(accumulated)<br/>residual = accumulated − wholeBirths<br/>_birthAccumulators[sp.FullName] = residual"]
-    Whole --> AddPop["sp.Population += wholeBirths<br/>(newborns inherit group Condition; v10 — no explicit dilution step,<br/>population-weighted average is unchanged when newborns match group)"]
+    Whole --> AddPop["sp.Population += wholeBirths<br/>LastBirthsT1/T2 += wholeBirths<br/>v12: LastBirthsBySpecies[FullName] += wholeBirths<br/>(newborns inherit group Condition; v10 — no explicit dilution step,<br/>population-weighted average is unchanged when newborns match group)"]
     AddPop --> S9
     SkipRepro --> S9
-    S9["Step 9: Natural Death<br/>rate = NaturalDeathRate ± uniform(-NaturalDeathVariance, +NaturalDeathVariance)<br/>rate = max(0, rate)<br/>rawDeaths = Pop × rate × BiologyStep"] --> NAcc["_naturalDeathAccumulators[sp.FullName] += rawDeaths<br/>apply floor(accum) whole deaths"]
+    S9["Step 9: Natural Death<br/>rate = NaturalDeathRate ± uniform(-NaturalDeathVariance, +NaturalDeathVariance)<br/>rate = max(0, rate)<br/>rawDeaths = Pop × rate × BiologyStep"] --> NAcc["_naturalDeathAccumulators[sp.FullName] += rawDeaths<br/>wholeDeaths = (long)floor(accum)<br/>residual carries to next day<br/>v12: LastNaturalDeathsBySpecies[FullName] += wholeDeaths"]
     NAcc --> Next[next species]
 ```
 

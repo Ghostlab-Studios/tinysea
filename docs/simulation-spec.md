@@ -117,7 +117,7 @@ then clamped to `[MinTemp, MaxTemp]`.
 
 | Component | Formula | Notes |
 |-----------|---------|-------|
-| Seasonal | `sin(2π · day / 365) · SeasonalAmplitude` | Coldest at `day = 0`, warmest at `day ≈ 182`. `DAYS_PER_YEAR` is a constant 365. |
+| Seasonal | `sin(2π · day / 365) · SeasonalAmplitude` | `T(0) = 0` (mean); warmest at `day ≈ 91`, coldest at `day ≈ 273`. `DAYS_PER_YEAR` is a constant 365. Note: [`TemperatureCalculator.cs:68`](../Assets/scripts/Simulation/TemperatureCalculator.cs) carries an inline summary comment that still describes the pre-fix phase ("coldest at day 0, warmest at day 182") — the formula at line 72 is authoritative; the comment is stale (pending-list A12). |
 | Climate trend | `ClimateTrendPerYear · (day / 365)` | Linear in simulated years. |
 | Interannual variation | Per-year random offset, cached in `_yearVariations`. Same value for all days of that year. Formula: `(cold + warm) / 2 − biasMean`, where `cold = uniform(−VariabilityMagnitude, 0)`, `warm = uniform(0, VariabilityMagnitude · WarmingBias)`, and `biasMean = VariabilityMagnitude · (WarmingBias − 1) / 4`. The `biasMean` subtraction zero-centers the distribution so `WarmingBias` only controls the *shape* (warm tail wider when `bias > 1`); long-term warming/cooling trend is owned solely by `ClimateTrendPerYear`. Disabled if `UseInterannualVariation = false`. |
 | Daily variation | `R = BaseRandomness + RandomnessGrowthRate · year`; raw draw `uniform(−R, +R)`. If `UseAutocorrelation` (default true): `v_today = 0.7 · v_yesterday + 0.3 · v_new`; stored in `_previousDayVariation`. |
@@ -316,7 +316,7 @@ Each species: `Pop = Math.Round(Pop, MidpointRounding.AwayFromZero)`. Population
 ## 5. Crash detection (`EcosystemSimulator.HasCrashed`)
 
 **Source of truth**: a scenario is crashed if and only if the **total population
-(Tier 1 + Tier 2) is exactly 0** ([EcosystemSimulator.cs:1252-1256](../Assets/scripts/Simulation/EcosystemSimulator.cs)):
+(Tier 1 + Tier 2) is exactly 0** ([EcosystemSimulator.cs:1319-1323](../Assets/scripts/Simulation/EcosystemSimulator.cs)):
 
 ```csharp
 public bool HasCrashed()
@@ -331,7 +331,7 @@ guard in the crash predicate itself. A scenario that starts with only one tier
 populated will report a crash as soon as that tier reaches zero — this is
 intentional and considered correct.
 
-`GetCrashedTier()` returns:
+`GetCrashedTier()` ([EcosystemSimulator.cs:1325-1331](../Assets/scripts/Simulation/EcosystemSimulator.cs)) returns:
 - `1` — Tier 1 is empty (and Tier 1 was populated at init).
 - `2` — Tier 2 is empty (and Tier 2 was populated at init).
 - `0` — both tiers empty (or other ambiguous state).
@@ -340,9 +340,13 @@ intentional and considered correct.
 The fields `_tier1WasPopulated` / `_tier2WasPopulated` are tracked at init solely
 to drive `GetCrashedTier`'s tier attribution; they do not gate `HasCrashed`.
 
-`MIN_ALIVE_POP = 1.0f` ([EcosystemSimulator.cs:218](../Assets/scripts/Simulation/EcosystemSimulator.cs)) is used
-in Step 8 as the no-predator-penalty threshold (when computing Tier 1 births),
-**not** in crash detection.
+`MIN_ALIVE_POP = 1.0f` ([EcosystemSimulator.cs:244](../Assets/scripts/Simulation/EcosystemSimulator.cs))
+is used as a "live species" filter throughout the biology loop — **not** in
+crash detection. Use sites:
+- Step 2 feeding: filter live predator/prey lists ([lines 667-668](../Assets/scripts/Simulation/EcosystemSimulator.cs)) and skip dead Tier 1 species when assigning food-pool FedRate ([line 702](../Assets/scripts/Simulation/EcosystemSimulator.cs)).
+- Step 4 (Update Condition), Step 6 (Thermal Death), Step 7 (Condition Death): early-return guards ([lines 889, 933, 989](../Assets/scripts/Simulation/EcosystemSimulator.cs); the condition-death guard lives in `ApplyConditionDeath`). Step 9 (Natural Death) uses a separate `if (sp.Population <= 0f)` guard at [line 1203](../Assets/scripts/Simulation/EcosystemSimulator.cs), not `MIN_ALIVE_POP`.
+- Step 8 reproduction: Tier 1 no-predator-penalty threshold (`tier2Pop < MIN_ALIVE_POP` at [line 1141](../Assets/scripts/Simulation/EcosystemSimulator.cs)).
+- `ComputeAverageCondition`: skip dead species in the population-weighted mean ([line 1262](../Assets/scripts/Simulation/EcosystemSimulator.cs)).
 
 ## 6. Accumulators
 
@@ -355,7 +359,7 @@ Four `Dictionary<string, float>` keyed by `SimSpecies.FullName` (= `"{Name}_{Var
 | `_naturalDeathAccumulators` | 9 | Fractional natural deaths. |
 | `_conditionDeathAccumulators` | 7 | Fractional condition deaths. |
 
-`_thermalDeathAccumulators` exists as a field but is not used by the current thermal-death logic (which is binary/instant).
+`_thermalDeathAccumulators` exists as a field but is not used by the current thermal-death logic (which is binary/instant). See [§10](#10-known-dead--inert-code-paths) for details.
 
 Per-day snapshots of accumulator totals are written to the CSV via tier-level columns `BirthAccumT1/T2`, `NaturalDeathAccumT1/T2`, `ConditionDeathAccumT1/T2`, `PredationAccumT1`.
 
@@ -427,17 +431,18 @@ column entirely.
 - **FinalPerformance is dead code path in biology.** Still computed for CSV output; not consumed by any downstream step. Pre-v8 history preserved for continuity.
 - **All random draws use the seeded `_rng`** in `EcosystemSimulator` (for hunting/natural-death variance) or `TemperatureCalculator._rng` (for temperature noise). Reproducibility depends on `BaseSeed + scenarioIndex`.
 - **First-mover bias in Step 8 carrying capacity** — eliminated in v10 by deleting the soft-cap-on-births block (the live `tierPop` read no longer exists).
-- **Per-predator Tier 2 FedRate** (v11): each predator's FedRate reflects its own hunting effort (scaled by overall scarcity), not a pooled group average. Specialist hunters get higher FedRate than generalists in mixed-HE runs. Reduces to v10 pooled formula in single-predator-species runs.
+- **Per-predator Tier 2 FedRate** (v11): each predator's FedRate reflects its own hunting effort (scaled by overall scarcity), not a pooled group average. Specialist hunters get higher FedRate than generalists in mixed-HE runs. Reduces to v10 pooled formula in single-predator-species runs (no behaviour change for single-species runs by design).
+- **Newborns inherit parent group Condition** (v10). The parent's current Condition is already a lagged integral of recent food density (Tier 1) or hunting success (Tier 2), so it encodes recent provisioning capacity. Multiplying by today's `FedRate` would double-count the same signal. Newborn vulnerability emerges from same-drain-no-head-start dynamics, not from a starting-Condition penalty. Source: [`EcosystemSimulator.cs:97-100`](../Assets/scripts/Simulation/EcosystemSimulator.cs).
 - **Thermal death is terminal.** Suboptimal-but-survivable temperatures channel through Condition; the lethal cliff is binary.
 
 ## 8. Version history recorded in source comments
 
 | Version | Change |
 |---------|--------|
-| v6 | Added Condition (health) system with drain/recovery. Split thermal death into instant (lethal) + condition (chronic). Decoupled natural death from performance (flat rate). Crash detection uses total population. Scenario length is days, not years. |
-| v7 | Replaced dual hunting system with single Holling Type II. FedRate has no floor (zero prey = zero efficiency). |
-| v8 | Reproduction moved off `FinalPerformance` onto `Condition`. Two-region continuous formula around `ReproThreshold`. Side effect: Pmax dropped out of reproduction and Condition pathways. |
-| v9 | Re-wired Pmax into: reproduction birth multiplier, Condition drain divisor, Condition recovery multiplier. Condition target and thresholds unchanged. |
+| v6 | Added Condition (health) system with drain/recovery. Split thermal death into instant (lethal) + condition (chronic) — *why: the previous binary cliff was unrealistic; chronic stress mortality scales continuously with severity (Casini et al. 2016, Dutil & Lambert 2000, see [`EcosystemSimulator.cs:961-983`](../Assets/scripts/Simulation/EcosystemSimulator.cs))*. Decoupled natural death from performance (flat rate) — *background mortality (old age, accidents, disease) is independent of thermal stress*. Crash detection uses total population. Scenario length is days, not years. |
+| v7 | Replaced dual hunting system (hunting bonus + scarcity multiplier) with single Holling Type II Functional Response (Holling 1959) — *why: single, scientifically-grounded curve replaces ad-hoc tuning; half-saturation derived from each species' base efficiency, no arbitrary parameters*. FedRate has no floor (zero prey = zero efficiency = true starvation). |
+| v8 | Reproduction moved off `FinalPerformance` onto `Condition` — *why: animals with energy reserves reproduce in all seasons (just less in harsh conditions); previous performance-driven cutoff was a hard cliff that produced unrealistic seasonal silences ([`EcosystemSimulator.cs:61-66`](../Assets/scripts/Simulation/EcosystemSimulator.cs))*. Two-region continuous formula around `ReproThreshold`. Side effect: Pmax dropped out of reproduction and Condition pathways (fixed in v9). |
+| v9 | Re-wired Pmax into: reproduction birth multiplier, Condition drain divisor, Condition recovery multiplier — *why: keep Condition's [0, 1] semantics species-agnostic (so thresholds need no per-species tuning) while still letting Pmax express specialist-vs-generalist dynamics. Specialists (high Pmax) convert health to offspring more efficiently, resist chronic stress better, and rebound faster ([`EcosystemSimulator.cs:69-77`](../Assets/scripts/Simulation/EcosystemSimulator.cs))*. Condition target and thresholds unchanged. |
 | v10 | Carrying capacity reframed as a shared food/resource pool driving Tier 1 FedRate (linear: `min(1, HE × food_density)`). Soft-cap-on-births block deleted from `ApplyReproduction` (processing-order bug eliminated as side effect). `HuntingEfficiency` for Tier 1 now meaningful as resource-extraction efficiency. `NEWBORN_CONDITION` constant removed — newborns inherit parent group Condition. CSV adds `FedRateT1`, `FoodDensityT1`, `model_version`. Pooled Tier 2 FedRate intentionally untouched (v11). |
 | v11 | Per-predator Tier 2 FedRate (review item A1). `fedRate_i = min(1, huntingSuccess_i × scarcityFactor)` where `scarcityFactor = totalEaten / totalActualDemand`. Replaces the pooled `fedRate = totalEaten / totalRawDemand` that erased per-species competitive signal. `LastFedRateT2` is now a population-weighted average across predators. Reduces to v10 formula in single-predator-species runs. `model_version` bumped to `v11-per-predator-fedrate`. |
 | v11.1 | Removed `UseCarryingCapacity` toggle from `SimulationConfig`, `BulkBatchConfig`, `EcosystemSimulator`, `ScenarioResult`. Carrying capacity is always on. Old bulk CSVs that include `use_carrying_cap` parse with a deprecation warning and the value is ignored. `GenerateTemplate()` omits the column and uses `seasonal_amp = 5`, `condition_drain_rate = 0.15`. `IsValid()` hard-rejects non-positive cap. `model_version` bumped to `v11.1-cap-always-on`. |
@@ -445,7 +450,7 @@ column entirely.
 
 ## 9. Fallback defaults (used only if no `RunSpeciesList` is provided)
 
-`SimSpecies.CreateHexapod(variant, pop)` and `CreateSheplik(variant, pop)` produce hardcoded species for testing:
+`SimSpecies.CreateHexapod(variant, pop)` ([SimSpecies.cs:125-177](../Assets/scripts/Simulation/SimSpecies.cs)) and `CreateSheplik(variant, pop)` ([SimSpecies.cs:182-233](../Assets/scripts/Simulation/SimSpecies.cs)) produce hardcoded species for testing. Hexapod and Sheplik share identical thermal parameters per variant; only the trophic params (eating, repro, death rates) differ.
 
 | Variant | Topt (°C) | Pmax | CTmin (°C) | CTmax (°C) | LowerBound (°C) | UpperBound (°C) |
 |---------|-----------|------|------------|------------|-----------------|-----------------|
@@ -453,4 +458,26 @@ column entirely.
 | Common | 20 | 0.9 | −5 | 40 | 12 | 22 |
 | Tropical | 35.5 | 1.0 | 0 | 80 | 27 | 37 |
 
-Both species share `ArrhenBreadth = 5273.15`, `ArrhenLower = 10273.15`, `ArrhenUpper = 21273.15`. `Hexapod` is Tier 1 with `ReproMult = 0.45`, `DeathRate = 0.6`; `Sheplik` is Tier 2 with `ReproMult = 0.1`, `DeathRate = 0.3`, `EatingAmount = 1.5`, `HuntingEfficiency = 0.75`. Production runs always pass a `RunSpeciesList` and never hit these defaults.
+Both species share `ArrhenBreadth = 5273.15`, `ArrhenLower = 10273.15`, `ArrhenUpper = 21273.15`. `DeathThreshold = 0.3` and `ReproThreshold = 0.25` are set on the species class (apply to all three variants); `NaturalDeathVariance` tracks the per-tier default below.
+
+Tier-specific defaults:
+- `Hexapod` (Tier 1): `ReproMult = 0.45`, `DeathRate = 0.6`, `NaturalDeathRate = 0.02` (2%/day), `NaturalDeathVariance = 0.01`, `EatingAmount = 0` (Tier 1 doesn't predate), `HuntingEfficiency = 1.0` (perfect plankton-style food-pool extraction; v10 semantic).
+- `Sheplik` (Tier 2): `ReproMult = 0.1` (4.5× slower than Tier 1 — comment at [SimSpecies.cs:191](../Assets/scripts/Simulation/SimSpecies.cs)), `DeathRate = 0.3`, `NaturalDeathRate = 0.01` (1%/day; allometric — larger predators have lower background mortality), `NaturalDeathVariance = 0.005`, `EatingAmount = 1.5`, `HuntingEfficiency = 0.75` (75% base success at NORMAL_PREY_RATIO), `HuntingVariance = 0.15`.
+
+Production runs always pass a `RunSpeciesList` and never hit these defaults.
+
+## 10. Known dead / inert code paths
+
+Surprises in the source. Listed so future maintainers don't waste time tracing apparent control flow that turns out to be no-ops, and so that real data-integrity bugs aren't hidden among the inert paths.
+
+### Inert (declared but never used)
+
+- **`_thermalDeathAccumulators`** ([EcosystemSimulator.cs:153](../Assets/scripts/Simulation/EcosystemSimulator.cs)) — the dictionary is declared, cleared in `ClearAccumulators`, and initialised per species, but it is never **written to or read from** anywhere else. Step 6 thermal death is binary/instant: when `RawThermalPerformance == 0`, the entire population is killed in one shot ([EcosystemSimulator.cs:946-948](../Assets/scripts/Simulation/EcosystemSimulator.cs)). There is no fractional-death pathway to accumulate. The comment block at lines 222-223 explicitly notes "_thermalDeathAccumulators is unused dead code in v11.1 — no accessor." Pending-list E2.
+- **`SimSpecies.MIN_FINAL_PERF_FOR_NATURAL_DEATH = 0.1f`** ([SimSpecies.cs:45](../Assets/scripts/Simulation/SimSpecies.cs)) — declared `public const`, never referenced anywhere in the codebase. A relic from pre-v6 when natural death was scaled by performance and needed a divide-by-zero guard. v6 made natural death flat-rate ([EcosystemSimulator.cs:1212](../Assets/scripts/Simulation/EcosystemSimulator.cs) — comment "Flat rate — natural death is independent of performance"). The constant should probably be deleted; left in place for binary compatibility.
+- **`SimulationRunner.SaveToFile`** ([SimulationRunner.cs:820-834](../Assets/scripts/Simulation/SimulationRunner.cs)) — editor-only single-file save with a hardcoded `tinysea_v6_` filename prefix. Both production paths (single-run and bulk) emit CSVs through `ToCsvInternal` + `WebGLZipDownload`/server upload, never through `SaveToFile`. The `v6_` prefix is stale (current model is v12) but functionally inert.
+
+### Real data-integrity bug (NOT inert — emits zeros into CSV output)
+
+- **`ScenarioResult.AvgConditionT1` / `AvgConditionT2` / `FinalConditionT1` / `FinalConditionT2`** ([ScenarioResult.cs:57-60](../Assets/scripts/Simulation/DataStructure/ScenarioResult.cs)) — these per-scenario fields are **read** in `AggregateResults.CalculateAggregates` ([ScenarioResult.cs:315-316, 331-332, 345-346, 355-356](../Assets/scripts/Simulation/DataStructure/ScenarioResult.cs)) to compute the run-level grand means. But `SimulationRunner.ToScenarioResult` ([SimulationRunner.cs:895-936](../Assets/scripts/Simulation/SimulationRunner.cs)) **never assigns them** — they default to 0. As a result the aggregate CSV's `=== CONDITION STATS ===` block ([ScenarioResult.cs:658-662](../Assets/scripts/Simulation/DataStructure/ScenarioResult.cs)) always emits `0.000` for all four condition averages regardless of actual scenario state. The per-tier `EcosystemSimulator.AvgConditionT1/T2` snapshot (population-weighted, computed daily) is captured in the per-day CSV but is not propagated to the per-scenario aggregate.
+  - Workaround: derive Condition stats from the per-species v12 sections (`PER-SPECIES FINAL YEAR METRICS.MeanCondition`) which **are** populated correctly.
+  - Fix would require copying `Ecosystem.AvgConditionT1/T2` (final-day snapshot) and a separate full-run mean of `AvgConditionT1/T2` from `_records` into the scenario result.

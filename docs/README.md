@@ -39,6 +39,7 @@ If you are changing behaviour, edit the C# first, then update the doc. All paths
 | Temperature model | `Assets/scripts/Simulation/TemperatureCalculator.cs` |
 | Scenario orchestration & CSV output | `Assets/scripts/Simulation/SimulationRunner.cs` |
 | Per-scenario result / stats | `Assets/scripts/Simulation/DataStructure/ScenarioResult.cs` |
+| Config export (`ConfigExporter`) | `Assets/scripts/Simulation/DataStructure/ScenarioResult.cs` (defined inline at the bottom of that file, line ~961 — not a standalone .cs) |
 | Scenario config schema (Inspector) | `Assets/scripts/Simulation/DataStructure/SimulationConfig.cs` |
 | Species list runtime container | `Assets/scripts/Simulation/DataStructure/RunSpeciesList.cs` |
 | Bulk CSV row schema (1 row = 1 run) | `Assets/scripts/Simulation/BulkBatchConfig.cs` |

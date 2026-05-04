@@ -8,11 +8,11 @@ flowchart TD
     Run --> Agg["aggregate.csv<br/>(one per run)"]
     Run --> Cfg["config.csv<br/>(one per run)"]
 
-    PerScn --> PH["#config: header<br/>(20 lines: model_version (v12),<br/>days, scenarios, seed, biology step,<br/>11 temp params, carrying cap, drain/recovery)"]
+    PerScn --> PH["#config: header<br/>(19 #config: lines + 1 separator '#':<br/>model_version (v12), days, scenarios,<br/>scenario_index, seed, biology step,<br/>10 temp params, carrying_capacity_tier1,<br/>condition_drain_rate, condition_recovery_rate)<br/>see SimulationRunner.cs:658-676"]
     PerScn --> PS["#species: table<br/>(1 header row + 1 row per species<br/>with 26 columns inc. both K and C<br/>for temperature fields)"]
     PerScn --> PD["Daily data rows<br/>(StepRecord.CsvHeader/ToCsvLine)<br/>Day..ReproScaleT2 per day +<br/>17 per-species columns × N species (v12)"]
-    PerScn --> PSum["#summary: statistics block<br/>Mean/Max/Min/StdDev across days<br/>for each PopColumn"]
-    PerScn --> PExt["#extinction: per-variant timing<br/>day reached zero, or -1 if survived"]
+    PerScn --> PSum["#summary: statistics block (v12.2)<br/>3 header rows: Statistic / Variant / Tier<br/>then Mean/Max/Min/StdDev rows<br/>across Tier1Pop, Tier2Pop, per-species cols"]
+    PerScn --> PExt["#extinction: per-species timing (v12.2)<br/>Species, Variant, Tier, DayReachedZero<br/>(-1 = never extinct in this scenario)"]
 
     Agg --> AH["=== TINYSEA AGGREGATE RESULTS ===<br/># metadata (generated timestamp, config summary)"]
     Agg --> AS["=== SUMMARY ===<br/>Scenarios Run, Survived, Crashed,<br/>Crash Rate, Avg Crash Day"]
@@ -22,18 +22,19 @@ flowchart TD
     Agg --> APerFY["=== PER-SPECIES FINAL YEAR METRICS === (v12)<br/>MeanCondition/BirthRate/PopCv/MeanPop<br/>w/ Mean, StdDev, SurvivedMean per species"]
     Agg --> APerFR["=== PER-SPECIES FULL-RUN METRICS === (v12)<br/>Same metrics over entire scenario"]
     Agg --> APerST["=== PER-SPECIES STABILITY METRICS === (v12)<br/>Min/Max/FinalPop, ExtinctionRate,<br/>MeanExtinctionDay, CrashRate, MeanCrashDay"]
-    Agg --> AInd["=== INDIVIDUAL SCENARIOS ===<br/>one row per scenario"]
-    Agg --> AGrand["=== SUMMARY STATISTICS<br/>(Grand Mean Across All Runs) ===<br/>GrandMean of Mean/Max/Min/StdDev"]
-    Agg --> AExt["=== EXTINCTION TIMING ===<br/>Min/Max/Avg days; extinct vs survived counts"]
+    Agg --> AInd["=== INDIVIDUAL SCENARIOS === (v12.2, wide)<br/>3 header rows (col name / Variant / Tier)<br/>then one row per scenario, with<br/>per-species FinalPop columns appended"]
+    Agg --> AGrand["=== SUMMARY STATISTICS<br/>(Grand Mean Across All Scenarios) === (v12.2, wide)<br/>3 header rows (Statistic / Variant / Tier)<br/>then GrandMean_Mean/Max/Min/StdDev rows<br/>across Tier1Pop, Tier2Pop, per-species cols"]
+    Agg --> AExt["=== EXTINCTION TIMING - TIER VARIANTS === +<br/>=== EXTINCTION TIMING - PER SPECIES === (v12.2)<br/>Variant/Species rollups: Min/Max/Avg days,<br/>NumExtinct, NumSurvived"]
 
     Cfg --> CH["=== section headers ===<br/># metadata lines<br/>Parameter,Value rows for environment"]
     Cfg --> CSpc["=== SPECIES ===<br/>(same 26-column table as #species: in scenario CSV)"]
 
     Bulk[Bulk upload] --> BulkSum["bulk_summary.csv<br/>(ZIP root, one per bulk)"]
     BulkSum --> BS1["=== TINYSEA BULK SUMMARY ===<br/># Model Version (v12), # Total Runs, # Generated"]
-    BulkSum --> BS2["=== PER-RUN RESULTS ===<br/>Run, Scenarios, Survived, Crashed,<br/>CrashRate, BaseTemp, ClimateTrend,<br/>per-species average populations"]
-    BulkSum --> BS3["=== PER-SPECIES AGGREGATE (Across All Runs) ===<br/>Species, GrandMean, SurvivedMean,<br/>RunsExtinct, RunsSurvived, ExtinctionRate"]
-    BulkSum --> BS4["=== PER-RUN PER-SPECIES FINAL YEAR === (v12)<br/>(run × species) detail rows"]
+    BulkSum --> BS2a["=== PER-RUN RESULTS - TIER LEVEL === (v12.2, wide)<br/>Run, Scenarios, Survived, Crashed,<br/>CrashRate, BaseTemp, ClimateTrend,<br/>per-species AvgPop columns appended"]
+    BulkSum --> BS2b["=== PER-RUN RESULTS - PER SPECIES === (v12.2, long)<br/>Run, Species, Variant, Tier,<br/>AvgPop, SurvivedAvgPop<br/>(one row per (run, species))"]
+    BulkSum --> BS3["=== PER-SPECIES AGGREGATE (Across All Runs) ===<br/>Species, Variant, Tier (v12.2),<br/>GrandMean, SurvivedMean,<br/>RunsExtinct, RunsSurvived, ExtinctionRate"]
+    BulkSum --> BS4["=== PER-RUN PER-SPECIES FINAL YEAR === (v12)<br/>Run, Species, Variant, Tier (v12.2),<br/>N, NSurvived, MeanCondition,<br/>MeanBirthRate, PopCv, MeanPop"]
     BulkSum --> BS5["=== CROSS-RUN PER-SPECIES FINAL YEAR === (v12)<br/>GrandMeanCondition/BirthRate/PopCv/MeanPop<br/>across runs (w/ StdDev)"]
     BulkSum --> BS6["=== CROSS-RUN STABILITY === (v12)<br/>Pooled extinction/crash rates and mean days"]
 ```
@@ -44,8 +45,8 @@ flowchart TD
 |-------|---------|
 | `#config:key,value` | R-compatible comment (ignored by `read.csv` default). One line per config key. |
 | `#species:col,col,...` | R-compatible comment carrying a header + data rows. Columns include both `OptimalTempK` and `OptimalTempC` (and same for LowerBound/UpperBound) for convenience. |
-| `#summary:key,…` | Per-scenario summary statistics block. |
-| `#extinction:variant,day` | Per-variant extinction day; `-1` means never extinct during the scenario. |
+| `#summary:Statistic,…` | Per-scenario summary statistics block. v12.2 wide format: 3 header rows (`Statistic` / `Variant` / `Tier`) then `Mean` / `Max` / `Min` / `StdDev` rows. Columns are `Tier1Pop`, `Tier2Pop`, then one column per species (sorted by `Tier asc, FullName asc`). |
+| `#extinction:Species,Variant,Tier,DayReachedZero` | Per-species extinction day; `-1` means the species never reached zero during the scenario. (v12.2 — per-species rather than per-variant; the legacy `#extinction:variant,day` format is gone.) |
 | `=== TITLE ===` | Section delimiter used by aggregate, config, and bulk-summary CSVs. |
 | `# Key,Value` | Metadata line inside a `=== section ===` (not the same as `#config:` — no prefix after the `#`). |
 

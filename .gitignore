@@ -101,3 +101,11 @@ InitTestScene*.unity*
 /.claude/worktrees
 /Tests
 claude_context/
+
+# Claude Code session artifacts (auto-generated)
+/.claude/skills/
+/log.md
+
+# Unity-MCP (IvanMurzak) plugin binaries — dev tool, reinstalled per machine
+/[Aa]ssets/[Pp]lugins/NuGet/
+/[Aa]ssets/[Pp]lugins/NuGet.meta

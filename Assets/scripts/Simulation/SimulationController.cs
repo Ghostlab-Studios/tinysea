@@ -308,6 +308,28 @@ public class SimulationController : MonoBehaviour
         runner.Ecosystem.ConditionDrainRate = batch.ConditionDrainRate;
         runner.Ecosystem.ConditionRecoveryRate = batch.ConditionRecoveryRate;
 
+        // Batch 3: if a temperature timeseries file is provided, load it (Editor/standalone
+        // file read) and let it override the parametric model. Missing/WebGL/parse failure
+        // => warn and fall back to the parametric model.
+        if (!string.IsNullOrWhiteSpace(batch.TemperatureTimeseriesFile))
+        {
+            try
+            {
+                string tsPath = batch.TemperatureTimeseriesFile;
+                if (System.IO.File.Exists(tsPath))
+                {
+                    var series = TemperatureCalculator.ParseTimeseriesCsv(System.IO.File.ReadAllText(tsPath));
+                    if (series != null) runner.TempCalc.LoadTimeseries(series);
+                    else Debug.LogWarning($"Temperature timeseries '{tsPath}' had no numeric rows; using parametric model.");
+                }
+                else Debug.LogWarning($"Temperature timeseries file not found: '{tsPath}'; using parametric model.");
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"Failed to load temperature timeseries '{batch.TemperatureTimeseriesFile}': {e.Message}; using parametric model.");
+            }
+        }
+
         runner.Run();
         return runner.ToScenarioResult(scenarioIndex, batch.NumScenarios);
     }

@@ -58,5 +58,7 @@ public class BulkBatchConfig
     public float CarryingCapT1;
     public float ConditionDrainRate = 0.15f;
     public float ConditionRecoveryRate = 0.10f;
+    // Batch 3: optional path to a "Day,Temperature_C" CSV. Empty => parametric model.
+    public string TemperatureTimeseriesFile = "";
     public List<BulkSpeciesConfig> Species = new List<BulkSpeciesConfig>();
 }

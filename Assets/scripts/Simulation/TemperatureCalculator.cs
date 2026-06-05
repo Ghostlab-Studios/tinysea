@@ -34,6 +34,12 @@ public class TemperatureCalculator
     private Dictionary<int, float> _yearVariations = new Dictionary<int, float>();
     private float _previousDayVariation = 0f;
 
+    // Batch 3: optional environmental temperature timeseries (one value per day, °C).
+    // When loaded, GetTemperature returns the series value for the day (looping if the
+    // series is shorter than the run) instead of the parametric 5-component model.
+    private List<float> _timeseries = null;
+    private bool _timeseriesLoopWarned = false;
+
     public TemperatureCalculator(int seed = -1)
     {
         _rng = (seed < 0) ? new Random() : new Random(seed);
@@ -54,6 +60,20 @@ public class TemperatureCalculator
     /// </summary>
     public float GetTemperature(int day)
     {
+        // Batch 3: if a temperature timeseries is loaded, use it (looping if shorter than
+        // the run). Per-species temp_offset is still applied downstream in the thermal
+        // calc, so each species' experienced temperature shifts as before.
+        if (_timeseries != null)
+        {
+            if (day >= _timeseries.Count && !_timeseriesLoopWarned)
+            {
+                UnityEngine.Debug.LogWarning(
+                    $"TemperatureCalculator: timeseries ({_timeseries.Count} days) is shorter than the run; looping.");
+                _timeseriesLoopWarned = true;
+            }
+            return Math.Max(MinTemp, Math.Min(MaxTemp, _timeseries[day % _timeseries.Count]));
+        }
+
         float temp = BaseTemperature
                    + GetSeasonalComponent(day)
                    + GetClimateTrend(day)
@@ -62,6 +82,42 @@ public class TemperatureCalculator
 
         // Clamp to bounds
         return Math.Max(MinTemp, Math.Min(MaxTemp, temp));
+    }
+
+    /// <summary>
+    /// Batch 3: load a daily temperature timeseries (°C, index = day). When non-empty it
+    /// overrides the parametric model in GetTemperature. Pass null/empty to clear.
+    /// </summary>
+    public void LoadTimeseries(List<float> dailyTempsC)
+    {
+        _timeseries = (dailyTempsC != null && dailyTempsC.Count > 0) ? dailyTempsC : null;
+        _timeseriesLoopWarned = false;
+    }
+
+    public bool HasTimeseries => _timeseries != null;
+
+    /// <summary>
+    /// Batch 3: parse a "Day,Temperature_C" CSV (header optional) into a per-day list.
+    /// Rows are read in order; the Day column is informational. Blank/comment (#) lines
+    /// and unparseable rows (e.g. the header) are skipped. Returns null if no numeric data.
+    /// </summary>
+    public static List<float> ParseTimeseriesCsv(string content)
+    {
+        if (string.IsNullOrWhiteSpace(content)) return null;
+        var temps = new List<float>();
+        var lines = content.Replace("\r\n", "\n").Replace("\r", "\n").Split('\n');
+        foreach (var raw in lines)
+        {
+            var line = raw.Trim();
+            if (line.Length == 0 || line[0] == '#') continue;
+            var parts = line.Split(',');
+            // Temperature is the last column (handles "Day,Temperature_C" and bare "Temperature_C").
+            string cell = parts[parts.Length - 1].Trim();
+            if (float.TryParse(cell, System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture, out float t))
+                temps.Add(t);
+        }
+        return temps.Count > 0 ? temps : null;
     }
 
     /// <summary>

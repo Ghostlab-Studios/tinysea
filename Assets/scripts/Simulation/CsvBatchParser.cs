@@ -35,6 +35,7 @@ public static class CsvBatchParser
     private static readonly string[] OPTIONAL_GLOBAL_COLUMNS =
     {
         "condition_drain_rate", "condition_recovery_rate",
+        "temperature_timeseries_file",
         "use_carrying_cap"
     };
 
@@ -188,6 +189,8 @@ public static class CsvBatchParser
             // Optional global columns (backward compatible — missing columns use defaults)
             batch.ConditionDrainRate = GetFloatOptional(fields, columnIndex, "condition_drain_rate", 0.15f);
             batch.ConditionRecoveryRate = GetFloatOptional(fields, columnIndex, "condition_recovery_rate", 0.10f);
+            // Batch 3: optional environmental temperature timeseries file path (empty => parametric model).
+            batch.TemperatureTimeseriesFile = GetString(fields, columnIndex, "temperature_timeseries_file");
 
             // v11.1 deprecation: use_carrying_cap column is deprecated. Carrying capacity
             // is always on. Log a warning if the column is present in the CSV but do not

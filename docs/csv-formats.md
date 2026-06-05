@@ -45,10 +45,10 @@ carrying_cap_t1
 From `OPTIONAL_GLOBAL_COLUMNS`:
 
 ```
-condition_drain_rate, condition_recovery_rate, use_carrying_cap (deprecated)
+condition_drain_rate, condition_recovery_rate, temperature_timeseries_file, use_carrying_cap (deprecated)
 ```
 
-Missing column or empty value → defaults (0.15 and 0.10 respectively). `use_carrying_cap` is deprecated and ignored if present (v11.1).
+Missing column or empty value → defaults (0.15 and 0.10 respectively). `use_carrying_cap` is deprecated and ignored if present (v11.1). **Batch 3:** `temperature_timeseries_file` is an optional path to a `Day,Temperature_C` CSV; when set (and the file is readable in Editor/standalone), the run reads its daily temperature from the file instead of the parametric 5-component model — looping with a warning if the series is shorter than the run — while each species' `temp_offset` still applies. Empty / missing file / WebGL / parse failure → parametric model unchanged.
 
 ### 1.3. Per-species columns (required, prefix `sp{N}_`)
 

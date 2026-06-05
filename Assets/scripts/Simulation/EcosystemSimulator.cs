@@ -329,6 +329,7 @@ public class EcosystemSimulator
             {
                 Name = !string.IsNullOrEmpty(data.displayName) ? data.displayName : data.speciesName.ToString(),
                 Variant = ConvertVariant(data.variant),
+                VariantLabel = !string.IsNullOrEmpty(data.variantLabel) ? data.variantLabel : data.variant.ToString(),
                 Tier = data.tier + 1,  // Database uses 0-based, we use 1-based
                 Population = data.count,
                 EatingAmount = data.eatingAmount,
@@ -388,6 +389,7 @@ public class EcosystemSimulator
             {
                 Name = !string.IsNullOrEmpty(data.displayName) ? data.displayName : data.speciesName.ToString(),
                 Variant = ConvertVariant(data.variant),
+                VariantLabel = !string.IsNullOrEmpty(data.variantLabel) ? data.variantLabel : data.variant.ToString(),
                 Tier = data.tier + 1,  // Database uses 0-based, we use 1-based
                 Population = data.count,
                 EatingAmount = data.eatingAmount,

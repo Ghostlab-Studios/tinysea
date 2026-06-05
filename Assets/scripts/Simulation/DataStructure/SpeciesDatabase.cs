@@ -33,6 +33,9 @@ public class SpeciesData
     public int index;
     public SpeciesName speciesName;
     public SpeciesVariant variant;
+    // Free-text variant label (Batch 1A). When set, used for FullName/output; the
+    // `variant` enum stays for legacy bucket columns + default-parameter lookup.
+    public string variantLabel;
     public string displayName;
     public Sprite icon;
     public int count;
@@ -116,6 +119,18 @@ public class SpeciesData
                 ctMaxC = 40f;
                 break;
         }
+    }
+
+    /// <summary>
+    /// Batch 1A: canonical-case the four legacy variant names (Common/Tropical/
+    /// Arctic/Custom, case-insensitive) and pass through any other free-text label
+    /// unchanged. Keeps legacy output byte-identical while allowing new labels.
+    /// </summary>
+    public static string NormalizeVariantLabel(string raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw)) return raw;
+        raw = raw.Trim();
+        return System.Enum.TryParse<SpeciesVariant>(raw, true, out var v) ? v.ToString() : raw;
     }
 }
 

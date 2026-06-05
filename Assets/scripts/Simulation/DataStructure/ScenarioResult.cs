@@ -617,9 +617,11 @@ public class AggregateResults
                 string name = !string.IsNullOrEmpty(sp.displayName)
                     ? sp.displayName
                     : sp.speciesName.ToString();
-                string fullName = $"{name}_{sp.variant}";
+                // Batch 1A: use the free-text variant label (falls back to enum name).
+                string vlabel = !string.IsNullOrEmpty(sp.variantLabel) ? sp.variantLabel : sp.variant.ToString();
+                string fullName = $"{name}_{vlabel}";
                 // SpeciesData.tier is 0-based (0=prey, 1=predator); CSV / internal Tier is 1-based.
-                speciesMeta[fullName] = (sp.tier + 1, sp.variant.ToString());
+                speciesMeta[fullName] = (sp.tier + 1, vlabel);
             }
         }
         string GetVariant(string fn) => speciesMeta.TryGetValue(fn, out var m) ? m.Variant : "Unknown";

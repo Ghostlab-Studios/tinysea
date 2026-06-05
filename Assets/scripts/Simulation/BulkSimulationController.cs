@@ -330,9 +330,12 @@ public class BulkSimulationController : MonoBehaviour
                         string name = !string.IsNullOrEmpty(sp.displayName)
                             ? sp.displayName
                             : sp.speciesName.ToString();
-                        string fullName = $"{name}_{sp.variant}";
+                        // Batch 1A: use the free-text variant label (falls back to the
+                        // enum name) so FullName matches SimSpecies.FullName.
+                        string vlabel = !string.IsNullOrEmpty(sp.variantLabel) ? sp.variantLabel : sp.variant.ToString();
+                        string fullName = $"{name}_{vlabel}";
                         // SpeciesData.tier is 0/1; internal Tier is 1/2.
-                        speciesInfo[fullName] = (sp.tier + 1, sp.variant.ToString());
+                        speciesInfo[fullName] = (sp.tier + 1, vlabel);
                     }
                 }
 
@@ -720,6 +723,7 @@ public class BulkSimulationController : MonoBehaviour
             index = index,
             speciesName = speciesName,
             variant = variant,
+            variantLabel = SpeciesData.NormalizeVariantLabel(sp.Variant),
             displayName = sp.Name,
             tier = sp.Tier,
             count = sp.Pop,

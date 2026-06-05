@@ -297,8 +297,10 @@ public static class CsvBatchParser
 
         if (string.IsNullOrWhiteSpace(sp.Variant))
             errors.Add($"Row {rowNum}: {prefix}_variant cannot be empty.");
-        else if (!Enum.TryParse<SpeciesVariant>(sp.Variant, true, out _))
-            errors.Add($"Row {rowNum}: {prefix}_variant '{sp.Variant}' is not valid. Use: Common, Tropical, Arctic, or Custom.");
+        // Batch 1A: any non-empty variant label is accepted (free-text). Legacy names
+        // (Common/Tropical/Arctic/Custom, case-insensitive) still resolve to their
+        // thermal defaults via SpeciesData.GetVariantThermalDefaults; unknown labels
+        // fall back to Custom/Common defaults for blank optional columns.
 
         if (sp.Tier < 0 || sp.Tier > 1)
             errors.Add($"Row {rowNum}: {prefix}_tier must be 0 (prey) or 1 (predator).");

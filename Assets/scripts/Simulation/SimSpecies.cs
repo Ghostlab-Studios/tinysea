@@ -13,6 +13,9 @@ public class SimSpecies
     // ==================== IDENTITY ====================
     public string Name;
     public ThermalVariant Variant;
+    // Free-text variant label for identity/output (Batch 1A). When empty, FullName
+    // falls back to the ThermalVariant enum name, so legacy species are unchanged.
+    public string VariantLabel;
     public int Tier;  // 1 = Hexapod (prey), 2 = Sheplik (predator)
 
     // ==================== POPULATION ====================
@@ -71,7 +74,7 @@ public class SimSpecies
     /// <summary>
     /// Full name for display (e.g., "Hexapod_Arctic")
     /// </summary>
-    public string FullName => $"{Name}_{Variant}";
+    public string FullName => $"{Name}_{(string.IsNullOrEmpty(VariantLabel) ? Variant.ToString() : VariantLabel)}";
 
     /// <summary>
     /// Calculate thermal performance using Arrhenius formula.

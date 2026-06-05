@@ -90,10 +90,12 @@ Species slots with an empty `spK_name` are skipped (allows ragged tables where n
 From `OPTIONAL_SPECIES_COLUMNS`:
 
 ```
-pmax, ctmin, ctmax, temp_offset
+pmax, ctmin, ctmax, temp_offset, condition_drain_rate, condition_recovery_rate
 ```
 
 Defaults come from `SpeciesData.GetVariantThermalDefaults(variant)` per-variant (Pmax, CTmin, CTmax) and literal `0` for `temp_offset`. Missing column or empty value → variant default. The variant for this lookup is resolved via `SpeciesData.ResolveVariantEnum` (Batch 1B), so `Cold`/`Warm`/`Hot` and the legacy `Arctic`/`Common`/`Tropical` aliases all resolve correctly; unknown free-text labels fall back to `Custom`/`Common` defaults.
+
+**Per-species condition timescale (Batch 2):** `spK_condition_drain_rate` and `spK_condition_recovery_rate` set that species' own condition integration rates (τ ≈ 1/rate). A missing column or blank/negative value inherits the row-global `condition_drain_rate` / `condition_recovery_rate`, so existing batches stay byte-identical. This lets two species share one TPC but differ in τ — the Paper 2 "same curve, different timescale" design.
 
 ### 1.5. Parsing rules
 

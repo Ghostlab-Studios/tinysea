@@ -745,7 +745,9 @@ public class BulkSimulationController : MonoBehaviour
             pmax = sp.Pmax,
             ctMinC = sp.CTminC,
             ctMaxC = sp.CTmaxC,
-            TemperatureDebuff = sp.TempOffset
+            TemperatureDebuff = sp.TempOffset,
+            conditionDrainRate = sp.ConditionDrainRate,
+            conditionRecoveryRate = sp.ConditionRecoveryRate
         };
     }
 

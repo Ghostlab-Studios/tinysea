@@ -29,6 +29,9 @@ public class BulkSpeciesConfig
     public float CTminC = -5.0f;
     public float CTmaxC = 50.0f;
     public float TempOffset = 0f;
+    // Per-species condition timescale (Batch 2). Negative = inherit the row-global rate.
+    public float ConditionDrainRate = -1f;
+    public float ConditionRecoveryRate = -1f;
 }
 
 /// <summary>

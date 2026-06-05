@@ -351,6 +351,8 @@ public class EcosystemSimulator
                 CTminC = data.ctMinC,
                 CTmaxC = data.ctMaxC,
                 TemperatureDebuff = data.TemperatureDebuff,
+                ConditionDrainRate = data.conditionDrainRate,
+                ConditionRecoveryRate = data.conditionRecoveryRate,
                 Condition = 1.0f
             };
 
@@ -411,6 +413,8 @@ public class EcosystemSimulator
                 CTminC = data.ctMinC,
                 CTmaxC = data.ctMaxC,
                 TemperatureDebuff = data.TemperatureDebuff,
+                ConditionDrainRate = data.conditionDrainRate,
+                ConditionRecoveryRate = data.conditionRecoveryRate,
                 Condition = 1.0f
             };
 
@@ -920,6 +924,10 @@ public class EcosystemSimulator
         // Safety: avoid divide-by-zero if Pmax is ever 0 for a species (clamp to small positive).
         float pmaxSafe = Math.Max(sp.Pmax, 1e-4f);
 
+        // Batch 2: per-species drain/recovery (τ). Negative => inherit the global rate.
+        float drainRate = sp.ConditionDrainRate >= 0f ? sp.ConditionDrainRate : ConditionDrainRate;
+        float recoveryRate = sp.ConditionRecoveryRate >= 0f ? sp.ConditionRecoveryRate : ConditionRecoveryRate;
+
         if (sp.Condition > target)
         {
             // Draining — continuous quadratic acceleration (Buckley et al. 2025)
@@ -928,7 +936,7 @@ public class EcosystemSimulator
             // Pmax scaling: generalists (low Pmax) drain faster; specialists drain slower.
             float severity = 1f - target;
             severity *= severity;
-            float effectiveDrain = ConditionDrainRate * (1f + severity) / pmaxSafe;
+            float effectiveDrain = drainRate * (1f + severity) / pmaxSafe;
             sp.Condition -= (sp.Condition - target) * effectiveDrain;
         }
         else
@@ -939,7 +947,7 @@ public class EcosystemSimulator
             // Pmax scaling: specialists (high Pmax) recover faster; generalists slower.
             float boost = target;
             boost *= boost;
-            float effectiveRecovery = ConditionRecoveryRate * (1f + boost) * pmaxSafe;
+            float effectiveRecovery = recoveryRate * (1f + boost) * pmaxSafe;
             sp.Condition += (target - sp.Condition) * effectiveRecovery;
         }
 

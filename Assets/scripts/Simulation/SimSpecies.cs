@@ -28,6 +28,14 @@ public class SimSpecies
     public float DeathRate;                 // Fraction dying when thermal death triggers
     public float ReproThreshold;            // Condition inflection point: above = healthy reproduction ramp, below = struggling but non-zero (default 0.25)
 
+    // ==================== CONDITION TIMESCALE (per-species τ, Batch 2) ====================
+    // Per-species condition drain / recovery rates. A negative value (the default) means
+    // "inherit the simulator-global rate", so blank CSV columns stay backward compatible.
+    // Two species with the same TPC but different rates integrate condition over different
+    // timescales τ ≈ 1/rate — the core Paper 2 design.
+    public float ConditionDrainRate = -1f;
+    public float ConditionRecoveryRate = -1f;
+
     // ==================== NATURAL MORTALITY ====================
     public float NaturalDeathRate = 0.02f;      // Base natural death rate (all species: 2%)
     public float NaturalDeathVariance = 0.01f;  // Random variance range (±1%)

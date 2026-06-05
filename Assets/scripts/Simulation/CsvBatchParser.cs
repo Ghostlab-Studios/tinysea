@@ -53,7 +53,8 @@ public static class CsvBatchParser
     // Optional species columns with defaults (backward compatible)
     private static readonly string[] OPTIONAL_SPECIES_COLUMNS =
     {
-        "pmax", "ctmin", "ctmax", "temp_offset"
+        "pmax", "ctmin", "ctmax", "temp_offset",
+        "condition_drain_rate", "condition_recovery_rate"
     };
 
     /// <summary>
@@ -264,6 +265,9 @@ public static class CsvBatchParser
         species.CTminC = GetFloatOptional(fields, columnIndex, prefix + "ctmin", defCtMin);
         species.CTmaxC = GetFloatOptional(fields, columnIndex, prefix + "ctmax", defCtMax);
         species.TempOffset = GetFloatOptional(fields, columnIndex, prefix + "temp_offset", 0f);
+        // Batch 2: per-species condition timescale. Default -1 => inherit the row-global rate.
+        species.ConditionDrainRate = GetFloatOptional(fields, columnIndex, prefix + "condition_drain_rate", -1f);
+        species.ConditionRecoveryRate = GetFloatOptional(fields, columnIndex, prefix + "condition_recovery_rate", -1f);
     }
 
     // ==================== VALIDATION ====================

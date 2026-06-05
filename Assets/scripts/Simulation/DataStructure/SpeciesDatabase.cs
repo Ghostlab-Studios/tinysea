@@ -47,7 +47,12 @@ public class SpeciesData
     public float deathThreshold = 0.3f;     // FinalPerf below this triggers thermal death
     public float deathRate;                 // Fraction dying when thermal death triggers
     public float TemperatureDebuff = 0.0f;  // Additional performance debuff from temperature applied after thermal curve 
-    public float reproThreshold = 0.25f;    // FinalPerf required to reproduce
+    public float reproThreshold = 0.25f;
+
+    [Header("Condition Timescale (per-species τ, Batch 2)")]
+    // Negative = inherit the simulator-global rate (blank CSV columns stay backward compatible).
+    public float conditionDrainRate = -1f;
+    public float conditionRecoveryRate = -1f;    // FinalPerf required to reproduce
     
     
     [Header("Natural Mortality")]

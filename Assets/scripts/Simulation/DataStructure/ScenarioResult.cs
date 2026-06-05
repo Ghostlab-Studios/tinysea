@@ -138,6 +138,13 @@ public class PerSpeciesScenarioMetrics
     // Mean population over final year — different from FinalPopulation (single-day snapshot)
     public float MeanPopulationFinalYear;
 
+    // Change 3: total death counts summed over the final year (last 365 days) of THIS
+    // scenario, by pathway. PredationDeaths uses Eaten (Tier-1 only; 0 for Tier 2).
+    public float FinalYearTempDeaths;
+    public float FinalYearConditionDeaths;
+    public float FinalYearNaturalDeaths;
+    public float FinalYearPredationDeaths;
+
     // Population extremes during full sim
     public long MinPopulation;
     public long MaxPopulation;
@@ -195,6 +202,11 @@ public class PerSpeciesAggregate
     public AggStat PopCvFullRun;
     public AggStat PopCvFinalYear;
     public AggStat MeanPopulationFinalYear;
+    // Change 3: final-year death-count means by pathway
+    public AggStat FinalYearTempDeaths;
+    public AggStat FinalYearConditionDeaths;
+    public AggStat FinalYearNaturalDeaths;
+    public AggStat FinalYearPredationDeaths;
     public AggStat MinPopulation;
     public AggStat MaxPopulation;
     public AggStat FinalPopulation;
@@ -251,6 +263,9 @@ public class AggregateResults
 
     // Timestamp
     public DateTime CompletedAt;
+
+    // Change 4: source run / batch name (from the input bulk CSV row) for self-identifying output
+    public string BatchName;
 
     // Population averages (across scenarios that survived)
     public float AvgFinalTier1Pop;
@@ -470,6 +485,10 @@ public class AggregateResults
             agg.PopCvFullRun            = ComputeAggStat(rows, r => r.PopCvFullRun);
             agg.PopCvFinalYear          = ComputeAggStat(rows, r => r.PopCvFinalYear);
             agg.MeanPopulationFinalYear = ComputeAggStat(rows, r => r.MeanPopulationFinalYear);
+            agg.FinalYearTempDeaths      = ComputeAggStat(rows, r => r.FinalYearTempDeaths);
+            agg.FinalYearConditionDeaths = ComputeAggStat(rows, r => r.FinalYearConditionDeaths);
+            agg.FinalYearNaturalDeaths   = ComputeAggStat(rows, r => r.FinalYearNaturalDeaths);
+            agg.FinalYearPredationDeaths = ComputeAggStat(rows, r => r.FinalYearPredationDeaths);
             agg.MinPopulation           = ComputeAggStat(rows, r => (float)r.MinPopulation);
             agg.MaxPopulation           = ComputeAggStat(rows, r => (float)r.MaxPopulation);
             agg.FinalPopulation         = ComputeAggStat(rows, r => (float)r.FinalPopulation);
@@ -607,6 +626,7 @@ public class AggregateResults
         string GetTier(string fn) => speciesMeta.TryGetValue(fn, out var m) ? m.Tier.ToString() : "?";
 
         sb.AppendLine("=== TINYSEA AGGREGATE RESULTS ===");
+        sb.AppendLine($"# Run Name,{BatchName}");
         sb.AppendLine($"# Generated,{CompletedAt:yyyy-MM-dd HH:mm:ss}");
         sb.AppendLine($"# Configuration,{DaysPerScenario} days x {TotalScenarios} scenarios");
         sb.AppendLine($"# Base Temp,{BaseTemperature}C");

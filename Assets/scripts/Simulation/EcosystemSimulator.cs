@@ -323,8 +323,22 @@ public class EcosystemSimulator
 
         SimLog($"Initializing from RunSpeciesList: {runSpecies.name}");
 
+        var byMatchKey = new Dictionary<string, SimSpecies>();
         foreach (var data in runSpecies.speciesList)
         {
+            // Group 2: merge species whose variant labels normalize equal (formatting-only
+            // differences) into the first-seen species, summing population. Unique labels
+            // never merge, so legacy single-spelling runs stay byte-identical.
+            string mkName  = !string.IsNullOrEmpty(data.displayName) ? data.displayName : data.speciesName.ToString();
+            string mkLabel = !string.IsNullOrEmpty(data.variantLabel) ? data.variantLabel : data.variant.ToString();
+            string matchKey = mkName + "_" + SpeciesData.VariantMatchKey(mkLabel);
+            if (byMatchKey.TryGetValue(matchKey, out var existingSp))
+            {
+                existingSp.Population += data.count;
+                SimLog($"Merged duplicate '{mkName}_{mkLabel}' into '{existingSp.FullName}' (pop {existingSp.Population})");
+                continue;
+            }
+
             var simSpecies = new SimSpecies
             {
                 Name = !string.IsNullOrEmpty(data.displayName) ? data.displayName : data.speciesName.ToString(),
@@ -358,6 +372,7 @@ public class EcosystemSimulator
 
             Species.Add(simSpecies);
             InitializeAccumulators(simSpecies.FullName);
+            byMatchKey[matchKey] = simSpecies;
 
             SimLog($"Loaded: {simSpecies.FullName} (Tier {simSpecies.Tier}) - Pop: {simSpecies.Population}");
         }

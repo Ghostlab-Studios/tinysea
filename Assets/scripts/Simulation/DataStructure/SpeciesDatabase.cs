@@ -158,6 +158,23 @@ public class SpeciesData
                 return System.Enum.TryParse<SpeciesVariant>(label.Trim(), true, out var e) ? e : SpeciesVariant.Custom;
         }
     }
+
+    /// <summary>
+    /// Group 2: normalized match-key for a variant label — lowercase, keep only [a-z0-9]
+    /// (strips spaces/dashes/underscores/punctuation). Two labels that normalize equal are
+    /// the same variant. "Common-Leaning Tropic" -> "commonleaningtropic"; "topic3" != "topic4".
+    /// </summary>
+    public static string VariantMatchKey(string raw)
+    {
+        if (string.IsNullOrEmpty(raw)) return "";
+        var sb = new System.Text.StringBuilder(raw.Length);
+        foreach (char ch in raw)
+        {
+            char c = char.ToLowerInvariant(ch);
+            if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) sb.Append(c);
+        }
+        return sb.ToString();
+    }
 }
 
 [CreateAssetMenu(fileName = "SpeciesDatabase", menuName = "TinySea/Species Database")]

@@ -166,7 +166,9 @@ public class SimSpecies
                 species.OptimalTempK = 293.15f;   // 20 C
                 species.LowerBoundK = 292.40f;    // 19.25 C
                 species.UpperBoundK = 293.90f;    // 20.75 C
-                species.Pmax = 0.972f;
+                species.ArrhenLower = 15998f;     // canonical per-variant L/U (±2 translate)
+                species.ArrhenUpper = 43798f;
+                species.Pmax = 0.9843f;           // canonical Cold Pmax
                 species.CTminC = 0f;
                 species.CTmaxC = 35f;
                 break;
@@ -184,7 +186,9 @@ public class SimSpecies
                 species.OptimalTempK = 297.15f;   // 24 C
                 species.LowerBoundK = 296.40f;    // 23.25 C
                 species.UpperBoundK = 297.90f;    // 24.75 C
-                species.Pmax = 0.972f;
+                species.ArrhenLower = 16002f;     // canonical per-variant L/U (±2 translate)
+                species.ArrhenUpper = 43802f;
+                species.Pmax = 0.96f;             // canonical Hot Pmax
                 species.CTminC = 4f;
                 species.CTmaxC = 39f;
                 break;

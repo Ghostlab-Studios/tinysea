@@ -286,6 +286,12 @@ public class EcosystemSimulator
     [System.Diagnostics.Conditional("TINYSEA_SIM_LOG")]
     private static void SimLog(string message) => Debug.Log(message);
 
+    /// <summary>Sanitize a float population before casting to long (local mirror of
+    /// SimulationRunner.SafePopToLong — kept here to avoid a core→runner dependency).
+    /// Non-finite values (NaN, ±Inf) cast to long.MinValue in C#; convert them to 0L.</summary>
+    private static long SafePopToLong(float pop)
+        => float.IsFinite(pop) ? (long)Math.Round(pop) : 0L;
+
     public EcosystemSimulator(int seed = -1)
     {
         Species = new List<SimSpecies>();
@@ -533,7 +539,7 @@ public class EcosystemSimulator
             LastEatenBySpecies[sp.FullName]           = 0L;
             LastReproScaleBySpecies[sp.FullName]      = 0f;
             LastFedRateBySpecies[sp.FullName]         = 0f;
-            StartPopBySpecies[sp.FullName]            = (long)Math.Round(sp.Population);
+            StartPopBySpecies[sp.FullName]            = SafePopToLong(sp.Population);
         }
 
         SimLog($"=== Biology Step at {temperature:F2}°C (BiologyStep={BiologyStep}) ===");
@@ -610,11 +616,27 @@ public class EcosystemSimulator
             ApplyNaturalDeathWithAccumulator(sp);
         }
 
-        // ========== STEP 10: POPULATION ROUNDING ==========
+        // ========== STEP 10: POPULATION ROUNDING + OVERFLOW GUARD ==========
+        // Hard cap at 100 × CarryingCapacityPerTier as a defensive guard against
+        // runaway population overshoot when condition feedback is too slow to throttle
+        // reproduction (drain rate ≤ 0.01/day with default Condition=1.0 init).
+        // Without this, sp.Population can exceed long.MaxValue during the initial
+        // transient, producing long.MinValue sentinels in CSV output. 100×K is well
+        // above biological overshoots (2–10×K) and far below the 10^18 overflow point.
+        const float MAX_POP_MULTIPLE_OF_K = 100f;
+        float popCap = MAX_POP_MULTIPLE_OF_K * CarryingCapacityPerTier;
+
         SimLog("--- Step 10: Population Rounding ---");
         foreach (var sp in Species)
         {
             float oldPop = sp.Population;
+
+            if (sp.Population > popCap)
+            {
+                SimLog($"  {sp.FullName}: POPULATION CAPPED at {popCap:F0} (was {sp.Population:E2}) — likely condition-feedback lag");
+                sp.Population = popCap;
+            }
+
             sp.Population = (float)Math.Round(sp.Population, MidpointRounding.AwayFromZero);
             if (Math.Abs(oldPop - sp.Population) > 0.01f)
             {
@@ -691,7 +713,9 @@ public class EcosystemSimulator
         // > 0 (validated at parse/inspect time). The previous off-mode is gone:
         // unbounded Tier 1 growth is biologically meaningless and triggered
         // integer-overflow accumulators.
-        float tier1Pop = GetTierPopulation(1);
+        // Clamp to non-negative so a corrupted/negative population can't make
+        // foodDensity blow up (the cascading-failure path of the long-τ bug).
+        float tier1Pop = Math.Max(0f, GetTierPopulation(1));
         float capSafe = Math.Max(CarryingCapacityPerTier, 1f);    // floor of 1 to guard against misconfig
         float foodDensity = Math.Max(0f, 1f - (tier1Pop / capSafe));
         LastFoodDensityT1 = foodDensity;

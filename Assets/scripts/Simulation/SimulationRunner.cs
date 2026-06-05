@@ -413,34 +413,34 @@ public class SimulationRunner
             BiologyCycle = biologyRan ? _biologyCycleCounter : 0,
 
             // Start/End population (T1 + T2 combined) - using long to prevent overflow
-            StartPop = biologyRan ? (long)Math.Round(Ecosystem.StartPopT1 + Ecosystem.StartPopT2) : 0,
-            EndPop = (long)Math.Round(Ecosystem.GetTier1Population() + Ecosystem.GetTier2Population()),
+            StartPop = biologyRan ? SafePopToLong(Ecosystem.StartPopT1 + Ecosystem.StartPopT2) : 0,
+            EndPop = SafePopToLong(Ecosystem.GetTier1Population() + Ecosystem.GetTier2Population()),
 
             // Population by tier - using long to prevent overflow
-            Tier1Pop = (long)Math.Round(Ecosystem.GetTier1Population()),
-            Tier2Pop = (long)Math.Round(Ecosystem.GetTier2Population()),
-            Tier1Arctic = (long)Math.Round(Ecosystem.GetVariantPopulation(1, ThermalVariant.Arctic)),
-            Tier1Common = (long)Math.Round(Ecosystem.GetVariantPopulation(1, ThermalVariant.Common)),
-            Tier1Tropical = (long)Math.Round(Ecosystem.GetVariantPopulation(1, ThermalVariant.Tropical)),
-            Tier2Arctic = (long)Math.Round(Ecosystem.GetVariantPopulation(2, ThermalVariant.Arctic)),
-            Tier2Common = (long)Math.Round(Ecosystem.GetVariantPopulation(2, ThermalVariant.Common)),
-            Tier2Tropical = (long)Math.Round(Ecosystem.GetVariantPopulation(2, ThermalVariant.Tropical)),
-            Tier1Custom = (long)Math.Round(Ecosystem.GetVariantPopulation(1, ThermalVariant.Custom)),
-            Tier2Custom = (long)Math.Round(Ecosystem.GetVariantPopulation(2, ThermalVariant.Custom)),
+            Tier1Pop = SafePopToLong(Ecosystem.GetTier1Population()),
+            Tier2Pop = SafePopToLong(Ecosystem.GetTier2Population()),
+            Tier1Arctic = SafePopToLong(Ecosystem.GetVariantPopulation(1, ThermalVariant.Arctic)),
+            Tier1Common = SafePopToLong(Ecosystem.GetVariantPopulation(1, ThermalVariant.Common)),
+            Tier1Tropical = SafePopToLong(Ecosystem.GetVariantPopulation(1, ThermalVariant.Tropical)),
+            Tier2Arctic = SafePopToLong(Ecosystem.GetVariantPopulation(2, ThermalVariant.Arctic)),
+            Tier2Common = SafePopToLong(Ecosystem.GetVariantPopulation(2, ThermalVariant.Common)),
+            Tier2Tropical = SafePopToLong(Ecosystem.GetVariantPopulation(2, ThermalVariant.Tropical)),
+            Tier1Custom = SafePopToLong(Ecosystem.GetVariantPopulation(1, ThermalVariant.Custom)),
+            Tier2Custom = SafePopToLong(Ecosystem.GetVariantPopulation(2, ThermalVariant.Custom)),
 
             // Death tracking - using long to prevent overflow
-            EatenT1 = (long)Math.Round(eatenT1),
-            TempDeathsT1 = (long)Math.Round(tempDeathsT1),
-            TempDeathsT2 = (long)Math.Round(tempDeathsT2),
-            ConditionDeathsT1 = (long)Math.Round(conditionDeathsT1),
-            ConditionDeathsT2 = (long)Math.Round(conditionDeathsT2),
-            NaturalDeathsT1 = (long)Math.Round(naturalDeathsT1),
-            NaturalDeathsT2 = (long)Math.Round(naturalDeathsT2),
-            TotalDeaths = (long)Math.Round(totalDeaths),
+            EatenT1 = SafePopToLong(eatenT1),
+            TempDeathsT1 = SafePopToLong(tempDeathsT1),
+            TempDeathsT2 = SafePopToLong(tempDeathsT2),
+            ConditionDeathsT1 = SafePopToLong(conditionDeathsT1),
+            ConditionDeathsT2 = SafePopToLong(conditionDeathsT2),
+            NaturalDeathsT1 = SafePopToLong(naturalDeathsT1),
+            NaturalDeathsT2 = SafePopToLong(naturalDeathsT2),
+            TotalDeaths = SafePopToLong(totalDeaths),
 
             // Birth tracking - using long to prevent overflow
-            BirthsT1 = biologyRan ? (long)Math.Round(Ecosystem.LastBirthsT1) : 0,
-            BirthsT2 = biologyRan ? (long)Math.Round(Ecosystem.LastBirthsT2) : 0,
+            BirthsT1 = biologyRan ? SafePopToLong(Ecosystem.LastBirthsT1) : 0,
+            BirthsT2 = biologyRan ? SafePopToLong(Ecosystem.LastBirthsT2) : 0,
 
             // Reproduction scale tracking (graduated reproduction)
             ReproScaleT1 = biologyRan ? Ecosystem.LastReproScaleT1 : 0f,
@@ -478,13 +478,13 @@ public class SimulationRunner
             // Fall back to current rounded population if reset block didn't run
             // (defensive — should not happen under normal flow).
             if (startPop == 0L && sp.Population > 0f)
-                startPop = (long)Math.Round(sp.Population);
+                startPop = SafePopToLong(sp.Population);
 
             long births = biologyRan ? GetOrZeroLong(Ecosystem.LastBirthsBySpecies, fn) : 0L;
 
             record.SpeciesData[fn] = new PerSpeciesStepData
             {
-                Population          = (long)Math.Round(sp.Population),
+                Population          = SafePopToLong(sp.Population),
                 Condition           = sp.Condition,
                 ThermalPerf         = sp.RawThermalPerformance,
                 FinalPerf           = sp.FinalPerformance,
@@ -514,6 +514,12 @@ public class SimulationRunner
 
     private static float GetOrFallbackFloat(IDictionary<string, float> d, string key, float fallback)
         => d != null && d.TryGetValue(key, out var v) ? v : fallback;
+
+    /// <summary>Sanitize a float population before casting to long for CSV output.
+    /// Non-finite values (NaN, ±Inf) cast to long.MinValue in C#, an uninterpretable
+    /// CSV sentinel. Convert non-finite to 0 instead.</summary>
+    private static long SafePopToLong(float pop)
+        => float.IsFinite(pop) ? (long)Math.Round(pop) : 0L;
 
     public List<StepRecord> GetRecords() => new List<StepRecord>(_records);
 
@@ -898,6 +904,23 @@ public class SimulationRunner
         var popStats = ComputePopulationStats();
         var speciesMetrics = ComputePerSpeciesScenarioMetrics();
 
+        // Change 2: full-run mean of the per-day average condition (mirrors the
+        // temperature-mean pattern in GetSummary). These four ScenarioResult fields
+        // were previously never assigned, so the aggregate CONDITION STATS block
+        // always printed 0.000.
+        float avgConditionT1 = 0f, avgConditionT2 = 0f;
+        if (_records != null && _records.Count > 0)
+        {
+            double sumCondT1 = 0.0, sumCondT2 = 0.0;
+            foreach (var r in _records)
+            {
+                sumCondT1 += r.AvgConditionT1;
+                sumCondT2 += r.AvgConditionT2;
+            }
+            avgConditionT1 = (float)(sumCondT1 / _records.Count);
+            avgConditionT2 = (float)(sumCondT2 / _records.Count);
+        }
+
         return new ScenarioResult
         {
             ScenarioIndex = scenarioIndex,
@@ -926,6 +949,11 @@ public class SimulationRunner
             AvgTemperature = summary?.AvgTemperature ?? 0,
             MinTemperature = summary?.MinTemperature ?? 0,
             MaxTemperature = summary?.MaxTemperature ?? 0,
+            // Change 2: condition stats — full-run mean + final-day snapshot
+            AvgConditionT1 = avgConditionT1,
+            AvgConditionT2 = avgConditionT2,
+            FinalConditionT1 = Ecosystem?.AvgConditionT1 ?? 0f,
+            FinalConditionT2 = Ecosystem?.AvgConditionT2 ?? 0f,
             PopMean = popStats.Mean,
             PopMax = popStats.Max,
             PopMin = popStats.Min,
@@ -939,7 +967,7 @@ public class SimulationRunner
     {
         var pops = new Dictionary<string, long>();
         foreach (var sp in Ecosystem.Species)
-            pops[sp.FullName] = (long)Math.Round(sp.Population);
+            pops[sp.FullName] = SafePopToLong(sp.Population);
         return pops;
     }
 
@@ -980,6 +1008,8 @@ public class SimulationRunner
             double brSumYear   = 0.0;       int brCountYear   = 0;
             double popSumYear  = 0.0;       int popCountYear  = 0;
             double popSqSumYear = 0.0;
+            // Change 3: final-year death-count sums by pathway (Eaten = predation, T1 only)
+            double tempDeathsYear = 0.0, condDeathsYear = 0.0, natDeathsYear = 0.0, predDeathsYear = 0.0;
 
             int extinctionDay = -1;
             bool wasAlive = false;
@@ -1041,6 +1071,11 @@ public class SimulationRunner
                     }
                     popSumYear   += d.Population;      popSqSumYear += (double)d.Population * d.Population;
                     popCountYear++;
+                    // Change 3: accumulate per-pathway deaths over the final year
+                    tempDeathsYear += d.TempDeaths;
+                    condDeathsYear += d.ConditionDeaths;
+                    natDeathsYear  += d.NaturalDeaths;
+                    predDeathsYear += d.Eaten;
                 }
             }
 
@@ -1064,6 +1099,10 @@ public class SimulationRunner
                                               ? ComputeCvFromSums(popSumYear, popSqSumYear, popCountYear)
                                               : ComputeCvFromSums(popSumFull, popSqSumFull, popCountFull),
                 MeanPopulationFinalYear = meanPopYear,
+                FinalYearTempDeaths      = (float)tempDeathsYear,
+                FinalYearConditionDeaths = (float)condDeathsYear,
+                FinalYearNaturalDeaths   = (float)natDeathsYear,
+                FinalYearPredationDeaths = (float)predDeathsYear,
                 MinPopulation           = minPop == long.MaxValue ? 0L : minPop,
                 MaxPopulation           = maxPop == long.MinValue ? 0L : maxPop,
                 ExtinctionDay           = extinctionDay,

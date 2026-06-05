@@ -31,6 +31,7 @@ public class SimulationController : MonoBehaviour
     private bool _isRunning = false;
     private bool _cancelRequested = false;
     private AggregateResults _currentResults;
+    private RunControl _runControl;  // Group 5: pause/stop signal
 
     // Cached output directory (Editor only)
     private string OutputDirectory => Path.Combine(SavePaths.ResultsFolder, outputFolderName);
@@ -111,6 +112,7 @@ public class SimulationController : MonoBehaviour
     {
         _isRunning = true;
         _cancelRequested = false;
+        _runControl = new RunControl();  // Group 5: fresh pause/stop signal for this run
 
         // Show results screen in progress mode
         if (resultsScreen != null)
@@ -370,6 +372,7 @@ public class SimulationController : MonoBehaviour
         runner.Ecosystem.ConditionDrainRate = config.ConditionDrainRate;
         runner.Ecosystem.ConditionRecoveryRate = config.ConditionRecoveryRate;
         runner.Ecosystem.Tier2Enabled = config.Tier2Enabled;  // Group 4: Tier-2 gate
+        runner.Control = _runControl;                          // Group 5: pause/stop signal
 
         // Run the simulation
         runner.Run();
@@ -384,7 +387,17 @@ public class SimulationController : MonoBehaviour
     private void OnCancelRequested()
     {
         _cancelRequested = true;
+        if (_runControl != null) { _runControl.Stopped = true; _runControl.Paused = false; }  // Group 5: break a paused run
     }
+
+    /// <summary>Group 5: pause the run at the next day boundary (deterministic — no RNG consumed).</summary>
+    public void PauseSimulation() { if (_runControl != null) _runControl.Paused = true; }
+
+    /// <summary>Group 5: resume a paused run.</summary>
+    public void ResumeSimulation() { if (_runControl != null) _runControl.Paused = false; }
+
+    /// <summary>Group 5: true while a run is paused.</summary>
+    public bool IsPaused => _runControl != null && _runControl.Paused;
 
     private void OnResultsClosed()
     {

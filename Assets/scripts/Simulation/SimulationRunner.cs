@@ -299,6 +299,9 @@ public class SimulationRunner
     // Species list reference
     public RunSpeciesList RunSpecies { get; set; }
 
+    // Group 5: optional cooperative pause/stop signal (null = uninterrupted run).
+    public RunControl Control { get; set; }
+
     // Results
     private List<StepRecord> _records = new List<StepRecord>();
     private int _biologyCycleCounter = 0;
@@ -353,6 +356,14 @@ public class SimulationRunner
 
         for (int dayIndex = 0; dayIndex < TotalDays; dayIndex++)
         {
+            // Group 5: cooperative per-day pause/stop. Spin while paused without consuming
+            // RNG or advancing state, so resume is byte-identical. Stop breaks the loop.
+            if (Control != null)
+            {
+                while (Control.Paused && !Control.Stopped) System.Threading.Thread.Sleep(10);
+                if (Control.Stopped) break;
+            }
+
             int displayDay = dayIndex + 1;
             int year = (dayIndex / TemperatureCalculator.DAYS_PER_YEAR) + 1;
 

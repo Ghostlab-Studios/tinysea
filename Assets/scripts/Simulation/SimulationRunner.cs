@@ -150,27 +150,29 @@ public class StepRecord
     /// orderedSpecies may be null/empty — in that case only tier-level columns are emitted
     /// (back-compat path; not used by SimulationRunner.ToCsvInternal anymore).
     /// </summary>
-    public string ToCsvLine(IList<SimSpecies> orderedSpecies)
+    public string ToCsvLine(IList<SimSpecies> orderedSpecies, bool tier2 = true)
     {
+        // Group 4: when tier2 == false the fixed Tier-2 columns are omitted (Tier-1-only
+        // public CSV). When true the concatenation is byte-identical to the prior layout.
         var sb = new StringBuilder();
         sb.Append($"{Day},{Year},{Temperature:F2},{BiologyCycle},");
         sb.Append($"{StartPop},{EndPop},");
-        sb.Append($"{Tier1Pop},{Tier2Pop},");
+        sb.Append($"{Tier1Pop},"); if (tier2) sb.Append($"{Tier2Pop},");
         sb.Append($"{Tier1Arctic},{Tier1Common},{Tier1Tropical},{Tier1Custom},");
-        sb.Append($"{Tier2Arctic},{Tier2Common},{Tier2Tropical},{Tier2Custom},");
-        sb.Append($"{EatenT1},{TempDeathsT1},{TempDeathsT2},");
-        sb.Append($"{ConditionDeathsT1},{ConditionDeathsT2},");
-        sb.Append($"{NaturalDeathsT1},{NaturalDeathsT2},");
+        if (tier2) sb.Append($"{Tier2Arctic},{Tier2Common},{Tier2Tropical},{Tier2Custom},");
+        sb.Append($"{EatenT1},{TempDeathsT1},"); if (tier2) sb.Append($"{TempDeathsT2},");
+        sb.Append($"{ConditionDeathsT1},"); if (tier2) sb.Append($"{ConditionDeathsT2},");
+        sb.Append($"{NaturalDeathsT1},"); if (tier2) sb.Append($"{NaturalDeathsT2},");
         sb.Append($"{TotalDeaths},");
-        sb.Append($"{BirthsT1},{BirthsT2},");
-        sb.Append($"{FedRateT2:F3},{AvgHuntingEff:F3},");
+        sb.Append($"{BirthsT1},"); if (tier2) sb.Append($"{BirthsT2},");
+        if (tier2) sb.Append($"{FedRateT2:F3},{AvgHuntingEff:F3},");
         sb.Append($"{FedRateT1:F3},{FoodDensityT1:F3},");
-        sb.Append($"{AvgConditionT1:F3},{AvgConditionT2:F3},");
-        sb.Append($"{BirthAccumT1:F3},{BirthAccumT2:F3},");
-        sb.Append($"{NaturalDeathAccumT1:F3},{NaturalDeathAccumT2:F3},");
-        sb.Append($"{ConditionDeathAccumT1:F3},{ConditionDeathAccumT2:F3},");
+        sb.Append($"{AvgConditionT1:F3},"); if (tier2) sb.Append($"{AvgConditionT2:F3},");
+        sb.Append($"{BirthAccumT1:F3},"); if (tier2) sb.Append($"{BirthAccumT2:F3},");
+        sb.Append($"{NaturalDeathAccumT1:F3},"); if (tier2) sb.Append($"{NaturalDeathAccumT2:F3},");
+        sb.Append($"{ConditionDeathAccumT1:F3},"); if (tier2) sb.Append($"{ConditionDeathAccumT2:F3},");
         sb.Append($"{PredationAccumT1:F3},");
-        sb.Append($"{ReproScaleT1:F3},{ReproScaleT2:F3}");
+        sb.Append($"{ReproScaleT1:F3}"); if (tier2) sb.Append($",{ReproScaleT2:F3}");
 
         // Per-species columns (v12). Each species contributes 17 columns.
         if (orderedSpecies != null)
@@ -202,27 +204,28 @@ public class StepRecord
     /// The SAME ordered list must be passed to CsvHeader and to every ToCsvLine call
     /// in the same scenario; otherwise the row data will misalign with the header.
     /// </summary>
-    public static string CsvHeader(IList<SimSpecies> orderedSpecies)
+    public static string CsvHeader(IList<SimSpecies> orderedSpecies, bool tier2 = true)
     {
+        // Group 4: tier2 == false omits the fixed Tier-2 columns (mirror of ToCsvLine).
         var sb = new StringBuilder();
         sb.Append("Day,Year,Temperature,BiologyCycle,");
         sb.Append("StartPop,EndPop,");
-        sb.Append("Tier1Pop,Tier2Pop,");
+        sb.Append("Tier1Pop,"); if (tier2) sb.Append("Tier2Pop,");
         sb.Append("Tier1Arctic,Tier1Common,Tier1Tropical,Tier1Custom,");
-        sb.Append("Tier2Arctic,Tier2Common,Tier2Tropical,Tier2Custom,");
-        sb.Append("EatenT1,TempDeathsT1,TempDeathsT2,");
-        sb.Append("ConditionDeathsT1,ConditionDeathsT2,");
-        sb.Append("NaturalDeathsT1,NaturalDeathsT2,");
+        if (tier2) sb.Append("Tier2Arctic,Tier2Common,Tier2Tropical,Tier2Custom,");
+        sb.Append("EatenT1,TempDeathsT1,"); if (tier2) sb.Append("TempDeathsT2,");
+        sb.Append("ConditionDeathsT1,"); if (tier2) sb.Append("ConditionDeathsT2,");
+        sb.Append("NaturalDeathsT1,"); if (tier2) sb.Append("NaturalDeathsT2,");
         sb.Append("TotalDeaths,");
-        sb.Append("BirthsT1,BirthsT2,");
-        sb.Append("FedRateT2,AvgHuntingEff,");
+        sb.Append("BirthsT1,"); if (tier2) sb.Append("BirthsT2,");
+        if (tier2) sb.Append("FedRateT2,AvgHuntingEff,");
         sb.Append("FedRateT1,FoodDensityT1,");
-        sb.Append("AvgConditionT1,AvgConditionT2,");
-        sb.Append("BirthAccumT1,BirthAccumT2,");
-        sb.Append("NaturalDeathAccumT1,NaturalDeathAccumT2,");
-        sb.Append("ConditionDeathAccumT1,ConditionDeathAccumT2,");
+        sb.Append("AvgConditionT1,"); if (tier2) sb.Append("AvgConditionT2,");
+        sb.Append("BirthAccumT1,"); if (tier2) sb.Append("BirthAccumT2,");
+        sb.Append("NaturalDeathAccumT1,"); if (tier2) sb.Append("NaturalDeathAccumT2,");
+        sb.Append("ConditionDeathAccumT1,"); if (tier2) sb.Append("ConditionDeathAccumT2,");
         sb.Append("PredationAccumT1,");
-        sb.Append("ReproScaleT1,ReproScaleT2");
+        sb.Append("ReproScaleT1"); if (tier2) sb.Append(",ReproScaleT2");
 
         if (orderedSpecies != null)
         {
@@ -713,10 +716,11 @@ public class SimulationRunner
             ? Ecosystem.Species.OrderBy(s => s.Tier).ThenBy(s => s.FullName).ToList()
             : new List<SimSpecies>();
 
-        sb.AppendLine(StepRecord.CsvHeader(orderedSpecies));
+        bool tier2 = Ecosystem == null || Ecosystem.Tier2Enabled;  // Group 4: omit Tier-2 columns when gated off
+        sb.AppendLine(StepRecord.CsvHeader(orderedSpecies, tier2));
         foreach (var record in _records)
         {
-            sb.AppendLine(record.ToCsvLine(orderedSpecies));
+            sb.AppendLine(record.ToCsvLine(orderedSpecies, tier2));
         }
 
         // Append summary statistics and extinction timing

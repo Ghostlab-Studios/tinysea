@@ -307,6 +307,7 @@ public class SimulationController : MonoBehaviour
         runner.Ecosystem.CarryingCapacityPerTier = batch.CarryingCapT1;
         runner.Ecosystem.ConditionDrainRate = batch.ConditionDrainRate;
         runner.Ecosystem.ConditionRecoveryRate = batch.ConditionRecoveryRate;
+        runner.Ecosystem.Tier2Enabled = config.Tier2Enabled;  // Group 4: Tier-2 gate
 
         // Batch 3: if a temperature timeseries file is provided, load it (Editor/standalone
         // file read) and let it override the parametric model. Missing/WebGL/parse failure
@@ -368,6 +369,7 @@ public class SimulationController : MonoBehaviour
         // Apply condition system settings
         runner.Ecosystem.ConditionDrainRate = config.ConditionDrainRate;
         runner.Ecosystem.ConditionRecoveryRate = config.ConditionRecoveryRate;
+        runner.Ecosystem.Tier2Enabled = config.Tier2Enabled;  // Group 4: Tier-2 gate
 
         // Run the simulation
         runner.Run();

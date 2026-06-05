@@ -122,6 +122,13 @@ public class SimulationConfig : ScriptableObject
              "Use this instead of SpeciesDatabase for runtime configuration.")]
     public RunSpeciesList RunSpecies;
 
+    // ==================== TIER 2 (PREDATOR) ====================
+    [Header("=== TIER 2 (PREDATOR) ===")]
+    [Tooltip("Enable Tier 2 (predator) species. Default ON.\n" +
+             "When OFF (public Tier-1-only build): Tier-2 species are excluded before the sim " +
+             "and Tier-2 output columns are suppressed. Tier-2 engine code stays intact.")]
+    public bool Tier2Enabled = true;
+
     // ==================== RANDOM SEED ====================
 
     [Header("=== RANDOMNESS ===")]

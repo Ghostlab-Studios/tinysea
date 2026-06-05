@@ -240,6 +240,10 @@ public class EcosystemSimulator
     public float ConditionDrainRate { get; set; } = 0.15f;
     public float ConditionRecoveryRate { get; set; } = 0.10f;
 
+    // Group 4: Tier-2 (predator) gate. Default true = current behaviour. When false,
+    // Tier-2 species are excluded at load and Tier-2 CSV columns are suppressed.
+    public bool Tier2Enabled { get; set; } = true;
+
     // ==================== CONSTANTS ====================
     private const float MIN_ALIVE_POP = 1.0f;
     // NEWBORN_CONDITION constant removed in v10: newborns inherit the species'
@@ -324,8 +328,13 @@ public class EcosystemSimulator
         SimLog($"Initializing from RunSpeciesList: {runSpecies.name}");
 
         var byMatchKey = new Dictionary<string, SimSpecies>();
+        if (!Tier2Enabled && runSpecies.speciesList.Any(s => s.tier == 1))
+            Debug.LogWarning("Tier2Enabled=false: Tier-2 (predator) species are excluded from this run.");
         foreach (var data in runSpecies.speciesList)
         {
+            // Group 4: skip Tier-2 species when the gate is off (engine code stays intact).
+            if (!Tier2Enabled && data.tier == 1) continue;
+
             // Group 2: merge species whose variant labels normalize equal (formatting-only
             // differences) into the first-seen species, summing population. Unique labels
             // never merge, so legacy single-spelling runs stay byte-identical.

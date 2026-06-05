@@ -316,6 +316,7 @@ public class BulkSimulationController : MonoBehaviour
             if (batchResults.Scenarios.Count > 0)
             {
                 batchResults.CompletedAt = DateTime.Now;
+                batchResults.BatchName = batch.BatchName;   // Change 4: stamp run name into aggregate.csv
                 batchResults.CalculateAggregates();
 
                 // v12.2: Build per-species (Tier, Variant) lookup from tempSpecies so
@@ -541,7 +542,7 @@ public class BulkSimulationController : MonoBehaviour
             // Per-run × per-species final-year detail table
             sb.AppendLine();
             sb.AppendLine("=== PER-RUN PER-SPECIES FINAL YEAR ===");
-            sb.AppendLine("Run,Species,Variant,Tier,N,NSurvived,MeanCondition,MeanBirthRate,PopCv,MeanPop");
+            sb.AppendLine("Run,Species,Variant,Tier,N,NSurvived,MeanCondition,MeanBirthRate,PopCv,MeanPop,MeanFinalYear_TempDeaths,MeanFinalYear_ConditionDeaths,MeanFinalYear_NaturalDeaths,MeanFinalYear_PredationDeaths");
             foreach (var run in summaries)
             {
                 if (run.PerSpeciesMetrics == null) continue;
@@ -552,7 +553,9 @@ public class BulkSimulationController : MonoBehaviour
                         $"{a.MeanConditionFinalYear.Mean:F3}," +
                         $"{a.MeanBirthRateFinalYear.Mean:F4}," +
                         $"{a.PopCvFinalYear.Mean:F3}," +
-                        $"{a.MeanPopulationFinalYear.Mean:F1}");
+                        $"{a.MeanPopulationFinalYear.Mean:F1}," +
+                        $"{a.FinalYearTempDeaths.Mean:F1},{a.FinalYearConditionDeaths.Mean:F1}," +
+                        $"{a.FinalYearNaturalDeaths.Mean:F1},{a.FinalYearPredationDeaths.Mean:F1}");
                 }
             }
             sb.AppendLine();

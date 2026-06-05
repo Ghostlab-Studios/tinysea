@@ -132,6 +132,27 @@ public class SpeciesData
         raw = raw.Trim();
         return System.Enum.TryParse<SpeciesVariant>(raw, true, out var v) ? v.ToString() : raw;
     }
+
+    /// <summary>
+    /// Batch 1B: resolve a variant label to its SpeciesVariant enum bucket, accepting
+    /// the new names (Cold/Warm/Hot) and the legacy aliases (Arctic/Common/Tropical).
+    /// Cold=Arctic, Warm=Common, Hot=Tropical; unknown labels => Custom. Used only for
+    /// default-parameter lookup + legacy bucket columns — the display label is kept
+    /// separately via variantLabel/NormalizeVariantLabel.
+    /// </summary>
+    public static SpeciesVariant ResolveVariantEnum(string label)
+    {
+        if (string.IsNullOrWhiteSpace(label)) return SpeciesVariant.Custom;
+        switch (label.Trim().ToLowerInvariant())
+        {
+            case "cold": case "arctic":   return SpeciesVariant.Arctic;
+            case "warm": case "common":   return SpeciesVariant.Common;
+            case "hot":  case "tropical": return SpeciesVariant.Tropical;
+            case "custom":                return SpeciesVariant.Custom;
+            default:
+                return System.Enum.TryParse<SpeciesVariant>(label.Trim(), true, out var e) ? e : SpeciesVariant.Custom;
+        }
+    }
 }
 
 [CreateAssetMenu(fileName = "SpeciesDatabase", menuName = "TinySea/Species Database")]

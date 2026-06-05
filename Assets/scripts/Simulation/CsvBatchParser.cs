@@ -257,7 +257,7 @@ public static class CsvBatchParser
         species.UpperBoundC = GetFloat(fields, columnIndex, prefix + "upper_bound_c", rowNum, errors);
 
         // Optional columns with variant-aware defaults (backward compatible — missing columns use variant defaults)
-        Enum.TryParse<SpeciesVariant>(species.Variant, true, out var parsedVariant);
+        var parsedVariant = SpeciesData.ResolveVariantEnum(species.Variant);  // Batch 1B: Cold/Warm/Hot + legacy aliases
         SpeciesData.GetVariantThermalDefaults(parsedVariant, out float defPmax, out float defCtMin, out float defCtMax);
 
         species.Pmax = GetFloatOptional(fields, columnIndex, prefix + "pmax", defPmax);

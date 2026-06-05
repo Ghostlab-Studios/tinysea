@@ -714,9 +714,9 @@ public class BulkSimulationController : MonoBehaviour
         if (!Enum.TryParse<SpeciesName>(sp.Name, true, out speciesName))
             speciesName = SpeciesName.Custom;
 
-        SpeciesVariant variant;
-        if (!Enum.TryParse<SpeciesVariant>(sp.Variant, true, out variant))
-            variant = SpeciesVariant.Custom;
+        // Batch 1B: resolve Cold/Warm/Hot + legacy aliases to the enum bucket; the
+        // free-text display label is preserved separately via variantLabel.
+        SpeciesVariant variant = SpeciesData.ResolveVariantEnum(sp.Variant);
 
         return new SpeciesData
         {

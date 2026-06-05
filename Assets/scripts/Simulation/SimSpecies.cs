@@ -142,37 +142,43 @@ public class SimSpecies
             NaturalDeathVariance = 0.01f,   // ±1%
             HuntingEfficiency = 1.0f,       // Tier 1 (v10): perfect resource extraction from shared food pool
             HuntingVariance = 0f,
-            ArrhenBreadth = 5273.15f,
-            ArrhenLower = 10273.15f,
-            ArrhenUpper = 21273.15f
+            // Batch 1B: canonical "Hexapod v2" TPC shape (constant across variants);
+            // only Topt shifts (Cold 20 / Warm 22 / Hot 24 C). The Arctic/Common/Tropical
+            // enum slots now carry the Cold/Warm/Hot labels + paper-canonical params.
+            ArrhenBreadth = 5000f,
+            ArrhenLower = 16000f,
+            ArrhenUpper = 43800f
         };
 
-        // Set temperature ranges and thermal limits based on variant
+        // Set temperature ranges, thermal limits, and Cold/Warm/Hot label by variant
         switch (variant)
         {
-            case ThermalVariant.Arctic:
-                species.OptimalTempK = 278.15f;   // 5°C optimal
-                species.LowerBoundK = 270.15f;    // -3°C
-                species.UpperBoundK = 280.15f;    // 7°C
-                species.Pmax = 1.0f;
-                species.CTminC = -30f;
-                species.CTmaxC = 20f;
-                break;
-            case ThermalVariant.Common:
-                species.OptimalTempK = 293.15f;   // 20°C optimal
-                species.LowerBoundK = 285.15f;    // 12°C
-                species.UpperBoundK = 295.15f;    // 22°C
-                species.Pmax = 0.9f;
-                species.CTminC = -5f;
-                species.CTmaxC = 40f;
-                break;
-            case ThermalVariant.Tropical:
-                species.OptimalTempK = 308.65f;   // 35.5°C optimal
-                species.LowerBoundK = 300.15f;    // 27°C
-                species.UpperBoundK = 310.15f;    // 37°C
-                species.Pmax = 1.0f;
+            case ThermalVariant.Arctic:   // Cold anchor — Topt 20 C
+                species.VariantLabel = "Cold";
+                species.OptimalTempK = 293.15f;   // 20 C
+                species.LowerBoundK = 292.40f;    // 19.25 C
+                species.UpperBoundK = 293.90f;    // 20.75 C
+                species.Pmax = 0.972f;
                 species.CTminC = 0f;
-                species.CTmaxC = 80f;
+                species.CTmaxC = 35f;
+                break;
+            case ThermalVariant.Common:   // Warm anchor — Topt 22 C
+                species.VariantLabel = "Warm";
+                species.OptimalTempK = 295.15f;   // 22 C
+                species.LowerBoundK = 294.40f;    // 21.25 C
+                species.UpperBoundK = 295.90f;    // 22.75 C
+                species.Pmax = 0.972f;
+                species.CTminC = 2f;
+                species.CTmaxC = 37f;
+                break;
+            case ThermalVariant.Tropical: // Hot anchor — Topt 24 C
+                species.VariantLabel = "Hot";
+                species.OptimalTempK = 297.15f;   // 24 C
+                species.LowerBoundK = 296.40f;    // 23.25 C
+                species.UpperBoundK = 297.90f;    // 24.75 C
+                species.Pmax = 0.972f;
+                species.CTminC = 4f;
+                species.CTmaxC = 39f;
                 break;
         }
 

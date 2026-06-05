@@ -16,7 +16,8 @@ MonoBehaviour:
   - index: 0
     speciesName: 0
     variant: 0
-    displayName: 
+    variantLabel: Warm
+    displayName:
     icon: {fileID: 21300000, guid: f89c1a59fafaa3e41aa5e9f94d051ee9, type: 3}
     count: 20
     tier: 0
@@ -37,20 +38,21 @@ MonoBehaviour:
     thermalBreadthStars: 5
     temperatureThresholdText: High
     reproductionRateText: Low
-    description: Hexapod - Common variant
-    optimalTempK: 297
-    arrhenBreadth: 8000
-    arrhenLower: 3000
-    arrhenUpper: 35000
-    lowerBoundK: 296
-    upperBoundK: 298
-    pmax: 0.65
-    ctMinC: 0
-    ctMaxC: 40
+    description: Hexapod - Warm variant
+    optimalTempK: 295.15
+    arrhenBreadth: 5000
+    arrhenLower: 16000
+    arrhenUpper: 43800
+    lowerBoundK: 294.4
+    upperBoundK: 295.9
+    pmax: 0.972
+    ctMinC: 2
+    ctMaxC: 37
   - index: 1
     speciesName: 0
     variant: 1
-    displayName: 
+    variantLabel: Hot
+    displayName:
     icon: {fileID: 21300000, guid: 485589c1ae6b14a4f825d236b41fef64, type: 3}
     count: 20
     tier: 0
@@ -71,20 +73,21 @@ MonoBehaviour:
     thermalBreadthStars: 5
     temperatureThresholdText: High
     reproductionRateText: Low
-    description: Hexapod - Tropical variant
-    optimalTempK: 303
-    arrhenBreadth: 4000
-    arrhenLower: 15827
-    arrhenUpper: 35000
-    lowerBoundK: 302.9
-    upperBoundK: 303.1
-    pmax: 0.85
-    ctMinC: 0
-    ctMaxC: 40
+    description: Hexapod - Hot variant
+    optimalTempK: 297.15
+    arrhenBreadth: 5000
+    arrhenLower: 16000
+    arrhenUpper: 43800
+    lowerBoundK: 296.4
+    upperBoundK: 297.9
+    pmax: 0.972
+    ctMinC: 4
+    ctMaxC: 39
   - index: 2
     speciesName: 0
     variant: 2
-    displayName: 
+    variantLabel: Cold
+    displayName:
     icon: {fileID: 21300000, guid: b18c89991d6433d47a3003fba57fad95, type: 3}
     count: 20
     tier: 0
@@ -105,16 +108,16 @@ MonoBehaviour:
     thermalBreadthStars: 5
     temperatureThresholdText: High
     reproductionRateText: Low
-    description: Hexapod - Arctic variant
-    optimalTempK: 291
-    arrhenBreadth: 4000
-    arrhenLower: 13974
-    arrhenUpper: 35000
-    lowerBoundK: 290.9
-    upperBoundK: 291.1
-    pmax: 0.85
+    description: Hexapod - Cold variant
+    optimalTempK: 293.15
+    arrhenBreadth: 5000
+    arrhenLower: 16000
+    arrhenUpper: 43800
+    lowerBoundK: 292.4
+    upperBoundK: 293.9
+    pmax: 0.972
     ctMinC: 0
-    ctMaxC: 40
+    ctMaxC: 35
   - index: 4
     speciesName: 3
     variant: 1

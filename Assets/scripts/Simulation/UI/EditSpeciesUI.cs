@@ -46,6 +46,10 @@ public class EditSpeciesUI : MonoBehaviour
     [SerializeField] private TMP_InputField naturalDeathVarianceField;
     [SerializeField] private TMP_InputField naturalDeathRateField;
 
+    [Header("UI Fields - Condition Timescale (per-species tau; blank = inherit global)")]
+    [SerializeField] private TMP_InputField conditionDrainRateField;
+    [SerializeField] private TMP_InputField conditionRecoveryRateField;
+
     [Header("UI Fields - Hunting (Tier 2+ only)")]
     [SerializeField] private GameObject huntingSection;
     [SerializeField] private TMP_InputField huntingEfficiencyField;
@@ -315,6 +319,14 @@ public class EditSpeciesUI : MonoBehaviour
         if (eatingAmountField != null)
             eatingAmountField.text = currentEditingData.eatingAmount.ToString("F2", CultureInfo.InvariantCulture);
 
+        // Group 3: per-species condition drain/recovery — blank means inherit global (value < 0)
+        if (conditionDrainRateField != null)
+            conditionDrainRateField.text = currentEditingData.conditionDrainRate < 0f
+                ? "" : currentEditingData.conditionDrainRate.ToString("F3", CultureInfo.InvariantCulture);
+        if (conditionRecoveryRateField != null)
+            conditionRecoveryRateField.text = currentEditingData.conditionRecoveryRate < 0f
+                ? "" : currentEditingData.conditionRecoveryRate.ToString("F3", CultureInfo.InvariantCulture);
+
         if (reproThresholdField != null)
             reproThresholdField.text = currentEditingData.reproThreshold.ToString("F2", CultureInfo.InvariantCulture);
 
@@ -526,6 +538,10 @@ public class EditSpeciesUI : MonoBehaviour
         currentEditingData.naturalDeathRate = naturalDeathRate;
         currentEditingData.TemperatureDebuff = tempDebuffValue;
 
+        // Group 3: per-species condition drain/recovery — blank/empty (or invalid) => -1 (inherit global)
+        currentEditingData.conditionDrainRate = ParseRateOrInherit(conditionDrainRateField);
+        currentEditingData.conditionRecoveryRate = ParseRateOrInherit(conditionRecoveryRateField);
+
         // Save hunting fields (Tier 2+ only)
         if (currentEditingData.tier >= 1)
         {
@@ -694,6 +710,20 @@ public class EditSpeciesUI : MonoBehaviour
 
         SetFieldColor(field, valid ? ValidColor : InvalidColor);
         return valid;
+    }
+
+    /// <summary>
+    /// Group 3: read a per-species condition rate. Blank/empty => -1 (inherit the global
+    /// rate). A valid non-negative number is used as-is; anything else falls back to -1.
+    /// </summary>
+    private float ParseRateOrInherit(TMP_InputField field)
+    {
+        if (field == null) return -1f;
+        string t = field.text?.Trim();
+        if (string.IsNullOrEmpty(t)) return -1f;
+        if (float.TryParse(t, NumberStyles.Float, CultureInfo.InvariantCulture, out float v) && v >= 0f)
+            return v;
+        return -1f;
     }
 
     /// <summary>

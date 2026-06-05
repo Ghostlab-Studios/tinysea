@@ -69,8 +69,8 @@ Per-species validation (see `ValidateSpecies`):
 
 | Column | Validation |
 |--------|-----------|
-| `spK_name` | Non-empty. |
-| `spK_variant` | Non-empty. Parseable as `Common`, `Tropical`, `Arctic`, or `Custom` (case-insensitive). |
+| `spK_name` | Non-empty. Free-text display label only — **not** matched against a species database. It becomes the species' `displayName` and the `<Name>` half of `FullName`; thermal/biology parameters always come from the row's own columns (so when `spK_variant=Custom` the name is purely cosmetic). Canonical spelling is lowercase DB style (`hexapod`, `gelgi`, `shelpik`); capitalized variants (`Hexapod`, `Golgi`, `Sheplik`) are accepted as-is. |
+| `spK_variant` | Non-empty. **Free-text (Batch 1A)** — any label is accepted and carried through to output (`FullName`, per-species + bulk-summary variant columns). The canonical default family is `Cold` / `Warm` / `Hot` (Batch 1B); the legacy names `Arctic` / `Common` / `Tropical` are still accepted as aliases (`Cold`=`Arctic`, `Warm`=`Common`, `Hot`=`Tropical`) for default-parameter lookup and the legacy `Tier{1,2}{Arctic,Common,Tropical,Custom}` bucket columns. Unknown labels map to the `Custom` bucket but keep their own label in per-species output. |
 | `spK_tier` | 0 (prey) or 1 (predator). Converted to 1-based internally. |
 | `spK_pop` | `≥ 0`. |
 | `spK_death_thresh` | `[0, 1]`. |
@@ -93,7 +93,7 @@ From `OPTIONAL_SPECIES_COLUMNS`:
 pmax, ctmin, ctmax, temp_offset
 ```
 
-Defaults come from `SpeciesData.GetVariantThermalDefaults(variant)` per-variant (Pmax, CTmin, CTmax) and literal `0` for `temp_offset`. Missing column or empty value → variant default.
+Defaults come from `SpeciesData.GetVariantThermalDefaults(variant)` per-variant (Pmax, CTmin, CTmax) and literal `0` for `temp_offset`. Missing column or empty value → variant default. The variant for this lookup is resolved via `SpeciesData.ResolveVariantEnum` (Batch 1B), so `Cold`/`Warm`/`Hot` and the legacy `Arctic`/`Common`/`Tropical` aliases all resolve correctly; unknown free-text labels fall back to `Custom`/`Common` defaults.
 
 ### 1.5. Parsing rules
 

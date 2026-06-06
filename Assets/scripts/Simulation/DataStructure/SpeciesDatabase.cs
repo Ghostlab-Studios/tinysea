@@ -215,181 +215,123 @@ public class SpeciesDatabase : ScriptableObject
     {
         speciesList.Clear();
 
-        // ===== HEXAPOD (Tier 1 - Prey) =====
-        // DeathRate 0.6 — smaller prey have less physiological buffering against
-        // chronic stress (allometric scaling: M ∝ W^-0.25, Peterson & Wroblewski 1984)
-        // Natural death: 2% base ±1% variance
-        // Hunting: N/A (Tier 1 doesn't hunt)
+        // ===== Six-organism canonical default family (Tier 1 / prey only) =====
+        // Source of truth: Phase2plus_SixOrganismDefaults_Kelvin.csv (2026-06-05).
+        // Hex = narrow-breadth specialist (B=5000) -> SpeciesName.Hexapod.
+        // Gol = broad-breadth  generalist (B=7000) -> SpeciesName.Gelgi.
+        // Variant Cold/Warm/Hot => Topt 20/22/24 °C (= 293.15/295.15/297.15 K).
+        // Display label is Cold/Warm/Hot (variantLabel); the legacy `variant`
+        // enum bucket is resolved via the alias map (Cold->Arctic, Warm->Common,
+        // Hot->Tropical) so legacy bucket columns / param lookups stay valid.
+        // Shared non-thermal defaults: eating=3, repro=0.45, deathThresh=0.3,
+        // deathRate=0.6, reproThresh=0.25, naturalDeath=0.02±0.01, tempOffset=0,
+        // hunting N/A (Tier 1), conditionDrain=0.15, conditionRecovery=0.10.
+        // NO Tier-2 / NO Sheplik here — that is a separate, pending decision.
 
+        const float SHARED_EATING = 3f;
+        const float SHARED_REPRO = 0.45f;
+        const float SHARED_DEATH_THRESH = 0.3f;
+        const float SHARED_DEATH_RATE = 0.6f;
+        const float SHARED_REPRO_THRESH = 0.25f;
+        const float SHARED_NATURAL_DEATH = 0.02f;
+        const float SHARED_NATURAL_DEATH_VAR = 0.01f;
+        const float SHARED_HUNT_EFF = 1.0f;   // Tier 1 ignores hunting
+        const float SHARED_HUNT_VAR = 0f;
+        const float SHARED_COND_DRAIN = 0.15f;
+        const float SHARED_COND_RECOVERY = 0.10f;
+
+        // ----- HEXAPOD (specialist, B=5000) -----
         AddSpecies(
-            index: 0,
-            name: SpeciesName.Hexapod,
-            variant: SpeciesVariant.Common,
-            tier: 0,
+            index: 0, name: SpeciesName.Hexapod, variant: SpeciesVariant.Arctic, tier: 0,
             count: DEFAULT_T1_COUNT,
-            eating: 0f,
-            repro: 0.45f,
-            deathThresh: 0.3f,
-            deathRate: 0.6f,
-            reproThresh: 0.25f,
-            naturalDeathRate: 0.02f,
-            naturalDeathVariance: 0.01f,
-            huntingEfficiency: 1.0f,
-            huntingVariance: 0f,
-            optimalK: 297.0f,       // 24°C
-            arrhenBreadth: 8000.0f,
-            arrhenLower: 3000.0f,
-            arrhenUpper: 35000.0f,
-            lowerBound: 296.0f,     // 23°C
-            upperBound: 298.0f,     // 25°C
-            pmax: 0.65f,
-            ctMinC: 0f,
-            ctMaxC: 40f
+            eating: SHARED_EATING, repro: SHARED_REPRO, deathThresh: SHARED_DEATH_THRESH,
+            deathRate: SHARED_DEATH_RATE, reproThresh: SHARED_REPRO_THRESH,
+            naturalDeathRate: SHARED_NATURAL_DEATH, naturalDeathVariance: SHARED_NATURAL_DEATH_VAR,
+            huntingEfficiency: SHARED_HUNT_EFF, huntingVariance: SHARED_HUNT_VAR,
+            optimalK: 293.15f, arrhenBreadth: 5000f, arrhenLower: 15998f, arrhenUpper: 43798f,
+            lowerBound: 292.4f, upperBound: 293.9f,
+            pmax: 0.9843f, ctMinC: 0f, ctMaxC: 35f,
+            conditionDrainRate: SHARED_COND_DRAIN, conditionRecoveryRate: SHARED_COND_RECOVERY,
+            variantLabel: "Cold"
         );
 
         AddSpecies(
-            index: 1,
-            name: SpeciesName.Hexapod,
-            variant: SpeciesVariant.Tropical,
-            tier: 0,
+            index: 1, name: SpeciesName.Hexapod, variant: SpeciesVariant.Common, tier: 0,
             count: DEFAULT_T1_COUNT,
-            eating: 0f,
-            repro: 0.45f,
-            deathThresh: 0.3f,
-            deathRate: 0.6f,
-            reproThresh: 0.25f,
-            naturalDeathRate: 0.02f,
-            naturalDeathVariance: 0.01f,
-            huntingEfficiency: 1.0f,
-            huntingVariance: 0f,
-            optimalK: 303.0f,       // 30°C
-            arrhenBreadth: 4000.0f,
-            arrhenLower: 15827.0f,
-            arrhenUpper: 35000.0f,
-            lowerBound: 302.9f,     // 29.75°C
-            upperBound: 303.1f,     // 29.95°C
-            pmax: 0.85f,
-            ctMinC: 0f,
-            ctMaxC: 40f
+            eating: SHARED_EATING, repro: SHARED_REPRO, deathThresh: SHARED_DEATH_THRESH,
+            deathRate: SHARED_DEATH_RATE, reproThresh: SHARED_REPRO_THRESH,
+            naturalDeathRate: SHARED_NATURAL_DEATH, naturalDeathVariance: SHARED_NATURAL_DEATH_VAR,
+            huntingEfficiency: SHARED_HUNT_EFF, huntingVariance: SHARED_HUNT_VAR,
+            optimalK: 295.15f, arrhenBreadth: 5000f, arrhenLower: 16000f, arrhenUpper: 43800f,
+            lowerBound: 294.4f, upperBound: 295.9f,
+            pmax: 0.972f, ctMinC: 2f, ctMaxC: 37f,
+            conditionDrainRate: SHARED_COND_DRAIN, conditionRecoveryRate: SHARED_COND_RECOVERY,
+            variantLabel: "Warm"
         );
 
         AddSpecies(
-            index: 2,
-            name: SpeciesName.Hexapod,
-            variant: SpeciesVariant.Arctic,
-            tier: 0,
+            index: 2, name: SpeciesName.Hexapod, variant: SpeciesVariant.Tropical, tier: 0,
             count: DEFAULT_T1_COUNT,
-            eating: 0f,
-            repro: 0.45f,
-            deathThresh: 0.3f,
-            deathRate: 0.6f,
-            reproThresh: 0.25f,
-            naturalDeathRate: 0.02f,
-            naturalDeathVariance: 0.01f,
-            huntingEfficiency: 1.0f,
-            huntingVariance: 0f,
-            optimalK: 291.0f,       // 18°C
-            arrhenBreadth: 4000.0f,
-            arrhenLower: 13974.0f,
-            arrhenUpper: 35000.0f,
-            lowerBound: 290.9f,     // 17.75°C
-            upperBound: 291.1f,     // 17.95°C
-            pmax: 0.85f,
-            ctMinC: 0f,
-            ctMaxC: 40f
+            eating: SHARED_EATING, repro: SHARED_REPRO, deathThresh: SHARED_DEATH_THRESH,
+            deathRate: SHARED_DEATH_RATE, reproThresh: SHARED_REPRO_THRESH,
+            naturalDeathRate: SHARED_NATURAL_DEATH, naturalDeathVariance: SHARED_NATURAL_DEATH_VAR,
+            huntingEfficiency: SHARED_HUNT_EFF, huntingVariance: SHARED_HUNT_VAR,
+            optimalK: 297.15f, arrhenBreadth: 5000f, arrhenLower: 16002f, arrhenUpper: 43802f,
+            lowerBound: 296.4f, upperBound: 297.9f,
+            pmax: 0.96f, ctMinC: 4f, ctMaxC: 39f,
+            conditionDrainRate: SHARED_COND_DRAIN, conditionRecoveryRate: SHARED_COND_RECOVERY,
+            variantLabel: "Hot"
         );
 
-        // ===== SHEPLIK (Tier 2 - Predator) =====
-        // DeathRate 0.3 — larger predators have greater energy reserves and stress
-        // tolerance, dying at roughly half the rate of prey (allometric scaling:
-        // M ∝ W^-0.25; cod M≈0.2 vs capelin M≈0.8, McCoy & Gillooly 2008)
-        // Natural death: 2% base ±1% variance
-        // Hunting: 75% base ±15% variance
-
+        // ----- GELGI (generalist, B=7000) -----
         AddSpecies(
-            index: 3,
-            name: SpeciesName.Sheplik,
-            variant: SpeciesVariant.Common,
-            tier: 1,
-            count: DEFAULT_T2_COUNT,
-            eating: 1.5f,
-            repro: 0.1f,
-            deathThresh: 0.3f,
-            deathRate: 0.3f,
-            reproThresh: 0.25f,
-            naturalDeathRate: 0.01f,      // Allometric: larger predators have lower background mortality
-            naturalDeathVariance: 0.005f,
-            huntingEfficiency: 0.75f,
-            huntingVariance: 0.15f,
-            optimalK: 297.0f,       // 24°C
-            arrhenBreadth: 8000.0f,
-            arrhenLower: 3000.0f,
-            arrhenUpper: 35000.0f,
-            lowerBound: 296.0f,     // 23°C
-            upperBound: 298.0f,     // 25°C
-            pmax: 0.65f,
-            ctMinC: 0f,
-            ctMaxC: 40f
+            index: 3, name: SpeciesName.Gelgi, variant: SpeciesVariant.Arctic, tier: 0,
+            count: DEFAULT_T1_COUNT,
+            eating: SHARED_EATING, repro: SHARED_REPRO, deathThresh: SHARED_DEATH_THRESH,
+            deathRate: SHARED_DEATH_RATE, reproThresh: SHARED_REPRO_THRESH,
+            naturalDeathRate: SHARED_NATURAL_DEATH, naturalDeathVariance: SHARED_NATURAL_DEATH_VAR,
+            huntingEfficiency: SHARED_HUNT_EFF, huntingVariance: SHARED_HUNT_VAR,
+            optimalK: 293.15f, arrhenBreadth: 7000f, arrhenLower: 4998f, arrhenUpper: 31098f,
+            lowerBound: 292.4f, upperBound: 293.9f,
+            pmax: 0.6616f, ctMinC: 0f, ctMaxC: 35f,
+            conditionDrainRate: SHARED_COND_DRAIN, conditionRecoveryRate: SHARED_COND_RECOVERY,
+            variantLabel: "Cold"
         );
 
         AddSpecies(
-            index: 4,
-            name: SpeciesName.Sheplik,
-            variant: SpeciesVariant.Tropical,
-            tier: 1,
-            count: DEFAULT_T2_COUNT,
-            eating: 1.5f,
-            repro: 0.1f,
-            deathThresh: 0.3f,
-            deathRate: 0.3f,
-            reproThresh: 0.25f,
-            naturalDeathRate: 0.01f,      // Allometric: larger predators have lower background mortality
-            naturalDeathVariance: 0.005f,
-            huntingEfficiency: 0.75f,
-            huntingVariance: 0.15f,
-            optimalK: 303.0f,       // 30°C
-            arrhenBreadth: 4000.0f,
-            arrhenLower: 15827.0f,
-            arrhenUpper: 35000.0f,
-            lowerBound: 302.9f,     // 29.75°C
-            upperBound: 303.1f,     // 29.95°C
-            pmax: 0.85f,
-            ctMinC: 0f,
-            ctMaxC: 40f
+            index: 4, name: SpeciesName.Gelgi, variant: SpeciesVariant.Common, tier: 0,
+            count: DEFAULT_T1_COUNT,
+            eating: SHARED_EATING, repro: SHARED_REPRO, deathThresh: SHARED_DEATH_THRESH,
+            deathRate: SHARED_DEATH_RATE, reproThresh: SHARED_REPRO_THRESH,
+            naturalDeathRate: SHARED_NATURAL_DEATH, naturalDeathVariance: SHARED_NATURAL_DEATH_VAR,
+            huntingEfficiency: SHARED_HUNT_EFF, huntingVariance: SHARED_HUNT_VAR,
+            optimalK: 295.15f, arrhenBreadth: 7000f, arrhenLower: 5000f, arrhenUpper: 31100f,
+            lowerBound: 294.4f, upperBound: 295.9f,
+            pmax: 0.6547f, ctMinC: 2f, ctMaxC: 37f,
+            conditionDrainRate: SHARED_COND_DRAIN, conditionRecoveryRate: SHARED_COND_RECOVERY,
+            variantLabel: "Warm"
         );
 
         AddSpecies(
-            index: 5,
-            name: SpeciesName.Sheplik,
-            variant: SpeciesVariant.Arctic,
-            tier: 1,
-            count: DEFAULT_T2_COUNT,
-            eating: 1.5f,
-            repro: 0.1f,
-            deathThresh: 0.3f,
-            deathRate: 0.3f,
-            reproThresh: 0.25f,
-            naturalDeathRate: 0.01f,      // Allometric: larger predators have lower background mortality
-            naturalDeathVariance: 0.005f,
-            huntingEfficiency: 0.75f,
-            huntingVariance: 0.15f,
-            optimalK: 291.0f,       // 18°C
-            arrhenBreadth: 4000.0f,
-            arrhenLower: 13974.0f,
-            arrhenUpper: 35000.0f,
-            lowerBound: 290.9f,     // 17.75°C
-            upperBound: 291.1f,     // 17.95°C
-            pmax: 0.85f,
-            ctMinC: 0f,
-            ctMaxC: 40f
+            index: 5, name: SpeciesName.Gelgi, variant: SpeciesVariant.Tropical, tier: 0,
+            count: DEFAULT_T1_COUNT,
+            eating: SHARED_EATING, repro: SHARED_REPRO, deathThresh: SHARED_DEATH_THRESH,
+            deathRate: SHARED_DEATH_RATE, reproThresh: SHARED_REPRO_THRESH,
+            naturalDeathRate: SHARED_NATURAL_DEATH, naturalDeathVariance: SHARED_NATURAL_DEATH_VAR,
+            huntingEfficiency: SHARED_HUNT_EFF, huntingVariance: SHARED_HUNT_VAR,
+            optimalK: 297.15f, arrhenBreadth: 7000f, arrhenLower: 5002f, arrhenUpper: 31102f,
+            lowerBound: 296.4f, upperBound: 297.9f,
+            pmax: 0.6481f, ctMinC: 4f, ctMaxC: 39f,
+            conditionDrainRate: SHARED_COND_DRAIN, conditionRecoveryRate: SHARED_COND_RECOVERY,
+            variantLabel: "Hot"
         );
 
         EditorUtility.SetDirty(this);
         AssetDatabase.SaveAssets();
 
-        Debug.Log($"Populated {speciesList.Count} species entries");
-        Debug.Log("Tier 1 (Hexapod): NaturalDeath=2%±1%, Hunting=N/A");
-        Debug.Log("Tier 2 (Sheplik): NaturalDeath=2%±1%, Hunting=75%±15%");
+        Debug.Log($"Populated {speciesList.Count} species entries (6 Tier-1 Cold/Warm/Hot organisms)");
+        Debug.Log("Hexapod (specialist B=5000) x Cold/Warm/Hot; Gelgi (generalist B=7000) x Cold/Warm/Hot");
+        Debug.Log("conditionDrain=0.15, conditionRecovery=0.10; eating=3, repro=0.45, deathRate=0.6");
     }
 
     private void AddSpecies(int index, SpeciesName name, SpeciesVariant variant, int tier, int count,
@@ -399,13 +341,16 @@ public class SpeciesDatabase : ScriptableObject
                            float huntingEfficiency, float huntingVariance,
                            float optimalK, float arrhenBreadth, float arrhenLower, float arrhenUpper,
                            float lowerBound, float upperBound,
-                           float pmax, float ctMinC, float ctMaxC)
+                           float pmax, float ctMinC, float ctMaxC,
+                           float conditionDrainRate = -1f, float conditionRecoveryRate = -1f,
+                           string variantLabel = null)
     {
         var data = new SpeciesData
         {
             index = index,
             speciesName = name,
             variant = variant,
+            variantLabel = variantLabel,
             displayName = name.ToString(),
             tier = tier,
             count = count,
@@ -414,6 +359,8 @@ public class SpeciesDatabase : ScriptableObject
             deathThreshold = deathThresh,
             deathRate = deathRate,
             reproThreshold = reproThresh,
+            conditionDrainRate = conditionDrainRate,
+            conditionRecoveryRate = conditionRecoveryRate,
             naturalDeathRate = naturalDeathRate,
             naturalDeathVariance = naturalDeathVariance,
             huntingEfficiency = huntingEfficiency,
@@ -437,7 +384,7 @@ public class SpeciesDatabase : ScriptableObject
             thermalBreadthStars = 5,
             temperatureThresholdText = "High",
             reproductionRateText = "Low",
-            description = $"{name} - {variant} variant"
+            description = $"{name} - {(string.IsNullOrEmpty(variantLabel) ? variant.ToString() : variantLabel)} variant"
         };
 
         speciesList.Add(data);
@@ -450,93 +397,44 @@ public class SpeciesDatabase : ScriptableObject
 
         foreach (var data in speciesList)
         {
-            // Preserve: icon, index, speciesName, variant, displayName, count
+            // Preserve: icon, index, speciesName, variant, displayName, count.
+            // Canonical source: Phase2plus_SixOrganismDefaults_Kelvin.csv (2026-06-05).
+            // Thermal params are keyed on BOTH speciesName AND variant — Hexapod
+            // (specialist B=5000) and Gelgi (generalist B=7000) differ in B/L/U/Pmax.
+            // Variant enum bucket -> display label: Arctic=Cold, Common=Warm, Tropical=Hot.
 
-            // --- Universal defaults ---
+            // --- Universal (shared Tier-1) defaults ---
             data.deathThreshold = 0.3f;
             data.reproThreshold = 0.25f;
             data.TemperatureDebuff = 0f;
-            data.ctMinC = 0f;
-            data.ctMaxC = 40f;
+            data.eatingAmount = 3f;
+            data.reproductionMultiplier = 0.45f;
+            data.deathRate = 0.6f;
+            data.naturalDeathRate = 0.02f;
+            data.naturalDeathVariance = 0.01f;
+            data.huntingEfficiency = 1.0f;   // Tier 1 ignores hunting
+            data.huntingVariance = 0f;
+            data.conditionDrainRate = 0.15f;
+            data.conditionRecoveryRate = 0.10f;
+            data.tier = 0;
 
-            // --- Variant-based defaults (thermal params) ---
-            switch (data.variant)
+            // --- Per-(species, variant) thermal params + variant label ---
+            bool thermalSet = ApplyCanonicalThermal(data);
+            if (!thermalSet)
             {
-                case SpeciesVariant.Common:
-                    data.optimalTempK = 297.0f;
-                    data.arrhenBreadth = 8000.0f;
-                    data.arrhenLower = 3000.0f;
-                    data.arrhenUpper = 35000.0f;
-                    data.lowerBoundK = 296.0f;
-                    data.upperBoundK = 298.0f;
-                    data.pmax = 0.65f;
-                    break;
-                case SpeciesVariant.Tropical:
-                    data.optimalTempK = 303.0f;
-                    data.arrhenBreadth = 4000.0f;
-                    data.arrhenLower = 15827.0f;
-                    data.arrhenUpper = 35000.0f;
-                    data.lowerBoundK = 302.9f;
-                    data.upperBoundK = 303.1f;
-                    data.pmax = 0.85f;
-                    break;
-                case SpeciesVariant.Arctic:
-                    data.optimalTempK = 291.0f;
-                    data.arrhenBreadth = 4000.0f;
-                    data.arrhenLower = 13974.0f;
-                    data.arrhenUpper = 35000.0f;
-                    data.lowerBoundK = 290.9f;
-                    data.upperBoundK = 291.1f;
-                    data.pmax = 0.85f;
-                    break;
-                default:
-                    Debug.LogWarning($"Skipping thermal reset for Custom variant: {data.displayName}");
-                    break;
+                Debug.LogWarning($"No canonical thermal defaults for {data.speciesName} {data.variant} — skipping reset");
+                continue;
             }
 
-            // --- Per-species defaults (biology + UI) ---
-            switch (data.speciesName)
-            {
-                case SpeciesName.Hexapod:
-                    data.tier = 0;
-                    data.eatingAmount = 0f;
-                    data.reproductionMultiplier = 0.45f;
-                    data.deathRate = 0.6f;
-                    data.naturalDeathRate = 0.02f;
-                    data.naturalDeathVariance = 0.01f;
-                    data.huntingEfficiency = 1.0f;
-                    data.huntingVariance = 0f;
-                    data.eatingStars = 0;
-                    data.reproductionStars = 4;
-                    data.deathThresholdStars = 3;
-                    data.deathRateStars = 2;
-                    data.thermalBreadthStars = 5;
-                    data.temperatureThresholdText = "High";
-                    data.reproductionRateText = "Low";
-                    data.description = $"Hexapod - {data.variant} variant";
-                    break;
-                case SpeciesName.Sheplik:
-                    data.tier = 1;
-                    data.eatingAmount = 1.5f;
-                    data.reproductionMultiplier = 0.1f;
-                    data.deathRate = 0.3f;  // Predators die at half prey rate (allometric scaling)
-                    data.naturalDeathRate = 0.01f;   // Allometric: larger predators have lower background mortality
-                    data.naturalDeathVariance = 0.005f;
-                    data.huntingEfficiency = 0.75f;
-                    data.huntingVariance = 0.15f;
-                    data.eatingStars = 4;
-                    data.reproductionStars = 2;
-                    data.deathThresholdStars = 4;
-                    data.deathRateStars = 4;
-                    data.thermalBreadthStars = data.variant == SpeciesVariant.Common ? 5 : 3;
-                    data.temperatureThresholdText = "High";
-                    data.reproductionRateText = "Low";
-                    data.description = $"Sheplik - {data.variant} variant";
-                    break;
-                default:
-                    Debug.LogWarning($"No per-species defaults for: {data.speciesName} {data.variant} — skipping biology reset");
-                    continue;
-            }
+            // --- Shared Tier-1 UI defaults ---
+            data.eatingStars = 0;
+            data.reproductionStars = 4;
+            data.deathThresholdStars = 3;
+            data.deathRateStars = 2;
+            data.thermalBreadthStars = 5;
+            data.temperatureThresholdText = "High";
+            data.reproductionRateText = "Low";
+            data.description = $"{data.speciesName} - {(string.IsNullOrEmpty(data.variantLabel) ? data.variant.ToString() : data.variantLabel)} variant";
 
             resetCount++;
         }
@@ -544,6 +442,67 @@ public class SpeciesDatabase : ScriptableObject
         EditorUtility.SetDirty(this);
         AssetDatabase.SaveAssets();
         Debug.Log($"Reset {resetCount}/{speciesList.Count} species values (icons preserved)");
+    }
+
+    /// <summary>
+    /// Apply the canonical Cold/Warm/Hot thermal params (optimalK, B, L, U, bounds,
+    /// pmax, CTmin/max) for the given species, keyed on BOTH speciesName AND variant.
+    /// Also sets variantLabel to Cold/Warm/Hot. Source: Phase2plus_SixOrganismDefaults_Kelvin.csv.
+    /// Returns false (caller skips) for species/variant combos that have no canonical entry.
+    /// </summary>
+    private static bool ApplyCanonicalThermal(SpeciesData data)
+    {
+        switch (data.speciesName)
+        {
+            case SpeciesName.Hexapod: // specialist, B = 5000
+                switch (data.variant)
+                {
+                    case SpeciesVariant.Arctic:  // Cold, Topt 20 °C
+                        data.optimalTempK = 293.15f; data.arrhenBreadth = 5000f;
+                        data.arrhenLower = 15998f; data.arrhenUpper = 43798f;
+                        data.lowerBoundK = 292.4f; data.upperBoundK = 293.9f;
+                        data.pmax = 0.9843f; data.ctMinC = 0f; data.ctMaxC = 35f;
+                        data.variantLabel = "Cold"; return true;
+                    case SpeciesVariant.Common:  // Warm, Topt 22 °C
+                        data.optimalTempK = 295.15f; data.arrhenBreadth = 5000f;
+                        data.arrhenLower = 16000f; data.arrhenUpper = 43800f;
+                        data.lowerBoundK = 294.4f; data.upperBoundK = 295.9f;
+                        data.pmax = 0.972f; data.ctMinC = 2f; data.ctMaxC = 37f;
+                        data.variantLabel = "Warm"; return true;
+                    case SpeciesVariant.Tropical: // Hot, Topt 24 °C
+                        data.optimalTempK = 297.15f; data.arrhenBreadth = 5000f;
+                        data.arrhenLower = 16002f; data.arrhenUpper = 43802f;
+                        data.lowerBoundK = 296.4f; data.upperBoundK = 297.9f;
+                        data.pmax = 0.96f; data.ctMinC = 4f; data.ctMaxC = 39f;
+                        data.variantLabel = "Hot"; return true;
+                    default: return false;
+                }
+            case SpeciesName.Gelgi: // generalist, B = 7000
+                switch (data.variant)
+                {
+                    case SpeciesVariant.Arctic:  // Cold, Topt 20 °C
+                        data.optimalTempK = 293.15f; data.arrhenBreadth = 7000f;
+                        data.arrhenLower = 4998f; data.arrhenUpper = 31098f;
+                        data.lowerBoundK = 292.4f; data.upperBoundK = 293.9f;
+                        data.pmax = 0.6616f; data.ctMinC = 0f; data.ctMaxC = 35f;
+                        data.variantLabel = "Cold"; return true;
+                    case SpeciesVariant.Common:  // Warm, Topt 22 °C
+                        data.optimalTempK = 295.15f; data.arrhenBreadth = 7000f;
+                        data.arrhenLower = 5000f; data.arrhenUpper = 31100f;
+                        data.lowerBoundK = 294.4f; data.upperBoundK = 295.9f;
+                        data.pmax = 0.6547f; data.ctMinC = 2f; data.ctMaxC = 37f;
+                        data.variantLabel = "Warm"; return true;
+                    case SpeciesVariant.Tropical: // Hot, Topt 24 °C
+                        data.optimalTempK = 297.15f; data.arrhenBreadth = 7000f;
+                        data.arrhenLower = 5002f; data.arrhenUpper = 31102f;
+                        data.lowerBoundK = 296.4f; data.upperBoundK = 297.9f;
+                        data.pmax = 0.6481f; data.ctMinC = 4f; data.ctMaxC = 39f;
+                        data.variantLabel = "Hot"; return true;
+                    default: return false;
+                }
+            default:
+                return false;
+        }
     }
 
     private void AddSpecies(int index, string displayname, int tier, int count,

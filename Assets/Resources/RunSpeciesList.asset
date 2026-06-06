@@ -16,7 +16,7 @@ MonoBehaviour:
   speciesList:
   - index: 0
     speciesName: 0
-    variant: 0
+    variant: 1
     variantLabel: Warm
     displayName: 
     icon: {fileID: 21300000, guid: f89c1a59fafaa3e41aa5e9f94d051ee9, type: 3}
@@ -53,7 +53,7 @@ MonoBehaviour:
     ctMaxC: 37
   - index: 1
     speciesName: 0
-    variant: 1
+    variant: 2
     variantLabel: Hot
     displayName: 
     icon: {fileID: 21300000, guid: 485589c1ae6b14a4f825d236b41fef64, type: 3}
@@ -90,7 +90,7 @@ MonoBehaviour:
     ctMaxC: 39
   - index: 2
     speciesName: 0
-    variant: 2
+    variant: 0
     variantLabel: Cold
     displayName: 
     icon: {fileID: 21300000, guid: b18c89991d6433d47a3003fba57fad95, type: 3}
@@ -127,7 +127,7 @@ MonoBehaviour:
     ctMaxC: 35
   - index: 7
     speciesName: 1
-    variant: 0
+    variant: 4
     variantLabel: Warm
     displayName: 
     icon: {fileID: 0}
@@ -164,7 +164,7 @@ MonoBehaviour:
     ctMaxC: 37
   - index: 8
     speciesName: 1
-    variant: 1
+    variant: 5
     variantLabel: Hot
     displayName: 
     icon: {fileID: 0}
@@ -201,7 +201,7 @@ MonoBehaviour:
     ctMaxC: 39
   - index: 6
     speciesName: 1
-    variant: 2
+    variant: 3
     variantLabel: Cold
     displayName: 
     icon: {fileID: 0}

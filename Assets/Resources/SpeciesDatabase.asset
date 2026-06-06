@@ -15,7 +15,7 @@ MonoBehaviour:
   speciesList:
   - index: 0
     speciesName: 0
-    variant: 0
+    variant: 1
     variantLabel: Warm
     displayName: Warm Specialist
     icon: {fileID: 21300000, guid: f89c1a59fafaa3e41aa5e9f94d051ee9, type: 3}
@@ -52,7 +52,7 @@ MonoBehaviour:
     ctMaxC: 37
   - index: 1
     speciesName: 0
-    variant: 1
+    variant: 2
     variantLabel: Hot
     displayName: Hot Specialist
     icon: {fileID: 21300000, guid: 485589c1ae6b14a4f825d236b41fef64, type: 3}
@@ -89,7 +89,7 @@ MonoBehaviour:
     ctMaxC: 39
   - index: 2
     speciesName: 0
-    variant: 2
+    variant: 0
     variantLabel: Cold
     displayName: Cold Specialist
     icon: {fileID: 21300000, guid: b18c89991d6433d47a3003fba57fad95, type: 3}
@@ -124,120 +124,9 @@ MonoBehaviour:
     pmax: 0.9843
     ctMinC: 0
     ctMaxC: 35
-  - index: 4
-    speciesName: 3
-    variant: 1
-    variantLabel: 
-    displayName: 
-    icon: {fileID: 21300000, guid: 6a4b52089df8bd0498453509201ec913, type: 3}
-    count: 4
-    tier: 1
-    eatingAmount: 1.5
-    reproductionMultiplier: 0.1
-    deathThreshold: 0.3
-    deathRate: 0.3
-    TemperatureDebuff: 0
-    reproThreshold: 0.25
-    conditionDrainRate: -1
-    conditionRecoveryRate: -1
-    naturalDeathRate: 0.01
-    naturalDeathVariance: 0.005
-    huntingEfficiency: 0.75
-    huntingVariance: 0.15
-    eatingStars: 4
-    reproductionStars: 2
-    deathThresholdStars: 4
-    deathRateStars: 4
-    thermalBreadthStars: 3
-    temperatureThresholdText: High
-    reproductionRateText: Low
-    description: Sheplik - Tropical variant
-    optimalTempK: 303
-    arrhenBreadth: 4000
-    arrhenLower: 15827
-    arrhenUpper: 35000
-    lowerBoundK: 302.9
-    upperBoundK: 303.1
-    pmax: 0.85
-    ctMinC: 0
-    ctMaxC: 40
-  - index: 5
-    speciesName: 3
-    variant: 2
-    variantLabel: 
-    displayName: 
-    icon: {fileID: 21300000, guid: cc38ddbdb02da6747bc7697cb69e3458, type: 3}
-    count: 4
-    tier: 1
-    eatingAmount: 1.5
-    reproductionMultiplier: 0.1
-    deathThreshold: 0.3
-    deathRate: 0.3
-    TemperatureDebuff: 0
-    reproThreshold: 0.25
-    conditionDrainRate: -1
-    conditionRecoveryRate: -1
-    naturalDeathRate: 0.01
-    naturalDeathVariance: 0.005
-    huntingEfficiency: 0.75
-    huntingVariance: 0.15
-    eatingStars: 4
-    reproductionStars: 2
-    deathThresholdStars: 4
-    deathRateStars: 4
-    thermalBreadthStars: 3
-    temperatureThresholdText: High
-    reproductionRateText: Low
-    description: Sheplik - Arctic variant
-    optimalTempK: 291
-    arrhenBreadth: 4000
-    arrhenLower: 13974
-    arrhenUpper: 35000
-    lowerBoundK: 290.9
-    upperBoundK: 291.1
-    pmax: 0.85
-    ctMinC: 0
-    ctMaxC: 40
-  - index: 3
-    speciesName: 3
-    variant: 0
-    variantLabel: 
-    displayName: 
-    icon: {fileID: 21300000, guid: 8ab2db50f00f92142abc4c674c239a1c, type: 3}
-    count: 4
-    tier: 1
-    eatingAmount: 1.5
-    reproductionMultiplier: 0.1
-    deathThreshold: 0.3
-    deathRate: 0.3
-    TemperatureDebuff: 0
-    reproThreshold: 0.25
-    conditionDrainRate: -1
-    conditionRecoveryRate: -1
-    naturalDeathRate: 0.01
-    naturalDeathVariance: 0.005
-    huntingEfficiency: 0.75
-    huntingVariance: 0.15
-    eatingStars: 4
-    reproductionStars: 2
-    deathThresholdStars: 4
-    deathRateStars: 4
-    thermalBreadthStars: 5
-    temperatureThresholdText: High
-    reproductionRateText: Low
-    description: Sheplik - Common variant
-    optimalTempK: 297
-    arrhenBreadth: 8000
-    arrhenLower: 3000
-    arrhenUpper: 35000
-    lowerBoundK: 296
-    upperBoundK: 298
-    pmax: 0.65
-    ctMinC: 0
-    ctMaxC: 40
   - index: 6
     speciesName: 1
-    variant: 2
+    variant: 3
     variantLabel: Cold
     displayName: Cold Generalist
     icon: {fileID: 0}
@@ -274,7 +163,7 @@ MonoBehaviour:
     ctMaxC: 35
   - index: 7
     speciesName: 1
-    variant: 0
+    variant: 4
     variantLabel: Warm
     displayName: Warm Generalist
     icon: {fileID: 0}
@@ -311,7 +200,7 @@ MonoBehaviour:
     ctMaxC: 37
   - index: 8
     speciesName: 1
-    variant: 1
+    variant: 5
     variantLabel: Hot
     displayName: Hot Generalist
     icon: {fileID: 0}

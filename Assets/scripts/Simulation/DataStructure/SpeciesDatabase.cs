@@ -20,9 +20,12 @@ public enum SpeciesName
 
 public enum SpeciesVariant
 {
-    Common,
-    Tropical,
-    Arctic,
+    ColdSpecialist,
+    WarmSpecialist,
+    HotSpecialist,
+    ColdGeneralist,
+    WarmGeneralist,
+    HotGeneralist,
     Custom
 }
 
@@ -108,21 +111,20 @@ public class SpeciesData
     {
         switch (variant)
         {
-            case SpeciesVariant.Tropical:
-                pmax = 0.85f;
-                ctMinC = 0f;
-                ctMaxC = 40f;
-                break;
-            case SpeciesVariant.Arctic:
-                pmax = 0.85f;
-                ctMinC = 0f;
-                ctMaxC = 40f;
-                break;
-            default: // Common and Custom
-                pmax = 0.65f;
-                ctMinC = 0f;
-                ctMaxC = 40f;
-                break;
+            case SpeciesVariant.ColdSpecialist:
+                pmax = 0.9843f; ctMinC = 0f; ctMaxC = 35f; break;
+            case SpeciesVariant.WarmSpecialist:
+                pmax = 0.972f; ctMinC = 2f; ctMaxC = 37f; break;
+            case SpeciesVariant.HotSpecialist:
+                pmax = 0.96f; ctMinC = 4f; ctMaxC = 39f; break;
+            case SpeciesVariant.ColdGeneralist:
+                pmax = 0.6616f; ctMinC = 0f; ctMaxC = 35f; break;
+            case SpeciesVariant.WarmGeneralist:
+                pmax = 0.6547f; ctMinC = 2f; ctMaxC = 37f; break;
+            case SpeciesVariant.HotGeneralist:
+                pmax = 0.6481f; ctMinC = 4f; ctMaxC = 39f; break;
+            default: // Custom / unknown
+                pmax = 0.65f; ctMinC = 0f; ctMaxC = 40f; break;
         }
     }
 
@@ -150,9 +152,19 @@ public class SpeciesData
         if (string.IsNullOrWhiteSpace(label)) return SpeciesVariant.Custom;
         switch (label.Trim().ToLowerInvariant())
         {
-            case "cold": case "arctic":   return SpeciesVariant.Arctic;
-            case "warm": case "common":   return SpeciesVariant.Common;
-            case "hot":  case "tropical": return SpeciesVariant.Tropical;
+            // Legacy temp aliases (fallback-only; Brian's CSVs pass explicit params).
+            // Bare temp strings map to the Specialist buckets; Generalist buckets are
+            // reached via the new names or the asset, not these bare strings.
+            case "cold": case "arctic":   return SpeciesVariant.ColdSpecialist;
+            case "warm": case "common":   return SpeciesVariant.WarmSpecialist;
+            case "hot":  case "tropical": return SpeciesVariant.HotSpecialist;
+            // New names accepted directly.
+            case "coldspecialist":        return SpeciesVariant.ColdSpecialist;
+            case "warmspecialist":        return SpeciesVariant.WarmSpecialist;
+            case "hotspecialist":         return SpeciesVariant.HotSpecialist;
+            case "coldgeneralist":        return SpeciesVariant.ColdGeneralist;
+            case "warmgeneralist":        return SpeciesVariant.WarmGeneralist;
+            case "hotgeneralist":         return SpeciesVariant.HotGeneralist;
             case "custom":                return SpeciesVariant.Custom;
             default:
                 return System.Enum.TryParse<SpeciesVariant>(label.Trim(), true, out var e) ? e : SpeciesVariant.Custom;
@@ -266,7 +278,7 @@ public class SpeciesDatabase : ScriptableObject
 
         // ----- HEXAPOD (specialist, B=5000) -----
         AddSpecies(
-            index: 0, name: SpeciesName.Hexapod, variant: SpeciesVariant.Arctic, tier: 0,
+            index: 0, name: SpeciesName.Hexapod, variant: SpeciesVariant.ColdSpecialist, tier: 0,
             count: DEFAULT_T1_COUNT,
             eating: SHARED_EATING, repro: SHARED_REPRO, deathThresh: SHARED_DEATH_THRESH,
             deathRate: SHARED_DEATH_RATE, reproThresh: SHARED_REPRO_THRESH,
@@ -276,11 +288,11 @@ public class SpeciesDatabase : ScriptableObject
             lowerBound: 292.4f, upperBound: 293.9f,
             pmax: 0.9843f, ctMinC: 0f, ctMaxC: 35f,
             conditionDrainRate: SHARED_COND_DRAIN, conditionRecoveryRate: SHARED_COND_RECOVERY,
-            variantLabel: "Cold"
+            variantLabel: "Cold", displayName: "Cold Specialist"
         );
 
         AddSpecies(
-            index: 1, name: SpeciesName.Hexapod, variant: SpeciesVariant.Common, tier: 0,
+            index: 1, name: SpeciesName.Hexapod, variant: SpeciesVariant.WarmSpecialist, tier: 0,
             count: DEFAULT_T1_COUNT,
             eating: SHARED_EATING, repro: SHARED_REPRO, deathThresh: SHARED_DEATH_THRESH,
             deathRate: SHARED_DEATH_RATE, reproThresh: SHARED_REPRO_THRESH,
@@ -290,11 +302,11 @@ public class SpeciesDatabase : ScriptableObject
             lowerBound: 294.4f, upperBound: 295.9f,
             pmax: 0.972f, ctMinC: 2f, ctMaxC: 37f,
             conditionDrainRate: SHARED_COND_DRAIN, conditionRecoveryRate: SHARED_COND_RECOVERY,
-            variantLabel: "Warm"
+            variantLabel: "Warm", displayName: "Warm Specialist"
         );
 
         AddSpecies(
-            index: 2, name: SpeciesName.Hexapod, variant: SpeciesVariant.Tropical, tier: 0,
+            index: 2, name: SpeciesName.Hexapod, variant: SpeciesVariant.HotSpecialist, tier: 0,
             count: DEFAULT_T1_COUNT,
             eating: SHARED_EATING, repro: SHARED_REPRO, deathThresh: SHARED_DEATH_THRESH,
             deathRate: SHARED_DEATH_RATE, reproThresh: SHARED_REPRO_THRESH,
@@ -304,12 +316,12 @@ public class SpeciesDatabase : ScriptableObject
             lowerBound: 296.4f, upperBound: 297.9f,
             pmax: 0.96f, ctMinC: 4f, ctMaxC: 39f,
             conditionDrainRate: SHARED_COND_DRAIN, conditionRecoveryRate: SHARED_COND_RECOVERY,
-            variantLabel: "Hot"
+            variantLabel: "Hot", displayName: "Hot Specialist"
         );
 
         // ----- GELGI (generalist, B=7000) -----
         AddSpecies(
-            index: 3, name: SpeciesName.Gelgi, variant: SpeciesVariant.Arctic, tier: 0,
+            index: 3, name: SpeciesName.Gelgi, variant: SpeciesVariant.ColdGeneralist, tier: 0,
             count: DEFAULT_T1_COUNT,
             eating: SHARED_EATING, repro: SHARED_REPRO, deathThresh: SHARED_DEATH_THRESH,
             deathRate: SHARED_DEATH_RATE, reproThresh: SHARED_REPRO_THRESH,
@@ -319,11 +331,11 @@ public class SpeciesDatabase : ScriptableObject
             lowerBound: 292.4f, upperBound: 293.9f,
             pmax: 0.6616f, ctMinC: 0f, ctMaxC: 35f,
             conditionDrainRate: SHARED_COND_DRAIN, conditionRecoveryRate: SHARED_COND_RECOVERY,
-            variantLabel: "Cold"
+            variantLabel: "Cold", displayName: "Cold Generalist"
         );
 
         AddSpecies(
-            index: 4, name: SpeciesName.Gelgi, variant: SpeciesVariant.Common, tier: 0,
+            index: 4, name: SpeciesName.Gelgi, variant: SpeciesVariant.WarmGeneralist, tier: 0,
             count: DEFAULT_T1_COUNT,
             eating: SHARED_EATING, repro: SHARED_REPRO, deathThresh: SHARED_DEATH_THRESH,
             deathRate: SHARED_DEATH_RATE, reproThresh: SHARED_REPRO_THRESH,
@@ -333,11 +345,11 @@ public class SpeciesDatabase : ScriptableObject
             lowerBound: 294.4f, upperBound: 295.9f,
             pmax: 0.6547f, ctMinC: 2f, ctMaxC: 37f,
             conditionDrainRate: SHARED_COND_DRAIN, conditionRecoveryRate: SHARED_COND_RECOVERY,
-            variantLabel: "Warm"
+            variantLabel: "Warm", displayName: "Warm Generalist"
         );
 
         AddSpecies(
-            index: 5, name: SpeciesName.Gelgi, variant: SpeciesVariant.Tropical, tier: 0,
+            index: 5, name: SpeciesName.Gelgi, variant: SpeciesVariant.HotGeneralist, tier: 0,
             count: DEFAULT_T1_COUNT,
             eating: SHARED_EATING, repro: SHARED_REPRO, deathThresh: SHARED_DEATH_THRESH,
             deathRate: SHARED_DEATH_RATE, reproThresh: SHARED_REPRO_THRESH,
@@ -347,7 +359,7 @@ public class SpeciesDatabase : ScriptableObject
             lowerBound: 296.4f, upperBound: 297.9f,
             pmax: 0.6481f, ctMinC: 4f, ctMaxC: 39f,
             conditionDrainRate: SHARED_COND_DRAIN, conditionRecoveryRate: SHARED_COND_RECOVERY,
-            variantLabel: "Hot"
+            variantLabel: "Hot", displayName: "Hot Generalist"
         );
 
         EditorUtility.SetDirty(this);
@@ -367,7 +379,7 @@ public class SpeciesDatabase : ScriptableObject
                            float lowerBound, float upperBound,
                            float pmax, float ctMinC, float ctMaxC,
                            float conditionDrainRate = -1f, float conditionRecoveryRate = -1f,
-                           string variantLabel = null)
+                           string variantLabel = null, string displayName = null)
     {
         var data = new SpeciesData
         {
@@ -375,7 +387,7 @@ public class SpeciesDatabase : ScriptableObject
             speciesName = name,
             variant = variant,
             variantLabel = variantLabel,
-            displayName = name.ToString(),
+            displayName = string.IsNullOrEmpty(displayName) ? name.ToString() : displayName,
             tier = tier,
             count = count,
             eatingAmount = eating,
@@ -476,55 +488,48 @@ public class SpeciesDatabase : ScriptableObject
     /// </summary>
     private static bool ApplyCanonicalThermal(SpeciesData data)
     {
-        switch (data.speciesName)
+        // The 7-value variant now fully identifies the organism (Specialist B=5000 /
+        // Generalist B=7000 baked into the bucket), so speciesName is no longer needed
+        // to disambiguate. Custom => skip (return false).
+        switch (data.variant)
         {
-            case SpeciesName.Hexapod: // specialist, B = 5000
-                switch (data.variant)
-                {
-                    case SpeciesVariant.Arctic:  // Cold, Topt 20 °C
-                        data.optimalTempK = 293.15f; data.arrhenBreadth = 5000f;
-                        data.arrhenLower = 15998f; data.arrhenUpper = 43798f;
-                        data.lowerBoundK = 292.4f; data.upperBoundK = 293.9f;
-                        data.pmax = 0.9843f; data.ctMinC = 0f; data.ctMaxC = 35f;
-                        data.variantLabel = "Cold"; data.displayName = "Cold Specialist"; return true;
-                    case SpeciesVariant.Common:  // Warm, Topt 22 °C
-                        data.optimalTempK = 295.15f; data.arrhenBreadth = 5000f;
-                        data.arrhenLower = 16000f; data.arrhenUpper = 43800f;
-                        data.lowerBoundK = 294.4f; data.upperBoundK = 295.9f;
-                        data.pmax = 0.972f; data.ctMinC = 2f; data.ctMaxC = 37f;
-                        data.variantLabel = "Warm"; data.displayName = "Warm Specialist"; return true;
-                    case SpeciesVariant.Tropical: // Hot, Topt 24 °C
-                        data.optimalTempK = 297.15f; data.arrhenBreadth = 5000f;
-                        data.arrhenLower = 16002f; data.arrhenUpper = 43802f;
-                        data.lowerBoundK = 296.4f; data.upperBoundK = 297.9f;
-                        data.pmax = 0.96f; data.ctMinC = 4f; data.ctMaxC = 39f;
-                        data.variantLabel = "Hot"; data.displayName = "Hot Specialist"; return true;
-                    default: return false;
-                }
-            case SpeciesName.Gelgi: // generalist, B = 7000
-                switch (data.variant)
-                {
-                    case SpeciesVariant.Arctic:  // Cold, Topt 20 °C
-                        data.optimalTempK = 293.15f; data.arrhenBreadth = 7000f;
-                        data.arrhenLower = 4998f; data.arrhenUpper = 31098f;
-                        data.lowerBoundK = 292.4f; data.upperBoundK = 293.9f;
-                        data.pmax = 0.6616f; data.ctMinC = 0f; data.ctMaxC = 35f;
-                        data.variantLabel = "Cold"; data.displayName = "Cold Generalist"; return true;
-                    case SpeciesVariant.Common:  // Warm, Topt 22 °C
-                        data.optimalTempK = 295.15f; data.arrhenBreadth = 7000f;
-                        data.arrhenLower = 5000f; data.arrhenUpper = 31100f;
-                        data.lowerBoundK = 294.4f; data.upperBoundK = 295.9f;
-                        data.pmax = 0.6547f; data.ctMinC = 2f; data.ctMaxC = 37f;
-                        data.variantLabel = "Warm"; data.displayName = "Warm Generalist"; return true;
-                    case SpeciesVariant.Tropical: // Hot, Topt 24 °C
-                        data.optimalTempK = 297.15f; data.arrhenBreadth = 7000f;
-                        data.arrhenLower = 5002f; data.arrhenUpper = 31102f;
-                        data.lowerBoundK = 296.4f; data.upperBoundK = 297.9f;
-                        data.pmax = 0.6481f; data.ctMinC = 4f; data.ctMaxC = 39f;
-                        data.variantLabel = "Hot"; data.displayName = "Hot Generalist"; return true;
-                    default: return false;
-                }
-            default:
+            case SpeciesVariant.ColdSpecialist:  // Cold, Topt 20 °C, B=5000
+                data.optimalTempK = 293.15f; data.arrhenBreadth = 5000f;
+                data.arrhenLower = 15998f; data.arrhenUpper = 43798f;
+                data.lowerBoundK = 292.4f; data.upperBoundK = 293.9f;
+                data.pmax = 0.9843f; data.ctMinC = 0f; data.ctMaxC = 35f;
+                data.variantLabel = "Cold"; data.displayName = "Cold Specialist"; return true;
+            case SpeciesVariant.WarmSpecialist:  // Warm, Topt 22 °C, B=5000
+                data.optimalTempK = 295.15f; data.arrhenBreadth = 5000f;
+                data.arrhenLower = 16000f; data.arrhenUpper = 43800f;
+                data.lowerBoundK = 294.4f; data.upperBoundK = 295.9f;
+                data.pmax = 0.972f; data.ctMinC = 2f; data.ctMaxC = 37f;
+                data.variantLabel = "Warm"; data.displayName = "Warm Specialist"; return true;
+            case SpeciesVariant.HotSpecialist:   // Hot, Topt 24 °C, B=5000
+                data.optimalTempK = 297.15f; data.arrhenBreadth = 5000f;
+                data.arrhenLower = 16002f; data.arrhenUpper = 43802f;
+                data.lowerBoundK = 296.4f; data.upperBoundK = 297.9f;
+                data.pmax = 0.96f; data.ctMinC = 4f; data.ctMaxC = 39f;
+                data.variantLabel = "Hot"; data.displayName = "Hot Specialist"; return true;
+            case SpeciesVariant.ColdGeneralist:  // Cold, Topt 20 °C, B=7000
+                data.optimalTempK = 293.15f; data.arrhenBreadth = 7000f;
+                data.arrhenLower = 4998f; data.arrhenUpper = 31098f;
+                data.lowerBoundK = 292.4f; data.upperBoundK = 293.9f;
+                data.pmax = 0.6616f; data.ctMinC = 0f; data.ctMaxC = 35f;
+                data.variantLabel = "Cold"; data.displayName = "Cold Generalist"; return true;
+            case SpeciesVariant.WarmGeneralist:  // Warm, Topt 22 °C, B=7000
+                data.optimalTempK = 295.15f; data.arrhenBreadth = 7000f;
+                data.arrhenLower = 5000f; data.arrhenUpper = 31100f;
+                data.lowerBoundK = 294.4f; data.upperBoundK = 295.9f;
+                data.pmax = 0.6547f; data.ctMinC = 2f; data.ctMaxC = 37f;
+                data.variantLabel = "Warm"; data.displayName = "Warm Generalist"; return true;
+            case SpeciesVariant.HotGeneralist:   // Hot, Topt 24 °C, B=7000
+                data.optimalTempK = 297.15f; data.arrhenBreadth = 7000f;
+                data.arrhenLower = 5002f; data.arrhenUpper = 31102f;
+                data.lowerBoundK = 296.4f; data.upperBoundK = 297.9f;
+                data.pmax = 0.6481f; data.ctMinC = 4f; data.ctMaxC = 39f;
+                data.variantLabel = "Hot"; data.displayName = "Hot Generalist"; return true;
+            default: // Custom / unknown — no canonical preset
                 return false;
         }
     }

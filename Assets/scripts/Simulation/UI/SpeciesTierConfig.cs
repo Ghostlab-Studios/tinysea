@@ -35,9 +35,9 @@ public class SpeciesTierConfig : MonoBehaviour
     // Variant sequence for cycling when adding
     private readonly SpeciesVariant[] variantSequence =
     {
-        SpeciesVariant.Common,
-        SpeciesVariant.Arctic,
-        SpeciesVariant.Tropical
+        SpeciesVariant.ColdSpecialist,
+        SpeciesVariant.WarmSpecialist,
+        SpeciesVariant.HotSpecialist
     };
 
     /// <summary>

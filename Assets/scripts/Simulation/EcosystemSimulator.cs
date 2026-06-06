@@ -456,13 +456,24 @@ public class EcosystemSimulator
 
     private ThermalVariant ConvertVariant(SpeciesVariant variant)
     {
+        // Map the 7 SpeciesVariant values onto the 4 legacy ThermalVariant buckets so the
+        // tier-rollup CSV columns (Tier1Arctic/Common/Tropical/Custom) stay byte-identical.
+        // Cold*->Arctic, Warm*->Common, Hot*->Tropical, Custom->Custom.
         switch (variant)
         {
-            case SpeciesVariant.Arctic: return ThermalVariant.Arctic;
-            case SpeciesVariant.Common: return ThermalVariant.Common;
-            case SpeciesVariant.Tropical: return ThermalVariant.Tropical;
-            case SpeciesVariant.Custom: return ThermalVariant.Custom;
-            default: return ThermalVariant.Common;
+            case SpeciesVariant.ColdSpecialist:
+            case SpeciesVariant.ColdGeneralist:
+                return ThermalVariant.Arctic;
+            case SpeciesVariant.WarmSpecialist:
+            case SpeciesVariant.WarmGeneralist:
+                return ThermalVariant.Common;
+            case SpeciesVariant.HotSpecialist:
+            case SpeciesVariant.HotGeneralist:
+                return ThermalVariant.Tropical;
+            case SpeciesVariant.Custom:
+                return ThermalVariant.Custom;
+            default:
+                return ThermalVariant.Common;
         }
     }
 

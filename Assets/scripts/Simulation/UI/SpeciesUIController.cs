@@ -12,7 +12,7 @@ public class SpeciesUIController : MonoBehaviour
     [Header("Species Selection")]
     [SerializeField] private string displayNameOverride = "";
     [SerializeField] private SpeciesName speciesName = SpeciesName.Cyplo;
-    [SerializeField] private SpeciesVariant speciesVariant = SpeciesVariant.Common;
+    [SerializeField] private SpeciesVariant speciesVariant = SpeciesVariant.WarmSpecialist;
 
     [Header("Graph UI")]
     [SerializeField] private ThermalGraphUI thermalGraphUI;

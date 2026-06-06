@@ -53,9 +53,11 @@ public class SpeciesData
     public float reproThreshold = 0.25f;
 
     [Header("Condition Timescale (per-species τ, Batch 2)")]
-    // Negative = inherit the simulator-global rate (blank CSV columns stay backward compatible).
-    public float conditionDrainRate = -1f;
-    public float conditionRecoveryRate = -1f;    // FinalPerf required to reproduce
+    // Database/UI default = explicit 0.15 / 0.10 so the inspector never shows a bare -1.
+    // The bulk-CSV parser keeps its own negative sentinel (a blank per-species column -> -1
+    // = inherit the simulator-global rate), so legacy CSV batches stay backward compatible.
+    public float conditionDrainRate = 0.15f;
+    public float conditionRecoveryRate = 0.10f;
     
     
     [Header("Natural Mortality")]

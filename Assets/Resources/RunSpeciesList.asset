@@ -28,8 +28,8 @@ MonoBehaviour:
     deathRate: 0.6
     TemperatureDebuff: 0
     reproThreshold: 0.25
-    conditionDrainRate: -1
-    conditionRecoveryRate: -1
+    conditionDrainRate: 0.15
+    conditionRecoveryRate: 0.1
     naturalDeathRate: 0.02
     naturalDeathVariance: 0.01
     huntingEfficiency: 1
@@ -65,8 +65,8 @@ MonoBehaviour:
     deathRate: 0.6
     TemperatureDebuff: 0
     reproThreshold: 0.25
-    conditionDrainRate: -1
-    conditionRecoveryRate: -1
+    conditionDrainRate: 0.15
+    conditionRecoveryRate: 0.1
     naturalDeathRate: 0.02
     naturalDeathVariance: 0.01
     huntingEfficiency: 1
@@ -102,8 +102,8 @@ MonoBehaviour:
     deathRate: 0.6
     TemperatureDebuff: 0
     reproThreshold: 0.25
-    conditionDrainRate: -1
-    conditionRecoveryRate: -1
+    conditionDrainRate: 0.15
+    conditionRecoveryRate: 0.1
     naturalDeathRate: 0.02
     naturalDeathVariance: 0.01
     huntingEfficiency: 1
@@ -139,8 +139,8 @@ MonoBehaviour:
     deathRate: 0.6
     TemperatureDebuff: 0
     reproThreshold: 0.25
-    conditionDrainRate: -1
-    conditionRecoveryRate: -1
+    conditionDrainRate: 0.15
+    conditionRecoveryRate: 0.1
     naturalDeathRate: 0.02
     naturalDeathVariance: 0.01
     huntingEfficiency: 1
@@ -176,8 +176,8 @@ MonoBehaviour:
     deathRate: 0.6
     TemperatureDebuff: 0
     reproThreshold: 0.25
-    conditionDrainRate: -1
-    conditionRecoveryRate: -1
+    conditionDrainRate: 0.15
+    conditionRecoveryRate: 0.1
     naturalDeathRate: 0.02
     naturalDeathVariance: 0.01
     huntingEfficiency: 1
@@ -213,8 +213,8 @@ MonoBehaviour:
     deathRate: 0.6
     TemperatureDebuff: 0
     reproThreshold: 0.25
-    conditionDrainRate: -1
-    conditionRecoveryRate: -1
+    conditionDrainRate: 0.15
+    conditionRecoveryRate: 0.1
     naturalDeathRate: 0.02
     naturalDeathVariance: 0.01
     huntingEfficiency: 1

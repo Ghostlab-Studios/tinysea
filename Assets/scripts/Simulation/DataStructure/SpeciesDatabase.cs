@@ -175,6 +175,30 @@ public class SpeciesData
         }
         return sb.ToString();
     }
+
+    /// <summary>
+    /// Variant-selector redesign: canonical deep copy of every serialized field
+    /// (thermal + biology + variantLabel + displayName + condition rates + icon ref).
+    /// Single source of copy truth — reuse wherever a catalog template is instantiated
+    /// into a RunSpeciesList working entry.
+    /// </summary>
+    public SpeciesData DeepCopy()
+    {
+        var c = UnityEngine.JsonUtility.FromJson<SpeciesData>(UnityEngine.JsonUtility.ToJson(this));
+        c.icon = this.icon;  // UnityEngine.Object ref isn't round-tripped by JsonUtility
+        return c;
+    }
+
+    /// <summary>
+    /// Variant-selector redesign: overwrite EVERY serialized field of THIS instance from
+    /// <paramref name="src"/> while preserving this object's reference (so callers holding
+    /// the RunSpeciesList entry keep their pointer). Counterpart to DeepCopy.
+    /// </summary>
+    public void CopyFrom(SpeciesData src)
+    {
+        UnityEngine.JsonUtility.FromJsonOverwrite(UnityEngine.JsonUtility.ToJson(src), this);
+        this.icon = src.icon;
+    }
 }
 
 [CreateAssetMenu(fileName = "SpeciesDatabase", menuName = "TinySea/Species Database")]
@@ -462,19 +486,19 @@ public class SpeciesDatabase : ScriptableObject
                         data.arrhenLower = 15998f; data.arrhenUpper = 43798f;
                         data.lowerBoundK = 292.4f; data.upperBoundK = 293.9f;
                         data.pmax = 0.9843f; data.ctMinC = 0f; data.ctMaxC = 35f;
-                        data.variantLabel = "Cold"; return true;
+                        data.variantLabel = "Cold"; data.displayName = "Cold Specialist"; return true;
                     case SpeciesVariant.Common:  // Warm, Topt 22 °C
                         data.optimalTempK = 295.15f; data.arrhenBreadth = 5000f;
                         data.arrhenLower = 16000f; data.arrhenUpper = 43800f;
                         data.lowerBoundK = 294.4f; data.upperBoundK = 295.9f;
                         data.pmax = 0.972f; data.ctMinC = 2f; data.ctMaxC = 37f;
-                        data.variantLabel = "Warm"; return true;
+                        data.variantLabel = "Warm"; data.displayName = "Warm Specialist"; return true;
                     case SpeciesVariant.Tropical: // Hot, Topt 24 °C
                         data.optimalTempK = 297.15f; data.arrhenBreadth = 5000f;
                         data.arrhenLower = 16002f; data.arrhenUpper = 43802f;
                         data.lowerBoundK = 296.4f; data.upperBoundK = 297.9f;
                         data.pmax = 0.96f; data.ctMinC = 4f; data.ctMaxC = 39f;
-                        data.variantLabel = "Hot"; return true;
+                        data.variantLabel = "Hot"; data.displayName = "Hot Specialist"; return true;
                     default: return false;
                 }
             case SpeciesName.Gelgi: // generalist, B = 7000
@@ -485,19 +509,19 @@ public class SpeciesDatabase : ScriptableObject
                         data.arrhenLower = 4998f; data.arrhenUpper = 31098f;
                         data.lowerBoundK = 292.4f; data.upperBoundK = 293.9f;
                         data.pmax = 0.6616f; data.ctMinC = 0f; data.ctMaxC = 35f;
-                        data.variantLabel = "Cold"; return true;
+                        data.variantLabel = "Cold"; data.displayName = "Cold Generalist"; return true;
                     case SpeciesVariant.Common:  // Warm, Topt 22 °C
                         data.optimalTempK = 295.15f; data.arrhenBreadth = 7000f;
                         data.arrhenLower = 5000f; data.arrhenUpper = 31100f;
                         data.lowerBoundK = 294.4f; data.upperBoundK = 295.9f;
                         data.pmax = 0.6547f; data.ctMinC = 2f; data.ctMaxC = 37f;
-                        data.variantLabel = "Warm"; return true;
+                        data.variantLabel = "Warm"; data.displayName = "Warm Generalist"; return true;
                     case SpeciesVariant.Tropical: // Hot, Topt 24 °C
                         data.optimalTempK = 297.15f; data.arrhenBreadth = 7000f;
                         data.arrhenLower = 5002f; data.arrhenUpper = 31102f;
                         data.lowerBoundK = 296.4f; data.upperBoundK = 297.9f;
                         data.pmax = 0.6481f; data.ctMinC = 4f; data.ctMaxC = 39f;
-                        data.variantLabel = "Hot"; return true;
+                        data.variantLabel = "Hot"; data.displayName = "Hot Generalist"; return true;
                     default: return false;
                 }
             default:

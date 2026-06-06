@@ -17,7 +17,7 @@ MonoBehaviour:
     speciesName: 0
     variant: 0
     variantLabel: Warm
-    displayName: 
+    displayName: Warm Specialist
     icon: {fileID: 21300000, guid: f89c1a59fafaa3e41aa5e9f94d051ee9, type: 3}
     count: 20
     tier: 0
@@ -54,7 +54,7 @@ MonoBehaviour:
     speciesName: 0
     variant: 1
     variantLabel: Hot
-    displayName: 
+    displayName: Hot Specialist
     icon: {fileID: 21300000, guid: 485589c1ae6b14a4f825d236b41fef64, type: 3}
     count: 20
     tier: 0
@@ -91,7 +91,7 @@ MonoBehaviour:
     speciesName: 0
     variant: 2
     variantLabel: Cold
-    displayName: 
+    displayName: Cold Specialist
     icon: {fileID: 21300000, guid: b18c89991d6433d47a3003fba57fad95, type: 3}
     count: 20
     tier: 0
@@ -239,7 +239,7 @@ MonoBehaviour:
     speciesName: 1
     variant: 2
     variantLabel: Cold
-    displayName: 
+    displayName: Cold Generalist
     icon: {fileID: 0}
     count: 0
     tier: 0
@@ -276,7 +276,7 @@ MonoBehaviour:
     speciesName: 1
     variant: 0
     variantLabel: Warm
-    displayName: 
+    displayName: Warm Generalist
     icon: {fileID: 0}
     count: 0
     tier: 0
@@ -313,7 +313,7 @@ MonoBehaviour:
     speciesName: 1
     variant: 1
     variantLabel: Hot
-    displayName: 
+    displayName: Hot Generalist
     icon: {fileID: 0}
     count: 0
     tier: 0

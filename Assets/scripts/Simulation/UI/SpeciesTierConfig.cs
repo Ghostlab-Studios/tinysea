@@ -403,55 +403,10 @@ public class SpeciesTierConfig : MonoBehaviour
     /// </summary>
     private SpeciesData CloneSpeciesData(SpeciesData original)
     {
-        return new SpeciesData
-        {
-            // Basic Info
-            index = original.index,
-            speciesName = original.speciesName,
-            variant = original.variant,
-            displayName = original.displayName,
-            icon = original.icon,
-            count = original.count,
-
-            // Gameplay Stats
-            tier = original.tier,
-            eatingAmount = original.eatingAmount,
-            reproductionMultiplier = original.reproductionMultiplier,
-            deathThreshold = original.deathThreshold,
-            deathRate = original.deathRate,
-            reproThreshold = original.reproThreshold,
-
-            // Natural Mortality
-            naturalDeathRate = original.naturalDeathRate,
-            naturalDeathVariance = original.naturalDeathVariance,
-
-            // Hunting Efficiency
-            huntingEfficiency = original.huntingEfficiency,
-            huntingVariance = original.huntingVariance,
-
-            // Star Ratings
-            eatingStars = original.eatingStars,
-            reproductionStars = original.reproductionStars,
-            deathThresholdStars = original.deathThresholdStars,
-            deathRateStars = original.deathRateStars,
-            thermalBreadthStars = original.thermalBreadthStars,
-
-            // Display Text
-            temperatureThresholdText = original.temperatureThresholdText,
-            reproductionRateText = original.reproductionRateText,
-            description = original.description,
-
-            // Thermal Curve Parameters
-            optimalTempK = original.optimalTempK,
-            arrhenBreadth = original.arrhenBreadth,
-            arrhenLower = original.arrhenLower,
-            arrhenUpper = original.arrhenUpper,
-            lowerBoundK = original.lowerBoundK,
-            upperBoundK = original.upperBoundK,
-            pmax = original.pmax,
-            ctMinC = original.ctMinC,
-            ctMaxC = original.ctMaxC
-        };
+        // Variant-selector redesign: canonical deep copy. The old field-by-field clone
+        // here silently omitted variantLabel / TemperatureDebuff / conditionDrainRate /
+        // conditionRecoveryRate — DeepCopy covers every serialized field.
+        return original.DeepCopy();
     }
 
     /// <summary>

@@ -648,28 +648,12 @@ public class EditSpeciesUI : MonoBehaviour
             return;
         }
 
-        // Copy all values from original database
-        currentEditingData.count = originalData.count;
-        currentEditingData.displayName = originalData.displayName;
-        currentEditingData.eatingAmount = originalData.eatingAmount;
-        currentEditingData.reproductionMultiplier = originalData.reproductionMultiplier;
-        currentEditingData.reproThreshold = originalData.reproThreshold;
-        currentEditingData.deathThreshold = originalData.deathThreshold;
-        currentEditingData.deathRate = originalData.deathRate;
-        currentEditingData.naturalDeathRate = originalData.naturalDeathRate;
-        currentEditingData.naturalDeathVariance = originalData.naturalDeathVariance;
-        currentEditingData.huntingEfficiency = originalData.huntingEfficiency;
-        currentEditingData.huntingVariance = originalData.huntingVariance;
-        currentEditingData.optimalTempK = originalData.optimalTempK;
-        currentEditingData.arrhenBreadth = originalData.arrhenBreadth;
-        currentEditingData.arrhenLower = originalData.arrhenLower;
-        currentEditingData.arrhenUpper = originalData.arrhenUpper;
-        currentEditingData.lowerBoundK = originalData.lowerBoundK;
-        currentEditingData.upperBoundK = originalData.upperBoundK;
-        currentEditingData.pmax = originalData.pmax;
-        currentEditingData.ctMinC = originalData.ctMinC;
-        currentEditingData.ctMaxC = originalData.ctMaxC;
-        currentEditingData.TemperatureDebuff = originalData.TemperatureDebuff;
+        // Variant-selector redesign: canonical full copy (the old field-by-field block
+        // omitted variantLabel + conditionDrainRate/conditionRecoveryRate). Preserve this
+        // row's list-index identity.
+        int keepIndex = currentEditingData.index;
+        currentEditingData.CopyFrom(originalData);
+        currentEditingData.index = keepIndex;
 
         Debug.Log($"EditSpeciesUI: Factory reset {currentEditingData.speciesName} to original database values");
 

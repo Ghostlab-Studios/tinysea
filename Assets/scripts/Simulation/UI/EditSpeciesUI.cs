@@ -33,7 +33,8 @@ public class EditSpeciesUI : MonoBehaviour
 
     [Header("UI Fields - Basic Info")]
     [SerializeField] private TMP_InputField nameField;
-    [SerializeField] private TMP_Dropdown variantDropdown;
+    [SerializeField] private TMP_Dropdown variantDropdown;     // Organism selector (catalog + Custom)
+    [SerializeField] private TMP_InputField variantLabelField; // free-text variant label (Custom path)
     [SerializeField] private TMP_InputField countField;
 
     [Header("UI Fields - Gameplay Stats")]
@@ -64,6 +65,12 @@ public class EditSpeciesUI : MonoBehaviour
 
     [Header("Debug")]
     [SerializeField] private int currentEditingIndex = -1;
+
+    // Variant-selector redesign: dropdown option index -> catalog speciesList index
+    // (-1 = the trailing "Custom" sentinel). Rebuilt each time the panel opens.
+    private readonly System.Collections.Generic.List<int> _organismCatalogIndices = new System.Collections.Generic.List<int>();
+    private bool _suppressOrganismCallback = false;
+    private const string CUSTOM_OPTION = "Custom";
 
     // Validation colors
     private static readonly Color InvalidColor = new Color(1f, 0.80f, 0.80f, 1f);
@@ -184,6 +191,13 @@ public class EditSpeciesUI : MonoBehaviour
     {
         SpeciesEditEvents.OnEditRequested += HandleEditRequested;
 
+        // Variant-selector redesign: data-driven Organism dropdown change handler.
+        if (variantDropdown != null)
+        {
+            variantDropdown.onValueChanged.RemoveListener(OnOrganismSelected);
+            variantDropdown.onValueChanged.AddListener(OnOrganismSelected);
+        }
+
         // Wire up button listeners (RemoveListener first to prevent duplicates)
         if (closeButton != null)
         {
@@ -270,6 +284,7 @@ public class EditSpeciesUI : MonoBehaviour
 
             Debug.Log($"EditSpeciesUI: Editing {currentEditingData.speciesName} - {currentEditingData.variant} (backup created)");
 
+            PopulateOrganismDropdown();   // rebuild from catalog (extensibility: N organisms)
             PopulateFields();
             ClearAllValidationColors();
         }
@@ -281,6 +296,84 @@ public class EditSpeciesUI : MonoBehaviour
         }
 
         Open();
+    }
+
+    // ==================== Variant-selector redesign (data-driven Organism dropdown) ====================
+
+    /// <summary>
+    /// Rebuild the Organism dropdown as a projection of the catalog (every Tier-1
+    /// SpeciesDatabase entry by displayName) + a trailing "Custom". No hard-coded list —
+    /// add a catalog entry and it appears here with zero code change.
+    /// </summary>
+    private void PopulateOrganismDropdown()
+    {
+        if (variantDropdown == null) return;
+        _organismCatalogIndices.Clear();
+        var options = new System.Collections.Generic.List<string>();
+        if (originalDatabase != null && originalDatabase.speciesList != null)
+        {
+            for (int i = 0; i < originalDatabase.speciesList.Count; i++)
+            {
+                var e = originalDatabase.speciesList[i];
+                if (e.tier != 0) continue;  // Tier 1 only (Tier 2 is gated off)
+                string label = !string.IsNullOrEmpty(e.displayName)
+                    ? e.displayName : $"{e.speciesName}_{e.variantLabel}";
+                options.Add(label);
+                _organismCatalogIndices.Add(i);
+            }
+        }
+        options.Add(CUSTOM_OPTION);
+        _organismCatalogIndices.Add(-1);
+
+        _suppressOrganismCallback = true;
+        variantDropdown.ClearOptions();
+        variantDropdown.AddOptions(options);
+        _suppressOrganismCallback = false;
+    }
+
+    /// <summary>Dropdown index of the catalog organism matching this row (speciesName+variant),
+    /// or the trailing "Custom" option when none matches.</summary>
+    private int FindOrganismOption(SpeciesData data)
+    {
+        if (data != null && originalDatabase != null)
+        {
+            for (int opt = 0; opt < _organismCatalogIndices.Count; opt++)
+            {
+                int ci = _organismCatalogIndices[opt];
+                if (ci < 0) continue;
+                var e = originalDatabase.speciesList[ci];
+                if (e.speciesName == data.speciesName && e.variant == data.variant)
+                    return opt;
+            }
+        }
+        return Mathf.Max(0, _organismCatalogIndices.Count - 1);  // Custom (last option)
+    }
+
+    /// <summary>
+    /// The user picked an organism. A preset copies the catalog template's params into the
+    /// working row (preserving its count + list index); "Custom" switches the row to a
+    /// free-text, fully-editable organism. The label never re-derives params — it's a copy.
+    /// </summary>
+    private void OnOrganismSelected(int dropdownIdx)
+    {
+        if (_suppressOrganismCallback || currentEditingData == null) return;
+        if (dropdownIdx < 0 || dropdownIdx >= _organismCatalogIndices.Count) return;
+        int catalogIdx = _organismCatalogIndices[dropdownIdx];
+
+        if (catalogIdx >= 0)
+        {
+            int keepCount = currentEditingData.count;
+            int keepIndex = currentEditingData.index;
+            currentEditingData.CopyFrom(originalDatabase.speciesList[catalogIdx]);
+            currentEditingData.count = keepCount;
+            currentEditingData.index = keepIndex;
+        }
+        else
+        {
+            currentEditingData.variant = SpeciesVariant.Custom;
+            currentEditingData.speciesName = SpeciesName.Custom;
+        }
+        PopulateFields();  // refresh fields to reflect the new params/label
     }
 
     /// <summary>
@@ -309,8 +402,14 @@ public class EditSpeciesUI : MonoBehaviour
             nameField.text = displayText;
         }
 
+        // Variant-selector redesign: select the catalog organism matching this row
+        // (speciesName+variant), else the trailing "Custom". SetValueWithoutNotify so
+        // this load doesn't fire OnOrganismSelected.
         if (variantDropdown != null)
-            variantDropdown.value = (int)currentEditingData.variant;
+            variantDropdown.SetValueWithoutNotify(FindOrganismOption(currentEditingData));
+
+        if (variantLabelField != null)
+            variantLabelField.text = currentEditingData.variantLabel ?? "";
 
         if (countField != null)
             countField.text = currentEditingData.count.ToString();
@@ -523,9 +622,11 @@ public class EditSpeciesUI : MonoBehaviour
             Debug.Log($"EditSpeciesUI: Display name set to '{newDisplayName}'");
         }
 
-        // Save variant
-        if (variantDropdown != null)
-            currentEditingData.variant = (SpeciesVariant)variantDropdown.value;
+        // Variant-selector redesign: the organism (enum bucket + params) is set by the
+        // dropdown selection, not derived from the dropdown index. Persist the free-text
+        // variant label here.
+        if (variantLabelField != null)
+            currentEditingData.variantLabel = variantLabelField.text?.Trim() ?? "";
 
         // Save validated values
         currentEditingData.count = count;

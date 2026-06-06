@@ -338,9 +338,9 @@ public class EcosystemSimulator
             // Group 2: merge species whose variant labels normalize equal (formatting-only
             // differences) into the first-seen species, summing population. Unique labels
             // never merge, so legacy single-spelling runs stay byte-identical.
-            string mkName  = !string.IsNullOrEmpty(data.displayName) ? data.displayName : data.speciesName.ToString();
+            string mkName  = !string.IsNullOrEmpty(data.speciesLabel) ? data.speciesLabel : data.speciesName.ToString();
             string mkLabel = !string.IsNullOrEmpty(data.variantLabel) ? data.variantLabel : data.variant.ToString();
-            string matchKey = mkName + "_" + SpeciesData.VariantMatchKey(mkLabel);
+            string matchKey = SpeciesData.SpeciesNameMatchKey(mkName) + "_" + SpeciesData.VariantMatchKey(mkLabel);
             if (byMatchKey.TryGetValue(matchKey, out var existingSp))
             {
                 existingSp.Population += data.count;
@@ -350,7 +350,7 @@ public class EcosystemSimulator
 
             var simSpecies = new SimSpecies
             {
-                Name = !string.IsNullOrEmpty(data.displayName) ? data.displayName : data.speciesName.ToString(),
+                Name = !string.IsNullOrEmpty(data.speciesLabel) ? data.speciesLabel : data.speciesName.ToString(),
                 Variant = ConvertVariant(data.variant),
                 VariantLabel = !string.IsNullOrEmpty(data.variantLabel) ? data.variantLabel : data.variant.ToString(),
                 Tier = data.tier + 1,  // Database uses 0-based, we use 1-based
@@ -413,7 +413,7 @@ public class EcosystemSimulator
         {
             var simSpecies = new SimSpecies
             {
-                Name = !string.IsNullOrEmpty(data.displayName) ? data.displayName : data.speciesName.ToString(),
+                Name = !string.IsNullOrEmpty(data.speciesLabel) ? data.speciesLabel : data.speciesName.ToString(),
                 Variant = ConvertVariant(data.variant),
                 VariantLabel = !string.IsNullOrEmpty(data.variantLabel) ? data.variantLabel : data.variant.ToString(),
                 Tier = data.tier + 1,  // Database uses 0-based, we use 1-based

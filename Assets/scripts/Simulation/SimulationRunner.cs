@@ -706,7 +706,7 @@ public class SimulationRunner
                 "Pmax,CTminC,CTmaxC,TemperatureDebuff");
             foreach (var sp in RunSpecies.speciesList)
             {
-                string spName = !string.IsNullOrEmpty(sp.displayName) ? sp.displayName : sp.speciesName.ToString();
+                string spName = !string.IsNullOrEmpty(sp.speciesLabel) ? sp.speciesLabel : sp.speciesName.ToString();
                 sb.AppendLine($"#species:{spName},{sp.variant},{sp.tier},{sp.count}," +
                     $"{sp.eatingAmount},{sp.reproductionMultiplier}," +
                     $"{sp.deathThreshold},{sp.deathRate},{sp.reproThreshold}," +

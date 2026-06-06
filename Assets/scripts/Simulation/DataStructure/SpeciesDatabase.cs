@@ -39,7 +39,11 @@ public class SpeciesData
     // Free-text variant label (Batch 1A). When set, used for FullName/output; the
     // `variant` enum stays for legacy bucket columns + default-parameter lookup.
     public string variantLabel;
-    public string displayName;
+    // Free-text species name (mirrors variantLabel). When set, used for FullName/output;
+    // the `speciesName` enum stays for UI presets + fallback. CSV writes the raw name here.
+    public string speciesLabel;
+    // Computed UI label = "{species} {variant}" (e.g. "Hexapod Cold"). NOT serialized/stored.
+    public string DisplayName => $"{(string.IsNullOrEmpty(speciesLabel) ? speciesName.ToString() : speciesLabel)} {(string.IsNullOrEmpty(variantLabel) ? variant.ToString() : variantLabel)}";
     public Sprite icon;
     public int count;
 
@@ -191,8 +195,35 @@ public class SpeciesData
     }
 
     /// <summary>
+    /// Mirror of NormalizeVariantLabel for the species name: canonical-case a known
+    /// SpeciesName enum value, pass through any other free-text name unchanged.
+    /// </summary>
+    public static string NormalizeSpeciesName(string raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw)) return raw;
+        raw = raw.Trim();
+        return System.Enum.TryParse<SpeciesName>(raw, true, out var n) ? n.ToString() : raw;
+    }
+
+    /// <summary>
+    /// Mirror of VariantMatchKey for the species name — lowercase, keep only [a-z0-9].
+    /// Two species names that normalize equal are the same species for grouping.
+    /// </summary>
+    public static string SpeciesNameMatchKey(string raw)
+    {
+        if (string.IsNullOrEmpty(raw)) return "";
+        var sb = new System.Text.StringBuilder(raw.Length);
+        foreach (char ch in raw)
+        {
+            char c = char.ToLowerInvariant(ch);
+            if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) sb.Append(c);
+        }
+        return sb.ToString();
+    }
+
+    /// <summary>
     /// Variant-selector redesign: canonical deep copy of every serialized field
-    /// (thermal + biology + variantLabel + displayName + condition rates + icon ref).
+    /// (thermal + biology + variantLabel + speciesLabel + condition rates + icon ref).
     /// Single source of copy truth — reuse wherever a catalog template is instantiated
     /// into a RunSpeciesList working entry.
     /// </summary>
@@ -230,9 +261,9 @@ public class SpeciesDatabase : ScriptableObject
         return speciesList.Find(s => s.speciesName == name && s.variant == variant);
     }
 
-    public SpeciesData GetSpeciesByName(string displayName)
+    public SpeciesData GetSpeciesByName(string speciesLabel)
     {
-        return speciesList.Find(s => s.displayName == displayName);
+        return speciesList.Find(s => s.speciesLabel == speciesLabel);
     }
 
     // Get all species of a specific tier
@@ -290,7 +321,7 @@ public class SpeciesDatabase : ScriptableObject
             lowerBound: 292.4f, upperBound: 293.9f,
             pmax: 0.9843f, ctMinC: 0f, ctMaxC: 35f,
             conditionDrainRate: SHARED_COND_DRAIN, conditionRecoveryRate: SHARED_COND_RECOVERY,
-            variantLabel: "Cold", displayName: "Cold Specialist"
+            variantLabel: "Cold", speciesLabel: "Hexapod"
         );
 
         AddSpecies(
@@ -304,7 +335,7 @@ public class SpeciesDatabase : ScriptableObject
             lowerBound: 294.4f, upperBound: 295.9f,
             pmax: 0.972f, ctMinC: 2f, ctMaxC: 37f,
             conditionDrainRate: SHARED_COND_DRAIN, conditionRecoveryRate: SHARED_COND_RECOVERY,
-            variantLabel: "Warm", displayName: "Warm Specialist"
+            variantLabel: "Warm", speciesLabel: "Hexapod"
         );
 
         AddSpecies(
@@ -318,7 +349,7 @@ public class SpeciesDatabase : ScriptableObject
             lowerBound: 296.4f, upperBound: 297.9f,
             pmax: 0.96f, ctMinC: 4f, ctMaxC: 39f,
             conditionDrainRate: SHARED_COND_DRAIN, conditionRecoveryRate: SHARED_COND_RECOVERY,
-            variantLabel: "Hot", displayName: "Hot Specialist"
+            variantLabel: "Hot", speciesLabel: "Hexapod"
         );
 
         // ----- GELGI (generalist, B=7000) -----
@@ -333,7 +364,7 @@ public class SpeciesDatabase : ScriptableObject
             lowerBound: 292.4f, upperBound: 293.9f,
             pmax: 0.6616f, ctMinC: 0f, ctMaxC: 35f,
             conditionDrainRate: SHARED_COND_DRAIN, conditionRecoveryRate: SHARED_COND_RECOVERY,
-            variantLabel: "Cold", displayName: "Cold Generalist"
+            variantLabel: "Cold", speciesLabel: "Gelgi"
         );
 
         AddSpecies(
@@ -347,7 +378,7 @@ public class SpeciesDatabase : ScriptableObject
             lowerBound: 294.4f, upperBound: 295.9f,
             pmax: 0.6547f, ctMinC: 2f, ctMaxC: 37f,
             conditionDrainRate: SHARED_COND_DRAIN, conditionRecoveryRate: SHARED_COND_RECOVERY,
-            variantLabel: "Warm", displayName: "Warm Generalist"
+            variantLabel: "Warm", speciesLabel: "Gelgi"
         );
 
         AddSpecies(
@@ -361,7 +392,7 @@ public class SpeciesDatabase : ScriptableObject
             lowerBound: 296.4f, upperBound: 297.9f,
             pmax: 0.6481f, ctMinC: 4f, ctMaxC: 39f,
             conditionDrainRate: SHARED_COND_DRAIN, conditionRecoveryRate: SHARED_COND_RECOVERY,
-            variantLabel: "Hot", displayName: "Hot Generalist"
+            variantLabel: "Hot", speciesLabel: "Gelgi"
         );
 
         EditorUtility.SetDirty(this);
@@ -381,7 +412,7 @@ public class SpeciesDatabase : ScriptableObject
                            float lowerBound, float upperBound,
                            float pmax, float ctMinC, float ctMaxC,
                            float conditionDrainRate = -1f, float conditionRecoveryRate = -1f,
-                           string variantLabel = null, string displayName = null)
+                           string variantLabel = null, string speciesLabel = null)
     {
         var data = new SpeciesData
         {
@@ -389,7 +420,7 @@ public class SpeciesDatabase : ScriptableObject
             speciesName = name,
             variant = variant,
             variantLabel = variantLabel,
-            displayName = string.IsNullOrEmpty(displayName) ? name.ToString() : displayName,
+            speciesLabel = string.IsNullOrEmpty(speciesLabel) ? name.ToString() : speciesLabel,
             tier = tier,
             count = count,
             eatingAmount = eating,
@@ -435,7 +466,7 @@ public class SpeciesDatabase : ScriptableObject
 
         foreach (var data in speciesList)
         {
-            // Preserve: icon, index, speciesName, variant, displayName, count.
+            // Preserve: icon, index, speciesName, variant, speciesLabel, count.
             // Canonical source: Phase2plus_SixOrganismDefaults_Kelvin.csv (2026-06-05).
             // Thermal params are keyed on BOTH speciesName AND variant — Hexapod
             // (specialist B=5000) and Gelgi (generalist B=7000) differ in B/L/U/Pmax.
@@ -500,37 +531,37 @@ public class SpeciesDatabase : ScriptableObject
                 data.arrhenLower = 15998f; data.arrhenUpper = 43798f;
                 data.lowerBoundK = 292.4f; data.upperBoundK = 293.9f;
                 data.pmax = 0.9843f; data.ctMinC = 0f; data.ctMaxC = 35f;
-                data.variantLabel = "Cold"; data.displayName = "Cold Specialist"; return true;
+                data.variantLabel = "Cold"; return true;
             case SpeciesVariant.WarmSpecialist:  // Warm, Topt 22 °C, B=5000
                 data.optimalTempK = 295.15f; data.arrhenBreadth = 5000f;
                 data.arrhenLower = 16000f; data.arrhenUpper = 43800f;
                 data.lowerBoundK = 294.4f; data.upperBoundK = 295.9f;
                 data.pmax = 0.972f; data.ctMinC = 2f; data.ctMaxC = 37f;
-                data.variantLabel = "Warm"; data.displayName = "Warm Specialist"; return true;
+                data.variantLabel = "Warm"; return true;
             case SpeciesVariant.HotSpecialist:   // Hot, Topt 24 °C, B=5000
                 data.optimalTempK = 297.15f; data.arrhenBreadth = 5000f;
                 data.arrhenLower = 16002f; data.arrhenUpper = 43802f;
                 data.lowerBoundK = 296.4f; data.upperBoundK = 297.9f;
                 data.pmax = 0.96f; data.ctMinC = 4f; data.ctMaxC = 39f;
-                data.variantLabel = "Hot"; data.displayName = "Hot Specialist"; return true;
+                data.variantLabel = "Hot"; return true;
             case SpeciesVariant.ColdGeneralist:  // Cold, Topt 20 °C, B=7000
                 data.optimalTempK = 293.15f; data.arrhenBreadth = 7000f;
                 data.arrhenLower = 4998f; data.arrhenUpper = 31098f;
                 data.lowerBoundK = 292.4f; data.upperBoundK = 293.9f;
                 data.pmax = 0.6616f; data.ctMinC = 0f; data.ctMaxC = 35f;
-                data.variantLabel = "Cold"; data.displayName = "Cold Generalist"; return true;
+                data.variantLabel = "Cold"; return true;
             case SpeciesVariant.WarmGeneralist:  // Warm, Topt 22 °C, B=7000
                 data.optimalTempK = 295.15f; data.arrhenBreadth = 7000f;
                 data.arrhenLower = 5000f; data.arrhenUpper = 31100f;
                 data.lowerBoundK = 294.4f; data.upperBoundK = 295.9f;
                 data.pmax = 0.6547f; data.ctMinC = 2f; data.ctMaxC = 37f;
-                data.variantLabel = "Warm"; data.displayName = "Warm Generalist"; return true;
+                data.variantLabel = "Warm"; return true;
             case SpeciesVariant.HotGeneralist:   // Hot, Topt 24 °C, B=7000
                 data.optimalTempK = 297.15f; data.arrhenBreadth = 7000f;
                 data.arrhenLower = 5002f; data.arrhenUpper = 31102f;
                 data.lowerBoundK = 296.4f; data.upperBoundK = 297.9f;
                 data.pmax = 0.6481f; data.ctMinC = 4f; data.ctMaxC = 39f;
-                data.variantLabel = "Hot"; data.displayName = "Hot Generalist"; return true;
+                data.variantLabel = "Hot"; return true;
             default: // Custom / unknown — no canonical preset
                 return false;
         }
@@ -548,7 +579,7 @@ public class SpeciesDatabase : ScriptableObject
             index = index,
             speciesName = SpeciesName.Custom,
             variant = SpeciesVariant.Custom,
-            displayName = displayname,
+            speciesLabel = displayname,
             tier = tier,
             count = count,
             eatingAmount = eating,

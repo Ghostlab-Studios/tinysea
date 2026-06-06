@@ -130,7 +130,7 @@ public class EditSpeciesUI : MonoBehaviour
             {
                 count = data.count,
                 variant = data.variant,
-                displayName = data.displayName,
+                displayName = data.speciesLabel,
                 speciesName = data.speciesName,
                 eatingAmount = data.eatingAmount,
                 reproThreshold = data.reproThreshold,
@@ -163,7 +163,7 @@ public class EditSpeciesUI : MonoBehaviour
 
             data.count = count;
             data.variant = variant;
-            data.displayName = displayName;
+            data.speciesLabel = displayName;
             data.speciesName = speciesName;
             data.eatingAmount = eatingAmount;
             data.reproThreshold = reproThreshold;
@@ -316,8 +316,7 @@ public class EditSpeciesUI : MonoBehaviour
             {
                 var e = originalDatabase.speciesList[i];
                 if (e.tier != 0) continue;  // Tier 1 only (Tier 2 is gated off)
-                string label = !string.IsNullOrEmpty(e.displayName)
-                    ? e.displayName : $"{e.speciesName}_{e.variantLabel}";
+                string label = e.DisplayName;
                 options.Add(label);
                 _organismCatalogIndices.Add(i);
             }
@@ -393,11 +392,11 @@ public class EditSpeciesUI : MonoBehaviour
         }
 
         // === BASIC INFO ===
-        // Name field shows displayName if set, otherwise falls back to speciesName
+        // Name field shows speciesLabel if set, otherwise falls back to speciesName
         if (nameField != null)
         {
-            string displayText = !string.IsNullOrEmpty(currentEditingData.displayName)
-                ? currentEditingData.displayName
+            string displayText = !string.IsNullOrEmpty(currentEditingData.speciesLabel)
+                ? currentEditingData.speciesLabel
                 : currentEditingData.speciesName.ToString();
             nameField.text = displayText;
         }
@@ -618,7 +617,7 @@ public class EditSpeciesUI : MonoBehaviour
         if (nameField != null)
         {
             string newDisplayName = nameField.text.Trim();
-            currentEditingData.displayName = newDisplayName;
+            currentEditingData.speciesLabel = newDisplayName;
             Debug.Log($"EditSpeciesUI: Display name set to '{newDisplayName}'");
         }
 
@@ -666,7 +665,7 @@ public class EditSpeciesUI : MonoBehaviour
         // Notify listeners
         SpeciesEditEvents.NotifySpeciesSaved(currentEditingIndex);
 
-        Debug.Log($"EditSpeciesUI: Data saved for {currentEditingData.displayName} ({currentEditingData.speciesName} - {currentEditingData.variant})");
+        Debug.Log($"EditSpeciesUI: Data saved for {currentEditingData.speciesLabel} ({currentEditingData.speciesName} - {currentEditingData.variant})");
 
         Close();
     }
@@ -688,7 +687,7 @@ public class EditSpeciesUI : MonoBehaviour
 
         if (currentEditingIndex < runSpeciesList.speciesList.Count)
         {
-            string deletedName = currentEditingData?.displayName ??
+            string deletedName = currentEditingData?.speciesLabel ??
                                  currentEditingData?.speciesName.ToString() ?? "Unknown";
             runSpeciesList.speciesList.RemoveAt(currentEditingIndex);
             Debug.Log($"EditSpeciesUI: Deleted {deletedName} at index {deletedIndex}");
@@ -897,7 +896,7 @@ public class EditSpeciesUI : MonoBehaviour
         // Compare key fields
         if (currentEditingData.count != backupData.count) return true;
         if (currentEditingData.variant != backupData.variant) return true;
-        if (currentEditingData.displayName != backupData.displayName) return true;
+        if (currentEditingData.speciesLabel != backupData.displayName) return true;
 
         // Check thermal parameters from controller
         if (thermalController != null)

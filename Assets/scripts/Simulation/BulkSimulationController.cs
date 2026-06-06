@@ -327,8 +327,8 @@ public class BulkSimulationController : MonoBehaviour
                 {
                     foreach (var sp in tempSpecies.speciesList)
                     {
-                        string name = !string.IsNullOrEmpty(sp.displayName)
-                            ? sp.displayName
+                        string name = !string.IsNullOrEmpty(sp.speciesLabel)
+                            ? sp.speciesLabel
                             : sp.speciesName.ToString();
                         // Batch 1A: use the free-text variant label (falls back to the
                         // enum name) so FullName matches SimSpecies.FullName.
@@ -705,7 +705,7 @@ public class BulkSimulationController : MonoBehaviour
     /// <summary>
     /// Convert BulkSpeciesConfig -> SpeciesData with proper enum handling.
     /// Known species names (Hexapod, Sheplik, etc.) map to their enum values.
-    /// Unknown names use SpeciesName.Custom. displayName always holds the actual CSV name.
+    /// Unknown names use SpeciesName.Custom. speciesLabel always holds the actual CSV name.
     /// Temperature values convert from Celsius to Kelvin (+273.15).
     /// </summary>
     private SpeciesData ConvertSpecies(BulkSpeciesConfig sp, int index)
@@ -724,7 +724,7 @@ public class BulkSimulationController : MonoBehaviour
             speciesName = speciesName,
             variant = variant,
             variantLabel = SpeciesData.NormalizeVariantLabel(sp.Variant),
-            displayName = sp.Name,
+            speciesLabel = sp.Name,
             tier = sp.Tier,
             count = sp.Pop,
             eatingAmount = sp.Eating,

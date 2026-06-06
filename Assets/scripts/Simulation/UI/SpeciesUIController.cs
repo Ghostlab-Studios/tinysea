@@ -137,7 +137,7 @@ public class SpeciesUIController : MonoBehaviour
         // Update local tracking vars to match
         speciesName = currentSpeciesData.speciesName;
         speciesVariant = currentSpeciesData.variant;
-        displayNameOverride = currentSpeciesData.displayName;
+        displayNameOverride = currentSpeciesData.speciesLabel;
         lastSpeciesName = speciesName;
         lastSpeciesVariant = speciesVariant;
         lastSpeciesDisplayNameOverride = displayNameOverride;
@@ -215,7 +215,7 @@ public class SpeciesUIController : MonoBehaviour
         this.currentSpeciesData = speciesData;
         this.speciesName = speciesData.speciesName;
         this.speciesVariant = speciesData.variant;
-        this.displayNameOverride = speciesData.displayName;
+        this.displayNameOverride = speciesData.speciesLabel;
 
         this.lastSpeciesName = speciesName;
         this.lastSpeciesVariant = speciesVariant;
@@ -269,10 +269,10 @@ public class SpeciesUIController : MonoBehaviour
 
         speciesName = data.speciesName;
         speciesVariant = data.variant;
-        displayNameOverride = data.displayName;
+        displayNameOverride = data.speciesLabel;
         lastSpeciesName = data.speciesName;
         lastSpeciesVariant = data.variant;
-        lastSpeciesDisplayNameOverride = data.displayName;
+        lastSpeciesDisplayNameOverride = data.speciesLabel;
         currentSpeciesData = data;
         ApplyThermalValues();
         UpdateUIDisplay();
@@ -429,9 +429,7 @@ public class SpeciesUIController : MonoBehaviour
 
     private string getName()
     {
-       return string.IsNullOrEmpty(currentSpeciesData.displayName)
-            ? $"{currentSpeciesData.speciesName} {currentSpeciesData.variant}"
-            : currentSpeciesData.displayName;
+       return currentSpeciesData.DisplayName;
     }
 
     /// <summary>

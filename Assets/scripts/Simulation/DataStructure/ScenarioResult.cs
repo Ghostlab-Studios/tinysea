@@ -614,8 +614,8 @@ public class AggregateResults
         {
             foreach (var sp in RunSpecies.speciesList)
             {
-                string name = !string.IsNullOrEmpty(sp.displayName)
-                    ? sp.displayName
+                string name = !string.IsNullOrEmpty(sp.speciesLabel)
+                    ? sp.speciesLabel
                     : sp.speciesName.ToString();
                 // Batch 1A: use the free-text variant label (falls back to enum name).
                 string vlabel = !string.IsNullOrEmpty(sp.variantLabel) ? sp.variantLabel : sp.variant.ToString();
@@ -1088,7 +1088,7 @@ public static class ConfigExporter
                 sb.AppendLine("    {");
                 sb.AppendLine($"      \"name\": \"{species.speciesName}\",");
                 sb.AppendLine($"      \"variant\": \"{species.variant}\",");
-                sb.AppendLine($"      \"displayName\": \"{EscapeJson(species.displayName)}\",");
+                sb.AppendLine($"      \"displayName\": \"{EscapeJson(species.speciesLabel)}\",");
                 sb.AppendLine($"      \"tier\": {species.tier},");
                 sb.AppendLine($"      \"initialCount\": {species.count},");
                 sb.AppendLine();
@@ -1189,7 +1189,7 @@ public static class ConfigExporter
 
             foreach (var species in runSpecies.speciesList)
             {
-                string spName = !string.IsNullOrEmpty(species.displayName) ? species.displayName : species.speciesName.ToString();
+                string spName = !string.IsNullOrEmpty(species.speciesLabel) ? species.speciesLabel : species.speciesName.ToString();
                 sb.AppendLine($"{spName},{species.variant},{species.tier},{species.count}," +
                     $"{species.eatingAmount},{species.reproductionMultiplier}," +
                     $"{species.deathThreshold},{species.deathRate},{species.reproThreshold}," +

@@ -55,12 +55,15 @@ flowchart TD
 ### `StepRecord.CsvHeader(orderedSpecies)` daily columns (41 fixed + 17×N per-species columns, v12):
 
 ```
-# Tier-level / variant-level (41 columns, unchanged from v10/v11.1):
+# Tier-level columns. The variant-level rollup is now DYNAMIC (T1-refactor): one
+# Tier{n}_{variantLabel} column per distinct (tier, variant label) present in the run
+# (e.g. Tier1_Hot_Specialist, Tier1_M2), ordered (tier asc, label asc). This replaces
+# the old fixed 8-column Tier1Arctic/Common/Tropical/Custom + Tier2* block — the
+# ThermalVariant enum names are no longer emitted anywhere in the CSV.
 Day, Year, Temperature, BiologyCycle,
 StartPop, EndPop,
 Tier1Pop, Tier2Pop,
-Tier1Arctic, Tier1Common, Tier1Tropical, Tier1Custom,
-Tier2Arctic, Tier2Common, Tier2Tropical, Tier2Custom,
+Tier{n}_{variantLabel}…,   (dynamic — count varies per run)
 EatenT1, TempDeathsT1, TempDeathsT2,
 ConditionDeathsT1, ConditionDeathsT2,
 NaturalDeathsT1, NaturalDeathsT2,

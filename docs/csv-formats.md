@@ -70,7 +70,7 @@ Per-species validation (see `ValidateSpecies`):
 | Column | Validation |
 |--------|-----------|
 | `spK_name` | Non-empty. Free-text display label only — **not** matched against a species database. It becomes the species' `displayName` and the `<Name>` half of `FullName`; thermal/biology parameters always come from the row's own columns (so when `spK_variant=Custom` the name is purely cosmetic). Canonical spelling is lowercase DB style (`hexapod`, `gelgi`, `shelpik`); capitalized variants (`Hexapod`, `Golgi`, `Sheplik`) are accepted as-is. |
-| `spK_variant` | Non-empty. **Free-text (Batch 1A)** — any label is accepted and carried through to output (`FullName`, per-species + bulk-summary variant columns). The canonical default family is `Cold` / `Warm` / `Hot` (Batch 1B); the legacy names `Arctic` / `Common` / `Tropical` are still accepted as aliases (`Cold`=`Arctic`, `Warm`=`Common`, `Hot`=`Tropical`) for default-parameter lookup and the legacy `Tier{1,2}{Arctic,Common,Tropical,Custom}` bucket columns. Unknown labels map to the `Custom` bucket but keep their own label in per-species output. |
+| `spK_variant` | Non-empty. **Free-text (Batch 1A)** — any label is accepted and carried through to output (`FullName`, per-species + bulk-summary variant columns, and the dynamic `Tier{n}_{variantLabel}` scenario rollup columns). The canonical default family is `Cold` / `Warm` / `Hot` (Batch 1B); the legacy names `Arctic` / `Common` / `Tropical` are still accepted as aliases (`Cold`=`Arctic`, `Warm`=`Common`, `Hot`=`Tropical`) **for default-parameter lookup only** (`ResolveVariantEnum`). The label itself — whatever its spelling — becomes the rollup column; the `ThermalVariant` enum it resolves to is internal and never appears in output. |
 | `spK_tier` | 0 (prey) or 1 (predator). Converted to 1-based internally. |
 | `spK_pop` | `≥ 0`. |
 | `spK_death_thresh` | `[0, 1]`. |
@@ -153,8 +153,7 @@ Header row from `StepRecord.CsvHeader`:
 Day,Year,Temperature,BiologyCycle,
 StartPop,EndPop,
 Tier1Pop,Tier2Pop,
-Tier1Arctic,Tier1Common,Tier1Tropical,Tier1Custom,
-Tier2Arctic,Tier2Common,Tier2Tropical,Tier2Custom,
+Tier{n}_{variantLabel}…,   (dynamic — one column per distinct (tier, variant label); see below)
 EatenT1,TempDeathsT1,TempDeathsT2,
 ConditionDeathsT1,ConditionDeathsT2,
 NaturalDeathsT1,NaturalDeathsT2,
@@ -171,6 +170,8 @@ ReproScaleT1,ReproScaleT2
 ```
 
 One data row per simulated day. Formatting: `Temperature` and all float metrics are `F2`–`F3` formatted; integer fields use plain integer formatting. Population fields are written as `long` to avoid overflow on large ecosystems.
+
+**Dynamic tier-variant rollup columns** (`SimulationRunner.BuildVariantRollupColumns`): between `Tier1Pop`/`Tier2Pop` and `EatenT1`, the header emits one `Tier{n}_{variantLabel}` column per **distinct `(tier, variantLabel)` pair** present in the run — e.g. `Tier1_Hot_Specialist`, `Tier1_M2`, `Tier1_weird_name_`. The label is the species' `variantLabel` (or its `Name` when the label is empty), passed through `SanitizeColumnName` (ASCII-only; `_2`/`_3` suffix on collision, same rule as per-species columns). Columns are ordered by `(tier asc, label asc, Ordinal)`. Each column is the summed population of all species in that tier sharing that label. **This replaces the legacy fixed 4-bucket `Tier1Arctic, Tier1Common, Tier1Tropical, Tier1Custom` (+ `Tier2*`) columns** — the `ThermalVariant` enum names are no longer emitted anywhere in the CSV. (Breaking change for R scripts that read `Tier1Arctic` etc.) When Tier 2 is gated off, only `Tier1_*` rollup columns appear, matching the `Tier2Pop` omission.
 
 > **Heads-up on `FedRateT2`** — column name unchanged since v10, but as of v11 this is a **population-weighted average across predators**, not a pooled scalar. See "v11 semantic change" below.
 
@@ -234,7 +235,8 @@ After the main data, `ToCsvInternal` appends (still within the same CSV). Three 
 ```
 
 - Summary columns are `Tier1Pop`, `Tier2Pop`, then one column per species (sanitized FullName, sorted by `(Tier asc, FullName asc)`).
-- Variant-rollup columns (`Tier1Arctic, …, Tier2Custom`) are intentionally omitted — per-species columns subsume them, and the tier-rollup invariant (per-species sums to tier total) holds.
+- The `#summary:Variant` and `#extinction:` rows now carry each species' free-text `variantLabel` (e.g. `Hot Specialist`, `M2`), not the legacy `ThermalVariant` enum name.
+- The dynamic tier-variant rollup columns (`Tier{n}_{label}`) are intentionally omitted from this summary block — per-species columns subsume them, and the tier-rollup invariant (per-species sums to tier total) holds.
 - `Min` and `Max` are integer (long) values; `Mean` and `StdDev` are formatted `:F1`.
 - Extinction day `-1` means the species never reached zero during the scenario.
 
@@ -353,7 +355,7 @@ Species,Variant,Tier,N,NSurvived,MinPop_Mean,MinPop_Min,MaxPop_Mean,MaxPop_Max,F
 
 ### 3.6. Individual scenarios (wide format)
 
-Combined wide-format table — one row per scenario, all species reported as additional columns. Three header rows (column name / Variant / Tier) annotate each species column with its taxonomic context. Variant-rollup columns (`T1Arctic, T1Common, …, T2Custom`) are intentionally omitted: the per-species columns sum to the tier totals, so the variant intermediate level is redundant.
+Combined wide-format table — one row per scenario, all species reported as additional columns. Three header rows (column name / Variant / Tier) annotate each species column with its taxonomic context. The dynamic tier-variant rollup columns are intentionally omitted: the per-species columns sum to the tier totals, so the variant intermediate level is redundant. The `Variant` annotation row carries each species' free-text `variantLabel`.
 
 ```
 === INDIVIDUAL SCENARIOS ===
@@ -388,7 +390,7 @@ GrandMean_StdDev,<values…>
 - Header row 1's leading cell is the row-label column name (`Statistic`); rows 2 and 3 reuse the leading cell for their own labels (`Variant`, `Tier`). Subsequent data rows reuse the same leading-cell convention with `GrandMean_*` labels.
 - `GrandMean_Mean` = average of per-scenario means. **Mean of means, not a raw population value.**
 - `GrandMean_Max` / `GrandMean_Min` = mean of per-scenario maxes / mins. **Not real ecosystem extrema** — use the per-scenario rows in §3.6 for genuine extrema.
-- Variant-rollup columns dropped for the same reason as §3.6.
+- The dynamic tier-variant rollup columns are dropped for the same reason as §3.6.
 
 ### 3.8. Extinction timing
 
@@ -397,10 +399,10 @@ Two sections — tier-variant rollup followed by per-species detail.
 ```
 === EXTINCTION TIMING - TIER VARIANTS (Across All Scenarios) ===
 Variant,MinDays,MaxDays,AvgDays,NumExtinct,NumSurvived
-<variant>,<min>,<max>,<avg>,<num_extinct>,<num_survived>
+<Tier{n}_{label}>,<min>,<max>,<avg>,<num_extinct>,<num_survived>
 ```
 
-Variant rows: `Tier1Arctic, Tier1Common, Tier1Tropical, Tier1Custom, Tier2Arctic, Tier2Common, Tier2Tropical, Tier2Custom`. Values are `-1` if no scenario recorded that variant going extinct.
+Variant rows are **dynamic**: the union of every scenario's `Tier{n}_{variantLabel}` rollup keys (e.g. `Tier1_Hot_Specialist`, `Tier1_M2`), sorted Ordinal — no longer the fixed `Tier1Arctic … Tier2Custom` set. Values are `-1` if no scenario recorded that tier-variant going extinct.
 
 ```
 === EXTINCTION TIMING - PER SPECIES (Across All Scenarios) ===

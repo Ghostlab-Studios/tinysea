@@ -80,9 +80,13 @@ public class SimSpecies
     public float Condition = 1.0f;          // Health/energy reserves [0-1], starts at 1.0
 
     /// <summary>
-    /// Full name for display (e.g., "Hexapod_Arctic")
+    /// Full name for display (e.g., "Hexapod_Cold", "Coral_M2").
+    /// Uses the free-text VariantLabel only — the legacy ThermalVariant enum name
+    /// (Arctic/Common/Tropical/Custom) is never emitted. When VariantLabel is empty
+    /// (defensive — it is set for every code path that reaches output), FullName is
+    /// just the species Name with no variant suffix.
     /// </summary>
-    public string FullName => $"{Name}_{(string.IsNullOrEmpty(VariantLabel) ? Variant.ToString() : VariantLabel)}";
+    public string FullName => string.IsNullOrEmpty(VariantLabel) ? Name : $"{Name}_{VariantLabel}";
 
     /// <summary>
     /// Calculate thermal performance using Arrhenius formula.

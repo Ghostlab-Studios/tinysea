@@ -1382,8 +1382,6 @@ public class EcosystemSimulator
     public float GetTier1Population() => Species.Where(s => s.Tier == 1).Sum(s => s.Population);
     public float GetTier2Population() => Species.Where(s => s.Tier == 2).Sum(s => s.Population);
     public float GetTierPopulation(int tier) => Species.Where(s => s.Tier == tier).Sum(s => s.Population);
-    public float GetVariantPopulation(int tier, ThermalVariant variant) =>
-        Species.Where(s => s.Tier == tier && s.Variant == variant).Sum(s => s.Population);
 
     public bool HasCrashed()
     {

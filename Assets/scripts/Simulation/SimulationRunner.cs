@@ -53,7 +53,9 @@ public struct PerSpeciesStepData
 /// CSV COLUMNS:
 /// - Day, Year, Temperature, BiologyCycle
 /// - StartPop, EndPop: Total population (T1+T2)
-/// - Tier1Pop, Tier2Pop, Tier1Arctic...Tier2Tropical: Populations by tier/variant
+/// - Tier1Pop, Tier2Pop: Tier-total populations
+/// - Tier{n}_{variantLabel}: Dynamic per-variant-label rollup (one column per distinct
+///   (tier, variantLabel) present in the run — see StepRecord.TierVariantPop)
 /// - EatenT1: Prey eaten (Tier 1 deaths from predation)
 /// - TempDeathsT1, TempDeathsT2: Thermal deaths (instant at lethal limits)
 /// - ConditionDeathsT1, ConditionDeathsT2: Condition deaths (chronic stress)
@@ -89,14 +91,12 @@ public class StepRecord
     // Population by tier (using long to prevent overflow)
     public long Tier1Pop;
     public long Tier2Pop;
-    public long Tier1Arctic;
-    public long Tier1Common;
-    public long Tier1Tropical;
-    public long Tier2Arctic;
-    public long Tier2Common;
-    public long Tier2Tropical;
-    public long Tier1Custom;
-    public long Tier2Custom;
+
+    // Dynamic per-variant-label rollup. Key = rollup column name "Tier{tier}_{SanitizedLabel}"
+    // (must equal the column produced by BuildVariantRollupColumns so header/row/stats align).
+    // Value = summed population of all species in that tier sharing that variant label.
+    // Replaces the legacy fixed 4-bucket Tier1Arctic/Common/Tropical/Custom (+Tier2*) fields.
+    public Dictionary<string, long> TierVariantPop = new Dictionary<string, long>();
 
     // Death tracking (using long to prevent overflow)
     public long EatenT1;           // Prey eaten = T1 deaths from predation
@@ -143,6 +143,62 @@ public class StepRecord
     public Dictionary<string, PerSpeciesStepData> SpeciesData = new Dictionary<string, PerSpeciesStepData>();
 
     /// <summary>
+    /// Build the ordered list of dynamic tier-variant rollup columns from the species
+    /// present in a scenario. One column per distinct (tier, variantLabel) pair, named
+    /// "Tier{tier}_{SanitizeColumnName(label)}" where label = VariantLabel (or Name when
+    /// VariantLabel is empty). Ordered by (tier asc, label asc, Ordinal). When two distinct
+    /// labels sanitize to the same column, a _2/_3/... suffix disambiguates — the SAME
+    /// collision logic the per-species columns use (so the schema stays internally unique).
+    ///
+    /// This is the single source of truth for the rollup column schema: CsvHeader, ToCsvLine,
+    /// and the stats code all derive their column set from this helper so they always align.
+    /// The returned col MUST equal the key RecordStep writes into TierVariantPop.
+    /// </summary>
+    /// <param name="orderedSpecies">Species in the scenario (order irrelevant — re-sorted here).</param>
+    /// <param name="tier2">When false, tier != 1 species are excluded (Tier-1-only public CSV).</param>
+    public static List<(string col, int tier, string label)> BuildVariantRollupColumns(
+        IList<SimSpecies> orderedSpecies, bool tier2 = true)
+    {
+        var result = new List<(string col, int tier, string label)>();
+        if (orderedSpecies == null) return result;
+
+        // Distinct (tier, label) pairs, filtered by tier2, sorted by (tier asc, label asc).
+        var pairs = new List<(int tier, string label)>();
+        var seenPairs = new HashSet<(int, string)>();
+        foreach (var s in orderedSpecies)
+        {
+            if (s == null) continue;
+            if (!tier2 && s.Tier != 1) continue;
+            string label = string.IsNullOrEmpty(s.VariantLabel) ? s.Name : s.VariantLabel;
+            var key = (s.Tier, label);
+            if (seenPairs.Add(key))
+                pairs.Add(key);
+        }
+        pairs.Sort((a, b) =>
+        {
+            int t = a.tier.CompareTo(b.tier);
+            return t != 0 ? t : string.CompareOrdinal(a.label, b.label);
+        });
+
+        // Assign sanitized column names with the same _2/_3 collision suffix as per-species cols.
+        var seenCols = new HashSet<string>();
+        foreach (var (tier, label) in pairs)
+        {
+            string baseName = $"Tier{tier}_{SanitizeColumnName(label)}";
+            string c = baseName;
+            int suffix = 2;
+            while (seenCols.Contains(c))
+            {
+                c = $"{baseName}_{suffix}";
+                suffix++;
+            }
+            seenCols.Add(c);
+            result.Add((c, tier, label));
+        }
+        return result;
+    }
+
+    /// <summary>
     /// Build CSV row. Tier-level columns first (byte-identical to v11.1 layout),
     /// then per-species columns appended in the same order as orderedSpecies (which
     /// must be identical to the order used in CsvHeader for the same scenario).
@@ -158,8 +214,9 @@ public class StepRecord
         sb.Append($"{Day},{Year},{Temperature:F2},{BiologyCycle},");
         sb.Append($"{StartPop},{EndPop},");
         sb.Append($"{Tier1Pop},"); if (tier2) sb.Append($"{Tier2Pop},");
-        sb.Append($"{Tier1Arctic},{Tier1Common},{Tier1Tropical},{Tier1Custom},");
-        if (tier2) sb.Append($"{Tier2Arctic},{Tier2Common},{Tier2Tropical},{Tier2Custom},");
+        // Dynamic tier-variant rollup columns (derived from orderedSpecies, same schema as CsvHeader).
+        foreach (var (col, _, _) in BuildVariantRollupColumns(orderedSpecies, tier2))
+            sb.Append($"{(TierVariantPop.TryGetValue(col, out var v) ? v : 0L)},");
         sb.Append($"{EatenT1},{TempDeathsT1},"); if (tier2) sb.Append($"{TempDeathsT2},");
         sb.Append($"{ConditionDeathsT1},"); if (tier2) sb.Append($"{ConditionDeathsT2},");
         sb.Append($"{NaturalDeathsT1},"); if (tier2) sb.Append($"{NaturalDeathsT2},");
@@ -211,8 +268,9 @@ public class StepRecord
         sb.Append("Day,Year,Temperature,BiologyCycle,");
         sb.Append("StartPop,EndPop,");
         sb.Append("Tier1Pop,"); if (tier2) sb.Append("Tier2Pop,");
-        sb.Append("Tier1Arctic,Tier1Common,Tier1Tropical,Tier1Custom,");
-        if (tier2) sb.Append("Tier2Arctic,Tier2Common,Tier2Tropical,Tier2Custom,");
+        // Dynamic tier-variant rollup columns (one per distinct (tier, variantLabel) present).
+        foreach (var (col, _, _) in BuildVariantRollupColumns(orderedSpecies, tier2))
+            sb.Append($"{col},");
         sb.Append("EatenT1,TempDeathsT1,"); if (tier2) sb.Append("TempDeathsT2,");
         sb.Append("ConditionDeathsT1,"); if (tier2) sb.Append("ConditionDeathsT2,");
         sb.Append("NaturalDeathsT1,"); if (tier2) sb.Append("NaturalDeathsT2,");
@@ -430,17 +488,11 @@ public class SimulationRunner
             StartPop = biologyRan ? SafePopToLong(Ecosystem.StartPopT1 + Ecosystem.StartPopT2) : 0,
             EndPop = SafePopToLong(Ecosystem.GetTier1Population() + Ecosystem.GetTier2Population()),
 
-            // Population by tier - using long to prevent overflow
+            // Population by tier - using long to prevent overflow.
+            // Dynamic per-variant-label rollup (record.TierVariantPop) is accumulated below
+            // in the per-species loop — one pass, no GetVariantPopulation scans.
             Tier1Pop = SafePopToLong(Ecosystem.GetTier1Population()),
             Tier2Pop = SafePopToLong(Ecosystem.GetTier2Population()),
-            Tier1Arctic = SafePopToLong(Ecosystem.GetVariantPopulation(1, ThermalVariant.Arctic)),
-            Tier1Common = SafePopToLong(Ecosystem.GetVariantPopulation(1, ThermalVariant.Common)),
-            Tier1Tropical = SafePopToLong(Ecosystem.GetVariantPopulation(1, ThermalVariant.Tropical)),
-            Tier2Arctic = SafePopToLong(Ecosystem.GetVariantPopulation(2, ThermalVariant.Arctic)),
-            Tier2Common = SafePopToLong(Ecosystem.GetVariantPopulation(2, ThermalVariant.Common)),
-            Tier2Tropical = SafePopToLong(Ecosystem.GetVariantPopulation(2, ThermalVariant.Tropical)),
-            Tier1Custom = SafePopToLong(Ecosystem.GetVariantPopulation(1, ThermalVariant.Custom)),
-            Tier2Custom = SafePopToLong(Ecosystem.GetVariantPopulation(2, ThermalVariant.Custom)),
 
             // Death tracking - using long to prevent overflow
             EatenT1 = SafePopToLong(eatenT1),
@@ -488,6 +540,16 @@ public class SimulationRunner
         foreach (var sp in Ecosystem.Species)
         {
             string fn = sp.FullName;
+
+            // Dynamic tier-variant rollup accumulation (one pass, replaces 8 LINQ scans).
+            // Key MUST match BuildVariantRollupColumns' col: same label rule + SanitizeColumnName.
+            // Use SafePopToLong(sp.Population) so each rollup column equals the sum of the
+            // per-species _Pop columns for that (tier, label) — the tier-rollup invariant.
+            string variantLabel = string.IsNullOrEmpty(sp.VariantLabel) ? sp.Name : sp.VariantLabel;
+            string variantKey = $"Tier{sp.Tier}_{StepRecord.SanitizeColumnName(variantLabel)}";
+            record.TierVariantPop.TryGetValue(variantKey, out var prevVariantPop);
+            record.TierVariantPop[variantKey] = prevVariantPop + SafePopToLong(sp.Population);
+
             long startPop = GetOrZeroLong(Ecosystem.StartPopBySpecies, fn);
             // Fall back to current rounded population if reset block didn't run
             // (defensive — should not happen under normal flow).
@@ -550,17 +612,10 @@ public class SimulationRunner
     {
         switch (column)
         {
-            case "Tier1Pop":      return r.Tier1Pop;
-            case "Tier2Pop":      return r.Tier2Pop;
-            case "Tier1Arctic":   return r.Tier1Arctic;
-            case "Tier1Common":   return r.Tier1Common;
-            case "Tier1Tropical": return r.Tier1Tropical;
-            case "Tier2Arctic":   return r.Tier2Arctic;
-            case "Tier2Common":   return r.Tier2Common;
-            case "Tier2Tropical": return r.Tier2Tropical;
-            case "Tier1Custom":   return r.Tier1Custom;
-            case "Tier2Custom":   return r.Tier2Custom;
-            default:              return 0;
+            case "Tier1Pop": return r.Tier1Pop;
+            case "Tier2Pop": return r.Tier2Pop;
+            // Dynamic tier-variant rollup columns live in TierVariantPop.
+            default:         return r.TierVariantPop.TryGetValue(column, out var v) ? v : 0L;
         }
     }
 
@@ -577,7 +632,23 @@ public class SimulationRunner
 
         if (_records.Count == 0) return stats;
 
-        foreach (var col in ScenarioResult.PopColumns)
+        // Dynamic tier-variant rollup columns: the union of every record's TierVariantPop
+        // keys (a record only holds keys for tiers/labels alive that day). Sorted for
+        // deterministic output. Mean/Max/Min/StdDev are computed for the two tier totals
+        // plus the rollup columns; ExtinctionDay is computed for the rollup columns only.
+        var rollupCols = new List<string>();
+        {
+            var seen = new HashSet<string>();
+            foreach (var r in _records)
+                foreach (var key in r.TierVariantPop.Keys)
+                    if (seen.Add(key)) rollupCols.Add(key);
+            rollupCols.Sort(StringComparer.Ordinal);
+        }
+
+        var statCols = new List<string> { "Tier1Pop", "Tier2Pop" };
+        statCols.AddRange(rollupCols);
+
+        foreach (var col in statCols)
         {
             long max = long.MinValue;
             long min = long.MaxValue;
@@ -607,7 +678,7 @@ public class SimulationRunner
             stats.StdDev[col] = stddev;
         }
 
-        foreach (var variant in ScenarioResult.VariantColumns)
+        foreach (var variant in rollupCols)
         {
             int extinctionDay = -1;
             bool wasAlive = false;
@@ -707,7 +778,8 @@ public class SimulationRunner
             foreach (var sp in RunSpecies.speciesList)
             {
                 string spName = !string.IsNullOrEmpty(sp.speciesLabel) ? sp.speciesLabel : sp.speciesName.ToString();
-                sb.AppendLine($"#species:{spName},{sp.variant},{sp.tier},{sp.count}," +
+                string spVariant = !string.IsNullOrEmpty(sp.variantLabel) ? sp.variantLabel : spName;
+                sb.AppendLine($"#species:{spName},{spVariant},{sp.tier},{sp.count}," +
                     $"{sp.eatingAmount},{sp.reproductionMultiplier}," +
                     $"{sp.deathThreshold},{sp.deathRate},{sp.reproThreshold}," +
                     $"{sp.naturalDeathRate},{sp.naturalDeathVariance}," +
@@ -795,7 +867,7 @@ public class SimulationRunner
             sb.Append("#summary:Variant");
             sb.Append(",All,All");
             foreach (var sp in orderedSpecies)
-                sb.Append($",{sp.Variant}");
+                sb.Append($",{(string.IsNullOrEmpty(sp.VariantLabel) ? sp.Name : sp.VariantLabel)}");
             sb.AppendLine();
 
             sb.Append("#summary:Tier");
@@ -830,7 +902,8 @@ public class SimulationRunner
             foreach (var sp in orderedSpecies)
             {
                 string col = StepRecord.SanitizeColumnName(sp.FullName);
-                sb.AppendLine($"#extinction:{col},{sp.Variant},{sp.Tier},{spExtinctionDay[sp.FullName]}");
+                string vlabel = string.IsNullOrEmpty(sp.VariantLabel) ? sp.Name : sp.VariantLabel;
+                sb.AppendLine($"#extinction:{col},{vlabel},{sp.Tier},{spExtinctionDay[sp.FullName]}");
             }
             sb.AppendLine("#");
         }
@@ -873,14 +946,6 @@ public class SimulationRunner
         var lastRecord = _records[_records.Count - 1];
         summary.FinalTier1Pop = lastRecord.Tier1Pop;
         summary.FinalTier2Pop = lastRecord.Tier2Pop;
-        summary.FinalTier1Arctic = lastRecord.Tier1Arctic;
-        summary.FinalTier1Common = lastRecord.Tier1Common;
-        summary.FinalTier1Tropical = lastRecord.Tier1Tropical;
-        summary.FinalTier2Arctic = lastRecord.Tier2Arctic;
-        summary.FinalTier2Common = lastRecord.Tier2Common;
-        summary.FinalTier2Tropical = lastRecord.Tier2Tropical;
-        summary.FinalTier1Custom = lastRecord.Tier1Custom;
-        summary.FinalTier2Custom = lastRecord.Tier2Custom;
 
         long maxT1 = 0, minT1 = long.MaxValue;
         long maxT2 = 0, minT2 = long.MaxValue;
@@ -947,14 +1012,6 @@ public class SimulationRunner
             CrashTier = CrashTier,
             FinalTier1Pop = summary?.FinalTier1Pop ?? 0,
             FinalTier2Pop = summary?.FinalTier2Pop ?? 0,
-            FinalTier1Arctic = summary?.FinalTier1Arctic ?? 0,
-            FinalTier1Common = summary?.FinalTier1Common ?? 0,
-            FinalTier1Tropical = summary?.FinalTier1Tropical ?? 0,
-            FinalTier2Arctic = summary?.FinalTier2Arctic ?? 0,
-            FinalTier2Common = summary?.FinalTier2Common ?? 0,
-            FinalTier2Tropical = summary?.FinalTier2Tropical ?? 0,
-            FinalTier1Custom = summary?.FinalTier1Custom ?? 0,
-            FinalTier2Custom = summary?.FinalTier2Custom ?? 0,
             FinalSpeciesPopulations = CaptureSpeciesPopulations(),
             SpeciesMetrics = speciesMetrics,
             MaxTier1Pop = summary?.MaxTier1Pop ?? 0,
@@ -1154,14 +1211,6 @@ public class SimulationSummary
     public int CrashTier;
     public long FinalTier1Pop;
     public long FinalTier2Pop;
-    public long FinalTier1Arctic;
-    public long FinalTier1Common;
-    public long FinalTier1Tropical;
-    public long FinalTier2Arctic;
-    public long FinalTier2Common;
-    public long FinalTier2Tropical;
-    public long FinalTier1Custom;
-    public long FinalTier2Custom;
     public long MaxTier1Pop;
     public long MinTier1Pop;
     public long MaxTier2Pop;

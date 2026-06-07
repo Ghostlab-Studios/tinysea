@@ -18,7 +18,7 @@ MonoBehaviour:
     variant: 0
     variantLabel: Cold Specialist
     speciesLabel: Hexapod
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: b18c89991d6433d47a3003fba57fad95, type: 3}
     count: 20
     tier: 0
     eatingAmount: 3
@@ -55,7 +55,7 @@ MonoBehaviour:
     variant: 1
     variantLabel: Warm Specialist
     speciesLabel: Hexapod
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: f89c1a59fafaa3e41aa5e9f94d051ee9, type: 3}
     count: 20
     tier: 0
     eatingAmount: 3
@@ -92,7 +92,7 @@ MonoBehaviour:
     variant: 2
     variantLabel: Hot Specialist
     speciesLabel: Hexapod
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 485589c1ae6b14a4f825d236b41fef64, type: 3}
     count: 20
     tier: 0
     eatingAmount: 3
@@ -129,7 +129,7 @@ MonoBehaviour:
     variant: 3
     variantLabel: Cold Generalist
     speciesLabel: Gelgi
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 6c964fb92296a454992c69f3b7c55d93, type: 3}
     count: 20
     tier: 0
     eatingAmount: 3
@@ -166,7 +166,7 @@ MonoBehaviour:
     variant: 4
     variantLabel: Warm Generalist
     speciesLabel: Gelgi
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 82c88d2d9c57b05498a15ab0c8cdee38, type: 3}
     count: 20
     tier: 0
     eatingAmount: 3
@@ -203,7 +203,7 @@ MonoBehaviour:
     variant: 5
     variantLabel: Hot Generalist
     speciesLabel: Gelgi
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 7af983ef6dc2bc84c9ff768388f83c29, type: 3}
     count: 20
     tier: 0
     eatingAmount: 3

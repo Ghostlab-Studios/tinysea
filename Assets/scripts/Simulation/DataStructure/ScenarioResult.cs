@@ -25,16 +25,8 @@ public class ScenarioResult
     // Final populations
     public long FinalTier1Pop;
     public long FinalTier2Pop;
-    public long FinalTier1Arctic;
-    public long FinalTier1Common;
-    public long FinalTier1Tropical;
-    public long FinalTier2Arctic;
-    public long FinalTier2Common;
-    public long FinalTier2Tropical;
-    public long FinalTier1Custom;
-    public long FinalTier2Custom;
 
-    // Per-species final populations (key = FullName like "Hexapod_Arctic" or "Coral_Custom")
+    // Per-species final populations (key = FullName like "Hexapod_Cold" or "Coral_M2")
     public Dictionary<string, long> FinalSpeciesPopulations;
 
     // v12: Per-species rich metrics (final-year means, CV, min/max, extinction/crash day)
@@ -65,20 +57,10 @@ public class ScenarioResult
     public Dictionary<string, long> PopMin;
     public Dictionary<string, double> PopStdDev;
 
-    // Extinction timing per variant: variant key -> day first reached 0 (-1 if survived)
+    // Extinction timing per tier-variant rollup column: key = "Tier{n}_{variantLabel}"
+    // -> day first reached 0 (-1 if survived). Keys are dynamic per run (one per distinct
+    // (tier, variantLabel) present), produced by SimulationRunner.ComputePopulationStats.
     public Dictionary<string, int> ExtinctionDay;
-
-    // Column name constants shared across SimulationRunner and AggregateResults
-    public static readonly string[] PopColumns = {
-        "Tier1Pop", "Tier2Pop",
-        "Tier1Arctic", "Tier1Common", "Tier1Tropical", "Tier1Custom",
-        "Tier2Arctic", "Tier2Common", "Tier2Tropical", "Tier2Custom"
-    };
-
-    public static readonly string[] VariantColumns = {
-        "Tier1Arctic", "Tier1Common", "Tier1Tropical", "Tier1Custom",
-        "Tier2Arctic", "Tier2Common", "Tier2Tropical", "Tier2Custom"
-    };
 
     // CSV data (stored for download)
     public string CsvData;
@@ -599,8 +581,8 @@ public class AggregateResults
     /// Conventions:
     /// - All per-species sections include separate <c>Species</c>, <c>Variant</c>, <c>Tier</c> columns.
     /// - Wide-format sections (9, 10) carry three header rows: column names, <c>Variant</c>, <c>Tier</c>.
-    ///   They omit the <c>T1Arctic, …, T2Custom</c> variant-rollup columns because the per-species
-    ///   columns subsume them; tier totals (<c>Tier1Pop</c>, <c>Tier2Pop</c>) remain.
+    ///   They omit the dynamic tier-variant rollup columns because the per-species columns
+    ///   subsume them; tier totals (<c>Tier1Pop</c>, <c>Tier2Pop</c>) remain.
     /// - Species columns are always sorted alphabetically by <c>FullName</c> for stable output.
     /// </remarks>
     public string ToAggregateCsv()
@@ -736,9 +718,9 @@ public class AggregateResults
         // column with its Variant and Tier; meta columns that aren't tier-bound
         // (Seed, Crashed, CrashDay, CrashTier, AvgTemp, MinTemp, MaxTemp) get
         // blank annotations, and FinalT1/FinalT2 carry Variant=All with their
-        // tier number. Variant-rollup columns (T1Arctic, …, T2Custom) are
-        // omitted: the per-species columns sum to the tier totals, so the
-        // variant intermediate level is redundant.
+        // tier number. The dynamic tier-variant rollup columns are omitted:
+        // the per-species columns sum to the tier totals, so the variant
+        // intermediate level is redundant.
         var speciesCols = new List<string>();
         {
             // Union of every species seen in any scenario, sorted alphabetically
@@ -793,9 +775,9 @@ public class AggregateResults
         // (Mean / Max / Min / StdDev across days, computed in
         // SimulationRunner.ComputePopulationStats). Mirrors the scenario CSV
         // `#summary:` block in shape: three header rows (Statistic / Variant /
-        // Tier) above the data rows. Variant-rollup columns are dropped here too
-        // — Tier1Pop/Tier2Pop carry Variant=All; per-species columns carry their
-        // own Variant + Tier.
+        // Tier) above the data rows. The dynamic tier-variant rollup columns are
+        // dropped here too — Tier1Pop/Tier2Pop carry Variant=All; per-species
+        // columns carry their own Variant + Tier.
         //
         // Note: GrandMean_Min/Max are means-of-mins / means-of-maxes across
         // scenarios — not real population values. Use the per-scenario rows in
@@ -877,7 +859,9 @@ public class AggregateResults
             }
         }
 
-        // Extinction timing across all runs (tier-variant rollups)
+        // Extinction timing across all runs (dynamic tier-variant rollup columns).
+        // The variant key set is the union of every scenario's ExtinctionDay keys
+        // (one key per distinct "Tier{n}_{variantLabel}" present), sorted for stable output.
         bool hasExtinction = Scenarios.Any(s => s.ExtinctionDay != null);
         if (hasExtinction)
         {
@@ -885,7 +869,14 @@ public class AggregateResults
             sb.AppendLine("=== EXTINCTION TIMING - TIER VARIANTS (Across All Scenarios) ===");
             sb.AppendLine("Variant,MinDays,MaxDays,AvgDays,NumExtinct,NumSurvived");
 
-            foreach (var variant in ScenarioResult.VariantColumns)
+            var variantKeys = new SortedSet<string>(StringComparer.Ordinal);
+            foreach (var s in Scenarios)
+            {
+                if (s.ExtinctionDay == null) continue;
+                foreach (var k in s.ExtinctionDay.Keys) variantKeys.Add(k);
+            }
+
+            foreach (var variant in variantKeys)
             {
                 var extinctDays = new List<int>();
                 int numSurvived = 0;
@@ -1190,7 +1181,8 @@ public static class ConfigExporter
             foreach (var species in runSpecies.speciesList)
             {
                 string spName = !string.IsNullOrEmpty(species.speciesLabel) ? species.speciesLabel : species.speciesName.ToString();
-                sb.AppendLine($"{spName},{species.variant},{species.tier},{species.count}," +
+                string spVariant = !string.IsNullOrEmpty(species.variantLabel) ? species.variantLabel : spName;
+                sb.AppendLine($"{spName},{spVariant},{species.tier},{species.count}," +
                     $"{species.eatingAmount},{species.reproductionMultiplier}," +
                     $"{species.deathThreshold},{species.deathRate},{species.reproThreshold}," +
                     $"{species.naturalDeathRate},{species.naturalDeathVariance}," +

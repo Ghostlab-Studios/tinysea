@@ -16,7 +16,7 @@ MonoBehaviour:
   - index: 0
     speciesName: 0
     variant: 0
-    variantLabel: Cold
+    variantLabel: ColdSpecialist
     speciesLabel: Hexapod
     icon: {fileID: 0}
     count: 20
@@ -40,7 +40,7 @@ MonoBehaviour:
     thermalBreadthStars: 5
     temperatureThresholdText: High
     reproductionRateText: Low
-    description: Hexapod - Cold variant
+    description: Hexapod - ColdSpecialist variant
     optimalTempK: 293.15
     arrhenBreadth: 5000
     arrhenLower: 15998
@@ -53,7 +53,7 @@ MonoBehaviour:
   - index: 1
     speciesName: 0
     variant: 1
-    variantLabel: Warm
+    variantLabel: WarmSpecialist
     speciesLabel: Hexapod
     icon: {fileID: 0}
     count: 20
@@ -77,7 +77,7 @@ MonoBehaviour:
     thermalBreadthStars: 5
     temperatureThresholdText: High
     reproductionRateText: Low
-    description: Hexapod - Warm variant
+    description: Hexapod - WarmSpecialist variant
     optimalTempK: 295.15
     arrhenBreadth: 5000
     arrhenLower: 16000
@@ -90,7 +90,7 @@ MonoBehaviour:
   - index: 2
     speciesName: 0
     variant: 2
-    variantLabel: Hot
+    variantLabel: HotSpecialist
     speciesLabel: Hexapod
     icon: {fileID: 0}
     count: 20
@@ -114,7 +114,7 @@ MonoBehaviour:
     thermalBreadthStars: 5
     temperatureThresholdText: High
     reproductionRateText: Low
-    description: Hexapod - Hot variant
+    description: Hexapod - HotSpecialist variant
     optimalTempK: 297.15
     arrhenBreadth: 5000
     arrhenLower: 16002
@@ -127,7 +127,7 @@ MonoBehaviour:
   - index: 3
     speciesName: 1
     variant: 3
-    variantLabel: Cold
+    variantLabel: ColdGeneralist
     speciesLabel: Gelgi
     icon: {fileID: 0}
     count: 20
@@ -151,7 +151,7 @@ MonoBehaviour:
     thermalBreadthStars: 5
     temperatureThresholdText: High
     reproductionRateText: Low
-    description: Gelgi - Cold variant
+    description: Gelgi - ColdGeneralist variant
     optimalTempK: 293.15
     arrhenBreadth: 7000
     arrhenLower: 4998
@@ -164,7 +164,7 @@ MonoBehaviour:
   - index: 4
     speciesName: 1
     variant: 4
-    variantLabel: Warm
+    variantLabel: WarmGeneralist
     speciesLabel: Gelgi
     icon: {fileID: 0}
     count: 20
@@ -188,7 +188,7 @@ MonoBehaviour:
     thermalBreadthStars: 5
     temperatureThresholdText: High
     reproductionRateText: Low
-    description: Gelgi - Warm variant
+    description: Gelgi - WarmGeneralist variant
     optimalTempK: 295.15
     arrhenBreadth: 7000
     arrhenLower: 5000
@@ -201,7 +201,7 @@ MonoBehaviour:
   - index: 5
     speciesName: 1
     variant: 5
-    variantLabel: Hot
+    variantLabel: HotGeneralist
     speciesLabel: Gelgi
     icon: {fileID: 0}
     count: 20
@@ -225,7 +225,7 @@ MonoBehaviour:
     thermalBreadthStars: 5
     temperatureThresholdText: High
     reproductionRateText: Low
-    description: Gelgi - Hot variant
+    description: Gelgi - HotGeneralist variant
     optimalTempK: 297.15
     arrhenBreadth: 7000
     arrhenLower: 5002

@@ -16,7 +16,7 @@ MonoBehaviour:
   - index: 0
     speciesName: 0
     variant: 0
-    variantLabel: ColdSpecialist
+    variantLabel: Cold Specialist
     speciesLabel: Hexapod
     icon: {fileID: 0}
     count: 20
@@ -53,7 +53,7 @@ MonoBehaviour:
   - index: 1
     speciesName: 0
     variant: 1
-    variantLabel: WarmSpecialist
+    variantLabel: Warm Specialist
     speciesLabel: Hexapod
     icon: {fileID: 0}
     count: 20
@@ -90,7 +90,7 @@ MonoBehaviour:
   - index: 2
     speciesName: 0
     variant: 2
-    variantLabel: HotSpecialist
+    variantLabel: Hot Specialist
     speciesLabel: Hexapod
     icon: {fileID: 0}
     count: 20
@@ -127,7 +127,7 @@ MonoBehaviour:
   - index: 3
     speciesName: 1
     variant: 3
-    variantLabel: ColdGeneralist
+    variantLabel: Cold Generalist
     speciesLabel: Gelgi
     icon: {fileID: 0}
     count: 20
@@ -164,7 +164,7 @@ MonoBehaviour:
   - index: 4
     speciesName: 1
     variant: 4
-    variantLabel: WarmGeneralist
+    variantLabel: Warm Generalist
     speciesLabel: Gelgi
     icon: {fileID: 0}
     count: 20
@@ -201,7 +201,7 @@ MonoBehaviour:
   - index: 5
     speciesName: 1
     variant: 5
-    variantLabel: HotGeneralist
+    variantLabel: Hot Generalist
     speciesLabel: Gelgi
     icon: {fileID: 0}
     count: 20

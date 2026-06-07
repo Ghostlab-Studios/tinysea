@@ -147,6 +147,19 @@ public class SpeciesData
     }
 
     /// <summary>
+    /// Modular default-derivation for the variant label. Rule:
+    ///   - already set (CSV / custom free-text) -> keep it untouched;
+    ///   - Custom variant with no label -> leave blank (free-text comes from elsewhere);
+    ///   - otherwise -> derive from the enum (variant.ToString()), so a preset like
+    ///     WarmGeneralist gets variantLabel "WarmGeneralist", not a hardcoded "Warm".
+    /// </summary>
+    public static string DeriveVariantLabel(SpeciesVariant variant, string existing)
+    {
+        if (!string.IsNullOrEmpty(existing)) return existing;
+        return variant == SpeciesVariant.Custom ? existing : variant.ToString();
+    }
+
+    /// <summary>
     /// Batch 1B: resolve a variant label to its SpeciesVariant enum bucket, accepting
     /// the new names (Cold/Warm/Hot) and the legacy aliases (Arctic/Common/Tropical).
     /// Cold=Arctic, Warm=Common, Hot=Tropical; unknown labels => Custom. Used only for
@@ -321,7 +334,7 @@ public class SpeciesDatabase : ScriptableObject
             lowerBound: 292.4f, upperBound: 293.9f,
             pmax: 0.9843f, ctMinC: 0f, ctMaxC: 35f,
             conditionDrainRate: SHARED_COND_DRAIN, conditionRecoveryRate: SHARED_COND_RECOVERY,
-            variantLabel: "Cold", speciesLabel: "Hexapod"
+            speciesLabel: "Hexapod"
         );
 
         AddSpecies(
@@ -335,7 +348,7 @@ public class SpeciesDatabase : ScriptableObject
             lowerBound: 294.4f, upperBound: 295.9f,
             pmax: 0.972f, ctMinC: 2f, ctMaxC: 37f,
             conditionDrainRate: SHARED_COND_DRAIN, conditionRecoveryRate: SHARED_COND_RECOVERY,
-            variantLabel: "Warm", speciesLabel: "Hexapod"
+            speciesLabel: "Hexapod"
         );
 
         AddSpecies(
@@ -349,7 +362,7 @@ public class SpeciesDatabase : ScriptableObject
             lowerBound: 296.4f, upperBound: 297.9f,
             pmax: 0.96f, ctMinC: 4f, ctMaxC: 39f,
             conditionDrainRate: SHARED_COND_DRAIN, conditionRecoveryRate: SHARED_COND_RECOVERY,
-            variantLabel: "Hot", speciesLabel: "Hexapod"
+            speciesLabel: "Hexapod"
         );
 
         // ----- GELGI (generalist, B=7000) -----
@@ -364,7 +377,7 @@ public class SpeciesDatabase : ScriptableObject
             lowerBound: 292.4f, upperBound: 293.9f,
             pmax: 0.6616f, ctMinC: 0f, ctMaxC: 35f,
             conditionDrainRate: SHARED_COND_DRAIN, conditionRecoveryRate: SHARED_COND_RECOVERY,
-            variantLabel: "Cold", speciesLabel: "Gelgi"
+            speciesLabel: "Gelgi"
         );
 
         AddSpecies(
@@ -378,7 +391,7 @@ public class SpeciesDatabase : ScriptableObject
             lowerBound: 294.4f, upperBound: 295.9f,
             pmax: 0.6547f, ctMinC: 2f, ctMaxC: 37f,
             conditionDrainRate: SHARED_COND_DRAIN, conditionRecoveryRate: SHARED_COND_RECOVERY,
-            variantLabel: "Warm", speciesLabel: "Gelgi"
+            speciesLabel: "Gelgi"
         );
 
         AddSpecies(
@@ -392,7 +405,7 @@ public class SpeciesDatabase : ScriptableObject
             lowerBound: 296.4f, upperBound: 297.9f,
             pmax: 0.6481f, ctMinC: 4f, ctMaxC: 39f,
             conditionDrainRate: SHARED_COND_DRAIN, conditionRecoveryRate: SHARED_COND_RECOVERY,
-            variantLabel: "Hot", speciesLabel: "Gelgi"
+            speciesLabel: "Gelgi"
         );
 
         EditorUtility.SetDirty(this);
@@ -419,7 +432,7 @@ public class SpeciesDatabase : ScriptableObject
             index = index,
             speciesName = name,
             variant = variant,
-            variantLabel = variantLabel,
+            variantLabel = SpeciesData.DeriveVariantLabel(variant, variantLabel),
             speciesLabel = string.IsNullOrEmpty(speciesLabel) ? name.ToString() : speciesLabel,
             tier = tier,
             count = count,
@@ -531,37 +544,37 @@ public class SpeciesDatabase : ScriptableObject
                 data.arrhenLower = 15998f; data.arrhenUpper = 43798f;
                 data.lowerBoundK = 292.4f; data.upperBoundK = 293.9f;
                 data.pmax = 0.9843f; data.ctMinC = 0f; data.ctMaxC = 35f;
-                data.variantLabel = "Cold"; return true;
+                data.variantLabel = data.variant.ToString(); return true;
             case SpeciesVariant.WarmSpecialist:  // Warm, Topt 22 °C, B=5000
                 data.optimalTempK = 295.15f; data.arrhenBreadth = 5000f;
                 data.arrhenLower = 16000f; data.arrhenUpper = 43800f;
                 data.lowerBoundK = 294.4f; data.upperBoundK = 295.9f;
                 data.pmax = 0.972f; data.ctMinC = 2f; data.ctMaxC = 37f;
-                data.variantLabel = "Warm"; return true;
+                data.variantLabel = data.variant.ToString(); return true;
             case SpeciesVariant.HotSpecialist:   // Hot, Topt 24 °C, B=5000
                 data.optimalTempK = 297.15f; data.arrhenBreadth = 5000f;
                 data.arrhenLower = 16002f; data.arrhenUpper = 43802f;
                 data.lowerBoundK = 296.4f; data.upperBoundK = 297.9f;
                 data.pmax = 0.96f; data.ctMinC = 4f; data.ctMaxC = 39f;
-                data.variantLabel = "Hot"; return true;
+                data.variantLabel = data.variant.ToString(); return true;
             case SpeciesVariant.ColdGeneralist:  // Cold, Topt 20 °C, B=7000
                 data.optimalTempK = 293.15f; data.arrhenBreadth = 7000f;
                 data.arrhenLower = 4998f; data.arrhenUpper = 31098f;
                 data.lowerBoundK = 292.4f; data.upperBoundK = 293.9f;
                 data.pmax = 0.6616f; data.ctMinC = 0f; data.ctMaxC = 35f;
-                data.variantLabel = "Cold"; return true;
+                data.variantLabel = data.variant.ToString(); return true;
             case SpeciesVariant.WarmGeneralist:  // Warm, Topt 22 °C, B=7000
                 data.optimalTempK = 295.15f; data.arrhenBreadth = 7000f;
                 data.arrhenLower = 5000f; data.arrhenUpper = 31100f;
                 data.lowerBoundK = 294.4f; data.upperBoundK = 295.9f;
                 data.pmax = 0.6547f; data.ctMinC = 2f; data.ctMaxC = 37f;
-                data.variantLabel = "Warm"; return true;
+                data.variantLabel = data.variant.ToString(); return true;
             case SpeciesVariant.HotGeneralist:   // Hot, Topt 24 °C, B=7000
                 data.optimalTempK = 297.15f; data.arrhenBreadth = 7000f;
                 data.arrhenLower = 5002f; data.arrhenUpper = 31102f;
                 data.lowerBoundK = 296.4f; data.upperBoundK = 297.9f;
                 data.pmax = 0.6481f; data.ctMinC = 4f; data.ctMaxC = 39f;
-                data.variantLabel = "Hot"; return true;
+                data.variantLabel = data.variant.ToString(); return true;
             default: // Custom / unknown — no canonical preset
                 return false;
         }

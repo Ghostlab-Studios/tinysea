@@ -156,7 +156,25 @@ public class SpeciesData
     public static string DeriveVariantLabel(SpeciesVariant variant, string existing)
     {
         if (!string.IsNullOrEmpty(existing)) return existing;
-        return variant == SpeciesVariant.Custom ? existing : variant.ToString();
+        return variant == SpeciesVariant.Custom ? existing : NicifyEnumName(variant.ToString());
+    }
+
+    /// <summary>
+    /// Insert a space before each interior capital so an enum name reads naturally:
+    /// "WarmGeneralist" -> "Warm Generalist", "ColdSpecialist" -> "Cold Specialist".
+    /// (CSV / custom labels are never passed here — they keep whatever the user typed.)
+    /// </summary>
+    public static string NicifyEnumName(string s)
+    {
+        if (string.IsNullOrEmpty(s)) return s;
+        var sb = new System.Text.StringBuilder(s.Length + 4);
+        for (int i = 0; i < s.Length; i++)
+        {
+            char c = s[i];
+            if (i > 0 && char.IsUpper(c) && !char.IsUpper(s[i - 1])) sb.Append(' ');
+            sb.Append(c);
+        }
+        return sb.ToString();
     }
 
     /// <summary>
@@ -544,37 +562,37 @@ public class SpeciesDatabase : ScriptableObject
                 data.arrhenLower = 15998f; data.arrhenUpper = 43798f;
                 data.lowerBoundK = 292.4f; data.upperBoundK = 293.9f;
                 data.pmax = 0.9843f; data.ctMinC = 0f; data.ctMaxC = 35f;
-                data.variantLabel = data.variant.ToString(); return true;
+                data.variantLabel = SpeciesData.DeriveVariantLabel(data.variant, null); return true;
             case SpeciesVariant.WarmSpecialist:  // Warm, Topt 22 °C, B=5000
                 data.optimalTempK = 295.15f; data.arrhenBreadth = 5000f;
                 data.arrhenLower = 16000f; data.arrhenUpper = 43800f;
                 data.lowerBoundK = 294.4f; data.upperBoundK = 295.9f;
                 data.pmax = 0.972f; data.ctMinC = 2f; data.ctMaxC = 37f;
-                data.variantLabel = data.variant.ToString(); return true;
+                data.variantLabel = SpeciesData.DeriveVariantLabel(data.variant, null); return true;
             case SpeciesVariant.HotSpecialist:   // Hot, Topt 24 °C, B=5000
                 data.optimalTempK = 297.15f; data.arrhenBreadth = 5000f;
                 data.arrhenLower = 16002f; data.arrhenUpper = 43802f;
                 data.lowerBoundK = 296.4f; data.upperBoundK = 297.9f;
                 data.pmax = 0.96f; data.ctMinC = 4f; data.ctMaxC = 39f;
-                data.variantLabel = data.variant.ToString(); return true;
+                data.variantLabel = SpeciesData.DeriveVariantLabel(data.variant, null); return true;
             case SpeciesVariant.ColdGeneralist:  // Cold, Topt 20 °C, B=7000
                 data.optimalTempK = 293.15f; data.arrhenBreadth = 7000f;
                 data.arrhenLower = 4998f; data.arrhenUpper = 31098f;
                 data.lowerBoundK = 292.4f; data.upperBoundK = 293.9f;
                 data.pmax = 0.6616f; data.ctMinC = 0f; data.ctMaxC = 35f;
-                data.variantLabel = data.variant.ToString(); return true;
+                data.variantLabel = SpeciesData.DeriveVariantLabel(data.variant, null); return true;
             case SpeciesVariant.WarmGeneralist:  // Warm, Topt 22 °C, B=7000
                 data.optimalTempK = 295.15f; data.arrhenBreadth = 7000f;
                 data.arrhenLower = 5000f; data.arrhenUpper = 31100f;
                 data.lowerBoundK = 294.4f; data.upperBoundK = 295.9f;
                 data.pmax = 0.6547f; data.ctMinC = 2f; data.ctMaxC = 37f;
-                data.variantLabel = data.variant.ToString(); return true;
+                data.variantLabel = SpeciesData.DeriveVariantLabel(data.variant, null); return true;
             case SpeciesVariant.HotGeneralist:   // Hot, Topt 24 °C, B=7000
                 data.optimalTempK = 297.15f; data.arrhenBreadth = 7000f;
                 data.arrhenLower = 5002f; data.arrhenUpper = 31102f;
                 data.lowerBoundK = 296.4f; data.upperBoundK = 297.9f;
                 data.pmax = 0.6481f; data.ctMinC = 4f; data.ctMaxC = 39f;
-                data.variantLabel = data.variant.ToString(); return true;
+                data.variantLabel = SpeciesData.DeriveVariantLabel(data.variant, null); return true;
             default: // Custom / unknown — no canonical preset
                 return false;
         }

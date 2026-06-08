@@ -163,6 +163,7 @@ public class BulkSimulationController : MonoBehaviour
                     progress);
             }
             yield return null;
+            yield return WaitWhilePaused();   // Group 6: honor pause at the batch boundary
 
             if (_cancelRequested)
                 break;
@@ -216,6 +217,7 @@ public class BulkSimulationController : MonoBehaviour
                         progress);
                 }
                 yield return null;
+                yield return WaitWhilePaused();   // Group 6: honor pause between scenarios (WebGL)
                 if (_cancelRequested) break;
 
                 var result = simulationController.RunSingleScenarioFromBatch(batch, tempSpecies, scenarioIndex, seed);
@@ -242,6 +244,8 @@ public class BulkSimulationController : MonoBehaviour
 
             for (int chunk = 0; chunk < batchSize; chunk += parallelism)
             {
+                if (_cancelRequested) break;
+                yield return WaitWhilePaused();   // Group 6: honor pause between parallel chunks
                 if (_cancelRequested) break;
 
                 int chunkEnd = Math.Min(chunk + parallelism, batchSize);
@@ -392,6 +396,14 @@ public class BulkSimulationController : MonoBehaviour
 
         _isRunning = false;
         _runCoroutine = null;
+    }
+
+    // Group 6: cooperative pause — spin (yielding to the UI so Resume/Cancel stay clickable)
+    // while the toggle is paused, without advancing the simulation. Exits if cancel is requested.
+    private IEnumerator WaitWhilePaused()
+    {
+        while (resultsScreen != null && resultsScreen.IsPaused && !_cancelRequested)
+            yield return null;
     }
 
     private void OnCancelRequested()

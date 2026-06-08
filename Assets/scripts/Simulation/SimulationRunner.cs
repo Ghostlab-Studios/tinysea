@@ -818,7 +818,8 @@ public class SimulationRunner
             // longer emitted here — species are tracked individually so the variant
             // intermediate level is now redundant. Tier totals are kept because they
             // are real ecosystem-level aggregates (not redundant with per-species).
-            var summaryCols = new List<string> { "Tier1Pop", "Tier2Pop" };
+            var summaryCols = new List<string> { "Tier1Pop" };
+            if (tier2) summaryCols.Add("Tier2Pop");
             foreach (var sp in orderedSpecies)
                 summaryCols.Add(StepRecord.SanitizeColumnName(sp.FullName));
 
@@ -865,34 +866,34 @@ public class SimulationRunner
             sb.AppendLine("#summary:Statistic," + string.Join(",", summaryCols));
 
             sb.Append("#summary:Variant");
-            sb.Append(",All,All");
+            sb.Append(",All"); if (tier2) sb.Append(",All");
             foreach (var sp in orderedSpecies)
                 sb.Append($",{(string.IsNullOrEmpty(sp.VariantLabel) ? sp.Name : sp.VariantLabel)}");
             sb.AppendLine();
 
             sb.Append("#summary:Tier");
-            sb.Append(",1,2");
+            sb.Append(",1"); if (tier2) sb.Append(",2");
             foreach (var sp in orderedSpecies)
                 sb.Append($",{sp.Tier}");
             sb.AppendLine();
 
             sb.Append("#summary:Mean");
-            sb.Append($",{stats.Mean["Tier1Pop"]:F1},{stats.Mean["Tier2Pop"]:F1}");
+            sb.Append($",{stats.Mean["Tier1Pop"]:F1}"); if (tier2) sb.Append($",{stats.Mean["Tier2Pop"]:F1}");
             foreach (var sp in orderedSpecies) sb.Append($",{spMean[sp.FullName]:F1}");
             sb.AppendLine();
 
             sb.Append("#summary:Max");
-            sb.Append($",{stats.Max["Tier1Pop"]},{stats.Max["Tier2Pop"]}");
+            sb.Append($",{stats.Max["Tier1Pop"]}"); if (tier2) sb.Append($",{stats.Max["Tier2Pop"]}");
             foreach (var sp in orderedSpecies) sb.Append($",{spMax[sp.FullName]}");
             sb.AppendLine();
 
             sb.Append("#summary:Min");
-            sb.Append($",{stats.Min["Tier1Pop"]},{stats.Min["Tier2Pop"]}");
+            sb.Append($",{stats.Min["Tier1Pop"]}"); if (tier2) sb.Append($",{stats.Min["Tier2Pop"]}");
             foreach (var sp in orderedSpecies) sb.Append($",{spMin[sp.FullName]}");
             sb.AppendLine();
 
             sb.Append("#summary:StdDev");
-            sb.Append($",{stats.StdDev["Tier1Pop"]:F1},{stats.StdDev["Tier2Pop"]:F1}");
+            sb.Append($",{stats.StdDev["Tier1Pop"]:F1}"); if (tier2) sb.Append($",{stats.StdDev["Tier2Pop"]:F1}");
             foreach (var sp in orderedSpecies) sb.Append($",{spStdDev[sp.FullName]:F1}");
             sb.AppendLine();
 

@@ -74,7 +74,7 @@ public class ScenarioResult
         {
             return $"Scenario {ScenarioIndex}: Crashed Day {CrashDay} (Tier {CrashTier})";
         }
-        return $"Scenario {ScenarioIndex}: T1={FinalTier1Pop:N0}, T2={FinalTier2Pop:N0}";
+        return $"Scenario {ScenarioIndex}: Pop={FinalTier1Pop:N0}";
     }
 
     /// <summary>
@@ -549,7 +549,7 @@ public class AggregateResults
     public string GetQuickStatsLine()
     {
         return $"{SurvivedScenarios} survived | {CrashedScenarios} crashed | " +
-               $"Avg T1: {AvgFinalTier1Pop:N0} | Avg T2: {AvgFinalTier2Pop:N0}";
+               $"Avg final pop: {AvgFinalTier1Pop:N0}";
     }
 
     /// <summary>
@@ -632,12 +632,9 @@ public class AggregateResults
         sb.AppendLine();
 
         sb.AppendLine("=== POPULATION STATS (Survived Only) ===");
-        sb.AppendLine($"Avg Final T1,{AvgFinalTier1Pop:F1}");
-        sb.AppendLine($"Avg Final T2,{AvgFinalTier2Pop:F1}");
-        sb.AppendLine($"Min Final T1,{MinFinalTier1Pop}");
-        sb.AppendLine($"Max Final T1,{MaxFinalTier1Pop}");
-        sb.AppendLine($"Min Final T2,{MinFinalTier2Pop}");
-        sb.AppendLine($"Max Final T2,{MaxFinalTier2Pop}");
+        sb.AppendLine($"Avg Final,{AvgFinalTier1Pop:F1}");
+        sb.AppendLine($"Min Final,{MinFinalTier1Pop}");
+        sb.AppendLine($"Max Final,{MaxFinalTier1Pop}");
         sb.AppendLine();
 
         if (PerSpeciesAvg != null && PerSpeciesAvg.Count > 0)
@@ -660,10 +657,8 @@ public class AggregateResults
         }
 
         sb.AppendLine("=== CONDITION STATS ===");
-        sb.AppendLine($"Avg Condition T1 (All Scenarios),{AvgConditionT1:F3}");
-        sb.AppendLine($"Avg Condition T2 (All Scenarios),{AvgConditionT2:F3}");
-        sb.AppendLine($"Avg Final Condition T1 (Survived),{AvgFinalConditionT1:F3}");
-        sb.AppendLine($"Avg Final Condition T2 (Survived),{AvgFinalConditionT2:F3}");
+        sb.AppendLine($"Avg Condition (All Scenarios),{AvgConditionT1:F3}");
+        sb.AppendLine($"Avg Final Condition (Survived),{AvgFinalConditionT1:F3}");
         sb.AppendLine();
 
         // v12: Per-species rich aggregate sections (final-year / full-run / stability)
@@ -738,19 +733,19 @@ public class AggregateResults
 
         // Header row 1 — column names. Sanitize species FullName so downstream
         // R/pandas pipelines see clean ASCII identifiers.
-        sb.Append("Scenario,Seed,Crashed,CrashDay,CrashTier,FinalT1,FinalT2,AvgTemp,MinTemp,MaxTemp");
+        sb.Append("Scenario,Seed,Crashed,CrashDay,CrashTier,FinalPop,AvgTemp,MinTemp,MaxTemp");
         foreach (var k in speciesCols) sb.Append($",{StepRecord.SanitizeColumnName(k)}");
         sb.AppendLine();
 
         // Header row 2 — Variant annotation. Empty cells under Seed/Crashed/
         // CrashDay/CrashTier and AvgTemp/MinTemp/MaxTemp; "All" under tier totals.
-        sb.Append("Variant,,,,,All,All,,,");
+        sb.Append("Variant,,,,,All,,,");
         foreach (var k in speciesCols) sb.Append($",{GetVariant(k)}");
         sb.AppendLine();
 
         // Header row 3 — Tier annotation. Same blank pattern as Variant; tier
         // totals carry their numeric tier (1 / 2).
-        sb.Append("Tier,,,,,1,2,,,");
+        sb.Append("Tier,,,,,1,,,");
         foreach (var k in speciesCols) sb.Append($",{GetTier(k)}");
         sb.AppendLine();
 
@@ -760,7 +755,7 @@ public class AggregateResults
         foreach (var s in Scenarios)
         {
             sb.Append($"{s.ScenarioIndex},{s.RandomSeed},{s.Crashed},{s.CrashDay},{s.CrashTier}");
-            sb.Append($",{s.FinalTier1Pop},{s.FinalTier2Pop}");
+            sb.Append($",{s.FinalTier1Pop}");
             sb.Append($",{s.AvgTemperature:F2},{s.MinTemperature:F2},{s.MaxTemperature:F2}");
             foreach (var k in speciesCols)
             {
@@ -829,20 +824,20 @@ public class AggregateResults
             sb.AppendLine("=== SUMMARY STATISTICS (Grand Mean Across All Scenarios) ===");
 
             // Header row 1 — Statistic label + tier totals + per-species columns.
-            var headerCols = new List<string> { "Tier1Pop", "Tier2Pop" };
+            var headerCols = new List<string> { "Tier1Pop" };
             foreach (var key in perSpeciesKeys)
                 headerCols.Add(StepRecord.SanitizeColumnName(key));
             sb.AppendLine("Statistic," + string.Join(",", headerCols));
 
             // Header row 2 — Variant: "All" for tier totals, the species'
             // variant otherwise.
-            sb.Append("Variant,All,All");
+            sb.Append("Variant,All");
             foreach (var key in perSpeciesKeys) sb.Append($",{GetVariant(key)}");
             sb.AppendLine();
 
             // Header row 3 — Tier: tier number for tier totals, species' tier
             // otherwise.
-            sb.Append("Tier,1,2");
+            sb.Append("Tier,1");
             foreach (var key in perSpeciesKeys) sb.Append($",{GetTier(key)}");
             sb.AppendLine();
 
@@ -852,7 +847,6 @@ public class AggregateResults
             {
                 sb.Append($"GrandMean_{statName}");
                 sb.Append($",{GrandMean(statName, "Tier1Pop"):F1}");
-                sb.Append($",{GrandMean(statName, "Tier2Pop"):F1}");
                 foreach (var key in perSpeciesKeys)
                     sb.Append($",{GrandMean(statName, key):F1}");
                 sb.AppendLine();

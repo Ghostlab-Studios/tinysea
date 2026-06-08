@@ -32,18 +32,28 @@ public class SpeciesTierConfig : MonoBehaviour
     private List<GameObject> instantiatedEntries = new List<GameObject>();
     private List<int> entryRunSpeciesListIndices = new List<int>(); // Parallel list tracking indices
 
-    // Variant sequence for cycling when adding
-    private readonly SpeciesVariant[] variantSequence =
+    // Catalog (SpeciesDatabase) entries for THIS tier, in catalog order — what the "+"
+    // button cycles through (e.g. Hexapod Cold/Warm/Hot, then Gelgi Cold/Warm/Hot). Cached.
+    // Falls back to the Resources catalog if RunSpeciesList's SpeciesDatabase ref is unset.
+    private List<SpeciesData> _tierCatalog;
+    private List<SpeciesData> TierCatalog
     {
-        SpeciesVariant.ColdSpecialist,
-        SpeciesVariant.WarmSpecialist,
-        SpeciesVariant.HotSpecialist
-    };
+        get
+        {
+            if (_tierCatalog != null) return _tierCatalog;
+            _tierCatalog = new List<SpeciesData>();
+            var db = (runSpeciesList != null && runSpeciesList.SpeciesDatabase != null)
+                ? runSpeciesList.SpeciesDatabase
+                : Resources.Load<SpeciesDatabase>("SpeciesDatabase");
+            if (db != null && db.speciesList != null)
+                foreach (var s in db.speciesList)
+                    if (s.tier == tier) _tierCatalog.Add(s);
+            return _tierCatalog;
+        }
+    }
 
-    /// <summary>
-    /// Returns the species name for this tier (Hexapod for Tier 0, Sheplik for Tier 1)
-    /// </summary>
-    private SpeciesName TierSpeciesName => tier == 0 ? SpeciesName.Hexapod : SpeciesName.Sheplik;
+    // Max entries this tier can hold = number of catalog species for the tier.
+    private int TierCap => TierCatalog.Count > 0 ? TierCatalog.Count : maxSpeciesPerTier;
 
     void Start()
     {
@@ -175,7 +185,7 @@ public class SpeciesTierConfig : MonoBehaviour
         for (int i = 0; i < runSpeciesList.speciesList.Count; i++)
         {
             var speciesData = runSpeciesList.speciesList[i];
-            if (speciesData.tier == tier && instantiatedEntries.Count < maxSpeciesPerTier)
+            if (speciesData.tier == tier && instantiatedEntries.Count < TierCap)
             {
                 // Pass visual index, actual RunSpeciesList index, and the data reference
                 InstantiateSpeciesEntry(visualIndex, i, speciesData);
@@ -244,41 +254,33 @@ public class SpeciesTierConfig : MonoBehaviour
     /// </summary>
     private void OnPlusClicked()
     {
-        if (instantiatedEntries.Count >= maxSpeciesPerTier)
+        var catalog = TierCatalog;
+        if (catalog.Count == 0)
         {
-            Debug.Log($"SpeciesTierConfig (Tier {tier}): Already at max species ({maxSpeciesPerTier})");
+            Debug.LogError($"SpeciesTierConfig (Tier {tier}): no catalog species found (SpeciesDatabase missing?)");
             return;
         }
 
-        // Determine which variant to add next (cycles through Common, Arctic, Tropical)
-        SpeciesVariant nextVariant = GetNextVariant();
-        SpeciesName speciesName = TierSpeciesName;
-
-        // Get species data from the master database
-        SpeciesData templateData = GetSpeciesFromDatabase(speciesName, nextVariant);
-        if (templateData == null)
+        // Add the NEXT catalog species for this tier, in order — Hexapod Cold/Warm/Hot,
+        // then Gelgi Cold/Warm/Hot, ... (one per click) until every catalog species is added.
+        int next = instantiatedEntries.Count;
+        if (next >= catalog.Count)
         {
-            Debug.LogError($"SpeciesTierConfig: Could not find {speciesName} {nextVariant} in database!");
+            Debug.Log($"SpeciesTierConfig (Tier {tier}): all {catalog.Count} catalog species already added");
             return;
         }
 
-        // Add cloned data to RunSpeciesList
+        SpeciesData templateData = catalog[next];
+
+        // Add cloned data to RunSpeciesList (added at the END, so index = Count - 1)
         SpeciesData newSpeciesData = AddToRunSpeciesList(templateData);
-
-        // The new species was added at the END of runSpeciesList.speciesList
-        // So its index is Count - 1
         int newRunSpeciesListIndex = runSpeciesList.speciesList.Count - 1;
-
-        // Visual index is based on how many entries this tier has
         int visualIndex = instantiatedEntries.Count + 1;
 
-        // Instantiate UI entry with the correct data reference
         InstantiateSpeciesEntry(visualIndex, newRunSpeciesListIndex, newSpeciesData);
-
-        // Update button visibility
         UpdateButtonVisibility();
 
-        Debug.Log($"SpeciesTierConfig (Tier {tier}): Added {speciesName} {nextVariant} at runSpeciesListIndex={newRunSpeciesListIndex}");
+        Debug.Log($"SpeciesTierConfig (Tier {tier}): Added {templateData.speciesLabel} ({templateData.variantLabel}) at runSpeciesListIndex={newRunSpeciesListIndex}");
     }
 
     /// <summary>
@@ -312,29 +314,6 @@ public class SpeciesTierConfig : MonoBehaviour
         UpdateButtonVisibility();
 
         Debug.Log($"SpeciesTierConfig (Tier {tier}): Removed last species entry");
-    }
-
-    /// <summary>
-    /// Get the next variant to add based on current count
-    /// </summary>
-    private SpeciesVariant GetNextVariant()
-    {
-        int index = instantiatedEntries.Count % variantSequence.Length;
-        return variantSequence[index];
-    }
-
-    /// <summary>
-    /// Fetch species data from the master database
-    /// </summary>
-    private SpeciesData GetSpeciesFromDatabase(SpeciesName name, SpeciesVariant variant)
-    {
-        if (runSpeciesList?.SpeciesDatabase == null)
-        {
-            Debug.LogError("SpeciesTierConfig: SpeciesDatabase reference missing from RunSpeciesList!");
-            return null;
-        }
-
-        return runSpeciesList.SpeciesDatabase.GetSpecies(name, variant);
     }
 
     /// <summary>
@@ -414,9 +393,9 @@ public class SpeciesTierConfig : MonoBehaviour
     /// </summary>
     private void UpdateButtonVisibility()
     {
-        // Hide plus when at max
+        // Hide plus once every catalog species for this tier has been added
         if (plusButton != null)
-            plusButton.transform.parent.gameObject.SetActive(instantiatedEntries.Count < maxSpeciesPerTier);
+            plusButton.transform.parent.gameObject.SetActive(instantiatedEntries.Count < TierCap);
 
         /*        // Hide minus when empty
                 if (minusButton != null)

@@ -408,7 +408,7 @@ public class SpeciesUIController : MonoBehaviour
             iconImage.sprite = currentSpeciesData.icon;
         }
 
-        // Update name with type (e.g., "Hexapod Tropical")
+        // Update name — species name only (variant is shown separately in typeText)
         if (nameText != null)
         {
             nameText.text = getName();
@@ -429,7 +429,11 @@ public class SpeciesUIController : MonoBehaviour
 
     private string getName()
     {
-       return currentSpeciesData.DisplayName;
+       // Species name only (e.g. "Hexapod"/"Gelgi"). The variant is shown separately in
+       // typeText, so we never repeat it here. Custom species use the typed speciesLabel.
+       return string.IsNullOrEmpty(currentSpeciesData.speciesLabel)
+           ? currentSpeciesData.speciesName.ToString()
+           : currentSpeciesData.speciesLabel;
     }
 
     /// <summary>

@@ -3,7 +3,11 @@
  * Serves build ZIPs with proper headers to reduce browser download warnings.
  */
 $file    = $_GET['file'] ?? '';
-$version = (($_GET['v'] ?? '1') === '2') ? 'v2' : 'v1';
+
+// v1 is the default. Any ?v=N is honored if that build exists, else we fall back to v1.
+$v = preg_replace('/[^0-9]/', '', (string)($_GET['v'] ?? '1'));
+if ($v === '') { $v = '1'; }
+$version = 'v' . $v;
 
 $allowed = [
     'windows'     => 'TinySea-Windows.zip',
@@ -19,6 +23,11 @@ if (!isset($allowed[$file])) {
 
 $filename = $allowed[$file];
 $path = __DIR__ . '/' . $version . '/' . $filename;
+
+// Fall back to the default v1 if the requested version/file isn't published.
+if (!file_exists($path)) {
+    $path = __DIR__ . '/v1/' . $filename;
+}
 
 if (!file_exists($path)) {
     http_response_code(404);

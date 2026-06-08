@@ -214,6 +214,10 @@ public static class CsvBatchParser
                 batch.Species.Add(sp);
             }
 
+            // A row with no usable species (every sp_name blank) can't simulate anything.
+            if (batch.Species.Count == 0)
+                errors.Add($"Row {rowNum}: at least one species is required — all sp_name columns are blank.");
+
             // Cross-field validation
             ValidateBatch(batch, rowNum, errors);
 

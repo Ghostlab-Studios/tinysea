@@ -5,7 +5,6 @@ Layout:
   v2/  -> served when URL has ?v=2
 
 In each version folder, drop:
-  TinySeaWebGL/                  (full Unity WebGL build, with Build/, StreamingAssets/, etc.)
   TinySea-Windows.zip
   TinySea-macOS.zip
   TinySea macOS Setup Guide.pdf

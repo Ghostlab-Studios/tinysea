@@ -148,179 +148,36 @@ main {
 }
 
 /* ========================================
-   UNITY SECTION
+   SIMULATION DOWNLOAD PAGE
    ======================================== */
 
-.unity-section {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+/* Hero intro text + call-to-action (simulation landing page) */
+.hero-text {
+    max-width: 720px;
+    margin: 18px auto 0;
+    font-size: 17px;
+    color: #2c3e50;
+    line-height: 1.7;
 }
 
-.unity-container {
-    width: 100%;
-    padding-top: 56.25%; /* Locks 16:9 aspect ratio (9/16 = 56.25%) */
-    height: 0;
-    background: linear-gradient(180deg, #001524 0%, #003153 100%);
-    border-radius: 16px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    position: relative;
-    overflow: hidden;
+.hero-cta {
+    margin-top: 25px;
 }
 
-#unity-canvas {
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    display: block;
-    outline: none;
-}
-
-/* Fullscreen Controls - OUTSIDE canvas */
-.fullscreen-controls {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 10px 0;
-}
-
-.fullscreen-button {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 24px;
-    background: linear-gradient(135deg, #088395 0%, #05BFDB 100%);
-    border: none;
-    border-radius: 25px;
-    color: #ffffff;
-    font-family: 'Montserrat', sans-serif;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(8, 131, 149, 0.3);
-}
-
-.fullscreen-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(8, 131, 149, 0.5);
-}
-
-.fullscreen-button:active {
-    transform: translateY(0);
-}
-
-.fullscreen-button svg {
-    width: 20px;
-    height: 20px;
-    flex-shrink: 0;
-}
-
-.fullscreen-button span {
-    white-space: nowrap;
-}
-
-#drop-overlay {
-    display: none;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 21, 36, 0.85);
-    z-index: 20;
-    justify-content: center;
-    align-items: center;
-    pointer-events: none;
-    border-radius: 14px;
-}
-
-.drop-overlay-content {
+/* Prominent download card */
+.download-card {
     text-align: center;
-    color: #00d9ff;
-    font-family: 'Montserrat', sans-serif;
-    font-size: 22px;
-    font-weight: 600;
+    border-left: 4px solid #05BFDB;
 }
 
-.drop-overlay-content p {
-    margin-top: 15px;
-    color: #b8e6f0;
+.download-card .download-buttons {
+    margin-top: 20px;
 }
 
-#loading-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 21, 36, 0.95);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 20px;
-    z-index: 10;
-}
-
-.spinner {
-    width: 60px;
-    height: 60px;
-    border: 4px solid rgba(255, 255, 255, 0.1);
-    border-top: 4px solid #00d9ff;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-#loading-overlay p {
-    color: #b8e6f0;
-    font-size: 18px;
-    font-weight: 600;
-}
-
-.progress-bar {
-    width: 250px;
-    height: 6px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 3px;
-    overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.progress-fill {
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, #00d9ff 0%, #088395 100%);
-    transition: width 0.3s ease;
-    box-shadow: 0 0 10px rgba(0, 217, 255, 0.5);
-}
-
-/* Standalone Builds Download */
-.download-builds {
-    text-align: center;
-    padding: 20px 0;
-}
-
-.download-builds h3 {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 16px;
-    font-weight: 600;
-    color: #fff;
-    margin-bottom: 6px;
-}
-
-.download-builds p {
+.download-meta {
+    margin-top: 16px;
     font-size: 14px;
-    color: #fff;
-    margin-bottom: 14px;
+    color: #7f8c8d;
 }
 
 .download-buttons {
@@ -368,16 +225,17 @@ main {
 }
 
 .setup-guide-link a {
-    color: rgba(255, 255, 255, 0.85);
-    font-size: 13px;
+    color: #088395;
+    font-size: 14px;
+    font-weight: 600;
     text-decoration: none;
-    border-bottom: 1px dotted rgba(255, 255, 255, 0.5);
+    border-bottom: 1px dotted rgba(8, 131, 149, 0.5);
     transition: color 0.2s ease, border-color 0.2s ease;
 }
 
 .setup-guide-link a:hover {
-    color: #fff;
-    border-bottom-color: #fff;
+    color: #0a4d68;
+    border-bottom-color: #0a4d68;
 }
 
 /* Info Card */
@@ -638,20 +496,6 @@ footer .container {
         font-size: 13px;
     }
     
-    .unity-container {
-        border-radius: 8px; /* slightly smaller radius on mobile */
-    }
-    
-    .fullscreen-button {
-        padding: 10px 20px;
-        font-size: 13px;
-    }
-    
-    .fullscreen-button svg {
-        width: 18px;
-        height: 18px;
-    }
-    
     .page-hero h1 {
         font-size: 32px;
     }
@@ -678,14 +522,6 @@ footer .container {
     nav a {
         font-size: 12px;
         padding: 6px 12px;
-    }
-    
-    .fullscreen-button span {
-        display: none;
-    }
-    
-    .fullscreen-button {
-        padding: 10px;
     }
     
     .page-hero h1 {

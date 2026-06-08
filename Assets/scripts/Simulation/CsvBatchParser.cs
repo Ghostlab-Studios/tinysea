@@ -435,22 +435,17 @@ public static class CsvBatchParser
     /// </summary>
     public static string GenerateTemplate()
     {
-        // Live defaults: the SimulationConfig the sim runs from, and its species list.
-        var config = Resources.Load<SimulationConfig>("SimulationConfig");
-        if (config == null) config = ScriptableObject.CreateInstance<SimulationConfig>(); // class defaults
-        RunSpeciesList runSpecies = config.RunSpecies != null
-            ? config.RunSpecies
-            : Resources.Load<RunSpeciesList>("RunSpeciesList");
-
+        // Species: the curated default list (the Tier-1 organisms) PLUS one fully custom
+        // example species, so the template doubles as a guideline for adding your own.
+        // N species are supported — the column count below is driven by this list's size.
+        var runSpecies = Resources.Load<RunSpeciesList>("RunSpeciesList");
         var species = new List<SpeciesData>();
         if (runSpecies != null && runSpecies.speciesList != null)
         {
             foreach (var sd in runSpecies.speciesList)
                 if (sd != null) species.Add(sd);
         }
-        if (species.Count == 0)
-            Debug.LogWarning("CsvBatchParser.GenerateTemplate: RunSpeciesList is empty — " +
-                             "the template will have no example species rows.");
+        species.Add(BuildCustomExampleSpecies());   // final row: custom name / variant / values
 
         var ci = CultureInfo.InvariantCulture;
         var sb = new StringBuilder();
@@ -474,26 +469,16 @@ public static class CsvBatchParser
         sb.Length--;            // drop trailing comma
         sb.AppendLine();
 
-        // ---------- Data row: globals straight from SimulationConfig ----------
-        sb.Append("default_batch,");
-        sb.Append(config.DaysPerScenario).Append(',');
-        sb.Append(config.NumberOfScenarios).Append(',');
-        sb.Append(config.BaseTemperature.ToString(ci)).Append(',');
-        sb.Append(config.SeasonalAmplitude.ToString(ci)).Append(',');
-        sb.Append(config.ClimateTrend.ToString(ci)).Append(',');
-        sb.Append(config.VariabilityMagnitude.ToString(ci)).Append(',');
-        sb.Append(config.WarmingBias.ToString(ci)).Append(',');
-        sb.Append(config.DailyVariationRange.ToString(ci)).Append(',');
-        sb.Append(config.RandomnessGrowthRate.ToString(ci)).Append(',');
-        sb.Append(config.Autocorrelated ? "true" : "false").Append(',');
-        sb.Append(config.InterannualVariation ? "true" : "false").Append(',');
-        sb.Append(config.TemperatureBoundsMin.ToString(ci)).Append(',');
-        sb.Append(config.TemperatureBoundsMax.ToString(ci)).Append(',');
-        sb.Append(config.CarryingCapacityTier1.ToString(ci)).Append(',');
-        // kept optional globals: condition rates, then empty timeseries file (parametric model)
-        sb.Append(config.ConditionDrainRate.ToString(ci)).Append(',');
-        sb.Append(config.ConditionRecoveryRate.ToString(ci)).Append(',');
-        sb.Append(',');   // temperature_timeseries_file = empty
+        // ---------- Data row: globals = canonical DEFAULTS ----------
+        // Hard-coded to mirror the shipped SimulationConfig defaults — deliberately NOT read
+        // from the live config instance (the input UI mutates that, and the template must
+        // always emit the defaults, never in-session edits). Keep in sync with the
+        // SimulationConfig defaults / the Reset button. Columns, in order:
+        //   batch_name, days, num_scenarios, base_temp, seasonal_amp, climate_trend,
+        //   variability_mag, warming_bias, daily_var_range, randomness_growth, autocorrelated,
+        //   interannual_variation, temp_min, temp_max, carrying_cap_t1, condition_drain_rate,
+        //   condition_recovery_rate, temperature_timeseries_file(empty=parametric model)
+        sb.Append("default_batch,365,5,20,5,0,0,0,5,0,true,false,0,40,5000,0.15,0.1,,");
 
         // ---------- Data row: one block per species, mirroring ConvertSpecies ----------
         // ConvertSpecies does Celsius -> Kelvin (+273.15) on opt/lower/upper temps, so we
@@ -534,6 +519,46 @@ public static class CsvBatchParser
         sb.Length--;            // drop trailing comma
         sb.AppendLine();
         return sb.ToString();
+    }
+
+    /// <summary>
+    /// A fully custom example species for the template — custom name, custom variant, and
+    /// hand-picked biology values — so the template shows exactly how to add your own (it can
+    /// be deleted if unwanted). Tier 0 (the only legal tier in this Tier-1 sim). Temps are
+    /// stored in Kelvin here; GenerateTemplate emits them back as Celsius (the *_c columns).
+    /// </summary>
+    private static SpeciesData BuildCustomExampleSpecies()
+    {
+        return new SpeciesData
+        {
+            speciesName = SpeciesName.Custom,
+            speciesLabel = "CustomSpecies",
+            variant = SpeciesVariant.Custom,
+            variantLabel = "My Custom Variant",
+            tier = 0,
+            count = 20,
+            eatingAmount = 3f,
+            reproductionMultiplier = 0.45f,
+            deathThreshold = 0.3f,
+            deathRate = 0.6f,
+            reproThreshold = 0.25f,
+            naturalDeathRate = 0.02f,
+            naturalDeathVariance = 0.01f,
+            huntingEfficiency = 1f,
+            huntingVariance = 0f,
+            optimalTempK = 21f + 273.15f,
+            arrhenBreadth = 6000f,
+            arrhenLower = 5000f,
+            arrhenUpper = 35000f,
+            lowerBoundK = 20f + 273.15f,
+            upperBoundK = 22f + 273.15f,
+            pmax = 0.8f,
+            ctMinC = 1f,
+            ctMaxC = 38f,
+            TemperatureDebuff = 0f,
+            conditionDrainRate = 0.15f,
+            conditionRecoveryRate = 0.10f
+        };
     }
 
     /// <summary>Quote a CSV field if it contains a comma, quote, or newline (writer side).</summary>

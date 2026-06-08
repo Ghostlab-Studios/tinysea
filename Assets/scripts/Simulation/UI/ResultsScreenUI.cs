@@ -137,10 +137,16 @@ public class ResultsScreenUI : MonoBehaviour
         if (cancelButton != null)
             cancelButton.interactable = true;
 
-        // Reset the pause toggle to the running state (gray, "Pause")
+        // Reset the pause toggle to the running state (gray, "Pause").
+        // Re-attach the click handler here too (idempotent) so it works even if the button
+        // reference was assigned after Awake ran.
         _isPaused = false;
         if (pauseResumeButton != null)
+        {
+            pauseResumeButton.onClick.RemoveListener(OnPauseResumeClicked);
+            pauseResumeButton.onClick.AddListener(OnPauseResumeClicked);
             pauseResumeButton.interactable = true;
+        }
         UpdatePauseResumeVisual();
 
         // Re-enable all download button GameObjects (bulk may have hidden some)
@@ -467,26 +473,23 @@ public class ResultsScreenUI : MonoBehaviour
 
     private void UpdatePauseResumeVisual()
     {
+        // Text: "Pause" while running, "Resume" while paused.
         if (pauseResumeLabel != null)
             pauseResumeLabel.text = _isPaused ? resumeLabelText : pauseLabelText;
 
         Color c = _isPaused ? pausedColor : runningColor;
 
-        // Drive the colour correctly whether the Button uses a ColorTint transition or none.
-        if (pauseResumeButton != null && pauseResumeButton.transition == Selectable.Transition.ColorTint)
-        {
-            var cb = pauseResumeButton.colors;
-            cb.normalColor = c; cb.highlightedColor = c; cb.pressedColor = c;
-            cb.selectedColor = c; cb.disabledColor = c;
-            pauseResumeButton.colors = cb;
-        }
-        else
-        {
-            var img = pauseResumeTarget != null ? pauseResumeTarget
-                      : (pauseResumeButton != null ? pauseResumeButton.GetComponent<Image>() : null);
-            if (img != null)
-                img.color = c;
-        }
+        // Resolve the image to recolor: the explicit target if set, else the button's own graphic.
+        Image img = pauseResumeTarget;
+        if (img == null && pauseResumeButton != null) img = pauseResumeButton.targetGraphic as Image;
+        if (img == null && pauseResumeButton != null) img = pauseResumeButton.GetComponent<Image>();
+
+        // Turn the Button's colour transition OFF so it can't tint over our flat colour, then set
+        // the image colour directly. Clean gray/green regardless of sprite base or transition setup.
+        if (pauseResumeButton != null)
+            pauseResumeButton.transition = Selectable.Transition.None;
+        if (img != null)
+            img.color = c;
     }
 
     private void OnCloseClicked()

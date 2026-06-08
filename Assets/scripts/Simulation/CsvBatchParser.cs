@@ -309,8 +309,10 @@ public static class CsvBatchParser
         // thermal defaults via SpeciesData.GetVariantThermalDefaults; unknown labels
         // fall back to Custom/Common defaults for blank optional columns.
 
-        if (sp.Tier < 0 || sp.Tier > 1)
-            errors.Add($"Row {rowNum}: {prefix}_tier must be 0 (prey) or 1 (predator).");
+        // Tier-1-only simulator: only prey (tier 0) species are accepted. Any tier != 0
+        // (predator / Tier-2 rows) is rejected at parse with a clear error.
+        if (sp.Tier != 0)
+            errors.Add($"Row {rowNum}: {prefix}_tier must be 0. This is a Tier-1 (prey-only) simulator — Tier 2 (predator) species are not supported.");
 
         if (sp.Pop < 0)
             errors.Add($"Row {rowNum}: {prefix}_pop must be non-negative.");

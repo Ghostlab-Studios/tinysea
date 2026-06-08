@@ -240,9 +240,9 @@ public class EcosystemSimulator
     public float ConditionDrainRate { get; set; } = 0.15f;
     public float ConditionRecoveryRate { get; set; } = 0.10f;
 
-    // Group 4: Tier-2 (predator) gate. Default true = current behaviour. When false,
-    // Tier-2 species are excluded at load and Tier-2 CSV columns are suppressed.
-    public bool Tier2Enabled { get; set; } = true;
+    // Tier-1-only build: Tier-2 (predator) gate defaults OFF. When false, Tier-2 species are
+    // excluded at load and Tier-2 CSV columns are suppressed. Engine code stays intact.
+    public bool Tier2Enabled { get; set; } = false;
 
     // ==================== CONSTANTS ====================
     private const float MIN_ALIVE_POP = 1.0f;

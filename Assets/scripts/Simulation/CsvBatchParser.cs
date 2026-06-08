@@ -420,28 +420,50 @@ public static class CsvBatchParser
     // ==================== TEMPLATE GENERATION ====================
 
     /// <summary>
-    /// Generate a downloadable template CSV with headers and one example row.
-    /// Uses the same column definitions as TryParse so they stay in sync.
-    /// Example row uses default Hexapod/Sheplik species (6 species: 3 prey + 3 predators).
+    /// Generate a downloadable template CSV: the header (same column definitions as
+    /// TryParse, so they always stay in sync) plus one data row that mirrors the LIVE
+    /// simulation defaults — the SimulationConfig in Resources and the RunSpeciesList it
+    /// references. The template is therefore current by construction and Tier-1-only:
+    /// every species row is whatever the configured list holds (all tier 0).
     ///
-    /// Note: the deprecated `use_carrying_cap` column is intentionally omitted from the
-    /// template. Old CSVs that still include it will parse (with a deprecation warning),
-    /// but new ones generated from this template will not have it.
+    /// This is deliberately dynamic. The previous hard-coded example row drifted out of
+    /// sync — it still emitted Tier-2 'Sheplik' rows and legacy Arctic/Common/Tropical
+    /// variants that the current parser rejects, so a freshly downloaded template failed
+    /// to re-upload. Mirroring the assets makes that class of bug impossible.
+    ///
+    /// Note: the deprecated `use_carrying_cap` column is intentionally omitted.
     /// </summary>
     public static string GenerateTemplate()
     {
-        const int TEMPLATE_SPECIES = 6;
+        // Live defaults: the SimulationConfig the sim runs from, and its species list.
+        var config = Resources.Load<SimulationConfig>("SimulationConfig");
+        if (config == null) config = ScriptableObject.CreateInstance<SimulationConfig>(); // class defaults
+        RunSpeciesList runSpecies = config.RunSpecies != null
+            ? config.RunSpecies
+            : Resources.Load<RunSpeciesList>("RunSpeciesList");
+
+        var species = new List<SpeciesData>();
+        if (runSpecies != null && runSpecies.speciesList != null)
+        {
+            foreach (var sd in runSpecies.speciesList)
+                if (sd != null) species.Add(sd);
+        }
+        if (species.Count == 0)
+            Debug.LogWarning("CsvBatchParser.GenerateTemplate: RunSpeciesList is empty — " +
+                             "the template will have no example species rows.");
+
+        var ci = CultureInfo.InvariantCulture;
         var sb = new StringBuilder();
 
-        // Header row — skip the deprecated `use_carrying_cap` optional column.
+        // ---------- Header (skip the deprecated use_carrying_cap column) ----------
         foreach (var col in GLOBAL_COLUMNS)
             sb.Append(col).Append(',');
         foreach (var col in OPTIONAL_GLOBAL_COLUMNS)
         {
-            if (col == "use_carrying_cap") continue; // deprecated — omit from new templates
+            if (col == "use_carrying_cap") continue;
             sb.Append(col).Append(',');
         }
-        for (int s = 1; s <= TEMPLATE_SPECIES; s++)
+        for (int s = 1; s <= species.Count; s++)
         {
             string prefix = $"sp{s}_";
             foreach (var col in SPECIES_COLUMNS)
@@ -449,48 +471,78 @@ public static class CsvBatchParser
             foreach (var col in OPTIONAL_SPECIES_COLUMNS)
                 sb.Append(prefix).Append(col).Append(',');
         }
-        // Remove trailing comma, add newline
-        sb.Length--;
+        sb.Length--;            // drop trailing comma
         sb.AppendLine();
 
-        // Example data row (matches default 6-species ecosystem).
-        // Global params (16 values, matching the columns above):
-        //   batch_name=example_batch, days=3650 (10 yr), num_scenarios=5,
-        //   base_temp=20, seasonal_amp=5, climate_trend=0,
-        //   variability_mag=2, warming_bias=1.5,
-        //   daily_var_range=5, randomness_growth=0.5,
-        //   autocorrelated=true, interannual_variation=true,
-        //   temp_min=-5, temp_max=50, carrying_cap_t1=5000,
-        //   condition_drain_rate=0.15, condition_recovery_rate=0.10.
-        sb.Append("example_batch,3650,5,20,5,0,2,1.5,5,0.5,true,true,-5,50,5000,0.15,0.10,");
+        // ---------- Data row: globals straight from SimulationConfig ----------
+        sb.Append("default_batch,");
+        sb.Append(config.DaysPerScenario).Append(',');
+        sb.Append(config.NumberOfScenarios).Append(',');
+        sb.Append(config.BaseTemperature.ToString(ci)).Append(',');
+        sb.Append(config.SeasonalAmplitude.ToString(ci)).Append(',');
+        sb.Append(config.ClimateTrend.ToString(ci)).Append(',');
+        sb.Append(config.VariabilityMagnitude.ToString(ci)).Append(',');
+        sb.Append(config.WarmingBias.ToString(ci)).Append(',');
+        sb.Append(config.DailyVariationRange.ToString(ci)).Append(',');
+        sb.Append(config.RandomnessGrowthRate.ToString(ci)).Append(',');
+        sb.Append(config.Autocorrelated ? "true" : "false").Append(',');
+        sb.Append(config.InterannualVariation ? "true" : "false").Append(',');
+        sb.Append(config.TemperatureBoundsMin.ToString(ci)).Append(',');
+        sb.Append(config.TemperatureBoundsMax.ToString(ci)).Append(',');
+        sb.Append(config.CarryingCapacityTier1.ToString(ci)).Append(',');
+        // kept optional globals: condition rates, then empty timeseries file (parametric model)
+        sb.Append(config.ConditionDrainRate.ToString(ci)).Append(',');
+        sb.Append(config.ConditionRecoveryRate.ToString(ci)).Append(',');
+        sb.Append(',');   // temperature_timeseries_file = empty
 
-        // Species: Hexapod Common, Arctic, Tropical (Tier 0 = prey)
-        string[] hexVariants = { "Common", "Arctic", "Tropical" };
-        float[] hexOptTemps = { 23.85f, 17.85f, 29.85f };
-        float[] hexBreadth = { 8000f, 4000f, 4000f };
-        float[] hexLower = { 3000f, 13974f, 15827f };
-        float[] hexLowerBound = { 22.85f, 17.75f, 29.75f };
-        float[] hexUpperBound = { 24.85f, 17.95f, 29.95f };
-        float[] hexPmax = { 0.65f, 0.85f, 0.85f };
-
-        for (int i = 0; i < 3; i++)
+        // ---------- Data row: one block per species, mirroring ConvertSpecies ----------
+        // ConvertSpecies does Celsius -> Kelvin (+273.15) on opt/lower/upper temps, so we
+        // invert it here (Kelvin -> Celsius) for the *_c columns. Everything else is 1:1.
+        for (int i = 0; i < species.Count; i++)
         {
-            sb.Append($"Hexapod,{hexVariants[i]},0,20,0,0.45,0.3,0.6,0.25,0.02,0.01,1,0,");
-            sb.Append($"{hexOptTemps[i]},{hexBreadth[i]},{hexLower[i]},35000,{hexLowerBound[i]},{hexUpperBound[i]},");
-            sb.Append($"{hexPmax[i]},0,40,0,");
+            var sp = species[i];
+            string name = string.IsNullOrEmpty(sp.speciesLabel) ? sp.speciesName.ToString() : sp.speciesLabel;
+            string variant = string.IsNullOrEmpty(sp.variantLabel) ? sp.variant.ToString() : sp.variantLabel;
+
+            sb.Append(EscapeCsv(name)).Append(',');
+            sb.Append(EscapeCsv(variant)).Append(',');
+            sb.Append(sp.tier).Append(',');
+            sb.Append(sp.count).Append(',');
+            sb.Append(sp.eatingAmount.ToString(ci)).Append(',');
+            sb.Append(sp.reproductionMultiplier.ToString(ci)).Append(',');
+            sb.Append(sp.deathThreshold.ToString(ci)).Append(',');
+            sb.Append(sp.deathRate.ToString(ci)).Append(',');
+            sb.Append(sp.reproThreshold.ToString(ci)).Append(',');
+            sb.Append(sp.naturalDeathRate.ToString(ci)).Append(',');
+            sb.Append(sp.naturalDeathVariance.ToString(ci)).Append(',');
+            sb.Append(sp.huntingEfficiency.ToString(ci)).Append(',');
+            sb.Append(sp.huntingVariance.ToString(ci)).Append(',');
+            sb.Append((sp.optimalTempK - 273.15f).ToString("0.##", ci)).Append(',');
+            sb.Append(sp.arrhenBreadth.ToString(ci)).Append(',');
+            sb.Append(sp.arrhenLower.ToString(ci)).Append(',');
+            sb.Append(sp.arrhenUpper.ToString(ci)).Append(',');
+            sb.Append((sp.lowerBoundK - 273.15f).ToString("0.##", ci)).Append(',');
+            sb.Append((sp.upperBoundK - 273.15f).ToString("0.##", ci)).Append(',');
+            sb.Append(sp.pmax.ToString(ci)).Append(',');
+            sb.Append(sp.ctMinC.ToString(ci)).Append(',');
+            sb.Append(sp.ctMaxC.ToString(ci)).Append(',');
+            sb.Append(sp.TemperatureDebuff.ToString(ci)).Append(',');
+            sb.Append(sp.conditionDrainRate.ToString(ci)).Append(',');
+            sb.Append(sp.conditionRecoveryRate.ToString(ci)).Append(',');
         }
 
-        // Species: Sheplik Common, Arctic, Tropical (Tier 1 = predator)
-        for (int i = 0; i < 3; i++)
-        {
-            sb.Append($"Sheplik,{hexVariants[i]},1,4,1.5,0.1,0.3,0.3,0.25,0.01,0.005,0.75,0.15,");
-            sb.Append($"{hexOptTemps[i]},{hexBreadth[i]},{hexLower[i]},35000,{hexLowerBound[i]},{hexUpperBound[i]},");
-            sb.Append($"{hexPmax[i]},0,40,0");
-            if (i < 2) sb.Append(',');
-        }
-
+        sb.Length--;            // drop trailing comma
         sb.AppendLine();
         return sb.ToString();
+    }
+
+    /// <summary>Quote a CSV field if it contains a comma, quote, or newline (writer side).</summary>
+    private static string EscapeCsv(string s)
+    {
+        if (string.IsNullOrEmpty(s)) return "";
+        if (s.IndexOf(',') >= 0 || s.IndexOf('"') >= 0 || s.IndexOf('\n') >= 0 || s.IndexOf('\r') >= 0)
+            return "\"" + s.Replace("\"", "\"\"") + "\"";
+        return s;
     }
 
     // ==================== CSV LINE PARSER ====================

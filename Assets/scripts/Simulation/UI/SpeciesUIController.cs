@@ -414,10 +414,13 @@ public class SpeciesUIController : MonoBehaviour
             nameText.text = getName();
         }
 
-        // Update type text
+        // Update type text — variantLabel is already the spaced display string
+        // (e.g. "Warm Specialist"), so fetch it directly instead of re-formatting the enum.
         if (typeText != null)
         {
-            typeText.text = currentSpeciesData.variant.ToString();
+            typeText.text = string.IsNullOrEmpty(currentSpeciesData.variantLabel)
+                ? currentSpeciesData.variant.ToString()
+                : currentSpeciesData.variantLabel;
         }
 
         // Update count (editable — saves immediately on end edit)

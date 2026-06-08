@@ -1078,7 +1078,7 @@ public static class ConfigExporter
 
                 sb.AppendLine("    {");
                 sb.AppendLine($"      \"name\": \"{species.speciesName}\",");
-                sb.AppendLine($"      \"variant\": \"{species.variant}\",");
+                sb.AppendLine($"      \"variant\": \"{EscapeJson(species.variantLabel)}\",");
                 sb.AppendLine($"      \"displayName\": \"{EscapeJson(species.speciesLabel)}\",");
                 sb.AppendLine($"      \"tier\": {species.tier},");
                 sb.AppendLine($"      \"initialCount\": {species.count},");

@@ -377,10 +377,12 @@ public class SpeciesUIController : MonoBehaviour
         thermalGraphUI.ctMinC = currentSpeciesData.ctMinC;
         thermalGraphUI.ctMaxC = currentSpeciesData.ctMaxC;
 
-        // Force graph update
+        // Force a redraw via the build-safe Refresh(). (ThermalGraphUI.OnValidate()'s body
+        // is wrapped in #if UNITY_EDITOR, so calling it did nothing in a player build - which
+        // is why the row curve thumbnails never updated in the standalone app.)
         if (Application.isPlaying)
         {
-            thermalGraphUI.OnValidate();
+            thermalGraphUI.Refresh();
         }
         else
         {
@@ -388,7 +390,7 @@ public class SpeciesUIController : MonoBehaviour
             UnityEditor.EditorApplication.delayCall += () =>
             {
                 if (thermalGraphUI != null)
-                    thermalGraphUI.OnValidate();
+                    thermalGraphUI.Refresh();
             };
 #endif
         }

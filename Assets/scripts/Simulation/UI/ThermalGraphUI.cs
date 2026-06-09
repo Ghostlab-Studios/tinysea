@@ -85,6 +85,23 @@ public class ThermalGraphUI : MonoBehaviour
 #endif
     }
 
+    /// <summary>
+    /// Build-safe public redraw. Ensures the texture exists, then renders the curve.
+    /// Use this at runtime after changing the thermal parameters - OnValidate()'s body is
+    /// editor-only (#if UNITY_EDITOR), so it is a no-op in a player build and the thumbnails
+    /// would otherwise never update.
+    /// </summary>
+    public void Refresh()
+    {
+        if (rawImage == null)
+            rawImage = GetComponent<RawImage>();
+        if (rawImage == null)
+            return;
+        if (graphTexture == null || graphTexture.width != textureWidth || graphTexture.height != textureHeight)
+            CreateTexture();
+        UpdateGraph();
+    }
+
     void CreateTexture()
     {
         graphTexture = new Texture2D(textureWidth, textureHeight);

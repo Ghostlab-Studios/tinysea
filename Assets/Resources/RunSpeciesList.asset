@@ -13,4 +13,226 @@ MonoBehaviour:
   m_Name: RunSpeciesList
   m_EditorClassIdentifier: Assembly-CSharp::RunSpeciesList
   SpeciesDatabase: {fileID: 0}
-  speciesList: []
+  speciesList:
+  - index: 0
+    speciesName: 0
+    variant: 0
+    variantLabel: Cold Specialist
+    speciesLabel: Hexapod
+    icon: {fileID: 21300000, guid: b18c89991d6433d47a3003fba57fad95, type: 3}
+    count: 20
+    tier: 0
+    eatingAmount: 3
+    reproductionMultiplier: 0.45
+    deathThreshold: 0.3
+    deathRate: 0.6
+    TemperatureDebuff: 0
+    reproThreshold: 0.25
+    conditionDrainRate: 0.15
+    conditionRecoveryRate: 0.1
+    naturalDeathRate: 0.02
+    naturalDeathVariance: 0.01
+    huntingEfficiency: 1
+    huntingVariance: 0
+    eatingStars: 0
+    reproductionStars: 4
+    deathThresholdStars: 3
+    deathRateStars: 2
+    thermalBreadthStars: 5
+    temperatureThresholdText: High
+    reproductionRateText: Low
+    description: Hexapod - ColdSpecialist variant
+    optimalTempK: 293.15
+    arrhenBreadth: 5000
+    arrhenLower: 15998
+    arrhenUpper: 43798
+    lowerBoundK: 292.4
+    upperBoundK: 293.9
+    pmax: 0.9843
+    ctMinC: 0
+    ctMaxC: 35
+  - index: 1
+    speciesName: 0
+    variant: 1
+    variantLabel: Warm Specialist
+    speciesLabel: Hexapod
+    icon: {fileID: 21300000, guid: f89c1a59fafaa3e41aa5e9f94d051ee9, type: 3}
+    count: 20
+    tier: 0
+    eatingAmount: 3
+    reproductionMultiplier: 0.45
+    deathThreshold: 0.3
+    deathRate: 0.6
+    TemperatureDebuff: 0
+    reproThreshold: 0.25
+    conditionDrainRate: 0.15
+    conditionRecoveryRate: 0.1
+    naturalDeathRate: 0.02
+    naturalDeathVariance: 0.01
+    huntingEfficiency: 1
+    huntingVariance: 0
+    eatingStars: 0
+    reproductionStars: 4
+    deathThresholdStars: 3
+    deathRateStars: 2
+    thermalBreadthStars: 5
+    temperatureThresholdText: High
+    reproductionRateText: Low
+    description: Hexapod - WarmSpecialist variant
+    optimalTempK: 295.15
+    arrhenBreadth: 5000
+    arrhenLower: 16000
+    arrhenUpper: 43800
+    lowerBoundK: 294.4
+    upperBoundK: 295.9
+    pmax: 0.972
+    ctMinC: 2
+    ctMaxC: 37
+  - index: 2
+    speciesName: 0
+    variant: 2
+    variantLabel: Hot Specialist
+    speciesLabel: Hexapod
+    icon: {fileID: 21300000, guid: 485589c1ae6b14a4f825d236b41fef64, type: 3}
+    count: 20
+    tier: 0
+    eatingAmount: 3
+    reproductionMultiplier: 0.45
+    deathThreshold: 0.3
+    deathRate: 0.6
+    TemperatureDebuff: 0
+    reproThreshold: 0.25
+    conditionDrainRate: 0.15
+    conditionRecoveryRate: 0.1
+    naturalDeathRate: 0.02
+    naturalDeathVariance: 0.01
+    huntingEfficiency: 1
+    huntingVariance: 0
+    eatingStars: 0
+    reproductionStars: 4
+    deathThresholdStars: 3
+    deathRateStars: 2
+    thermalBreadthStars: 5
+    temperatureThresholdText: High
+    reproductionRateText: Low
+    description: Hexapod - HotSpecialist variant
+    optimalTempK: 297.15
+    arrhenBreadth: 5000
+    arrhenLower: 16002
+    arrhenUpper: 43802
+    lowerBoundK: 296.4
+    upperBoundK: 297.9
+    pmax: 0.96
+    ctMinC: 4
+    ctMaxC: 39
+  - index: 3
+    speciesName: 1
+    variant: 3
+    variantLabel: Cold Generalist
+    speciesLabel: Gelgi
+    icon: {fileID: 21300000, guid: 6c964fb92296a454992c69f3b7c55d93, type: 3}
+    count: 20
+    tier: 0
+    eatingAmount: 3
+    reproductionMultiplier: 0.45
+    deathThreshold: 0.3
+    deathRate: 0.6
+    TemperatureDebuff: 0
+    reproThreshold: 0.25
+    conditionDrainRate: 0.15
+    conditionRecoveryRate: 0.1
+    naturalDeathRate: 0.02
+    naturalDeathVariance: 0.01
+    huntingEfficiency: 1
+    huntingVariance: 0
+    eatingStars: 0
+    reproductionStars: 4
+    deathThresholdStars: 3
+    deathRateStars: 2
+    thermalBreadthStars: 5
+    temperatureThresholdText: High
+    reproductionRateText: Low
+    description: Gelgi - ColdGeneralist variant
+    optimalTempK: 293.15
+    arrhenBreadth: 7000
+    arrhenLower: 4998
+    arrhenUpper: 31098
+    lowerBoundK: 292.4
+    upperBoundK: 293.9
+    pmax: 0.6616
+    ctMinC: 0
+    ctMaxC: 35
+  - index: 4
+    speciesName: 1
+    variant: 4
+    variantLabel: Warm Generalist
+    speciesLabel: Gelgi
+    icon: {fileID: 21300000, guid: 82c88d2d9c57b05498a15ab0c8cdee38, type: 3}
+    count: 20
+    tier: 0
+    eatingAmount: 3
+    reproductionMultiplier: 0.45
+    deathThreshold: 0.3
+    deathRate: 0.6
+    TemperatureDebuff: 0
+    reproThreshold: 0.25
+    conditionDrainRate: 0.15
+    conditionRecoveryRate: 0.1
+    naturalDeathRate: 0.02
+    naturalDeathVariance: 0.01
+    huntingEfficiency: 1
+    huntingVariance: 0
+    eatingStars: 0
+    reproductionStars: 4
+    deathThresholdStars: 3
+    deathRateStars: 2
+    thermalBreadthStars: 5
+    temperatureThresholdText: High
+    reproductionRateText: Low
+    description: Gelgi - WarmGeneralist variant
+    optimalTempK: 295.15
+    arrhenBreadth: 7000
+    arrhenLower: 5000
+    arrhenUpper: 31100
+    lowerBoundK: 294.4
+    upperBoundK: 295.9
+    pmax: 0.6547
+    ctMinC: 2
+    ctMaxC: 37
+  - index: 5
+    speciesName: 1
+    variant: 5
+    variantLabel: Hot Generalist
+    speciesLabel: Gelgi
+    icon: {fileID: 21300000, guid: 7af983ef6dc2bc84c9ff768388f83c29, type: 3}
+    count: 20
+    tier: 0
+    eatingAmount: 3
+    reproductionMultiplier: 0.45
+    deathThreshold: 0.3
+    deathRate: 0.6
+    TemperatureDebuff: 0
+    reproThreshold: 0.25
+    conditionDrainRate: 0.15
+    conditionRecoveryRate: 0.1
+    naturalDeathRate: 0.02
+    naturalDeathVariance: 0.01
+    huntingEfficiency: 1
+    huntingVariance: 0
+    eatingStars: 0
+    reproductionStars: 4
+    deathThresholdStars: 3
+    deathRateStars: 2
+    thermalBreadthStars: 5
+    temperatureThresholdText: High
+    reproductionRateText: Low
+    description: Gelgi - HotGeneralist variant
+    optimalTempK: 297.15
+    arrhenBreadth: 7000
+    arrhenLower: 5002
+    arrhenUpper: 31102
+    lowerBoundK: 296.4
+    upperBoundK: 297.9
+    pmax: 0.6481
+    ctMinC: 4
+    ctMaxC: 39

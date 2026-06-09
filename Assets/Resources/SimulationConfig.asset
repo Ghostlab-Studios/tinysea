@@ -30,4 +30,5 @@ MonoBehaviour:
   TemperatureBoundsMin: 0
   TemperatureBoundsMax: 40
   RunSpecies: {fileID: 11400000, guid: cd179f552d2ff62439d8a6b811b28584, type: 2}
+  Tier2Enabled: 1
   RandomSeed: 12345

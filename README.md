@@ -49,12 +49,12 @@ The biology engine was written for a two-level food chain: **Tier 1** (prey) and
 
 Plain language: "Tier 1" means the small organisms at the bottom of the food chain (think plankton or small grazers) that feed on a shared environmental resource pool rather than hunting. "Tier 2" means larger animals that would eat the Tier 1 organisms. The active research model studies only the Tier 1 prey under temperature stress.
 
-Two independent switches control whether Tier 2 participates, and they do not agree in the shipped project, so read this carefully:
+Two switches control whether Tier 2 participates, and as shipped both keep it off:
 
 - The **bulk CSV upload path is hard Tier-1-only**. The bulk parser rejects any species row whose `tier` is not `0` (prey) with an explicit error (`CsvBatchParser.cs:316-319`). You cannot upload a predator through the bulk workflow.
-- The **single-config path is governed by a `Tier2Enabled` flag** on the config (`SimulationConfig.cs:126-130`). The code default for this flag is `false` (`EcosystemSimulator.cs:245`), but the **shipped config asset sets it to `1` (true)**: `Tier2Enabled: 1` in `Assets/Resources/SimulationConfig.asset:33`. So a default single-config run as shipped will still process any Tier 2 species present in the species list, and will emit Tier 2 output columns.
+- The **single-config path is governed by a `Tier2Enabled` flag** on the config (`SimulationConfig.cs:126-130`). Both the code default (`EcosystemSimulator.cs:245`) and the shipped config asset (`Tier2Enabled: 0` in `Assets/Resources/SimulationConfig.asset:33`) keep it `false`, so a default single-config run is Tier-1-only.
 
-When `Tier2Enabled` is false, Tier 2 species are dropped at load (`EcosystemSimulator.cs:331-337`) and every Tier 2 output column is suppressed (`SimulationRunner.cs:802`, header/row logic in `SimulationRunner.cs:209-313`). For a clean Tier-1-only study, set `Tier2Enabled` to false on the config and include only `tier 0` species.
+When `Tier2Enabled` is false, Tier 2 species are dropped at load (`EcosystemSimulator.cs:331-337`) and every Tier 2 output column is suppressed (`SimulationRunner.cs:802`, header/row logic in `SimulationRunner.cs:209-313`). Tier 2 is disabled for now; the predator code remains in the engine so it can be re-enabled later by setting `Tier2Enabled` true and adding `tier 1` species.
 
 ---
 
@@ -252,10 +252,10 @@ The single-config run reads a `SimulationConfig` ScriptableObject (`DataStructur
 | `TemperatureBoundsMin` | float | -5 | 0 | none | Hard floor, deg C. (`SimulationConfig.cs:110-112`) |
 | `TemperatureBoundsMax` | float | 50 | 40 | none | Hard ceiling, deg C. (`SimulationConfig.cs:114-115`) |
 | `RunSpecies` | reference | none | `RunSpeciesList.asset` | none | The list of species to simulate. (`SimulationConfig.cs:119-123`) |
-| `Tier2Enabled` | bool | false | 1 (on) | none | Whether legacy Tier 2 predators participate. (`SimulationConfig.cs:126-130`) |
+| `Tier2Enabled` | bool | false | 0 (off) | none | Whether legacy Tier 2 predators participate. Disabled for now; predator code retained for a future re-enable. (`SimulationConfig.cs:126-130`) |
 | `RandomSeed` | int | 12345 | 12345 | none | Base seed. `-1` = system time (non-reproducible). Scenario `i` uses `RandomSeed + i`. (`SimulationConfig.cs:134-139`) |
 
-Source for shipped values: `Assets/Resources/SimulationConfig.asset:15-34`. Note again that the shipped asset enables Tier 2 (`Tier2Enabled: 1`) even though the field's code default is false.
+Source for shipped values: `Assets/Resources/SimulationConfig.asset:15-34`. The shipped asset sets `Tier2Enabled: 0`, matching the field's code default, so the shipped configuration is Tier-1-only.
 
 **Validation** runs before a single-config simulation starts (`SimulationConfig.cs:146-195`, called from `SimulationController.cs:90-94`). It fails if `DaysPerScenario < 1`, if `NumberOfScenarios < 1`, if no species are configured, or if `CarryingCapacityTier1 <= 0`. It warns (non-fatal) if the initial Tier 1 population exceeds the carrying capacity, since that is a valid but often unintended over-seeding (`SimulationConfig.cs:173-191`).
 

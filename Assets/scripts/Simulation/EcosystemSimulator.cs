@@ -508,10 +508,16 @@ public class EcosystemSimulator
         Species.Add(SimSpecies.CreateHexapod(ThermalVariant.Common, 20f));
         Species.Add(SimSpecies.CreateHexapod(ThermalVariant.Tropical, 20f));
 
-        // Tier 2: Sheplik (4 of each variant)
-        Species.Add(SimSpecies.CreateSheplik(ThermalVariant.Arctic, 4f));
-        Species.Add(SimSpecies.CreateSheplik(ThermalVariant.Common, 4f));
-        Species.Add(SimSpecies.CreateSheplik(ThermalVariant.Tropical, 4f));
+        // Tier 2: Sheplik (4 of each variant). F17: the fallback species set must respect
+        // Tier2Enabled like the RunSpeciesList path does, otherwise this fallback silently
+        // injects predators into a Tier-1-only run. Tier 2 is disabled for now; the predator
+        // factory and the rest of the predator path stay intact so it can be re-enabled later.
+        if (Tier2Enabled)
+        {
+            Species.Add(SimSpecies.CreateSheplik(ThermalVariant.Arctic, 4f));
+            Species.Add(SimSpecies.CreateSheplik(ThermalVariant.Common, 4f));
+            Species.Add(SimSpecies.CreateSheplik(ThermalVariant.Tropical, 4f));
+        }
 
         foreach (var sp in Species)
         {

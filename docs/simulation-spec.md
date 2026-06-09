@@ -614,7 +614,7 @@ Both are documented below because the gap closed here is "the defaults are not g
 | `TemperatureBoundsMin` | float | `-5f` (cs:112) | `0` (asset:30) | Clamp floor; copied to `MinTemp`. |
 | `TemperatureBoundsMax` | float | `50f` (cs:115) | `40` (asset:31) | Clamp ceiling; copied to `MaxTemp`. |
 | `RunSpecies` | `RunSpeciesList` | null (cs:123) | asset reference (asset:32) | The runtime species list. When usable, this replaces the default species (Section 6). |
-| `Tier2Enabled` | bool | `false` (cs:130) | `1` / true (asset:33) | Tier 2 gate (Section 1). The C# default is off; the inspected asset has it on. |
+| `Tier2Enabled` | bool | `false` (cs:130) | `0` / false (asset:33) | Tier 2 gate (Section 1). Both the C# default and the shipped asset are off, so the shipped run is Tier-1-only. |
 | `RandomSeed` | int | `12345` (cs:139) | `12345` (asset:34) | Base seed. Per scenario seed is `RandomSeed + i` when non negative, sentinel `-1` per scenario when negative (Section 2.2). |
 
 The asset values above are the literal serialized contents of `Assets/Resources/SimulationConfig.asset` as inspected; they are editable in the Unity inspector and represent one saved configuration, not a hard default. A reimplementer reproducing a specific CSV should read the `#config:` comment lines that every scenario CSV embeds (SimulationRunner.cs:749-767), which record the exact values that produced that file.

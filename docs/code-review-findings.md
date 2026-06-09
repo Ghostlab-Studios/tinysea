@@ -6,6 +6,17 @@ Method: ten independent review dimensions, each producing raw findings, followed
 
 Reviewed at: (fill in)
 
+## Fix status (applied 2026-06-09, branch simulation-T1Refactor)
+
+Fixed in code this session (pending a Unity compile at time of writing). Design and reporting-definition items are left for the team and Brian.
+
+- **Fixed:** F1 (asset `Tier2Enabled` set to 0), F2 (follows F1), F4 (invariant CSV number formatting), F8 (rate columns written as fractions, not `"20.0 %"`), F12 (NaN guard in thermal performance), F14 (carrying-capacity floor and temperature-bounds-order validation), F15 (`AddSpecies` overload now adds), F17 (fallback predators gated by `Tier2Enabled`), F19 (independent biology RNG seed), F21 (bulk summary uses the completed scenario count), F22 (blank, not 0, for no-survivor cross-run metrics). The bulk CSV error panel also now lists every error instead of capping at 10.
+- **Deferred to design / Brian:** F3 (no-predator birth penalty), F5 (Pmax ceiling semantics), F6/F7/F10 (BiologyStep semantics), F11 (death-then-birth ordering), F13 (carrying-capacity cap shape), F20 (which extinction definition is canonical).
+- **Deferred (low impact, do with compile verification):** F24 (float to double accumulators and dead-member cleanup).
+- **Pending Unity scene work:** the bulk CSV error panel needs a ScrollRect and auto-size disabled on its text so the full list is readable at a fixed size (the code now emits the full list).
+
+Tier 2 was disabled for the current build (F1 and F17). The predator algorithm stays in the engine so it can be re-enabled later.
+
 ## Severity legend
 
 - blocker: breaks the simulation or its output for the shipped configuration; must fix before use.

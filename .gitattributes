@@ -1,0 +1,12 @@
+# Treat these as binary so git never applies text or CRLF conversion to them.
+# Unity YAML assets (.unity/.asset/.prefab/.meta) are intentionally left as text
+# so Unity smart-merge and diffs keep working.
+*.pdf  binary
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.zip  binary
+*.xlsx binary
+*.docx binary
+*.fbx  binary

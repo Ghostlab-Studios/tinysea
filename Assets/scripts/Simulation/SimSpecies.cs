@@ -128,8 +128,17 @@ public class SimSpecies
 
         double perf = numerator / denominator;
 
-        // Clamp to [0, 1] with CTmin/CTmax fade — Pmax is applied externally
-        return (float)Math.Max(0.0, Math.Min(1.0, perf)) * fadeFactor;
+        // F12: Math.Min/Math.Max do not strip NaN, and extreme custom Arrhenius constants
+        // can overflow Exp() to Infinity (Infinity/Infinity = NaN) or drive the denominator
+        // to 0. Guard explicitly so a non-finite or out-of-range value cannot leak into
+        // RawThermalPerformance, Condition, ReproScale, or the per-species CSV metrics.
+        if (double.IsNaN(perf) || perf < 0.0)
+            perf = 0.0;
+        else if (perf > 1.0)
+            perf = 1.0;
+
+        // Pmax is applied externally
+        return (float)perf * fadeFactor;
     }
 
     // ==================== FACTORY METHODS (for fallback/testing) ====================

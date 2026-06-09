@@ -643,6 +643,8 @@ public class SpeciesDatabase : ScriptableObject
             reproductionRateText = "Low",
             description = $"{displayname} - {SpeciesVariant.Custom} variant"
         };
+
+        speciesList.Add(data);
     }
 
 #endif

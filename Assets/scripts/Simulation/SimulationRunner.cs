@@ -383,7 +383,12 @@ public class SimulationRunner
     {
         UsedSeed = seed;
         TempCalc = new TemperatureCalculator(seed);
-        Ecosystem = new EcosystemSimulator(seed);
+        // F19: the biology RNG must be an independent stream from the temperature RNG.
+        // Passing the same seed makes both System.Random emit the identical sequence,
+        // correlating environmental and biological noise. Derive a distinct but still
+        // reproducible seed for the ecosystem; keep negative (random) seeds as-is.
+        int bioSeed = seed < 0 ? seed : (int)(((long)seed + 2654435761L) & 0x7FFFFFFF);
+        Ecosystem = new EcosystemSimulator(bioSeed);
     }
 
     /// <summary>

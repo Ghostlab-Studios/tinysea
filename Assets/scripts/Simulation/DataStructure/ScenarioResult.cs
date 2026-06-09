@@ -624,7 +624,7 @@ public class AggregateResults
         sb.AppendLine($"Scenarios Run,{TotalScenarios}");
         sb.AppendLine($"Survived,{SurvivedScenarios}");
         sb.AppendLine($"Crashed,{CrashedScenarios}");
-        sb.AppendLine($"Crash Rate,{CrashRate:P1}");
+        sb.AppendLine($"Crash Rate,{CrashRate:F3}");
         if (CrashedScenarios > 0)
         {
             sb.AppendLine($"Avg Crash Day,{AvgCrashDay:F1}");
@@ -651,7 +651,7 @@ public class AggregateResults
                 int survived = PerSpeciesSurvived != null && PerSpeciesSurvived.ContainsKey(key) ? PerSpeciesSurvived[key] : 0;
                 int total = extinct + survived;
                 float extinctionRate = total > 0 ? (float)extinct / total : 0;
-                sb.AppendLine($"{key},{GetVariant(key)},{GetTier(key)},{avg:F1},{survivedAvg:F1},{min},{max},{extinct},{survived},{extinctionRate:P1}");
+                sb.AppendLine($"{key},{GetVariant(key)},{GetTier(key)},{avg:F1},{survivedAvg:F1},{min},{max},{extinct},{survived},{extinctionRate:F3}");
             }
             sb.AppendLine();
         }
@@ -700,8 +700,8 @@ public class AggregateResults
                     $"{a.MinPopulation.Mean:F1},{a.MinPopulation.Min:F0}," +
                     $"{a.MaxPopulation.Mean:F1},{a.MaxPopulation.Max:F0}," +
                     $"{a.FinalPopulation.Mean:F1},{a.FinalPopulation.SurvivedMean:F1}," +
-                    $"{extinctionRate:P1},{a.ExtinctionTiming.MeanDay:F1}," +
-                    $"{crashRate:P1},{a.CrashTiming.MeanDay:F1}");
+                    $"{extinctionRate:F3},{a.ExtinctionTiming.MeanDay:F1}," +
+                    $"{crashRate:F3},{a.CrashTiming.MeanDay:F1}");
             }
             sb.AppendLine();
         }

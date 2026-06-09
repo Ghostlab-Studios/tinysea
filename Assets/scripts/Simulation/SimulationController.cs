@@ -43,6 +43,14 @@ public class SimulationController : MonoBehaviour
 
     private void Awake()
     {
+        // F4: write all CSV numbers with '.' as the decimal separator regardless of the OS
+        // locale. Set the default culture for this thread and any worker threads the
+        // simulation spawns. The CSV input parser already uses InvariantCulture; this makes
+        // the output writers match so the files stay machine-parseable on every machine.
+        var inv = System.Globalization.CultureInfo.InvariantCulture;
+        System.Globalization.CultureInfo.DefaultThreadCurrentCulture = inv;
+        System.Threading.Thread.CurrentThread.CurrentCulture = inv;
+
         // Force windowed mode on macOS standalone
         if (Application.platform == RuntimePlatform.OSXPlayer)
         {

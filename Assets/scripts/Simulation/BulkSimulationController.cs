@@ -55,6 +55,12 @@ public class BulkSimulationController : MonoBehaviour
 
     private void Start()
     {
+        // F4: see SimulationController.Awake. Make CSV output use invariant ('.') number
+        // formatting on this thread and inherited by the bulk worker threads.
+        var inv = System.Globalization.CultureInfo.InvariantCulture;
+        System.Globalization.CultureInfo.DefaultThreadCurrentCulture = inv;
+        System.Threading.Thread.CurrentThread.CurrentCulture = inv;
+
         if (csvUploadHandler != null)
             csvUploadHandler.OnRunBulkSimulation += OnRunBulkSimulation;
 
@@ -346,7 +352,12 @@ public class BulkSimulationController : MonoBehaviour
                 _bulkSummaries.Add(new BulkRunSummary
                 {
                     BatchName = batch.BatchName,
-                    NumScenarios = batch.NumScenarios,
+                    // F21: report the number of scenarios that actually completed, not the
+                    // requested count. A scenario whose task threw is skipped above (and
+                    // logged via Debug.LogError), so Survived + Crashed counts only completed
+                    // runs. Using the requested count here made the Scenarios column disagree
+                    // with Survived + Crashed and biased the crash/extinction denominators.
+                    NumScenarios = batchResults.Scenarios.Count,
                     Survived = batchResults.SurvivedScenarios,
                     Crashed = batchResults.CrashedScenarios,
                     BaseTemp = batch.BaseTemp,
@@ -469,7 +480,7 @@ public class BulkSimulationController : MonoBehaviour
         {
             int total = run.Survived + run.Crashed;
             float crashRate = total > 0 ? (float)run.Crashed / total : 0;
-            sb.Append($"{run.BatchName},{run.NumScenarios},{run.Survived},{run.Crashed},{crashRate:P1},{run.BaseTemp:F2},{run.ClimateTrend:F4}");
+            sb.Append($"{run.BatchName},{run.NumScenarios},{run.Survived},{run.Crashed},{crashRate:F3},{run.BaseTemp:F2},{run.ClimateTrend:F4}");
             foreach (var sp in allSpecies)
             {
                 float val = run.AvgSpeciesPop != null && run.AvgSpeciesPop.ContainsKey(sp) ? run.AvgSpeciesPop[sp] : 0;
@@ -536,7 +547,7 @@ public class BulkSimulationController : MonoBehaviour
             float grandMean = count > 0 ? sum / count : 0;
             float survivedMean = survivedCount > 0 ? survivedSum / survivedCount : 0;
             float extinctionRate = count > 0 ? (float)runsExtinct / count : 0;
-            sb.AppendLine($"{sp},{GetVariant(sp)},{GetTier(sp)},{grandMean:F1},{survivedMean:F1},{runsExtinct},{runsSurvived},{extinctionRate:P1}");
+            sb.AppendLine($"{sp},{GetVariant(sp)},{GetTier(sp)},{grandMean:F1},{survivedMean:F1},{runsExtinct},{runsSurvived},{extinctionRate:F3}");
         }
 
         // ====================================================================
@@ -629,27 +640,40 @@ public class BulkSimulationController : MonoBehaviour
 
                 if (runs == 0) continue;
 
-                // Grand means for condition / birth-rate / popCv are over surviving
-                // runs only; if no runs survived, emit 0 (consistent with how
-                // GrandMeanPop_SurvivedMean handles the same edge case).
-                float gmCond = runsSurvivedCount > 0 ? condSum / runsSurvivedCount : 0f;
-                float gmBr   = runsSurvivedCount > 0 ? brSum   / runsSurvivedCount : 0f;
-                float gmCv   = runsSurvivedCount > 0 ? cvSum   / runsSurvivedCount : 0f;
+                // F22: the condition / birth-rate / popCv grand means are defined over
+                // surviving runs only. When no run survived there is genuinely no data, so
+                // emit a blank cell instead of 0. A literal 0 was indistinguishable from a
+                // real near-zero value (a species that held Condition ~0.4 but always
+                // eventually crashed would read as "0.000" = "zero condition"). GrandMeanPop
+                // (averaged over all runs) is a real datum and is always written.
+                bool anySurvived = runsSurvivedCount > 0;
+                float gmCond = anySurvived ? condSum / runsSurvivedCount : 0f;
+                float gmBr   = anySurvived ? brSum   / runsSurvivedCount : 0f;
+                float gmCv   = anySurvived ? cvSum   / runsSurvivedCount : 0f;
                 float gmPop  = popSum / runs;
 
                 // StdDev across the same surviving-run sample.
-                float condVar = runsSurvivedCount > 0 ? (condSqSum / runsSurvivedCount) - (gmCond * gmCond) : 0f;
-                float brVar   = runsSurvivedCount > 0 ? (brSqSum   / runsSurvivedCount) - (gmBr   * gmBr)   : 0f;
+                float condVar = anySurvived ? (condSqSum / runsSurvivedCount) - (gmCond * gmCond) : 0f;
+                float brVar   = anySurvived ? (brSqSum   / runsSurvivedCount) - (gmBr   * gmBr)   : 0f;
                 float gmCondStd = condVar > 0f ? (float)Math.Sqrt(condVar) : 0f;
                 float gmBrStd   = brVar   > 0f ? (float)Math.Sqrt(brVar)   : 0f;
 
-                float gmPopSurvived = popSurvivedCount > 0 ? popSurvivedSum / popSurvivedCount : 0f;
+                bool anyPopSurvived = popSurvivedCount > 0;
+                float gmPopSurvived = anyPopSurvived ? popSurvivedSum / popSurvivedCount : 0f;
+
+                // Blank (not 0) for the surviving-runs-only columns when there is no data.
+                string condS  = anySurvived ? gmCond.ToString("F3") : "";
+                string condSd = anySurvived ? gmCondStd.ToString("F3") : "";
+                string brS    = anySurvived ? gmBr.ToString("F4") : "";
+                string brSd   = anySurvived ? gmBrStd.ToString("F4") : "";
+                string cvS    = anySurvived ? gmCv.ToString("F3") : "";
+                string popSurvivedS = anyPopSurvived ? gmPopSurvived.ToString("F1") : "";
 
                 sb.AppendLine($"{sp},{GetVariant(sp)},{GetTier(sp)},{runs},{runsSurvivedCount}," +
-                    $"{gmCond:F3},{gmCondStd:F3}," +
-                    $"{gmBr:F4},{gmBrStd:F4}," +
-                    $"{gmCv:F3}," +
-                    $"{gmPop:F1},{gmPopSurvived:F1}");
+                    $"{condS},{condSd}," +
+                    $"{brS},{brSd}," +
+                    $"{cvS}," +
+                    $"{gmPop:F1},{popSurvivedS}");
             }
             sb.AppendLine();
 
@@ -706,8 +730,8 @@ public class BulkSimulationController : MonoBehaviour
 
                 sb.AppendLine($"{sp},{GetVariant(sp)},{GetTier(sp)},{runs},{runsSurvivedCount}," +
                     $"{minMean:F1},{maxMean:F1},{finalMean:F1}," +
-                    $"{extinctionRate2:P1},{meanExtDay:F1}," +
-                    $"{crashRate2:P1},{meanCrashDay:F1}");
+                    $"{extinctionRate2:F3},{meanExtDay:F1}," +
+                    $"{crashRate2:F3},{meanCrashDay:F1}");
             }
         }
 

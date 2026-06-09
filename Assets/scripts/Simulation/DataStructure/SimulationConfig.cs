@@ -163,10 +163,20 @@ public class SimulationConfig : ScriptableObject
             return false;
         }
 
-        // v11.1: hard requirement that the cap is positive — carrying capacity is always on.
-        if (CarryingCapacityTier1 <= 0f)
+        // v11.1 / F14: carrying capacity is always on, and the inspector restricts it to
+        // [Range(100, 100000)]. Nothing enforced that floor at runtime, so a UI- or
+        // asset-supplied value below 100 (or at/below 0) slipped through. Enforce the floor.
+        if (CarryingCapacityTier1 < 100f)
         {
-            errorMessage = "CarryingCapacityTier1 must be > 0 (carrying capacity is always on).";
+            errorMessage = "CarryingCapacityTier1 must be at least 100 (carrying capacity is always on).";
+            return false;
+        }
+
+        // F14: temperature bounds must be ordered. Nothing checked min < max, so an inverted
+        // pair was silently accepted and produced a meaningless clamp range.
+        if (TemperatureBoundsMin >= TemperatureBoundsMax)
+        {
+            errorMessage = $"TemperatureBoundsMin ({TemperatureBoundsMin}) must be less than TemperatureBoundsMax ({TemperatureBoundsMax}).";
             return false;
         }
 

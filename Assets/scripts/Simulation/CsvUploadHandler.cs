@@ -168,12 +168,13 @@ public class CsvUploadHandler : MonoBehaviour
         else
         {
             parsedBatches = null;
-            // Show first 10 errors, indicate if there are more
-            int showCount = System.Math.Min(errors.Count, 10);
-            string errorMsg = string.Join("\n", errors.GetRange(0, showCount));
-            if (errors.Count > showCount)
-                errorMsg += $"\n\n... and {errors.Count - showCount} more errors.";
-            ShowError(errorMsg);
+            // Show every error (no truncation). The error panel is scrollable and keeps a
+            // fixed, readable text size, so the full list is browsable instead of being
+            // capped at 10 with a "... and N more" tail.
+            string countHeader = errors.Count == 1
+                ? "1 error found:\n\n"
+                : $"{errors.Count} errors found:\n\n";
+            ShowError(countHeader + string.Join("\n", errors));
         }
     }
 

@@ -91,3 +91,15 @@ New deploy assets (tracked): `assets/images/creatures/{hexapod-c,hexapod-a,hexap
 - Removed Yelloo; added **Grabbler** (near the ground), **Sploof** (near the sky), **Gelgi A** (middle).
 - **Tier 1 (Hexapod + Gelgi) shrunk** (38-46px) vs predators (Sheplik/Grabbler/Sploof 58-66px).
 - Now 7 creatures total. Assets: `creatures/{grabbler,sploof,gelgi-a}.png` added; `yelloo.png` removed.
+
+## 2026-06-09 - Widen simulation page + logo in hero scene
+
+- **Widened the home page** to reduce wasted L/R space: `main`/header/footer containers
+  to 1340px; `.about-page.is-home` runs to 1340 (the text-heavy About page stays 1100).
+  Hero and the ocean image are now noticeably larger.
+- **TinySea logo floats in the hero ocean scene** (user-chosen placement). Uses the SAME
+  `assets/images/logo.png` as the header (so they match) at upper-center, 38% width,
+  opacity .7, behind the creatures (which swim in front). Nudged Sploof left to clear it.
+  (Initially used a cropped Unity logo, but it didn't match the header; switched to logo.png.)
+- Stripped em dashes from `style.css` comments (honoring "remove dashes everywhere").
+- No new logo asset needed - reuses the existing header `logo.png`.

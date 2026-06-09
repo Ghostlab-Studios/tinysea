@@ -18,7 +18,7 @@ if (is_dir(__DIR__ . '/builds/v' . $requestedV)) {
 include __DIR__ . '/includes/header.php';
 ?>
 
-<section class="about-page">
+<section class="about-page is-home">
     <?php if ($versionFallback): ?>
     <div class="version-notice" role="status">
         Version <?php echo htmlspecialchars($requestedV, ENT_QUOTES, 'UTF-8'); ?> isn't available, so you're seeing the default (version 1).
@@ -47,6 +47,7 @@ include __DIR__ . '/includes/header.php';
         </div>
         <div class="hero-art">
             <img class="scene" src="/assets/images/ocean-hero.jpg" alt="Illustration of the Tiny Sea underwater ecosystem" width="1200" height="675" loading="lazy">
+            <img class="hero-logo" src="/assets/images/logo.png" alt="" aria-hidden="true">
             <img class="hero-creature c1" src="/assets/images/creatures/hexapod-c.png" alt="" aria-hidden="true">
             <img class="hero-creature c2" src="/assets/images/creatures/hexapod-a.png" alt="" aria-hidden="true">
             <img class="hero-creature c3" src="/assets/images/creatures/hexapod-t.png" alt="" aria-hidden="true">
@@ -99,7 +100,7 @@ include __DIR__ . '/includes/header.php';
             <div class="note">macOS users: because the app is distributed outside the App Store, you'll need to allow it in System Settings on first launch. The setup guide walks you through it step by step.</div>
         </div>
 
-        <div class="about-band">
+        <div class="about-band branded">
             <div class="card-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M2 7c2 1.6 3.3 1.6 5 0s3.3-1.6 5 0 3.3 1.6 5 0 3.3-1.6 5 0"/>

@@ -25,17 +25,14 @@ public class ScenarioResult
     // Final populations
     public long FinalTier1Pop;
     public long FinalTier2Pop;
-    public long FinalTier1Arctic;
-    public long FinalTier1Common;
-    public long FinalTier1Tropical;
-    public long FinalTier2Arctic;
-    public long FinalTier2Common;
-    public long FinalTier2Tropical;
-    public long FinalTier1Custom;
-    public long FinalTier2Custom;
 
-    // Per-species final populations (key = FullName like "Hexapod_Arctic" or "Coral_Custom")
+    // Per-species final populations (key = FullName like "Hexapod_Cold" or "Coral_M2")
     public Dictionary<string, long> FinalSpeciesPopulations;
+
+    // v12: Per-species rich metrics (final-year means, CV, min/max, extinction/crash day)
+    // Populated by SimulationRunner.ComputePerSpeciesScenarioMetrics().
+    // Key = FullName.
+    public Dictionary<string, PerSpeciesScenarioMetrics> SpeciesMetrics;
 
     // Population stats (across all days)
     public long MaxTier1Pop;
@@ -60,20 +57,10 @@ public class ScenarioResult
     public Dictionary<string, long> PopMin;
     public Dictionary<string, double> PopStdDev;
 
-    // Extinction timing per variant: variant key -> day first reached 0 (-1 if survived)
+    // Extinction timing per tier-variant rollup column: key = "Tier{n}_{variantLabel}"
+    // -> day first reached 0 (-1 if survived). Keys are dynamic per run (one per distinct
+    // (tier, variantLabel) present), produced by SimulationRunner.ComputePopulationStats.
     public Dictionary<string, int> ExtinctionDay;
-
-    // Column name constants shared across SimulationRunner and AggregateResults
-    public static readonly string[] PopColumns = {
-        "Tier1Pop", "Tier2Pop",
-        "Tier1Arctic", "Tier1Common", "Tier1Tropical", "Tier1Custom",
-        "Tier2Arctic", "Tier2Common", "Tier2Tropical", "Tier2Custom"
-    };
-
-    public static readonly string[] VariantColumns = {
-        "Tier1Arctic", "Tier1Common", "Tier1Tropical", "Tier1Custom",
-        "Tier2Arctic", "Tier2Common", "Tier2Tropical", "Tier2Custom"
-    };
 
     // CSV data (stored for download)
     public string CsvData;
@@ -87,7 +74,7 @@ public class ScenarioResult
         {
             return $"Scenario {ScenarioIndex}: Crashed Day {CrashDay} (Tier {CrashTier})";
         }
-        return $"Scenario {ScenarioIndex}: T1={FinalTier1Pop:N0}, T2={FinalTier2Pop:N0}";
+        return $"Scenario {ScenarioIndex}: Pop={FinalTier1Pop:N0}";
     }
 
     /// <summary>
@@ -97,6 +84,116 @@ public class ScenarioResult
     {
         return Crashed ? "X" : "OK";
     }
+}
+
+/// <summary>
+/// Per-species rich metrics for a single scenario (v12).
+///
+/// Computed by SimulationRunner.ComputePerSpeciesScenarioMetrics() at end of run
+/// by post-processing the per-day StepRecord.SpeciesData entries. These metrics
+/// are NOT clamped by carrying capacity (Condition, BirthRate are physiological
+/// signals), so they expose the "suboptimal is optimal" Jensen shift that
+/// final-day population masks.
+///
+/// Final year = last 365 days; if total run is shorter, final-year metrics
+/// equal full-run metrics (slice covers all days).
+/// </summary>
+[Serializable]
+public class PerSpeciesScenarioMetrics
+{
+    public string FullName;
+    public long  FinalPopulation;
+
+    // Mean Condition over the window (population-weighted equivalent — each day
+    // contributes one observation regardless of population size)
+    public float MeanConditionFullRun;
+    public float MeanConditionFinalYear;
+
+    // Mean per-capita birth rate (Births / max(StartOfDayPop, 1) per day)
+    public float MeanBirthRateFullRun;
+    public float MeanBirthRateFinalYear;
+
+    // Population coefficient of variation (StdDev / Mean) — instability signal
+    public float PopCvFullRun;
+    public float PopCvFinalYear;
+
+    // Mean population over final year — different from FinalPopulation (single-day snapshot)
+    public float MeanPopulationFinalYear;
+
+    // Change 3: total death counts summed over the final year (last 365 days) of THIS
+    // scenario, by pathway. PredationDeaths uses Eaten (Tier-1 only; 0 for Tier 2).
+    public float FinalYearTempDeaths;
+    public float FinalYearConditionDeaths;
+    public float FinalYearNaturalDeaths;
+    public float FinalYearPredationDeaths;
+
+    // Population extremes during full sim
+    public long MinPopulation;
+    public long MaxPopulation;
+
+    // Timing events (-1 if event never occurred)
+    public int ExtinctionDay;     // First day Pop reaches 0 after being alive
+    public int CrashDay;          // First day Pop drops below max(CRASH_FLOOR, CRASH_FRACTION × StartPop)
+
+    public bool Survived => FinalPopulation > 0;
+}
+
+/// <summary>
+/// Per-metric Mean / StdDev / Min / Max stats with survived-only variants (v12).
+/// Used inside PerSpeciesAggregate for cross-scenario aggregation.
+/// </summary>
+[Serializable]
+public struct AggStat
+{
+    public float Mean;
+    public float StdDev;
+    public float Min;
+    public float Max;
+    public float SurvivedMean;
+    public float SurvivedStdDev;
+}
+
+/// <summary>
+/// Extinction/crash timing summary for a species across scenarios (v12).
+/// </summary>
+[Serializable]
+public struct ExtinctionStat
+{
+    public int   NEvents;       // # scenarios where event occurred (day != -1)
+    public int   NNonEvents;    // # scenarios where event did not occur (day == -1)
+    public float MinDay;        // Earliest day among events; -1 if no events
+    public float MaxDay;        // Latest day among events; -1 if no events
+    public float MeanDay;       // Mean day among events; -1 if no events
+}
+
+/// <summary>
+/// Per-species aggregate across all scenarios in a run (v12).
+/// Wraps the AggStat for each metric defined on PerSpeciesScenarioMetrics.
+/// </summary>
+[Serializable]
+public class PerSpeciesAggregate
+{
+    public string FullName;
+    public int N;             // # scenarios contributing
+    public int NSurvived;     // # scenarios where species final pop > 0
+
+    public AggStat MeanConditionFullRun;
+    public AggStat MeanConditionFinalYear;
+    public AggStat MeanBirthRateFullRun;
+    public AggStat MeanBirthRateFinalYear;
+    public AggStat PopCvFullRun;
+    public AggStat PopCvFinalYear;
+    public AggStat MeanPopulationFinalYear;
+    // Change 3: final-year death-count means by pathway
+    public AggStat FinalYearTempDeaths;
+    public AggStat FinalYearConditionDeaths;
+    public AggStat FinalYearNaturalDeaths;
+    public AggStat FinalYearPredationDeaths;
+    public AggStat MinPopulation;
+    public AggStat MaxPopulation;
+    public AggStat FinalPopulation;
+    public ExtinctionStat ExtinctionTiming;
+    public ExtinctionStat CrashTiming;
 }
 
 /// <summary>
@@ -117,8 +214,7 @@ public class AggregateResults
     public int BiologyStep;
     public int RandomSeed;
 
-    // Carrying Capacity
-    public bool UseCarryingCapacity;
+    // Carrying Capacity (always on as of v11.1)
     public float CarryingCapacity;
 
     // Condition System
@@ -150,6 +246,9 @@ public class AggregateResults
     // Timestamp
     public DateTime CompletedAt;
 
+    // Change 4: source run / batch name (from the input bulk CSV row) for self-identifying output
+    public string BatchName;
+
     // Population averages (across scenarios that survived)
     public float AvgFinalTier1Pop;
     public float AvgFinalTier2Pop;
@@ -176,6 +275,9 @@ public class AggregateResults
     public Dictionary<string, int> PerSpeciesExtinct;  // scenarios where final pop = 0
     public Dictionary<string, int> PerSpeciesSurvived; // scenarios where final pop > 0
     public Dictionary<string, float> PerSpeciesSurvivedAvg; // avg pop only across survived scenarios
+
+    // v12: Per-species rich aggregate (final-year means, CV, min/max, extinction/crash timing)
+    public Dictionary<string, PerSpeciesAggregate> PerSpeciesMetrics;
 
     // Individual results
     public List<ScenarioResult> Scenarios = new List<ScenarioResult>();
@@ -316,6 +418,129 @@ public class AggregateResults
             PerSpeciesSurvived[key] = survived;
             PerSpeciesSurvivedAvg[key] = survived > 0 ? survivedSum / survived : 0;
         }
+
+        // v12: Per-species rich aggregate (final-year means, CV, min/max, extinction/crash timing)
+        BuildPerSpeciesAggregate();
+    }
+
+    /// <summary>
+    /// v12: Build PerSpeciesMetrics dict by aggregating Scenarios[].SpeciesMetrics
+    /// across scenarios. Existing tier-level dicts (PerSpeciesAvg etc.) are NOT
+    /// touched — both old and new aggregates coexist for backward compatibility.
+    /// </summary>
+    private void BuildPerSpeciesAggregate()
+    {
+        PerSpeciesMetrics = new Dictionary<string, PerSpeciesAggregate>();
+        if (Scenarios == null || Scenarios.Count == 0) return;
+
+        // Union of species names across all scenarios
+        var allKeys = new HashSet<string>();
+        foreach (var s in Scenarios)
+        {
+            if (s.SpeciesMetrics == null) continue;
+            foreach (var k in s.SpeciesMetrics.Keys) allKeys.Add(k);
+        }
+
+        foreach (var key in allKeys)
+        {
+            var rows = new List<PerSpeciesScenarioMetrics>();
+            foreach (var s in Scenarios)
+            {
+                if (s.SpeciesMetrics == null) continue;
+                if (s.SpeciesMetrics.TryGetValue(key, out var m))
+                    rows.Add(m);
+            }
+            if (rows.Count == 0) continue;
+
+            var agg = new PerSpeciesAggregate
+            {
+                FullName  = key,
+                N         = rows.Count,
+                NSurvived = 0
+            };
+            foreach (var r in rows) if (r.Survived) agg.NSurvived++;
+
+            agg.MeanConditionFullRun    = ComputeAggStat(rows, r => r.MeanConditionFullRun);
+            agg.MeanConditionFinalYear  = ComputeAggStat(rows, r => r.MeanConditionFinalYear);
+            agg.MeanBirthRateFullRun    = ComputeAggStat(rows, r => r.MeanBirthRateFullRun);
+            agg.MeanBirthRateFinalYear  = ComputeAggStat(rows, r => r.MeanBirthRateFinalYear);
+            agg.PopCvFullRun            = ComputeAggStat(rows, r => r.PopCvFullRun);
+            agg.PopCvFinalYear          = ComputeAggStat(rows, r => r.PopCvFinalYear);
+            agg.MeanPopulationFinalYear = ComputeAggStat(rows, r => r.MeanPopulationFinalYear);
+            agg.FinalYearTempDeaths      = ComputeAggStat(rows, r => r.FinalYearTempDeaths);
+            agg.FinalYearConditionDeaths = ComputeAggStat(rows, r => r.FinalYearConditionDeaths);
+            agg.FinalYearNaturalDeaths   = ComputeAggStat(rows, r => r.FinalYearNaturalDeaths);
+            agg.FinalYearPredationDeaths = ComputeAggStat(rows, r => r.FinalYearPredationDeaths);
+            agg.MinPopulation           = ComputeAggStat(rows, r => (float)r.MinPopulation);
+            agg.MaxPopulation           = ComputeAggStat(rows, r => (float)r.MaxPopulation);
+            agg.FinalPopulation         = ComputeAggStat(rows, r => (float)r.FinalPopulation);
+            agg.ExtinctionTiming        = ComputeExtinctionStat(rows, r => r.ExtinctionDay);
+            agg.CrashTiming             = ComputeExtinctionStat(rows, r => r.CrashDay);
+
+            PerSpeciesMetrics[key] = agg;
+        }
+    }
+
+    private static AggStat ComputeAggStat(List<PerSpeciesScenarioMetrics> rows, Func<PerSpeciesScenarioMetrics, float> sel)
+    {
+        var stat = new AggStat();
+        if (rows == null || rows.Count == 0) return stat;
+        float sum = 0f, sqSum = 0f;
+        float sSum = 0f, sSqSum = 0f;
+        float min = float.MaxValue, max = float.MinValue;
+        int n = 0, nSurvived = 0;
+        foreach (var r in rows)
+        {
+            float v = sel(r);
+            sum += v; sqSum += v * v;
+            if (v < min) min = v;
+            if (v > max) max = v;
+            n++;
+            if (r.Survived)
+            {
+                sSum += v; sSqSum += v * v;
+                nSurvived++;
+            }
+        }
+        if (n > 0)
+        {
+            stat.Mean = sum / n;
+            float variance = (sqSum / n) - (stat.Mean * stat.Mean);
+            stat.StdDev = variance > 0f ? (float)Math.Sqrt(variance) : 0f;
+            stat.Min = min;
+            stat.Max = max;
+        }
+        if (nSurvived > 0)
+        {
+            stat.SurvivedMean = sSum / nSurvived;
+            float sVar = (sSqSum / nSurvived) - (stat.SurvivedMean * stat.SurvivedMean);
+            stat.SurvivedStdDev = sVar > 0f ? (float)Math.Sqrt(sVar) : 0f;
+        }
+        return stat;
+    }
+
+    private static ExtinctionStat ComputeExtinctionStat(List<PerSpeciesScenarioMetrics> rows, Func<PerSpeciesScenarioMetrics, int> selector)
+    {
+        var stat = new ExtinctionStat { MinDay = -1f, MaxDay = -1f, MeanDay = -1f };
+        if (rows == null || rows.Count == 0) return stat;
+        int sum = 0;
+        int min = int.MaxValue, max = int.MinValue;
+        foreach (var r in rows)
+        {
+            int day = selector(r);
+            if (day < 0) { stat.NNonEvents++; continue; }
+            stat.NEvents++;
+            sum += day;
+            if (day < min) min = day;
+            if (day > max) max = day;
+        }
+        if (stat.NEvents > 0)
+        {
+            stat.MinDay = min;
+            stat.MaxDay = max;
+            stat.MeanDay = (float)sum / stat.NEvents;
+        }
+        return stat;
     }
 
     /// <summary>
@@ -324,7 +549,7 @@ public class AggregateResults
     public string GetQuickStatsLine()
     {
         return $"{SurvivedScenarios} survived | {CrashedScenarios} crashed | " +
-               $"Avg T1: {AvgFinalTier1Pop:N0} | Avg T2: {AvgFinalTier2Pop:N0}";
+               $"Avg final pop: {AvgFinalTier1Pop:N0}";
     }
 
     /// <summary>
@@ -336,18 +561,61 @@ public class AggregateResults
     }
 
     /// <summary>
-    /// Generate aggregate CSV for download (contains RESULTS)
+    /// Generate the per-run aggregate CSV (rolls up all scenarios within this run).
     /// </summary>
+    /// <remarks>
+    /// Section layout, in emitted order:
+    ///   1. Header block + run config
+    ///   2. <c>=== SUMMARY ===</c> — scenario counts, crash rate, optional avg crash day
+    ///   3. <c>=== POPULATION STATS (Survived Only) ===</c> — tier-total final pops
+    ///   4. <c>=== PER-SPECIES POPULATION STATS (All Scenarios) ===</c> — final-day pops, per species
+    ///   5. <c>=== CONDITION STATS ===</c> — tier-level means
+    ///   6. <c>=== PER-SPECIES FINAL YEAR METRICS ===</c> — last-365-day Condition / BirthRate / PopCv / MeanPop
+    ///   7. <c>=== PER-SPECIES FULL-RUN METRICS ===</c> — same metrics over the entire scenario
+    ///   8. <c>=== PER-SPECIES STABILITY METRICS ===</c> — Min/Max/Final pop, extinction &amp; crash timing
+    ///   9. <c>=== INDIVIDUAL SCENARIOS ===</c> — wide table, one row per scenario, three header rows
+    ///  10. <c>=== SUMMARY STATISTICS (Grand Mean Across All Scenarios) ===</c> — grand mean of per-scenario stats, three header rows
+    ///  11. <c>=== EXTINCTION TIMING - TIER VARIANTS (Across All Scenarios) ===</c>
+    ///  12. <c>=== EXTINCTION TIMING - PER SPECIES (Across All Scenarios) ===</c>
+    ///
+    /// Conventions:
+    /// - All per-species sections include separate <c>Species</c>, <c>Variant</c>, <c>Tier</c> columns.
+    /// - Wide-format sections (9, 10) carry three header rows: column names, <c>Variant</c>, <c>Tier</c>.
+    ///   They omit the dynamic tier-variant rollup columns because the per-species columns
+    ///   subsume them; tier totals (<c>Tier1Pop</c>, <c>Tier2Pop</c>) remain.
+    /// - Species columns are always sorted alphabetically by <c>FullName</c> for stable output.
+    /// </remarks>
     public string ToAggregateCsv()
     {
         var sb = new System.Text.StringBuilder();
 
+        // Per-species sections only carry FullName strings, so resolve Variant and
+        // Tier from RunSpecies once and look them up at write time.
+        var speciesMeta = new Dictionary<string, (int Tier, string Variant)>();
+        if (RunSpecies?.speciesList != null)
+        {
+            foreach (var sp in RunSpecies.speciesList)
+            {
+                string name = !string.IsNullOrEmpty(sp.speciesLabel)
+                    ? sp.speciesLabel
+                    : sp.speciesName.ToString();
+                // Batch 1A: use the free-text variant label (falls back to enum name).
+                string vlabel = !string.IsNullOrEmpty(sp.variantLabel) ? sp.variantLabel : sp.variant.ToString();
+                string fullName = $"{name}_{vlabel}";
+                // SpeciesData.tier is 0-based (0=prey, 1=predator); CSV / internal Tier is 1-based.
+                speciesMeta[fullName] = (sp.tier + 1, vlabel);
+            }
+        }
+        string GetVariant(string fn) => speciesMeta.TryGetValue(fn, out var m) ? m.Variant : "Unknown";
+        string GetTier(string fn) => speciesMeta.TryGetValue(fn, out var m) ? m.Tier.ToString() : "?";
+
         sb.AppendLine("=== TINYSEA AGGREGATE RESULTS ===");
+        sb.AppendLine($"# Run Name,{BatchName}");
         sb.AppendLine($"# Generated,{CompletedAt:yyyy-MM-dd HH:mm:ss}");
         sb.AppendLine($"# Configuration,{DaysPerScenario} days x {TotalScenarios} scenarios");
         sb.AppendLine($"# Base Temp,{BaseTemperature}C");
         sb.AppendLine($"# Climate Trend,{ClimateTrend}C/year");
-        sb.AppendLine($"# Carrying Capacity,{(UseCarryingCapacity ? CarryingCapacity.ToString() : "Disabled")}");
+        sb.AppendLine($"# Carrying Capacity,{CarryingCapacity}");
         sb.AppendLine($"# Condition Drain Rate,{ConditionDrainRate}");
         sb.AppendLine($"# Condition Recovery Rate,{ConditionRecoveryRate}");
         sb.AppendLine();
@@ -364,18 +632,15 @@ public class AggregateResults
         sb.AppendLine();
 
         sb.AppendLine("=== POPULATION STATS (Survived Only) ===");
-        sb.AppendLine($"Avg Final T1,{AvgFinalTier1Pop:F1}");
-        sb.AppendLine($"Avg Final T2,{AvgFinalTier2Pop:F1}");
-        sb.AppendLine($"Min Final T1,{MinFinalTier1Pop}");
-        sb.AppendLine($"Max Final T1,{MaxFinalTier1Pop}");
-        sb.AppendLine($"Min Final T2,{MinFinalTier2Pop}");
-        sb.AppendLine($"Max Final T2,{MaxFinalTier2Pop}");
+        sb.AppendLine($"Avg Final,{AvgFinalTier1Pop:F1}");
+        sb.AppendLine($"Min Final,{MinFinalTier1Pop}");
+        sb.AppendLine($"Max Final,{MaxFinalTier1Pop}");
         sb.AppendLine();
 
         if (PerSpeciesAvg != null && PerSpeciesAvg.Count > 0)
         {
             sb.AppendLine("=== PER-SPECIES POPULATION STATS (All Scenarios) ===");
-            sb.AppendLine("Species,Avg,SurvivedAvg,Min,Max,Extinct,Survived,ExtinctionRate");
+            sb.AppendLine("Species,Variant,Tier,Avg,SurvivedAvg,Min,Max,Extinct,Survived,ExtinctionRate");
             foreach (var key in PerSpeciesAvg.Keys.OrderBy(k => k))
             {
                 float avg = PerSpeciesAvg[key];
@@ -386,84 +651,226 @@ public class AggregateResults
                 int survived = PerSpeciesSurvived != null && PerSpeciesSurvived.ContainsKey(key) ? PerSpeciesSurvived[key] : 0;
                 int total = extinct + survived;
                 float extinctionRate = total > 0 ? (float)extinct / total : 0;
-                sb.AppendLine($"{key},{avg:F1},{survivedAvg:F1},{min},{max},{extinct},{survived},{extinctionRate:P1}");
+                sb.AppendLine($"{key},{GetVariant(key)},{GetTier(key)},{avg:F1},{survivedAvg:F1},{min},{max},{extinct},{survived},{extinctionRate:P1}");
             }
             sb.AppendLine();
         }
 
         sb.AppendLine("=== CONDITION STATS ===");
-        sb.AppendLine($"Avg Condition T1 (All Scenarios),{AvgConditionT1:F3}");
-        sb.AppendLine($"Avg Condition T2 (All Scenarios),{AvgConditionT2:F3}");
-        sb.AppendLine($"Avg Final Condition T1 (Survived),{AvgFinalConditionT1:F3}");
-        sb.AppendLine($"Avg Final Condition T2 (Survived),{AvgFinalConditionT2:F3}");
+        sb.AppendLine($"Avg Condition (All Scenarios),{AvgConditionT1:F3}");
+        sb.AppendLine($"Avg Final Condition (Survived),{AvgFinalConditionT1:F3}");
         sb.AppendLine();
 
-        sb.AppendLine("=== INDIVIDUAL SCENARIOS ===");
-        sb.AppendLine("Scenario,Seed,Crashed,CrashDay,CrashTier,FinalT1,FinalT2,T1Arctic,T1Common,T1Tropical,T1Custom,T2Arctic,T2Common,T2Tropical,T2Custom,AvgTemp,MinTemp,MaxTemp");
-
-        foreach (var s in Scenarios)
+        // v12: Per-species rich aggregate sections (final-year / full-run / stability)
+        if (PerSpeciesMetrics != null && PerSpeciesMetrics.Count > 0)
         {
-            sb.AppendLine($"{s.ScenarioIndex},{s.RandomSeed},{s.Crashed},{s.CrashDay},{s.CrashTier}," +
-                         $"{s.FinalTier1Pop},{s.FinalTier2Pop}," +
-                         $"{s.FinalTier1Arctic},{s.FinalTier1Common},{s.FinalTier1Tropical},{s.FinalTier1Custom}," +
-                         $"{s.FinalTier2Arctic},{s.FinalTier2Common},{s.FinalTier2Tropical},{s.FinalTier2Custom}," +
-                         $"{s.AvgTemperature:F2},{s.MinTemperature:F2},{s.MaxTemperature:F2}");
+            sb.AppendLine("=== PER-SPECIES FINAL YEAR METRICS ===");
+            sb.AppendLine("Species,Variant,Tier,N,NSurvived,MeanCondition,MeanCondition_StdDev,MeanCondition_SurvivedMean,MeanBirthRate,MeanBirthRate_StdDev,MeanBirthRate_SurvivedMean,PopCv,PopCv_StdDev,MeanPop,MeanPop_StdDev,MeanPop_SurvivedMean");
+            foreach (var key in PerSpeciesMetrics.Keys.OrderBy(k => k))
+            {
+                var a = PerSpeciesMetrics[key];
+                sb.AppendLine($"{key},{GetVariant(key)},{GetTier(key)},{a.N},{a.NSurvived}," +
+                    $"{a.MeanConditionFinalYear.Mean:F3},{a.MeanConditionFinalYear.StdDev:F3},{a.MeanConditionFinalYear.SurvivedMean:F3}," +
+                    $"{a.MeanBirthRateFinalYear.Mean:F4},{a.MeanBirthRateFinalYear.StdDev:F4},{a.MeanBirthRateFinalYear.SurvivedMean:F4}," +
+                    $"{a.PopCvFinalYear.Mean:F3},{a.PopCvFinalYear.StdDev:F3}," +
+                    $"{a.MeanPopulationFinalYear.Mean:F1},{a.MeanPopulationFinalYear.StdDev:F1},{a.MeanPopulationFinalYear.SurvivedMean:F1}");
+            }
+            sb.AppendLine();
+
+            sb.AppendLine("=== PER-SPECIES FULL-RUN METRICS ===");
+            sb.AppendLine("Species,Variant,Tier,N,NSurvived,MeanCondition,MeanCondition_StdDev,MeanBirthRate,MeanBirthRate_StdDev,PopCv,PopCv_StdDev");
+            foreach (var key in PerSpeciesMetrics.Keys.OrderBy(k => k))
+            {
+                var a = PerSpeciesMetrics[key];
+                sb.AppendLine($"{key},{GetVariant(key)},{GetTier(key)},{a.N},{a.NSurvived}," +
+                    $"{a.MeanConditionFullRun.Mean:F3},{a.MeanConditionFullRun.StdDev:F3}," +
+                    $"{a.MeanBirthRateFullRun.Mean:F4},{a.MeanBirthRateFullRun.StdDev:F4}," +
+                    $"{a.PopCvFullRun.Mean:F3},{a.PopCvFullRun.StdDev:F3}");
+            }
+            sb.AppendLine();
+
+            sb.AppendLine("=== PER-SPECIES STABILITY METRICS ===");
+            sb.AppendLine("Species,Variant,Tier,N,NSurvived,MinPop_Mean,MinPop_Min,MaxPop_Mean,MaxPop_Max,FinalPop_Mean,FinalPop_SurvivedMean,ExtinctionRate,MeanExtinctionDay,CrashRate,MeanCrashDay");
+            foreach (var key in PerSpeciesMetrics.Keys.OrderBy(k => k))
+            {
+                var a = PerSpeciesMetrics[key];
+                float extinctionRate = a.N > 0 ? (float)a.ExtinctionTiming.NEvents / a.N : 0f;
+                float crashRate      = a.N > 0 ? (float)a.CrashTiming.NEvents / a.N : 0f;
+                sb.AppendLine($"{key},{GetVariant(key)},{GetTier(key)},{a.N},{a.NSurvived}," +
+                    $"{a.MinPopulation.Mean:F1},{a.MinPopulation.Min:F0}," +
+                    $"{a.MaxPopulation.Mean:F1},{a.MaxPopulation.Max:F0}," +
+                    $"{a.FinalPopulation.Mean:F1},{a.FinalPopulation.SurvivedMean:F1}," +
+                    $"{extinctionRate:P1},{a.ExtinctionTiming.MeanDay:F1}," +
+                    $"{crashRate:P1},{a.CrashTiming.MeanDay:F1}");
+            }
+            sb.AppendLine();
         }
 
-        // Grand Mean across all runs
+        // ── Section 9: INDIVIDUAL SCENARIOS ────────────────────────────────────
+        // One row per scenario. Wide format: scenario metadata + tier totals +
+        // temperatures + one FinalPop column per species (sanitized FullName,
+        // alpha-sorted). The two extra header rows below annotate each species
+        // column with its Variant and Tier; meta columns that aren't tier-bound
+        // (Seed, Crashed, CrashDay, CrashTier, AvgTemp, MinTemp, MaxTemp) get
+        // blank annotations, and FinalT1/FinalT2 carry Variant=All with their
+        // tier number. The dynamic tier-variant rollup columns are omitted:
+        // the per-species columns sum to the tier totals, so the variant
+        // intermediate level is redundant.
+        var speciesCols = new List<string>();
+        {
+            // Union of every species seen in any scenario, sorted alphabetically
+            // by FullName. SortedSet handles dedup and ordering in one step.
+            var keys = new SortedSet<string>();
+            foreach (var s in Scenarios)
+            {
+                if (s.FinalSpeciesPopulations == null) continue;
+                foreach (var k in s.FinalSpeciesPopulations.Keys) keys.Add(k);
+            }
+            speciesCols.AddRange(keys);
+        }
+
+        sb.AppendLine("=== INDIVIDUAL SCENARIOS ===");
+
+        // Header row 1 — column names. Sanitize species FullName so downstream
+        // R/pandas pipelines see clean ASCII identifiers.
+        sb.Append("Scenario,Seed,Crashed,CrashDay,CrashTier,FinalPop,AvgTemp,MinTemp,MaxTemp");
+        foreach (var k in speciesCols) sb.Append($",{StepRecord.SanitizeColumnName(k)}");
+        sb.AppendLine();
+
+        // Header row 2 — Variant annotation. Empty cells under Seed/Crashed/
+        // CrashDay/CrashTier and AvgTemp/MinTemp/MaxTemp; "All" under tier totals.
+        sb.Append("Variant,,,,,All,,,");
+        foreach (var k in speciesCols) sb.Append($",{GetVariant(k)}");
+        sb.AppendLine();
+
+        // Header row 3 — Tier annotation. Same blank pattern as Variant; tier
+        // totals carry their numeric tier (1 / 2).
+        sb.Append("Tier,,,,,1,,,");
+        foreach (var k in speciesCols) sb.Append($",{GetTier(k)}");
+        sb.AppendLine();
+
+        // Data rows — one per scenario, columns aligned with header row 1.
+        // Species absent from a scenario emit FinalPop=0 so the table stays
+        // rectangular across runs even when species sets differ.
+        foreach (var s in Scenarios)
+        {
+            sb.Append($"{s.ScenarioIndex},{s.RandomSeed},{s.Crashed},{s.CrashDay},{s.CrashTier}");
+            sb.Append($",{s.FinalTier1Pop}");
+            sb.Append($",{s.AvgTemperature:F2},{s.MinTemperature:F2},{s.MaxTemperature:F2}");
+            foreach (var k in speciesCols)
+            {
+                long pop = (s.FinalSpeciesPopulations != null && s.FinalSpeciesPopulations.TryGetValue(k, out var p)) ? p : 0L;
+                sb.Append($",{pop}");
+            }
+            sb.AppendLine();
+        }
+
+        // ── Section 10: SUMMARY STATISTICS (Grand Mean Across All Scenarios) ──
+        // Wide-format grand mean of the per-scenario population statistics
+        // (Mean / Max / Min / StdDev across days, computed in
+        // SimulationRunner.ComputePopulationStats). Mirrors the scenario CSV
+        // `#summary:` block in shape: three header rows (Statistic / Variant /
+        // Tier) above the data rows. The dynamic tier-variant rollup columns are
+        // dropped here too — Tier1Pop/Tier2Pop carry Variant=All; per-species
+        // columns carry their own Variant + Tier.
+        //
+        // Note: GrandMean_Min/Max are means-of-mins / means-of-maxes across
+        // scenarios — not real population values. Use the per-scenario rows in
+        // INDIVIDUAL SCENARIOS for genuine extrema.
         bool hasPopStats = Scenarios.Any(s => s.PopMean != null);
         if (hasPopStats)
         {
-            sb.AppendLine();
-            sb.AppendLine("=== SUMMARY STATISTICS (Grand Mean Across All Runs) ===");
-            sb.AppendLine("Statistic," + string.Join(",", ScenarioResult.PopColumns));
+            // Per-species column order matches PerSpeciesMetrics' alphabetical
+            // FullName order so this section lines up with the per-species
+            // sections above.
+            var perSpeciesKeys = (PerSpeciesMetrics != null && PerSpeciesMetrics.Count > 0)
+                ? PerSpeciesMetrics.Keys.OrderBy(k => k).ToList()
+                : new List<string>();
 
+            // Per-scenario PopMean/Max/Min/StdDev dicts are keyed by both tier-
+            // total names ("Tier1Pop", "Tier2Pop") and per-species FullNames.
+            // PopMin/Max are stored as long; PopMean/StdDev as double. The
+            // switch handles all four with a single double accumulator.
+            double GrandMean(string statName, string col)
+            {
+                double sum = 0;
+                int count = 0;
+                foreach (var s in Scenarios)
+                {
+                    double val;
+                    switch (statName)
+                    {
+                        case "Mean":
+                            if (s.PopMean == null || !s.PopMean.ContainsKey(col)) continue;
+                            val = s.PopMean[col]; break;
+                        case "Max":
+                            if (s.PopMax == null || !s.PopMax.ContainsKey(col)) continue;
+                            val = s.PopMax[col]; break;
+                        case "Min":
+                            if (s.PopMin == null || !s.PopMin.ContainsKey(col)) continue;
+                            val = s.PopMin[col]; break;
+                        case "StdDev":
+                            if (s.PopStdDev == null || !s.PopStdDev.ContainsKey(col)) continue;
+                            val = s.PopStdDev[col]; break;
+                        default: continue;
+                    }
+                    sum += val;
+                    count++;
+                }
+                return count > 0 ? sum / count : 0;
+            }
+
+            sb.AppendLine();
+            sb.AppendLine("=== SUMMARY STATISTICS (Grand Mean Across All Scenarios) ===");
+
+            // Header row 1 — Statistic label + tier totals + per-species columns.
+            var headerCols = new List<string> { "Tier1Pop" };
+            foreach (var key in perSpeciesKeys)
+                headerCols.Add(StepRecord.SanitizeColumnName(key));
+            sb.AppendLine("Statistic," + string.Join(",", headerCols));
+
+            // Header row 2 — Variant: "All" for tier totals, the species'
+            // variant otherwise.
+            sb.Append("Variant,All");
+            foreach (var key in perSpeciesKeys) sb.Append($",{GetVariant(key)}");
+            sb.AppendLine();
+
+            // Header row 3 — Tier: tier number for tier totals, species' tier
+            // otherwise.
+            sb.Append("Tier,1");
+            foreach (var key in perSpeciesKeys) sb.Append($",{GetTier(key)}");
+            sb.AppendLine();
+
+            // Data rows — one per statistic. Same column order as header row 1.
             string[] statNames = { "Mean", "Max", "Min", "StdDev" };
             foreach (var statName in statNames)
             {
                 sb.Append($"GrandMean_{statName}");
-                foreach (var col in ScenarioResult.PopColumns)
-                {
-                    double sum = 0;
-                    int count = 0;
-                    foreach (var s in Scenarios)
-                    {
-                        double val;
-                        switch (statName)
-                        {
-                            case "Mean":
-                                if (s.PopMean == null) continue;
-                                val = s.PopMean.ContainsKey(col) ? s.PopMean[col] : 0; break;
-                            case "Max":
-                                if (s.PopMax == null) continue;
-                                val = s.PopMax.ContainsKey(col) ? s.PopMax[col] : 0; break;
-                            case "Min":
-                                if (s.PopMin == null) continue;
-                                val = s.PopMin.ContainsKey(col) ? s.PopMin[col] : 0; break;
-                            case "StdDev":
-                                if (s.PopStdDev == null) continue;
-                                val = s.PopStdDev.ContainsKey(col) ? s.PopStdDev[col] : 0; break;
-                            default: continue;
-                        }
-                        sum += val;
-                        count++;
-                    }
-                    double grandMean = count > 0 ? sum / count : 0;
-                    sb.Append($",{grandMean:F1}");
-                }
+                sb.Append($",{GrandMean(statName, "Tier1Pop"):F1}");
+                foreach (var key in perSpeciesKeys)
+                    sb.Append($",{GrandMean(statName, key):F1}");
                 sb.AppendLine();
             }
         }
 
-        // Extinction timing across all runs
+        // Extinction timing across all runs (dynamic tier-variant rollup columns).
+        // The variant key set is the union of every scenario's ExtinctionDay keys
+        // (one key per distinct "Tier{n}_{variantLabel}" present), sorted for stable output.
         bool hasExtinction = Scenarios.Any(s => s.ExtinctionDay != null);
         if (hasExtinction)
         {
             sb.AppendLine();
-            sb.AppendLine("=== EXTINCTION TIMING (Across All Runs) ===");
+            sb.AppendLine("=== EXTINCTION TIMING - TIER VARIANTS (Across All Scenarios) ===");
             sb.AppendLine("Variant,MinDays,MaxDays,AvgDays,NumExtinct,NumSurvived");
 
-            foreach (var variant in ScenarioResult.VariantColumns)
+            var variantKeys = new SortedSet<string>(StringComparer.Ordinal);
+            foreach (var s in Scenarios)
+            {
+                if (s.ExtinctionDay == null) continue;
+                foreach (var k in s.ExtinctionDay.Keys) variantKeys.Add(k);
+            }
+
+            foreach (var variant in variantKeys)
             {
                 var extinctDays = new List<int>();
                 int numSurvived = 0;
@@ -493,6 +900,28 @@ public class AggregateResults
             }
         }
 
+        // v12.2: Per-species extinction timing (Across All Scenarios).
+        // Source: PerSpeciesMetrics[key].ExtinctionTiming (already computed in CalculateAggregates).
+        if (PerSpeciesMetrics != null && PerSpeciesMetrics.Count > 0)
+        {
+            sb.AppendLine();
+            sb.AppendLine("=== EXTINCTION TIMING - PER SPECIES (Across All Scenarios) ===");
+            sb.AppendLine("Species,Variant,Tier,MinDays,MaxDays,AvgDays,NumExtinct,NumSurvived");
+
+            foreach (var key in PerSpeciesMetrics.Keys.OrderBy(k => k))
+            {
+                var et = PerSpeciesMetrics[key].ExtinctionTiming;
+                if (et.NEvents == 0)
+                {
+                    sb.AppendLine($"{key},{GetVariant(key)},{GetTier(key)},-1,-1,-1,0,{et.NNonEvents}");
+                }
+                else
+                {
+                    sb.AppendLine($"{key},{GetVariant(key)},{GetTier(key)},{et.MinDay:F0},{et.MaxDay:F0},{et.MeanDay:F1},{et.NEvents},{et.NNonEvents}");
+                }
+            }
+        }
+
         return sb.ToString();
     }
 
@@ -503,7 +932,7 @@ public class AggregateResults
     {
         return ConfigExporter.BuildConfigJson(
             DaysPerScenario, TotalScenarios, BiologyStep, RandomSeed,
-            UseCarryingCapacity, CarryingCapacity,
+            CarryingCapacity,
             BaseTemperature, SeasonalAmplitude, ClimateTrend,
             InterannualVariation, VariabilityMagnitude, WarmingBias,
             Autocorrelated, DailyVariationRange, RandomnessGrowthRate,
@@ -520,7 +949,7 @@ public class AggregateResults
     {
         return ConfigExporter.BuildConfigCsv(
             DaysPerScenario, TotalScenarios, BiologyStep, RandomSeed,
-            UseCarryingCapacity, CarryingCapacity,
+            CarryingCapacity,
             BaseTemperature, SeasonalAmplitude, ClimateTrend,
             InterannualVariation, VariabilityMagnitude, WarmingBias,
             Autocorrelated, DailyVariationRange, RandomnessGrowthRate,
@@ -547,7 +976,7 @@ public static class ConfigExporter
 
         return BuildConfigJson(
             config.DaysPerScenario, config.NumberOfScenarios, config.BiologyStep, config.RandomSeed,
-            config.UseCarryingCapacity, config.CarryingCapacityTier1,
+            config.CarryingCapacityTier1,
             config.BaseTemperature, config.SeasonalAmplitude, config.ClimateTrend,
             config.InterannualVariation, config.VariabilityMagnitude, config.WarmingBias,
             config.Autocorrelated, config.DailyVariationRange, config.RandomnessGrowthRate,
@@ -566,7 +995,7 @@ public static class ConfigExporter
 
         return BuildConfigCsv(
             config.DaysPerScenario, config.NumberOfScenarios, config.BiologyStep, config.RandomSeed,
-            config.UseCarryingCapacity, config.CarryingCapacityTier1,
+            config.CarryingCapacityTier1,
             config.BaseTemperature, config.SeasonalAmplitude, config.ClimateTrend,
             config.InterannualVariation, config.VariabilityMagnitude, config.WarmingBias,
             config.Autocorrelated, config.DailyVariationRange, config.RandomnessGrowthRate,
@@ -581,7 +1010,7 @@ public static class ConfigExporter
     /// </summary>
     public static string BuildConfigJson(
         int daysPerScenario, int numberOfScenarios, int biologyStep, int randomSeed,
-        bool useCarryingCapacity, float carryingCapacity,
+        float carryingCapacity,
         float baseTemperature, float seasonalAmplitude, float climateTrend,
         bool interannualVariation, float variabilityMagnitude, float warmingBias,
         bool autocorrelated, float dailyVariationRange, float randomnessGrowthRate,
@@ -603,9 +1032,8 @@ public static class ConfigExporter
         sb.AppendLine("  },");
         sb.AppendLine();
 
-        // Carrying capacity
+        // Carrying capacity (always on as of v11.1)
         sb.AppendLine("  \"carryingCapacity\": {");
-        sb.AppendLine($"    \"enabled\": {useCarryingCapacity.ToString().ToLower()},");
         sb.AppendLine($"    \"tier1Limit\": {carryingCapacity}");
         sb.AppendLine("  },");
         sb.AppendLine();
@@ -644,8 +1072,8 @@ public static class ConfigExporter
 
                 sb.AppendLine("    {");
                 sb.AppendLine($"      \"name\": \"{species.speciesName}\",");
-                sb.AppendLine($"      \"variant\": \"{species.variant}\",");
-                sb.AppendLine($"      \"displayName\": \"{EscapeJson(species.displayName)}\",");
+                sb.AppendLine($"      \"variant\": \"{EscapeJson(species.variantLabel)}\",");
+                sb.AppendLine($"      \"displayName\": \"{EscapeJson(species.speciesLabel)}\",");
                 sb.AppendLine($"      \"tier\": {species.tier},");
                 sb.AppendLine($"      \"initialCount\": {species.count},");
                 sb.AppendLine();
@@ -690,7 +1118,7 @@ public static class ConfigExporter
     /// </summary>
     public static string BuildConfigCsv(
         int daysPerScenario, int numberOfScenarios, int biologyStep, int randomSeed,
-        bool useCarryingCapacity, float carryingCapacity,
+        float carryingCapacity,
         float baseTemperature, float seasonalAmplitude, float climateTrend,
         bool interannualVariation, float variabilityMagnitude, float warmingBias,
         bool autocorrelated, float dailyVariationRange, float randomnessGrowthRate,
@@ -711,8 +1139,7 @@ public static class ConfigExporter
         sb.AppendLine($"Random Seed,{randomSeed}");
         sb.AppendLine();
 
-        sb.AppendLine("=== CARRYING CAPACITY ===");
-        sb.AppendLine($"Enabled,{useCarryingCapacity.ToString().ToLower()}");
+        sb.AppendLine("=== CARRYING CAPACITY (always on as of v11.1) ===");
         sb.AppendLine($"Tier 1 Limit,{carryingCapacity}");
         sb.AppendLine();
 
@@ -747,8 +1174,9 @@ public static class ConfigExporter
 
             foreach (var species in runSpecies.speciesList)
             {
-                string spName = !string.IsNullOrEmpty(species.displayName) ? species.displayName : species.speciesName.ToString();
-                sb.AppendLine($"{spName},{species.variant},{species.tier},{species.count}," +
+                string spName = !string.IsNullOrEmpty(species.speciesLabel) ? species.speciesLabel : species.speciesName.ToString();
+                string spVariant = !string.IsNullOrEmpty(species.variantLabel) ? species.variantLabel : spName;
+                sb.AppendLine($"{spName},{spVariant},{species.tier},{species.count}," +
                     $"{species.eatingAmount},{species.reproductionMultiplier}," +
                     $"{species.deathThreshold},{species.deathRate},{species.reproThreshold}," +
                     $"{species.naturalDeathRate},{species.naturalDeathVariance}," +

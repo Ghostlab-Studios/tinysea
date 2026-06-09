@@ -12,7 +12,7 @@ public class SpeciesUIController : MonoBehaviour
     [Header("Species Selection")]
     [SerializeField] private string displayNameOverride = "";
     [SerializeField] private SpeciesName speciesName = SpeciesName.Cyplo;
-    [SerializeField] private SpeciesVariant speciesVariant = SpeciesVariant.Common;
+    [SerializeField] private SpeciesVariant speciesVariant = SpeciesVariant.WarmSpecialist;
 
     [Header("Graph UI")]
     [SerializeField] private ThermalGraphUI thermalGraphUI;
@@ -137,7 +137,7 @@ public class SpeciesUIController : MonoBehaviour
         // Update local tracking vars to match
         speciesName = currentSpeciesData.speciesName;
         speciesVariant = currentSpeciesData.variant;
-        displayNameOverride = currentSpeciesData.displayName;
+        displayNameOverride = currentSpeciesData.speciesLabel;
         lastSpeciesName = speciesName;
         lastSpeciesVariant = speciesVariant;
         lastSpeciesDisplayNameOverride = displayNameOverride;
@@ -215,7 +215,7 @@ public class SpeciesUIController : MonoBehaviour
         this.currentSpeciesData = speciesData;
         this.speciesName = speciesData.speciesName;
         this.speciesVariant = speciesData.variant;
-        this.displayNameOverride = speciesData.displayName;
+        this.displayNameOverride = speciesData.speciesLabel;
 
         this.lastSpeciesName = speciesName;
         this.lastSpeciesVariant = speciesVariant;
@@ -269,10 +269,10 @@ public class SpeciesUIController : MonoBehaviour
 
         speciesName = data.speciesName;
         speciesVariant = data.variant;
-        displayNameOverride = data.displayName;
+        displayNameOverride = data.speciesLabel;
         lastSpeciesName = data.speciesName;
         lastSpeciesVariant = data.variant;
-        lastSpeciesDisplayNameOverride = data.displayName;
+        lastSpeciesDisplayNameOverride = data.speciesLabel;
         currentSpeciesData = data;
         ApplyThermalValues();
         UpdateUIDisplay();
@@ -377,10 +377,12 @@ public class SpeciesUIController : MonoBehaviour
         thermalGraphUI.ctMinC = currentSpeciesData.ctMinC;
         thermalGraphUI.ctMaxC = currentSpeciesData.ctMaxC;
 
-        // Force graph update
+        // Force a redraw via the build-safe Refresh(). (ThermalGraphUI.OnValidate()'s body
+        // is wrapped in #if UNITY_EDITOR, so calling it did nothing in a player build - which
+        // is why the row curve thumbnails never updated in the standalone app.)
         if (Application.isPlaying)
         {
-            thermalGraphUI.OnValidate();
+            thermalGraphUI.Refresh();
         }
         else
         {
@@ -388,7 +390,7 @@ public class SpeciesUIController : MonoBehaviour
             UnityEditor.EditorApplication.delayCall += () =>
             {
                 if (thermalGraphUI != null)
-                    thermalGraphUI.OnValidate();
+                    thermalGraphUI.Refresh();
             };
 #endif
         }
@@ -408,16 +410,19 @@ public class SpeciesUIController : MonoBehaviour
             iconImage.sprite = currentSpeciesData.icon;
         }
 
-        // Update name with type (e.g., "Hexapod Tropical")
+        // Update name — species name only (variant is shown separately in typeText)
         if (nameText != null)
         {
             nameText.text = getName();
         }
 
-        // Update type text
+        // Update type text — variantLabel is already the spaced display string
+        // (e.g. "Warm Specialist"), so fetch it directly instead of re-formatting the enum.
         if (typeText != null)
         {
-            typeText.text = currentSpeciesData.variant.ToString();
+            typeText.text = string.IsNullOrEmpty(currentSpeciesData.variantLabel)
+                ? currentSpeciesData.variant.ToString()
+                : currentSpeciesData.variantLabel;
         }
 
         // Update count (editable — saves immediately on end edit)
@@ -429,9 +434,11 @@ public class SpeciesUIController : MonoBehaviour
 
     private string getName()
     {
-       return string.IsNullOrEmpty(currentSpeciesData.displayName)
-            ? $"{currentSpeciesData.speciesName} {currentSpeciesData.variant}"
-            : currentSpeciesData.displayName;
+       // Species name only (e.g. "Hexapod"/"Gelgi"). The variant is shown separately in
+       // typeText, so we never repeat it here. Custom species use the typed speciesLabel.
+       return string.IsNullOrEmpty(currentSpeciesData.speciesLabel)
+           ? currentSpeciesData.speciesName.ToString()
+           : currentSpeciesData.speciesLabel;
     }
 
     /// <summary>

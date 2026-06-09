@@ -1,65 +1,58 @@
-# TinySea Headless Simulation — Documentation
+# TinySea Headless Simulation: Developer Documentation
 
-Source-of-truth docs for the headless ecosystem simulator used for research runs. Everything here is derived directly from the C# source in `Assets/scripts/Simulation/` and is intended to stay in sync with that source — if a doc and the source disagree, trust the source and fix the doc.
+This folder documents the TinySea headless ecosystem simulation, the non-visual research model that lives under `tinysea/Assets/scripts/Simulation/`. It is separate from the interactive Unity game under `tinysea/Assets/scripts/`. The audience is software developers who have never seen this codebase. The documents together hold enough detail to reimplement the simulation behavior.
 
-This document set covers only the headless simulation. The interactive Unity game (scenes `main_menu`, `mainscene`, `tutorial`) uses a separate biology path (`CharacterManager`, `PlayerManager`, `ThermalCurve`) and is not documented here.
+Every non-trivial statement in these documents cites a source file and line range, for example `(EcosystemSimulator.cs:543-700)`. A reader can jump straight to the cited code to confirm any claim.
 
-## Document set
+## Scope: Tier 1 now, Tier 2 is dormant legacy
 
-| File | Contents |
-|------|---------|
-| [simulation-spec.md](./simulation-spec.md) | Authoritative specification. Biology sequence (10 steps), Arrhenius TPC, Condition system, Pmax flow, scenario loop, temperature model, accumulators, design invariants. |
-| [simulation-variables.xlsx](./simulation-variables.xlsx) | Spreadsheet reference for every parameter, field, and constant. Seven sheets: Overview, Config (single-run), Bulk CSV Globals, Per-Species Params, Runtime State, Constants, Fallback Defaults. |
-| [csv-formats.md](./csv-formats.md) | CSV schemas for input (bulk upload) and output (per-scenario, aggregate, bulk summary, config export). Column-by-column with types and meaning. |
-| [diagrams/](./diagrams/) | Mermaid diagrams — one flow per file. See [diagrams/README.md](./diagrams/README.md) for the index. |
+The current shipping configuration runs Tier 1 (prey) only. The Tier-2 (predator) gate defaults to off: `EcosystemSimulator.Tier2Enabled` is `false` (`EcosystemSimulator.cs:245`) and `SimulationConfig.Tier2Enabled` is `false` (`SimulationConfig.cs:130`). When the gate is off, Tier-2 species are dropped at load (`EcosystemSimulator.cs:336`), Tier-2 CSV columns are suppressed (`SimulationRunner.cs:216-232`, `SimulationRunner.cs:270-286`), and the bulk CSV parser rejects any row with `tier != 0` (`CsvBatchParser.cs:318-319`). The Tier-2 predation code, including the Holling Type II functional response, remains in the engine from the original two-tier design. The documents describe Tier 1 completely. Where Tier-2 logic appears, it is marked as secondary legacy and the documents state plainly that current runs consider Tier 1 only.
 
-## Diagrams — individual files
+## Source of truth
 
-Each diagram is its own markdown so edits are focused and diffs are readable.
+The C# source under `tinysea/Assets/scripts/Simulation/` and the ScriptableObject `.asset` files under `tinysea/Assets/` are the only source of truth. These documents are derived from that code. When behavior and a document disagree, the code is correct. To change documented behavior, edit the C# first, then update the affected document and its citations to match. Do not edit a document to describe behavior the code does not have.
 
-- [diagrams/bulk-hierarchy.md](./diagrams/bulk-hierarchy.md) — Bulk CSV → Runs → Scenarios → outputs
-- [diagrams/scenario-flow.md](./diagrams/scenario-flow.md) — Per-scenario day loop
-- [diagrams/temperature-model.md](./diagrams/temperature-model.md) — Daily temperature components
-- [diagrams/biology-overview.md](./diagrams/biology-overview.md) — 10-step biology sequence
-- [diagrams/biology-performance-phase.md](./diagrams/biology-performance-phase.md) — Steps 1–5 (Arrhenius, feeding, Condition)
-- [diagrams/biology-death-phase.md](./diagrams/biology-death-phase.md) — Steps 6–7 (thermal + condition death)
-- [diagrams/biology-life-phase.md](./diagrams/biology-life-phase.md) — Steps 8–9 (reproduction + natural death)
-- [diagrams/pmax-flow.md](./diagrams/pmax-flow.md) — Where Pmax enters the pipeline (v9)
-- [diagrams/csv-output-shape.md](./diagrams/csv-output-shape.md) — CSV section layout for scenario/aggregate/bulk-summary
-- [diagrams/accumulator-pattern.md](./diagrams/accumulator-pattern.md) — Fractional-event accumulators
+## Reading order
 
-## Source-of-truth files
+Read top to bottom for a full pass. Each entry is one document with a one line description.
 
-If you are changing behaviour, edit the C# first, then update the doc. All paths relative to `tinysea/`:
+1. [architecture-overview.md](architecture-overview.md): What the simulation is, the two driver chains from scene entry to CSV output, and how the pieces fit together. Start here.
+2. [simulation-spec.md](simulation-spec.md): The authoritative specification of the daily biology sequence, state variables, and design invariants.
+3. [biology-and-formulas.md](biology-and-formulas.md): The ten biology steps in full: thermal performance, feeding, condition, the death pathways, and reproduction, with every formula and constant.
+4. [temperature-model.md](temperature-model.md): The standalone temperature model: the five-component parametric sum, the timeseries override, and the clamp.
+5. [run-scenario-batch.md](run-scenario-batch.md): The Run, Scenario, and day-loop nesting: seeding, the biology-step cadence, crash detection, and parallel vs sequential execution.
+6. [bulk-system.md](bulk-system.md): The bulk batch system: uploading one CSV of many runs, per-row parsing and validation, and the ZIP of per-run outputs plus the bulk summary.
+7. [configuration-reference.md](configuration-reference.md): Every configuration parameter and ScriptableObject field, with defaults, ranges, and validation rules exactly as the code sets them.
+8. [csv-output-formats.md](csv-output-formats.md): The exact column layout of the scenario, aggregate, bulk-summary, and config CSV files, including the dynamic tier-variant rollup and the per-species columns.
+9. [data-structures.md](data-structures.md): The internal data types: `SimSpecies`, `SpeciesData`, `StepRecord`, `ScenarioResult`, `AggregateResults`, and the per-species metric structs.
+10. [ui-and-io.md](ui-and-io.md): The simulation UI and input/output: the results screen, the species editor, file upload, downloads (single file and ZIP), and the server upload path.
+11. [diagrams/](diagrams/): Mermaid diagrams for the biology day sequence, temperature model, run/scenario/bulk nesting, and CSV output shape. See [diagrams/README.md](diagrams/README.md).
 
-| Area | File |
-|------|------|
-| Biology sequence | `Assets/scripts/Simulation/EcosystemSimulator.cs` |
-| Per-species fields & Arrhenius formula | `Assets/scripts/Simulation/SimSpecies.cs` |
-| Temperature model | `Assets/scripts/Simulation/TemperatureCalculator.cs` |
-| Scenario orchestration & CSV output | `Assets/scripts/Simulation/SimulationRunner.cs` |
-| Per-scenario result / stats | `Assets/scripts/Simulation/DataStructure/ScenarioResult.cs` |
-| Scenario config schema (Inspector) | `Assets/scripts/Simulation/DataStructure/SimulationConfig.cs` |
-| Species list runtime container | `Assets/scripts/Simulation/DataStructure/RunSpeciesList.cs` |
-| Bulk CSV row schema (1 row = 1 run) | `Assets/scripts/Simulation/BulkBatchConfig.cs` |
-| Bulk CSV parser | `Assets/scripts/Simulation/CsvBatchParser.cs` |
-| Bulk orchestration | `Assets/scripts/Simulation/BulkSimulationController.cs` |
-| Single-run Unity entry point | `Assets/scripts/Simulation/SimulationController.cs` |
+## Subject-to-source map
 
-## Conventions
+Each subject area maps to its primary C# file under `Assets/scripts/Simulation/`. These are the files to read or edit first for each topic. The code is the source of truth; the listed document describes it.
 
-- All temperatures are in **°C** unless a field name ends in `K` (Kelvin). The Arrhenius formula evaluates in Kelvin internally.
-- `Tier 1` = prey (CSV tier column uses 0, code uses 1 — `CsvBatchParser` converts).
-- `Tier 2` = predator (CSV tier column uses 1, code uses 2).
-- "Pmax" and "peak height" are the same parameter: the `Pmax` field on `SimSpecies`.
-- Version tags in code comments (`v6`, `v7`, `v8`, `v9`) refer to simulation-logic revisions, not Unity versions.
-- `FullName = "{Name}_{Variant}"` is the key used by all accumulators and per-species CSV columns.
-
-## How to regenerate these docs
-
-All files in this set are handwritten from source. There is no generator.
-
-- For markdown edits: read the affected source file(s), then edit the doc in place. Keep heading levels consistent — readers search across files.
-- For [simulation-variables.xlsx](./simulation-variables.xlsx): open in Excel or LibreOffice and edit rows directly. If adding a new field, add a row to the appropriate sheet with Type, Default, Range/Validation, Units, and Meaning columns filled in.
-
-A separate PDF generator (`gen_pdf.py`) exists for producing printable Simulation Guide PDFs from independent hardcoded content; it does **not** read these files.
+| Subject area | Primary C# file | Document |
+|--------------|-----------------|----------|
+| Daily biology sequence (10 steps), feeding, condition, deaths, reproduction | `EcosystemSimulator.cs` | biology-and-formulas.md, simulation-spec.md |
+| Per-species state, thermal performance (Arrhenius), default-species factories | `SimSpecies.cs` | biology-and-formulas.md, data-structures.md |
+| Scenario day loop, per-day recording, scenario CSV writer, per-species scenario metrics | `SimulationRunner.cs` | run-scenario-batch.md, csv-output-formats.md |
+| Temperature model (parametric components, timeseries override, clamp) | `TemperatureCalculator.cs` | temperature-model.md |
+| Standard-run entry point, scenario orchestration, parameter wiring onto the runner | `SimulationController.cs` | run-scenario-batch.md, architecture-overview.md |
+| Bulk batch orchestration, ZIP packaging, bulk summary writer | `BulkSimulationController.cs` | bulk-system.md |
+| Bulk CSV parsing, validation, template generation | `CsvBatchParser.cs` | bulk-system.md, csv-output-formats.md |
+| One parsed bulk row (run config + species) | `BulkBatchConfig.cs` | bulk-system.md, configuration-reference.md |
+| Standard-run configuration ScriptableObject (all parameters, validation) | `DataStructure/SimulationConfig.cs` | configuration-reference.md |
+| Species record (serialized fields, variant resolution, match keys) | `DataStructure/SpeciesDatabase.cs` | configuration-reference.md, data-structures.md |
+| Runtime species list ScriptableObject | `DataStructure/RunSpeciesList.cs` | configuration-reference.md, data-structures.md |
+| Per-scenario and cross-scenario results, aggregate CSV writer, config CSV/JSON exporter | `DataStructure/ScenarioResult.cs` | csv-output-formats.md, data-structures.md |
+| Daily and per-species step records, dynamic rollup column schema | `SimulationRunner.cs` (`StepRecord`, `PerSpeciesStepData`) | data-structures.md, csv-output-formats.md |
+| Cooperative pause/stop signal for a run | `RunControl.cs` | run-scenario-batch.md |
+| Results screen UI, progress, completion state | `UI/ResultsScreenUI.cs` | ui-and-io.md |
+| Simulation input UI (parameters and run button) | `UI/SimulationInputUI.cs` | ui-and-io.md |
+| Species editor UI and thermal curve editing | `UI/EditSpeciesUI.cs`, `UI/ThermalGraphEditor.cs` | ui-and-io.md |
+| CSV file upload handling (drag-drop and picker) | `CsvUploadHandler.cs` | ui-and-io.md, bulk-system.md |
+| Single-file download (WebGL jslib and editor fallback) | `WebGLDownload.cs` | ui-and-io.md |
+| ZIP download (progressive, WebGL and editor fallback) | `WebGLZipDownload.cs` | ui-and-io.md |
+| Server upload of result files (S3, WebGL non-editor) | `ServerUpload.cs` | ui-and-io.md |
+| Output directory resolution per platform | `SavePaths.cs` | ui-and-io.md |

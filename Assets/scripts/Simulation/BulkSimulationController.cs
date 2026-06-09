@@ -41,6 +41,12 @@ public class BulkSimulationController : MonoBehaviour
         public float ClimateTrend;
         public Dictionary<string, float> AvgSpeciesPop;
         public Dictionary<string, float> SurvivedSpeciesPop; // avg pop only from survived scenarios
+        // v12: Per-species rich aggregate snapshot for cross-run aggregation in GenerateBulkSummary.
+        public Dictionary<string, PerSpeciesAggregate> PerSpeciesMetrics;
+        // v12.2: Per-species (Tier, Variant) lookup keyed by FullName. Populated in
+        // RunAllBatches from tempSpecies. Lets GenerateBulkSummary annotate every
+        // per-species row with explicit Variant + Tier columns.
+        public Dictionary<string, (int Tier, string Variant)> SpeciesInfo;
     }
 
     // ETA — recalculated once per minute, cached between updates
@@ -157,6 +163,7 @@ public class BulkSimulationController : MonoBehaviour
                     progress);
             }
             yield return null;
+            yield return WaitWhilePaused();   // Group 6: honor pause at the batch boundary
 
             if (_cancelRequested)
                 break;
@@ -174,7 +181,6 @@ public class BulkSimulationController : MonoBehaviour
                 DaysPerScenario = batch.Days,
                 BiologyStep = config.BiologyStep,
                 RandomSeed = config.RandomSeed,
-                UseCarryingCapacity = batch.UseCarryingCap,
                 CarryingCapacity = batch.CarryingCapT1,
                 ConditionDrainRate = batch.ConditionDrainRate,
                 ConditionRecoveryRate = batch.ConditionRecoveryRate,
@@ -211,6 +217,7 @@ public class BulkSimulationController : MonoBehaviour
                         progress);
                 }
                 yield return null;
+                yield return WaitWhilePaused();   // Group 6: honor pause between scenarios (WebGL)
                 if (_cancelRequested) break;
 
                 var result = simulationController.RunSingleScenarioFromBatch(batch, tempSpecies, scenarioIndex, seed);
@@ -237,6 +244,8 @@ public class BulkSimulationController : MonoBehaviour
 
             for (int chunk = 0; chunk < batchSize; chunk += parallelism)
             {
+                if (_cancelRequested) break;
+                yield return WaitWhilePaused();   // Group 6: honor pause between parallel chunks
                 if (_cancelRequested) break;
 
                 int chunkEnd = Math.Min(chunk + parallelism, batchSize);
@@ -311,7 +320,28 @@ public class BulkSimulationController : MonoBehaviour
             if (batchResults.Scenarios.Count > 0)
             {
                 batchResults.CompletedAt = DateTime.Now;
+                batchResults.BatchName = batch.BatchName;   // Change 4: stamp run name into aggregate.csv
                 batchResults.CalculateAggregates();
+
+                // v12.2: Build per-species (Tier, Variant) lookup from tempSpecies so
+                // GenerateBulkSummary can annotate per-species rows with explicit
+                // Variant + Tier columns.
+                var speciesInfo = new Dictionary<string, (int Tier, string Variant)>();
+                if (tempSpecies != null && tempSpecies.speciesList != null)
+                {
+                    foreach (var sp in tempSpecies.speciesList)
+                    {
+                        string name = !string.IsNullOrEmpty(sp.speciesLabel)
+                            ? sp.speciesLabel
+                            : sp.speciesName.ToString();
+                        // Batch 1A: use the free-text variant label (falls back to the
+                        // enum name) so FullName matches SimSpecies.FullName.
+                        string vlabel = !string.IsNullOrEmpty(sp.variantLabel) ? sp.variantLabel : sp.variant.ToString();
+                        string fullName = $"{name}_{vlabel}";
+                        // SpeciesData.tier is 0/1; internal Tier is 1/2.
+                        speciesInfo[fullName] = (sp.tier + 1, vlabel);
+                    }
+                }
 
                 _bulkSummaries.Add(new BulkRunSummary
                 {
@@ -326,7 +356,11 @@ public class BulkSimulationController : MonoBehaviour
                         : new Dictionary<string, float>(),
                     SurvivedSpeciesPop = batchResults.PerSpeciesSurvivedAvg != null
                         ? new Dictionary<string, float>(batchResults.PerSpeciesSurvivedAvg)
-                        : new Dictionary<string, float>()
+                        : new Dictionary<string, float>(),
+                    // v12: snapshot the rich aggregate. Reference is fine — batchResults
+                    // is discarded after Scenarios.Clear() below; we keep the dict alive.
+                    PerSpeciesMetrics = batchResults.PerSpeciesMetrics ?? new Dictionary<string, PerSpeciesAggregate>(),
+                    SpeciesInfo = speciesInfo
                 });
 
                 string aggCsv = batchResults.ToAggregateCsv();
@@ -364,6 +398,14 @@ public class BulkSimulationController : MonoBehaviour
         _runCoroutine = null;
     }
 
+    // Group 6: cooperative pause — spin (yielding to the UI so Resume/Cancel stay clickable)
+    // while the toggle is paused, without advancing the simulation. Exits if cancel is requested.
+    private IEnumerator WaitWhilePaused()
+    {
+        while (resultsScreen != null && resultsScreen.IsPaused && !_cancelRequested)
+            yield return null;
+    }
+
     private void OnCancelRequested()
     {
         _cancelRequested = true;
@@ -387,7 +429,21 @@ public class BulkSimulationController : MonoBehaviour
     {
         var sb = new System.Text.StringBuilder();
 
+        // v12.2: Build a unified (Tier, Variant) lookup across all runs. Some
+        // species may appear only in some runs; merge all SpeciesInfo dicts
+        // into one for use in per-species CSV rows.
+        var bulkSpeciesMeta = new Dictionary<string, (int Tier, string Variant)>();
+        foreach (var run in summaries)
+        {
+            if (run.SpeciesInfo == null) continue;
+            foreach (var kv in run.SpeciesInfo)
+                bulkSpeciesMeta[kv.Key] = kv.Value; // last-write-wins; fine since species shared across runs have identical metadata
+        }
+        string GetVariant(string fn) => bulkSpeciesMeta.TryGetValue(fn, out var m) ? m.Variant : "Unknown";
+        string GetTier(string fn) => bulkSpeciesMeta.TryGetValue(fn, out var m) ? m.Tier.ToString() : "?";
+
         sb.AppendLine("=== TINYSEA BULK SUMMARY (Across All Runs) ===");
+        sb.AppendLine($"# Model Version,v12-per-species-tracking");
         sb.AppendLine($"# Total Runs,{summaries.Count}");
         sb.AppendLine($"# Generated,{DateTime.Now:yyyy-MM-dd HH:mm:ss}");
         sb.AppendLine();
@@ -401,8 +457,9 @@ public class BulkSimulationController : MonoBehaviour
                     allSpecies.Add(key);
         }
 
-        // Per-run results table
-        sb.AppendLine("=== PER-RUN RESULTS ===");
+        // Per-run results table — TIER LEVEL (kept wide-format, includes per-species
+        // average columns for backward compatibility with existing analysis scripts).
+        sb.AppendLine("=== PER-RUN RESULTS - TIER LEVEL ===");
         sb.Append("Run,Scenarios,Survived,Crashed,CrashRate,BaseTemp,ClimateTrend");
         foreach (var sp in allSpecies)
             sb.Append($",{sp}");
@@ -422,12 +479,29 @@ public class BulkSimulationController : MonoBehaviour
         }
         sb.AppendLine();
 
+        // v12.2: Per-run per-species long-format table. One row per (run, species)
+        // with explicit Variant + Tier columns. Easier to consume than the wide
+        // format above, especially when there are many species.
+        sb.AppendLine("=== PER-RUN RESULTS - PER SPECIES ===");
+        sb.AppendLine("Run,Species,Variant,Tier,AvgPop,SurvivedAvgPop");
+        foreach (var run in summaries)
+        {
+            if (run.AvgSpeciesPop == null) continue;
+            foreach (var sp in allSpecies)
+            {
+                float avgPop = run.AvgSpeciesPop.TryGetValue(sp, out var av) ? av : 0f;
+                float survivedAvgPop = run.SurvivedSpeciesPop != null && run.SurvivedSpeciesPop.TryGetValue(sp, out var sv) ? sv : 0f;
+                sb.AppendLine($"{run.BatchName},{sp},{GetVariant(sp)},{GetTier(sp)},{avgPop:F1},{survivedAvgPop:F1}");
+            }
+        }
+        sb.AppendLine();
+
         // Per-species aggregate across all runs
         // GrandMean = avg of run-level avgs (all scenarios, including extinct).
         // SurvivedMean = avg of run-level survived avgs (only scenarios where species lived).
         // Min/Max of averages are not meaningful population values — use the per-run table.
         sb.AppendLine("=== PER-SPECIES AGGREGATE (Across All Runs) ===");
-        sb.AppendLine("Species,GrandMean,SurvivedMean,RunsExtinct,RunsSurvived,ExtinctionRate");
+        sb.AppendLine("Species,Variant,Tier,GrandMean,SurvivedMean,RunsExtinct,RunsSurvived,ExtinctionRate");
 
         foreach (var sp in allSpecies)
         {
@@ -462,7 +536,179 @@ public class BulkSimulationController : MonoBehaviour
             float grandMean = count > 0 ? sum / count : 0;
             float survivedMean = survivedCount > 0 ? survivedSum / survivedCount : 0;
             float extinctionRate = count > 0 ? (float)runsExtinct / count : 0;
-            sb.AppendLine($"{sp},{grandMean:F1},{survivedMean:F1},{runsExtinct},{runsSurvived},{extinctionRate:P1}");
+            sb.AppendLine($"{sp},{GetVariant(sp)},{GetTier(sp)},{grandMean:F1},{survivedMean:F1},{runsExtinct},{runsSurvived},{extinctionRate:P1}");
+        }
+
+        // ====================================================================
+        // v12: Per-species rich aggregate sections — final-year metrics, full-run
+        // metrics, and stability across all runs in the bulk batch.
+        // ====================================================================
+
+        // Build the cross-run species union from PerSpeciesMetrics (richer than AvgSpeciesPop)
+        var allSpeciesRich = new SortedSet<string>();
+        foreach (var run in summaries)
+        {
+            if (run.PerSpeciesMetrics == null) continue;
+            foreach (var k in run.PerSpeciesMetrics.Keys) allSpeciesRich.Add(k);
+        }
+
+        if (allSpeciesRich.Count > 0)
+        {
+            // Per-run × per-species final-year detail table
+            sb.AppendLine();
+            sb.AppendLine("=== PER-RUN PER-SPECIES FINAL YEAR ===");
+            sb.AppendLine("Run,Species,Variant,Tier,N,NSurvived,MeanCondition,MeanBirthRate,PopCv,MeanPop,MeanFinalYear_TempDeaths,MeanFinalYear_ConditionDeaths,MeanFinalYear_NaturalDeaths,MeanFinalYear_PredationDeaths");
+            foreach (var run in summaries)
+            {
+                if (run.PerSpeciesMetrics == null) continue;
+                foreach (var sp in allSpeciesRich)
+                {
+                    if (!run.PerSpeciesMetrics.TryGetValue(sp, out var a)) continue;
+                    sb.AppendLine($"{run.BatchName},{sp},{GetVariant(sp)},{GetTier(sp)},{a.N},{a.NSurvived}," +
+                        $"{a.MeanConditionFinalYear.Mean:F3}," +
+                        $"{a.MeanBirthRateFinalYear.Mean:F4}," +
+                        $"{a.PopCvFinalYear.Mean:F3}," +
+                        $"{a.MeanPopulationFinalYear.Mean:F1}," +
+                        $"{a.FinalYearTempDeaths.Mean:F1},{a.FinalYearConditionDeaths.Mean:F1}," +
+                        $"{a.FinalYearNaturalDeaths.Mean:F1},{a.FinalYearPredationDeaths.Mean:F1}");
+                }
+            }
+            sb.AppendLine();
+
+            // Cross-run grand-mean (mean of per-run means — equal weight per run).
+            //
+            // Population is averaged across ALL runs for GrandMeanPop (zero-pop runs
+            // contribute a real 0 — meaningful for "typical population including
+            // failures") and across surviving runs only for GrandMeanPop_SurvivedMean.
+            //
+            // Condition / BirthRate / PopCv are averaged across surviving runs ONLY
+            // (NSurvived > 0). For non-surviving runs the per-run "mean" of these
+            // metrics is either 0 (post-fix, when no day had Population > 0) or a
+            // sentinel value (Condition stuck at its initial 1.0 because biology
+            // never updated it). Including those samples produced misleading aggregates
+            // — fixed in v12.3. We also use the per-run SurvivedMean (not Mean) for
+            // these three so partial-survival runs contribute their cleanest
+            // representative value.
+            sb.AppendLine("=== CROSS-RUN PER-SPECIES FINAL YEAR (Mean of per-run means) ===");
+            sb.AppendLine("Species,Variant,Tier,Runs,RunsSurvived,GrandMeanCondition,GrandMeanCondition_StdDev,GrandMeanBirthRate,GrandMeanBirthRate_StdDev,GrandMeanPopCv,GrandMeanPop,GrandMeanPop_SurvivedMean");
+            foreach (var sp in allSpeciesRich)
+            {
+                int runs = 0, runsSurvivedCount = 0;
+                float condSum = 0f, condSqSum = 0f;
+                float brSum = 0f, brSqSum = 0f;
+                float cvSum = 0f;
+                float popSum = 0f;
+                float popSurvivedSum = 0f;
+                int popSurvivedCount = 0;
+
+                foreach (var run in summaries)
+                {
+                    if (run.PerSpeciesMetrics == null) continue;
+                    if (!run.PerSpeciesMetrics.TryGetValue(sp, out var a)) continue;
+
+                    // Population: include every run (zero is a real datum here).
+                    popSum += a.MeanPopulationFinalYear.Mean;
+                    runs++;
+
+                    // Condition / BirthRate / PopCv: only include runs where the
+                    // species had at least one surviving scenario, and use the
+                    // per-run SurvivedMean (cleaned of dead-scenario samples).
+                    if (a.NSurvived > 0)
+                    {
+                        runsSurvivedCount++;
+                        float cond = a.MeanConditionFinalYear.SurvivedMean;
+                        float br   = a.MeanBirthRateFinalYear.SurvivedMean;
+                        float cv   = a.PopCvFinalYear.SurvivedMean;
+                        condSum += cond; condSqSum += cond * cond;
+                        brSum   += br;   brSqSum   += br * br;
+                        cvSum   += cv;
+                        popSurvivedSum += a.MeanPopulationFinalYear.SurvivedMean;
+                        popSurvivedCount++;
+                    }
+                }
+
+                if (runs == 0) continue;
+
+                // Grand means for condition / birth-rate / popCv are over surviving
+                // runs only; if no runs survived, emit 0 (consistent with how
+                // GrandMeanPop_SurvivedMean handles the same edge case).
+                float gmCond = runsSurvivedCount > 0 ? condSum / runsSurvivedCount : 0f;
+                float gmBr   = runsSurvivedCount > 0 ? brSum   / runsSurvivedCount : 0f;
+                float gmCv   = runsSurvivedCount > 0 ? cvSum   / runsSurvivedCount : 0f;
+                float gmPop  = popSum / runs;
+
+                // StdDev across the same surviving-run sample.
+                float condVar = runsSurvivedCount > 0 ? (condSqSum / runsSurvivedCount) - (gmCond * gmCond) : 0f;
+                float brVar   = runsSurvivedCount > 0 ? (brSqSum   / runsSurvivedCount) - (gmBr   * gmBr)   : 0f;
+                float gmCondStd = condVar > 0f ? (float)Math.Sqrt(condVar) : 0f;
+                float gmBrStd   = brVar   > 0f ? (float)Math.Sqrt(brVar)   : 0f;
+
+                float gmPopSurvived = popSurvivedCount > 0 ? popSurvivedSum / popSurvivedCount : 0f;
+
+                sb.AppendLine($"{sp},{GetVariant(sp)},{GetTier(sp)},{runs},{runsSurvivedCount}," +
+                    $"{gmCond:F3},{gmCondStd:F3}," +
+                    $"{gmBr:F4},{gmBrStd:F4}," +
+                    $"{gmCv:F3}," +
+                    $"{gmPop:F1},{gmPopSurvived:F1}");
+            }
+            sb.AppendLine();
+
+            // Cross-run stability summary
+            sb.AppendLine("=== CROSS-RUN STABILITY ===");
+            sb.AppendLine("Species,Variant,Tier,Runs,RunsSurvived,MinPop_Mean,MaxPop_Mean,FinalPop_Mean,ExtinctionRate,MeanExtinctionDay,CrashRate,MeanCrashDay");
+            foreach (var sp in allSpeciesRich)
+            {
+                int runs = 0, runsSurvivedCount = 0;
+                float minSum = 0f, maxSum = 0f, finalSum = 0f;
+                int totalScenarios = 0;
+                int totalExtinctions = 0;
+                int totalCrashes = 0;
+                float extDaySum = 0f;
+                int extDayCount = 0;
+                float crashDaySum = 0f;
+                int crashDayCount = 0;
+
+                foreach (var run in summaries)
+                {
+                    if (run.PerSpeciesMetrics == null) continue;
+                    if (!run.PerSpeciesMetrics.TryGetValue(sp, out var a)) continue;
+
+                    minSum += a.MinPopulation.Mean;
+                    maxSum += a.MaxPopulation.Mean;
+                    finalSum += a.FinalPopulation.Mean;
+                    runs++;
+                    if (a.NSurvived > 0) runsSurvivedCount++;
+
+                    totalScenarios   += a.N;
+                    totalExtinctions += a.ExtinctionTiming.NEvents;
+                    totalCrashes     += a.CrashTiming.NEvents;
+
+                    if (a.ExtinctionTiming.NEvents > 0)
+                    {
+                        extDaySum   += a.ExtinctionTiming.MeanDay * a.ExtinctionTiming.NEvents;
+                        extDayCount += a.ExtinctionTiming.NEvents;
+                    }
+                    if (a.CrashTiming.NEvents > 0)
+                    {
+                        crashDaySum   += a.CrashTiming.MeanDay * a.CrashTiming.NEvents;
+                        crashDayCount += a.CrashTiming.NEvents;
+                    }
+                }
+
+                if (runs == 0) continue;
+                float minMean = minSum / runs;
+                float maxMean = maxSum / runs;
+                float finalMean = finalSum / runs;
+                float extinctionRate2 = totalScenarios > 0 ? (float)totalExtinctions / totalScenarios : 0f;
+                float crashRate2 = totalScenarios > 0 ? (float)totalCrashes / totalScenarios : 0f;
+                float meanExtDay = extDayCount > 0 ? extDaySum / extDayCount : -1f;
+                float meanCrashDay = crashDayCount > 0 ? crashDaySum / crashDayCount : -1f;
+
+                sb.AppendLine($"{sp},{GetVariant(sp)},{GetTier(sp)},{runs},{runsSurvivedCount}," +
+                    $"{minMean:F1},{maxMean:F1},{finalMean:F1}," +
+                    $"{extinctionRate2:P1},{meanExtDay:F1}," +
+                    $"{crashRate2:P1},{meanCrashDay:F1}");
+            }
         }
 
         return sb.ToString();
@@ -471,7 +717,7 @@ public class BulkSimulationController : MonoBehaviour
     /// <summary>
     /// Convert BulkSpeciesConfig -> SpeciesData with proper enum handling.
     /// Known species names (Hexapod, Sheplik, etc.) map to their enum values.
-    /// Unknown names use SpeciesName.Custom. displayName always holds the actual CSV name.
+    /// Unknown names use SpeciesName.Custom. speciesLabel always holds the actual CSV name.
     /// Temperature values convert from Celsius to Kelvin (+273.15).
     /// </summary>
     private SpeciesData ConvertSpecies(BulkSpeciesConfig sp, int index)
@@ -480,16 +726,17 @@ public class BulkSimulationController : MonoBehaviour
         if (!Enum.TryParse<SpeciesName>(sp.Name, true, out speciesName))
             speciesName = SpeciesName.Custom;
 
-        SpeciesVariant variant;
-        if (!Enum.TryParse<SpeciesVariant>(sp.Variant, true, out variant))
-            variant = SpeciesVariant.Custom;
+        // Batch 1B: resolve Cold/Warm/Hot + legacy aliases to the enum bucket; the
+        // free-text display label is preserved separately via variantLabel.
+        SpeciesVariant variant = SpeciesData.ResolveVariantEnum(sp.Variant);
 
         return new SpeciesData
         {
             index = index,
             speciesName = speciesName,
             variant = variant,
-            displayName = sp.Name,
+            variantLabel = SpeciesData.NormalizeVariantLabel(sp.Variant),
+            speciesLabel = sp.Name,
             tier = sp.Tier,
             count = sp.Pop,
             eatingAmount = sp.Eating,
@@ -510,7 +757,9 @@ public class BulkSimulationController : MonoBehaviour
             pmax = sp.Pmax,
             ctMinC = sp.CTminC,
             ctMaxC = sp.CTmaxC,
-            TemperatureDebuff = sp.TempOffset
+            TemperatureDebuff = sp.TempOffset,
+            conditionDrainRate = sp.ConditionDrainRate,
+            conditionRecoveryRate = sp.ConditionRecoveryRate
         };
     }
 

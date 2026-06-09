@@ -31,6 +31,7 @@ public class SimulationController : MonoBehaviour
     private bool _isRunning = false;
     private bool _cancelRequested = false;
     private AggregateResults _currentResults;
+    private RunControl _runControl;  // Group 5: pause/stop signal
 
     // Cached output directory (Editor only)
     private string OutputDirectory => Path.Combine(SavePaths.ResultsFolder, outputFolderName);
@@ -111,6 +112,7 @@ public class SimulationController : MonoBehaviour
     {
         _isRunning = true;
         _cancelRequested = false;
+        _runControl = new RunControl();  // Group 5: fresh pause/stop signal for this run
 
         // Show results screen in progress mode
         if (resultsScreen != null)
@@ -132,8 +134,7 @@ public class SimulationController : MonoBehaviour
             BiologyStep = config.BiologyStep,
             RandomSeed = config.RandomSeed,
 
-            // Carrying capacity
-            UseCarryingCapacity = config.UseCarryingCapacity,
+            // Carrying capacity (always on as of v11.1)
             CarryingCapacity = config.CarryingCapacityTier1,
 
             // Condition system
@@ -305,10 +306,32 @@ public class SimulationController : MonoBehaviour
 
         runner.RunSpecies = tempSpecies;
 
-        runner.Ecosystem.UseCarryingCapacity = batch.UseCarryingCap;
         runner.Ecosystem.CarryingCapacityPerTier = batch.CarryingCapT1;
         runner.Ecosystem.ConditionDrainRate = batch.ConditionDrainRate;
         runner.Ecosystem.ConditionRecoveryRate = batch.ConditionRecoveryRate;
+        runner.Ecosystem.Tier2Enabled = config.Tier2Enabled;  // Group 4: Tier-2 gate
+
+        // Batch 3: if a temperature timeseries file is provided, load it (Editor/standalone
+        // file read) and let it override the parametric model. Missing/WebGL/parse failure
+        // => warn and fall back to the parametric model.
+        if (!string.IsNullOrWhiteSpace(batch.TemperatureTimeseriesFile))
+        {
+            try
+            {
+                string tsPath = batch.TemperatureTimeseriesFile;
+                if (System.IO.File.Exists(tsPath))
+                {
+                    var series = TemperatureCalculator.ParseTimeseriesCsv(System.IO.File.ReadAllText(tsPath));
+                    if (series != null) runner.TempCalc.LoadTimeseries(series);
+                    else Debug.LogWarning($"Temperature timeseries '{tsPath}' had no numeric rows; using parametric model.");
+                }
+                else Debug.LogWarning($"Temperature timeseries file not found: '{tsPath}'; using parametric model.");
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"Failed to load temperature timeseries '{batch.TemperatureTimeseriesFile}': {e.Message}; using parametric model.");
+            }
+        }
 
         runner.Run();
         return runner.ToScenarioResult(scenarioIndex, batch.NumScenarios);
@@ -342,13 +365,14 @@ public class SimulationController : MonoBehaviour
         // Pass species list
         runner.RunSpecies = config.RunSpecies;
 
-        // Apply carrying capacity settings
-        runner.Ecosystem.UseCarryingCapacity = config.UseCarryingCapacity;
+        // Apply carrying capacity (always on as of v11.1)
         runner.Ecosystem.CarryingCapacityPerTier = config.CarryingCapacityTier1;
 
         // Apply condition system settings
         runner.Ecosystem.ConditionDrainRate = config.ConditionDrainRate;
         runner.Ecosystem.ConditionRecoveryRate = config.ConditionRecoveryRate;
+        runner.Ecosystem.Tier2Enabled = config.Tier2Enabled;  // Group 4: Tier-2 gate
+        runner.Control = _runControl;                          // Group 5: pause/stop signal
 
         // Run the simulation
         runner.Run();
@@ -363,7 +387,17 @@ public class SimulationController : MonoBehaviour
     private void OnCancelRequested()
     {
         _cancelRequested = true;
+        if (_runControl != null) { _runControl.Stopped = true; _runControl.Paused = false; }  // Group 5: break a paused run
     }
+
+    /// <summary>Group 5: pause the run at the next day boundary (deterministic — no RNG consumed).</summary>
+    public void PauseSimulation() { if (_runControl != null) _runControl.Paused = true; }
+
+    /// <summary>Group 5: resume a paused run.</summary>
+    public void ResumeSimulation() { if (_runControl != null) _runControl.Paused = false; }
+
+    /// <summary>Group 5: true while a run is paused.</summary>
+    public bool IsPaused => _runControl != null && _runControl.Paused;
 
     private void OnResultsClosed()
     {
@@ -416,7 +450,7 @@ public class SimulationController : MonoBehaviour
         Debug.Log($"Biology Step: {config.BiologyStep}");
         Debug.Log($"Base Temperature: {config.BaseTemperature}C");
         Debug.Log($"Climate Trend: {config.ClimateTrend}C/year");
-        Debug.Log($"Carrying Capacity: {config.UseCarryingCapacity} ({config.CarryingCapacityTier1})");
+        Debug.Log($"Carrying Capacity (always on): {config.CarryingCapacityTier1}");
         Debug.Log($"Random Seed: {config.RandomSeed}");
 
         if (config.RunSpecies != null)

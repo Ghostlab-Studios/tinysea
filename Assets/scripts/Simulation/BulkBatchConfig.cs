@@ -29,6 +29,9 @@ public class BulkSpeciesConfig
     public float CTminC = -5.0f;
     public float CTmaxC = 50.0f;
     public float TempOffset = 0f;
+    // Per-species condition timescale (Batch 2). Negative = inherit the row-global rate.
+    public float ConditionDrainRate = -1f;
+    public float ConditionRecoveryRate = -1f;
 }
 
 /// <summary>
@@ -51,9 +54,11 @@ public class BulkBatchConfig
     public bool InterannualVariation;
     public float TempMin;
     public float TempMax;
-    public bool UseCarryingCap;
+    // UseCarryingCap field removed in v11.1 — carrying capacity is always on.
     public float CarryingCapT1;
     public float ConditionDrainRate = 0.15f;
     public float ConditionRecoveryRate = 0.10f;
+    // Batch 3: optional path to a "Day,Temperature_C" CSV. Empty => parametric model.
+    public string TemperatureTimeseriesFile = "";
     public List<BulkSpeciesConfig> Species = new List<BulkSpeciesConfig>();
 }

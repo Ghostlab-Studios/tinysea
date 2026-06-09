@@ -787,7 +787,26 @@ MonoBehaviour:
     - line: '|   webGLCloseOnQuit: 0'
     - line: '|   webWasm2023: 1'
     - line: '|   webEnableSubmoduleStrippingCompatibility: 0'
-    - line: '|   scriptingDefineSymbols: {}'
+    - line: '|   scriptingDefineSymbols:'
+    - line: '|     Android: UNITY_MCP_READY'
+    - line: '|     EmbeddedLinux: UNITY_MCP_READY'
+    - line: '|     GameCoreScarlett: UNITY_MCP_READY'
+    - line: '|     GameCoreXboxOne: UNITY_MCP_READY'
+    - line: '|     Kepler: UNITY_MCP_READY'
+    - line: '|     LinuxHeadlessSimulation: UNITY_MCP_READY'
+    - line: '|     Nintendo Switch: UNITY_MCP_READY'
+    - line: '|     Nintendo Switch 2: UNITY_MCP_READY'
+    - line: '|     PS4: UNITY_MCP_READY'
+    - line: '|     PS5: UNITY_MCP_READY'
+    - line: '|     QNX: UNITY_MCP_READY'
+    - line: '|     Server: UNITY_MCP_READY'
+    - line: '|     Standalone: UNITY_MCP_READY'
+    - line: '|     VisionOS: UNITY_MCP_READY'
+    - line: '|     WebGL: UNITY_MCP_READY'
+    - line: '|     Windows Store Apps: UNITY_MCP_READY'
+    - line: '|     XboxOne: UNITY_MCP_READY'
+    - line: '|     iPhone: UNITY_MCP_READY'
+    - line: '|     tvOS: UNITY_MCP_READY'
     - line: '|   additionalCompilerArguments: {}'
     - line: '|   platformArchitecture:'
     - line: '|     iPhone: 1'
@@ -934,7 +953,7 @@ MonoBehaviour:
     - rid: 2282863528488468540
       type: {class: WebGLPlatformSettings, ns: UnityEditor.WebGL, asm: UnityEditor.WebGL.Extensions}
       data:
-        m_Development: 1
+        m_Development: 0
         m_ConnectProfiler: 0
         m_BuildWithDeepProfilingSupport: 0
         m_AllowDebugging: 0
@@ -948,7 +967,7 @@ MonoBehaviour:
         m_InsightsSettingsContainer:
           m_BuildProfileEngineDiagnosticsState: 2
         m_AdaptivePerformanceEnabled: 0
-        m_CodeOptimization: 0
+        m_CodeOptimization: 4
         m_WebGLClientBrowserPath: 
         m_WebGLClientBrowserType: 0
-        m_WebGLTextureSubtarget: 1
+        m_WebGLTextureSubtarget: 0

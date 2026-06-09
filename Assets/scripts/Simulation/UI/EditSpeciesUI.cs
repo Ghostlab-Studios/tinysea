@@ -33,7 +33,8 @@ public class EditSpeciesUI : MonoBehaviour
 
     [Header("UI Fields - Basic Info")]
     [SerializeField] private TMP_InputField nameField;
-    [SerializeField] private TMP_Dropdown variantDropdown;
+    [SerializeField] private TMP_Dropdown variantDropdown;     // Organism selector (catalog + Custom)
+    [SerializeField] private TMP_InputField variantLabelField; // free-text variant label (Custom path)
     [SerializeField] private TMP_InputField countField;
 
     [Header("UI Fields - Gameplay Stats")]
@@ -45,6 +46,10 @@ public class EditSpeciesUI : MonoBehaviour
     [SerializeField] private TMP_InputField tempDebuff;
     [SerializeField] private TMP_InputField naturalDeathVarianceField;
     [SerializeField] private TMP_InputField naturalDeathRateField;
+
+    [Header("UI Fields - Condition Timescale (per-species tau; blank = inherit global)")]
+    [SerializeField] private TMP_InputField conditionDrainRateField;
+    [SerializeField] private TMP_InputField conditionRecoveryRateField;
 
     [Header("UI Fields - Hunting (Tier 2+ only)")]
     [SerializeField] private GameObject huntingSection;
@@ -60,6 +65,12 @@ public class EditSpeciesUI : MonoBehaviour
 
     [Header("Debug")]
     [SerializeField] private int currentEditingIndex = -1;
+
+    // Variant-selector redesign: dropdown option index -> catalog speciesList index
+    // (-1 = the trailing "Custom" sentinel). Rebuilt each time the panel opens.
+    private readonly System.Collections.Generic.List<int> _organismCatalogIndices = new System.Collections.Generic.List<int>();
+    private bool _suppressOrganismCallback = false;
+    private const string CUSTOM_OPTION = "Custom";
 
     // Validation colors
     private static readonly Color InvalidColor = new Color(1f, 0.80f, 0.80f, 1f);
@@ -119,7 +130,7 @@ public class EditSpeciesUI : MonoBehaviour
             {
                 count = data.count,
                 variant = data.variant,
-                displayName = data.displayName,
+                displayName = data.speciesLabel,
                 speciesName = data.speciesName,
                 eatingAmount = data.eatingAmount,
                 reproThreshold = data.reproThreshold,
@@ -152,7 +163,7 @@ public class EditSpeciesUI : MonoBehaviour
 
             data.count = count;
             data.variant = variant;
-            data.displayName = displayName;
+            data.speciesLabel = displayName;
             data.speciesName = speciesName;
             data.eatingAmount = eatingAmount;
             data.reproThreshold = reproThreshold;
@@ -179,6 +190,13 @@ public class EditSpeciesUI : MonoBehaviour
     private void OnEnable()
     {
         SpeciesEditEvents.OnEditRequested += HandleEditRequested;
+
+        // Variant-selector redesign: data-driven Organism dropdown change handler.
+        if (variantDropdown != null)
+        {
+            variantDropdown.onValueChanged.RemoveListener(OnOrganismSelected);
+            variantDropdown.onValueChanged.AddListener(OnOrganismSelected);
+        }
 
         // Wire up button listeners (RemoveListener first to prevent duplicates)
         if (closeButton != null)
@@ -266,6 +284,7 @@ public class EditSpeciesUI : MonoBehaviour
 
             Debug.Log($"EditSpeciesUI: Editing {currentEditingData.speciesName} - {currentEditingData.variant} (backup created)");
 
+            PopulateOrganismDropdown();   // rebuild from catalog (extensibility: N organisms)
             PopulateFields();
             ClearAllValidationColors();
         }
@@ -277,6 +296,83 @@ public class EditSpeciesUI : MonoBehaviour
         }
 
         Open();
+    }
+
+    // ==================== Variant-selector redesign (data-driven Organism dropdown) ====================
+
+    /// <summary>
+    /// Rebuild the Organism dropdown as a projection of the catalog (every Tier-1
+    /// SpeciesDatabase entry by displayName) + a trailing "Custom". No hard-coded list —
+    /// add a catalog entry and it appears here with zero code change.
+    /// </summary>
+    private void PopulateOrganismDropdown()
+    {
+        if (variantDropdown == null) return;
+        _organismCatalogIndices.Clear();
+        var options = new System.Collections.Generic.List<string>();
+        if (originalDatabase != null && originalDatabase.speciesList != null)
+        {
+            for (int i = 0; i < originalDatabase.speciesList.Count; i++)
+            {
+                var e = originalDatabase.speciesList[i];
+                if (e.tier != 0) continue;  // Tier 1 only (Tier 2 is gated off)
+                string label = e.DisplayName;
+                options.Add(label);
+                _organismCatalogIndices.Add(i);
+            }
+        }
+        options.Add(CUSTOM_OPTION);
+        _organismCatalogIndices.Add(-1);
+
+        _suppressOrganismCallback = true;
+        variantDropdown.ClearOptions();
+        variantDropdown.AddOptions(options);
+        _suppressOrganismCallback = false;
+    }
+
+    /// <summary>Dropdown index of the catalog organism matching this row (speciesName+variant),
+    /// or the trailing "Custom" option when none matches.</summary>
+    private int FindOrganismOption(SpeciesData data)
+    {
+        if (data != null && originalDatabase != null)
+        {
+            for (int opt = 0; opt < _organismCatalogIndices.Count; opt++)
+            {
+                int ci = _organismCatalogIndices[opt];
+                if (ci < 0) continue;
+                var e = originalDatabase.speciesList[ci];
+                if (e.speciesName == data.speciesName && e.variant == data.variant)
+                    return opt;
+            }
+        }
+        return Mathf.Max(0, _organismCatalogIndices.Count - 1);  // Custom (last option)
+    }
+
+    /// <summary>
+    /// The user picked an organism. A preset copies the catalog template's params into the
+    /// working row (preserving its count + list index); "Custom" switches the row to a
+    /// free-text, fully-editable organism. The label never re-derives params — it's a copy.
+    /// </summary>
+    private void OnOrganismSelected(int dropdownIdx)
+    {
+        if (_suppressOrganismCallback || currentEditingData == null) return;
+        if (dropdownIdx < 0 || dropdownIdx >= _organismCatalogIndices.Count) return;
+        int catalogIdx = _organismCatalogIndices[dropdownIdx];
+
+        if (catalogIdx >= 0)
+        {
+            int keepCount = currentEditingData.count;
+            int keepIndex = currentEditingData.index;
+            currentEditingData.CopyFrom(originalDatabase.speciesList[catalogIdx]);
+            currentEditingData.count = keepCount;
+            currentEditingData.index = keepIndex;
+        }
+        else
+        {
+            currentEditingData.variant = SpeciesVariant.Custom;
+            currentEditingData.speciesName = SpeciesName.Custom;
+        }
+        PopulateFields();  // refresh fields to reflect the new params/label
     }
 
     /// <summary>
@@ -296,17 +392,23 @@ public class EditSpeciesUI : MonoBehaviour
         }
 
         // === BASIC INFO ===
-        // Name field shows displayName if set, otherwise falls back to speciesName
+        // Name field shows speciesLabel if set, otherwise falls back to speciesName
         if (nameField != null)
         {
-            string displayText = !string.IsNullOrEmpty(currentEditingData.displayName)
-                ? currentEditingData.displayName
+            string displayText = !string.IsNullOrEmpty(currentEditingData.speciesLabel)
+                ? currentEditingData.speciesLabel
                 : currentEditingData.speciesName.ToString();
             nameField.text = displayText;
         }
 
+        // Variant-selector redesign: select the catalog organism matching this row
+        // (speciesName+variant), else the trailing "Custom". SetValueWithoutNotify so
+        // this load doesn't fire OnOrganismSelected.
         if (variantDropdown != null)
-            variantDropdown.value = (int)currentEditingData.variant;
+            variantDropdown.SetValueWithoutNotify(FindOrganismOption(currentEditingData));
+
+        if (variantLabelField != null)
+            variantLabelField.text = currentEditingData.variantLabel ?? "";
 
         if (countField != null)
             countField.text = currentEditingData.count.ToString();
@@ -314,6 +416,14 @@ public class EditSpeciesUI : MonoBehaviour
         // === GAMEPLAY STATS ===
         if (eatingAmountField != null)
             eatingAmountField.text = currentEditingData.eatingAmount.ToString("F2", CultureInfo.InvariantCulture);
+
+        // Group 3: per-species condition drain/recovery — blank means inherit global (value < 0)
+        if (conditionDrainRateField != null)
+            conditionDrainRateField.text = currentEditingData.conditionDrainRate < 0f
+                ? "" : currentEditingData.conditionDrainRate.ToString("F3", CultureInfo.InvariantCulture);
+        if (conditionRecoveryRateField != null)
+            conditionRecoveryRateField.text = currentEditingData.conditionRecoveryRate < 0f
+                ? "" : currentEditingData.conditionRecoveryRate.ToString("F3", CultureInfo.InvariantCulture);
 
         if (reproThresholdField != null)
             reproThresholdField.text = currentEditingData.reproThreshold.ToString("F2", CultureInfo.InvariantCulture);
@@ -507,13 +617,15 @@ public class EditSpeciesUI : MonoBehaviour
         if (nameField != null)
         {
             string newDisplayName = nameField.text.Trim();
-            currentEditingData.displayName = newDisplayName;
+            currentEditingData.speciesLabel = newDisplayName;
             Debug.Log($"EditSpeciesUI: Display name set to '{newDisplayName}'");
         }
 
-        // Save variant
-        if (variantDropdown != null)
-            currentEditingData.variant = (SpeciesVariant)variantDropdown.value;
+        // Variant-selector redesign: the organism (enum bucket + params) is set by the
+        // dropdown selection, not derived from the dropdown index. Persist the free-text
+        // variant label here.
+        if (variantLabelField != null)
+            currentEditingData.variantLabel = variantLabelField.text?.Trim() ?? "";
 
         // Save validated values
         currentEditingData.count = count;
@@ -525,6 +637,10 @@ public class EditSpeciesUI : MonoBehaviour
         currentEditingData.naturalDeathVariance = naturalDeathVariance;
         currentEditingData.naturalDeathRate = naturalDeathRate;
         currentEditingData.TemperatureDebuff = tempDebuffValue;
+
+        // Group 3: per-species condition drain/recovery — blank/empty (or invalid) => -1 (inherit global)
+        currentEditingData.conditionDrainRate = ParseRateOrInherit(conditionDrainRateField);
+        currentEditingData.conditionRecoveryRate = ParseRateOrInherit(conditionRecoveryRateField);
 
         // Save hunting fields (Tier 2+ only)
         if (currentEditingData.tier >= 1)
@@ -549,7 +665,7 @@ public class EditSpeciesUI : MonoBehaviour
         // Notify listeners
         SpeciesEditEvents.NotifySpeciesSaved(currentEditingIndex);
 
-        Debug.Log($"EditSpeciesUI: Data saved for {currentEditingData.displayName} ({currentEditingData.speciesName} - {currentEditingData.variant})");
+        Debug.Log($"EditSpeciesUI: Data saved for {currentEditingData.speciesLabel} ({currentEditingData.speciesName} - {currentEditingData.variant})");
 
         Close();
     }
@@ -571,7 +687,7 @@ public class EditSpeciesUI : MonoBehaviour
 
         if (currentEditingIndex < runSpeciesList.speciesList.Count)
         {
-            string deletedName = currentEditingData?.displayName ??
+            string deletedName = currentEditingData?.speciesLabel ??
                                  currentEditingData?.speciesName.ToString() ?? "Unknown";
             runSpeciesList.speciesList.RemoveAt(currentEditingIndex);
             Debug.Log($"EditSpeciesUI: Deleted {deletedName} at index {deletedIndex}");
@@ -632,28 +748,12 @@ public class EditSpeciesUI : MonoBehaviour
             return;
         }
 
-        // Copy all values from original database
-        currentEditingData.count = originalData.count;
-        currentEditingData.displayName = originalData.displayName;
-        currentEditingData.eatingAmount = originalData.eatingAmount;
-        currentEditingData.reproductionMultiplier = originalData.reproductionMultiplier;
-        currentEditingData.reproThreshold = originalData.reproThreshold;
-        currentEditingData.deathThreshold = originalData.deathThreshold;
-        currentEditingData.deathRate = originalData.deathRate;
-        currentEditingData.naturalDeathRate = originalData.naturalDeathRate;
-        currentEditingData.naturalDeathVariance = originalData.naturalDeathVariance;
-        currentEditingData.huntingEfficiency = originalData.huntingEfficiency;
-        currentEditingData.huntingVariance = originalData.huntingVariance;
-        currentEditingData.optimalTempK = originalData.optimalTempK;
-        currentEditingData.arrhenBreadth = originalData.arrhenBreadth;
-        currentEditingData.arrhenLower = originalData.arrhenLower;
-        currentEditingData.arrhenUpper = originalData.arrhenUpper;
-        currentEditingData.lowerBoundK = originalData.lowerBoundK;
-        currentEditingData.upperBoundK = originalData.upperBoundK;
-        currentEditingData.pmax = originalData.pmax;
-        currentEditingData.ctMinC = originalData.ctMinC;
-        currentEditingData.ctMaxC = originalData.ctMaxC;
-        currentEditingData.TemperatureDebuff = originalData.TemperatureDebuff;
+        // Variant-selector redesign: canonical full copy (the old field-by-field block
+        // omitted variantLabel + conditionDrainRate/conditionRecoveryRate). Preserve this
+        // row's list-index identity.
+        int keepIndex = currentEditingData.index;
+        currentEditingData.CopyFrom(originalData);
+        currentEditingData.index = keepIndex;
 
         Debug.Log($"EditSpeciesUI: Factory reset {currentEditingData.speciesName} to original database values");
 
@@ -694,6 +794,20 @@ public class EditSpeciesUI : MonoBehaviour
 
         SetFieldColor(field, valid ? ValidColor : InvalidColor);
         return valid;
+    }
+
+    /// <summary>
+    /// Group 3: read a per-species condition rate. Blank/empty => -1 (inherit the global
+    /// rate). A valid non-negative number is used as-is; anything else falls back to -1.
+    /// </summary>
+    private float ParseRateOrInherit(TMP_InputField field)
+    {
+        if (field == null) return -1f;
+        string t = field.text?.Trim();
+        if (string.IsNullOrEmpty(t)) return -1f;
+        if (float.TryParse(t, NumberStyles.Float, CultureInfo.InvariantCulture, out float v) && v >= 0f)
+            return v;
+        return -1f;
     }
 
     /// <summary>
@@ -782,7 +896,7 @@ public class EditSpeciesUI : MonoBehaviour
         // Compare key fields
         if (currentEditingData.count != backupData.count) return true;
         if (currentEditingData.variant != backupData.variant) return true;
-        if (currentEditingData.displayName != backupData.displayName) return true;
+        if (currentEditingData.speciesLabel != backupData.displayName) return true;
 
         // Check thermal parameters from controller
         if (thermalController != null)

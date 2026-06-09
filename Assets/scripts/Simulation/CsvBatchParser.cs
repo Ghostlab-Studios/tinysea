@@ -23,13 +23,20 @@ public static class CsvBatchParser
         "daily_var_range", "randomness_growth", "autocorrelated",
         "interannual_variation",
         "temp_min", "temp_max",
-        "use_carrying_cap", "carrying_cap_t1"
+        "carrying_cap_t1"
     };
 
-    // Optional global columns with defaults (backward compatible)
+    // Optional global columns with defaults (backward compatible).
+    // `use_carrying_cap` is deprecated as of v11.1 — carrying capacity is always on
+    // (Tier 1 species without a resource limit grow without bound, which is biologically
+    // meaningless and triggers integer-overflow accumulators). Old CSVs that still
+    // include the column parse fine; the column's value is logged as a warning and
+    // ignored. New CSVs should omit it entirely.
     private static readonly string[] OPTIONAL_GLOBAL_COLUMNS =
     {
-        "condition_drain_rate", "condition_recovery_rate"
+        "condition_drain_rate", "condition_recovery_rate",
+        "temperature_timeseries_file",
+        "use_carrying_cap"
     };
 
     private static readonly string[] SPECIES_COLUMNS =
@@ -47,7 +54,8 @@ public static class CsvBatchParser
     // Optional species columns with defaults (backward compatible)
     private static readonly string[] OPTIONAL_SPECIES_COLUMNS =
     {
-        "pmax", "ctmin", "ctmax", "temp_offset"
+        "pmax", "ctmin", "ctmax", "temp_offset",
+        "condition_drain_rate", "condition_recovery_rate"
     };
 
     /// <summary>
@@ -176,12 +184,23 @@ public static class CsvBatchParser
             batch.InterannualVariation = GetBool(fields, columnIndex, "interannual_variation", rowNum, errors);
             batch.TempMin = GetFloat(fields, columnIndex, "temp_min", rowNum, errors);
             batch.TempMax = GetFloat(fields, columnIndex, "temp_max", rowNum, errors);
-            batch.UseCarryingCap = GetBool(fields, columnIndex, "use_carrying_cap", rowNum, errors);
             batch.CarryingCapT1 = GetFloat(fields, columnIndex, "carrying_cap_t1", rowNum, errors);
 
             // Optional global columns (backward compatible — missing columns use defaults)
             batch.ConditionDrainRate = GetFloatOptional(fields, columnIndex, "condition_drain_rate", 0.15f);
             batch.ConditionRecoveryRate = GetFloatOptional(fields, columnIndex, "condition_recovery_rate", 0.10f);
+            // Batch 3: optional environmental temperature timeseries file path (empty => parametric model).
+            batch.TemperatureTimeseriesFile = GetString(fields, columnIndex, "temperature_timeseries_file");
+
+            // v11.1 deprecation: use_carrying_cap column is deprecated. Carrying capacity
+            // is always on. Log a warning if the column is present in the CSV but do not
+            // alter behaviour. The bulk loader will treat every row as if it were `true`.
+            if (columnIndex.ContainsKey("use_carrying_cap"))
+            {
+                Debug.LogWarning(
+                    $"Row {rowNum}: 'use_carrying_cap' column is deprecated and will be ignored. " +
+                    "Carrying capacity is always on as of v11.1. Remove the column from new CSV files.");
+            }
 
             // Parse species (dynamic N species — skip if name is empty)
             for (int s = 1; s <= speciesCount; s++)
@@ -194,6 +213,10 @@ public static class CsvBatchParser
                 ParseSpecies(fields, columnIndex, $"sp{s}_", sp, rowNum, errors);
                 batch.Species.Add(sp);
             }
+
+            // A row with no usable species (every sp_name blank) can't simulate anything.
+            if (batch.Species.Count == 0)
+                errors.Add($"Row {rowNum}: at least one species is required — all sp_name columns are blank.");
 
             // Cross-field validation
             ValidateBatch(batch, rowNum, errors);
@@ -242,13 +265,16 @@ public static class CsvBatchParser
         species.UpperBoundC = GetFloat(fields, columnIndex, prefix + "upper_bound_c", rowNum, errors);
 
         // Optional columns with variant-aware defaults (backward compatible — missing columns use variant defaults)
-        Enum.TryParse<SpeciesVariant>(species.Variant, true, out var parsedVariant);
+        var parsedVariant = SpeciesData.ResolveVariantEnum(species.Variant);  // Batch 1B: Cold/Warm/Hot + legacy aliases
         SpeciesData.GetVariantThermalDefaults(parsedVariant, out float defPmax, out float defCtMin, out float defCtMax);
 
         species.Pmax = GetFloatOptional(fields, columnIndex, prefix + "pmax", defPmax);
         species.CTminC = GetFloatOptional(fields, columnIndex, prefix + "ctmin", defCtMin);
         species.CTmaxC = GetFloatOptional(fields, columnIndex, prefix + "ctmax", defCtMax);
         species.TempOffset = GetFloatOptional(fields, columnIndex, prefix + "temp_offset", 0f);
+        // Batch 2: per-species condition timescale. Default -1 => inherit the row-global rate.
+        species.ConditionDrainRate = GetFloatOptional(fields, columnIndex, prefix + "condition_drain_rate", -1f);
+        species.ConditionRecoveryRate = GetFloatOptional(fields, columnIndex, prefix + "condition_recovery_rate", -1f);
     }
 
     // ==================== VALIDATION ====================
@@ -267,8 +293,9 @@ public static class CsvBatchParser
         if (batch.TempMax <= batch.TempMin)
             errors.Add($"Row {rowNum}: temp_max ({batch.TempMax}) must be greater than temp_min ({batch.TempMin}).");
 
-        if (batch.UseCarryingCap && batch.CarryingCapT1 <= 0)
-            errors.Add($"Row {rowNum}: carrying_cap_t1 must be positive when use_carrying_cap is true.");
+        // Carrying capacity is always on (v11.1) — cap value must always be positive.
+        if (batch.CarryingCapT1 <= 0)
+            errors.Add($"Row {rowNum}: carrying_cap_t1 must be positive (carrying capacity is always on).");
 
         for (int s = 0; s < batch.Species.Count; s++)
             ValidateSpecies(batch.Species[s], $"sp{s + 1}", rowNum, errors);
@@ -281,11 +308,15 @@ public static class CsvBatchParser
 
         if (string.IsNullOrWhiteSpace(sp.Variant))
             errors.Add($"Row {rowNum}: {prefix}_variant cannot be empty.");
-        else if (!Enum.TryParse<SpeciesVariant>(sp.Variant, true, out _))
-            errors.Add($"Row {rowNum}: {prefix}_variant '{sp.Variant}' is not valid. Use: Common, Tropical, Arctic, or Custom.");
+        // Batch 1A: any non-empty variant label is accepted (free-text). Legacy names
+        // (Common/Tropical/Arctic/Custom, case-insensitive) still resolve to their
+        // thermal defaults via SpeciesData.GetVariantThermalDefaults; unknown labels
+        // fall back to Custom/Common defaults for blank optional columns.
 
-        if (sp.Tier < 0 || sp.Tier > 1)
-            errors.Add($"Row {rowNum}: {prefix}_tier must be 0 (prey) or 1 (predator).");
+        // Tier-1-only simulator: only prey (tier 0) species are accepted. Any tier != 0
+        // (predator / Tier-2 rows) is rejected at parse with a clear error.
+        if (sp.Tier != 0)
+            errors.Add($"Row {rowNum}: {prefix}_tier must be 0. This is a Tier-1 (prey-only) simulator — Tier 2 (predator) species are not supported.");
 
         if (sp.Pop < 0)
             errors.Add($"Row {rowNum}: {prefix}_pop must be non-negative.");
@@ -389,21 +420,45 @@ public static class CsvBatchParser
     // ==================== TEMPLATE GENERATION ====================
 
     /// <summary>
-    /// Generate a downloadable template CSV with headers and one example row.
-    /// Uses the same column definitions as TryParse so they stay in sync.
-    /// Example row uses default Hexapod/Sheplik species (6 species: 3 prey + 3 predators).
+    /// Generate a downloadable template CSV: the header (same column definitions as
+    /// TryParse, so they always stay in sync) plus one data row that mirrors the LIVE
+    /// simulation defaults — the SimulationConfig in Resources and the RunSpeciesList it
+    /// references. The template is therefore current by construction and Tier-1-only:
+    /// every species row is whatever the configured list holds (all tier 0).
+    ///
+    /// This is deliberately dynamic. The previous hard-coded example row drifted out of
+    /// sync — it still emitted Tier-2 'Sheplik' rows and legacy Arctic/Common/Tropical
+    /// variants that the current parser rejects, so a freshly downloaded template failed
+    /// to re-upload. Mirroring the assets makes that class of bug impossible.
+    ///
+    /// Note: the deprecated `use_carrying_cap` column is intentionally omitted.
     /// </summary>
     public static string GenerateTemplate()
     {
-        const int TEMPLATE_SPECIES = 6;
+        // Species: the curated default list (the Tier-1 organisms) PLUS one fully custom
+        // example species, so the template doubles as a guideline for adding your own.
+        // N species are supported — the column count below is driven by this list's size.
+        var runSpecies = Resources.Load<RunSpeciesList>("RunSpeciesList");
+        var species = new List<SpeciesData>();
+        if (runSpecies != null && runSpecies.speciesList != null)
+        {
+            foreach (var sd in runSpecies.speciesList)
+                if (sd != null) species.Add(sd);
+        }
+        species.Add(BuildCustomExampleSpecies());   // final row: custom name / variant / values
+
+        var ci = CultureInfo.InvariantCulture;
         var sb = new StringBuilder();
 
-        // Header row
+        // ---------- Header (skip the deprecated use_carrying_cap column) ----------
         foreach (var col in GLOBAL_COLUMNS)
             sb.Append(col).Append(',');
         foreach (var col in OPTIONAL_GLOBAL_COLUMNS)
+        {
+            if (col == "use_carrying_cap") continue;
             sb.Append(col).Append(',');
-        for (int s = 1; s <= TEMPLATE_SPECIES; s++)
+        }
+        for (int s = 1; s <= species.Count; s++)
         {
             string prefix = $"sp{s}_";
             foreach (var col in SPECIES_COLUMNS)
@@ -411,41 +466,108 @@ public static class CsvBatchParser
             foreach (var col in OPTIONAL_SPECIES_COLUMNS)
                 sb.Append(prefix).Append(col).Append(',');
         }
-        // Remove trailing comma, add newline
-        sb.Length--;
+        sb.Length--;            // drop trailing comma
         sb.AppendLine();
 
-        // Example data row (matches default 6-species ecosystem)
-        // Global params
-        sb.Append("example_batch,3650,5,20,10,0,2,1.5,5,0.5,true,true,-5,50,true,5000,0.20,0.10,");
+        // ---------- Data row: globals = canonical DEFAULTS ----------
+        // Hard-coded to mirror the shipped SimulationConfig defaults — deliberately NOT read
+        // from the live config instance (the input UI mutates that, and the template must
+        // always emit the defaults, never in-session edits). Keep in sync with the
+        // SimulationConfig defaults / the Reset button. Columns, in order:
+        //   batch_name, days, num_scenarios, base_temp, seasonal_amp, climate_trend,
+        //   variability_mag, warming_bias, daily_var_range, randomness_growth, autocorrelated,
+        //   interannual_variation, temp_min, temp_max, carrying_cap_t1, condition_drain_rate,
+        //   condition_recovery_rate, temperature_timeseries_file(empty=parametric model)
+        sb.Append("default_batch,365,5,20,5,0,0,0,5,0,true,false,0,40,5000,0.15,0.1,,");
 
-        // Species: Hexapod Common, Arctic, Tropical (Tier 0 = prey)
-        string[] hexVariants = { "Common", "Arctic", "Tropical" };
-        float[] hexOptTemps = { 23.85f, 17.85f, 29.85f };
-        float[] hexBreadth = { 8000f, 4000f, 4000f };
-        float[] hexLower = { 3000f, 13974f, 15827f };
-        float[] hexLowerBound = { 22.85f, 17.75f, 29.75f };
-        float[] hexUpperBound = { 24.85f, 17.95f, 29.95f };
-        float[] hexPmax = { 0.65f, 0.85f, 0.85f };
-
-        for (int i = 0; i < 3; i++)
+        // ---------- Data row: one block per species, mirroring ConvertSpecies ----------
+        // ConvertSpecies does Celsius -> Kelvin (+273.15) on opt/lower/upper temps, so we
+        // invert it here (Kelvin -> Celsius) for the *_c columns. Everything else is 1:1.
+        for (int i = 0; i < species.Count; i++)
         {
-            sb.Append($"Hexapod,{hexVariants[i]},0,20,0,0.45,0.3,0.6,0.25,0.02,0.01,1,0,");
-            sb.Append($"{hexOptTemps[i]},{hexBreadth[i]},{hexLower[i]},35000,{hexLowerBound[i]},{hexUpperBound[i]},");
-            sb.Append($"{hexPmax[i]},0,40,0,");
+            var sp = species[i];
+            string name = string.IsNullOrEmpty(sp.speciesLabel) ? sp.speciesName.ToString() : sp.speciesLabel;
+            string variant = string.IsNullOrEmpty(sp.variantLabel) ? sp.variant.ToString() : sp.variantLabel;
+
+            sb.Append(EscapeCsv(name)).Append(',');
+            sb.Append(EscapeCsv(variant)).Append(',');
+            sb.Append(sp.tier).Append(',');
+            sb.Append(sp.count).Append(',');
+            sb.Append(sp.eatingAmount.ToString(ci)).Append(',');
+            sb.Append(sp.reproductionMultiplier.ToString(ci)).Append(',');
+            sb.Append(sp.deathThreshold.ToString(ci)).Append(',');
+            sb.Append(sp.deathRate.ToString(ci)).Append(',');
+            sb.Append(sp.reproThreshold.ToString(ci)).Append(',');
+            sb.Append(sp.naturalDeathRate.ToString(ci)).Append(',');
+            sb.Append(sp.naturalDeathVariance.ToString(ci)).Append(',');
+            sb.Append(sp.huntingEfficiency.ToString(ci)).Append(',');
+            sb.Append(sp.huntingVariance.ToString(ci)).Append(',');
+            sb.Append((sp.optimalTempK - 273.15f).ToString("0.##", ci)).Append(',');
+            sb.Append(sp.arrhenBreadth.ToString(ci)).Append(',');
+            sb.Append(sp.arrhenLower.ToString(ci)).Append(',');
+            sb.Append(sp.arrhenUpper.ToString(ci)).Append(',');
+            sb.Append((sp.lowerBoundK - 273.15f).ToString("0.##", ci)).Append(',');
+            sb.Append((sp.upperBoundK - 273.15f).ToString("0.##", ci)).Append(',');
+            sb.Append(sp.pmax.ToString(ci)).Append(',');
+            sb.Append(sp.ctMinC.ToString(ci)).Append(',');
+            sb.Append(sp.ctMaxC.ToString(ci)).Append(',');
+            sb.Append(sp.TemperatureDebuff.ToString(ci)).Append(',');
+            sb.Append(sp.conditionDrainRate.ToString(ci)).Append(',');
+            sb.Append(sp.conditionRecoveryRate.ToString(ci)).Append(',');
         }
 
-        // Species: Sheplik Common, Arctic, Tropical (Tier 1 = predator)
-        for (int i = 0; i < 3; i++)
-        {
-            sb.Append($"Sheplik,{hexVariants[i]},1,4,1.5,0.1,0.3,0.3,0.25,0.01,0.005,0.75,0.15,");
-            sb.Append($"{hexOptTemps[i]},{hexBreadth[i]},{hexLower[i]},35000,{hexLowerBound[i]},{hexUpperBound[i]},");
-            sb.Append($"{hexPmax[i]},0,40,0");
-            if (i < 2) sb.Append(',');
-        }
-
+        sb.Length--;            // drop trailing comma
         sb.AppendLine();
         return sb.ToString();
+    }
+
+    /// <summary>
+    /// A fully custom example species for the template — custom name, custom variant, and
+    /// hand-picked biology values — so the template shows exactly how to add your own (it can
+    /// be deleted if unwanted). Tier 0 (the only legal tier in this Tier-1 sim). Temps are
+    /// stored in Kelvin here; GenerateTemplate emits them back as Celsius (the *_c columns).
+    /// </summary>
+    private static SpeciesData BuildCustomExampleSpecies()
+    {
+        return new SpeciesData
+        {
+            speciesName = SpeciesName.Custom,
+            speciesLabel = "CustomSpecies",
+            variant = SpeciesVariant.Custom,
+            variantLabel = "My Custom Variant",
+            tier = 0,
+            count = 20,
+            eatingAmount = 3f,
+            reproductionMultiplier = 0.45f,
+            deathThreshold = 0.3f,
+            deathRate = 0.6f,
+            reproThreshold = 0.25f,
+            naturalDeathRate = 0.02f,
+            naturalDeathVariance = 0.01f,
+            huntingEfficiency = 1f,
+            huntingVariance = 0f,
+            optimalTempK = 21f + 273.15f,
+            arrhenBreadth = 6000f,
+            arrhenLower = 5000f,
+            arrhenUpper = 35000f,
+            lowerBoundK = 20f + 273.15f,
+            upperBoundK = 22f + 273.15f,
+            pmax = 0.8f,
+            ctMinC = 1f,
+            ctMaxC = 38f,
+            TemperatureDebuff = 0f,
+            conditionDrainRate = 0.15f,
+            conditionRecoveryRate = 0.10f
+        };
+    }
+
+    /// <summary>Quote a CSV field if it contains a comma, quote, or newline (writer side).</summary>
+    private static string EscapeCsv(string s)
+    {
+        if (string.IsNullOrEmpty(s)) return "";
+        if (s.IndexOf(',') >= 0 || s.IndexOf('"') >= 0 || s.IndexOf('\n') >= 0 || s.IndexOf('\r') >= 0)
+            return "\"" + s.Replace("\"", "\"\"") + "\"";
+        return s;
     }
 
     // ==================== CSV LINE PARSER ====================

@@ -1,89 +1,40 @@
-# CSV output shape
+# Diagram: Scenario, Aggregate, and Bulk Summary CSV Layout
 
-Source: `SimulationRunner.ToCsvInternal`, `ScenarioResult.ToAggregateCsv`, `ScenarioResult.ToConfigCsv`, `BulkSimulationController.GenerateBulkSummary`, `StepRecord.CsvHeader` / `ToCsvLine`.
+This diagram shows the block layout of the three CSV files the simulation writes. `scenario_{N}.csv` is one file per Scenario, built by `SimulationRunner.ToCsvInternal` (`SimulationRunner.cs:743`); it has four parts in fixed order: `#config:` comment lines, a `#species:` input table, the daily data block (the only part R reads, since every `#` line is a comment), and trailing `#summary:`/`#extinction:` comment blocks. `aggregate.csv` is one file per Run, built by `AggregateResults.ToAggregateCsv` (`ScenarioResult.cs:588`); it is a mixed-format file with `=== TITLE ===` section dividers and `# Key,Value` metadata, not one rectangular table. `bulk_summary.csv` is one file at the ZIP root per Bulk upload, built by `BulkSimulationController.GenerateBulkSummary` (`BulkSimulationController.cs:428`). The current shipping mode is Tier 1 only: every Tier 2 column is suppressed when `Tier2Enabled` is `false` (`SimulationRunner.cs:216-232`, `SimulationRunner.cs:270-286`). The daily block appends 17 per-species columns per species, prefixed by `SanitizeColumnName(FullName)` and ordered `(Tier asc, FullName asc)`; the tier-rollup invariant is that per-species `_Pop` columns sum to the dynamic `Tier{n}_{label}` rollup column, which sum to `Tier{n}Pop`. Sections marked v12 appear only when per-species rich metrics exist. For the exact header strings, value formats, and per-column sources see `csv-output-formats.md`.
 
 ```mermaid
-flowchart TD
-    Run[One run] --> PerScn["Per-scenario CSV<br/>scenario_{N}.csv"]
-    Run --> Agg["aggregate.csv<br/>(one per run)"]
-    Run --> Cfg["config.csv<br/>(one per run)"]
+flowchart TB
+    subgraph SCN["scenario_N.csv  -  per Scenario  (SimulationRunner.ToCsvInternal, cs:743)"]
+        direction TB
+        SC1["1. #config: block (cs:749-767)<br/>#config:model_version,v12-per-species-tracking<br/>#config:days_per_scenario, random_seed, biology_step, ...<br/>#config:base_temperature, climate_trend_per_year, warming_bias, ...<br/>#config:carrying_capacity_tier1, condition_drain_rate, condition_recovery_rate"]
+        SC2["2. #species: table (cs:770-793)  one header + one row per input species<br/>#species:Name,Variant,Tier,InitialCount,...,Pmax,CTminC,CTmaxC,TemperatureDebuff<br/>temps in both Kelvin and Celsius (Kelvin-273.15, :F2)"]
+        SC3["3. Daily data block  (one row per recorded day; R reads only this)<br/>fixed: Day,Year,Temperature,BiologyCycle,StartPop,EndPop,Tier1Pop[,Tier2Pop]<br/>dynamic rollup: Tier{n}_{label} per (tier,label), ordinal sort (cs:159-199)<br/>tier events: EatenT1,TempDeathsT1,...,TotalDeaths,BirthsT1,FedRateT1,FoodDensityT1,...,ReproScaleT1<br/>per-species x N: {SanitizeColumnName(FullName)}_{Field} x 17, order (Tier asc, FullName asc)<br/>invariant: sum(_Pop) = Tier{n}_{label} = Tier{n}Pop"]
+        SC4["4. Trailing #summary: + #extinction: comment blocks (cs:810-909)<br/>#summary:Statistic / Variant / Tier / Mean / Max / Min / StdDev<br/>#extinction:Species,Variant,Tier,DayReachedZero"]
+        SC1 --> SC2 --> SC3 --> SC4
+    end
 
-    PerScn --> PH["#config: header<br/>(19 lines: days, scenarios,<br/>seed, biology step, 11 temp params,<br/>carrying cap, drain/recovery rates)"]
-    PerScn --> PS["#species: table<br/>(1 header row + 1 row per species<br/>with 26 columns inc. both K and C<br/>for temperature fields)"]
-    PerScn --> PD["Daily data rows<br/>(StepRecord.CsvHeader/ToCsvLine)<br/>Day..ReproScaleT2 per day"]
-    PerScn --> PSum["#summary: statistics block<br/>Mean/Max/Min/StdDev across days<br/>for each PopColumn"]
-    PerScn --> PExt["#extinction: per-variant timing<br/>day reached zero, or -1 if survived"]
+    subgraph AGG["aggregate.csv  -  per Run  (AggregateResults.ToAggregateCsv, cs:588)"]
+        direction TB
+        AG1["=== TINYSEA AGGREGATE RESULTS === + # Key,Value header block"]
+        AG2["=== SUMMARY ===  Scenarios Run, Survived, Crashed, Crash Rate[, Avg Crash Day]"]
+        AG3["=== POPULATION STATS (Survived Only) ===  Avg/Min/Max Final (Tier 1)"]
+        AG4["=== PER-SPECIES POPULATION STATS (All Scenarios) ===<br/>Species,Variant,Tier,Avg,SurvivedAvg,Min,Max,Extinct,Survived,ExtinctionRate"]
+        AG5["=== CONDITION STATS ===  Avg Condition (all), Avg Final Condition (survived)"]
+        AG6["v12 (only if PerSpeciesMetrics non-empty):<br/>=== PER-SPECIES FINAL YEAR METRICS === (last 365 days)<br/>=== PER-SPECIES FULL-RUN METRICS ===<br/>=== PER-SPECIES STABILITY METRICS ==="]
+        AG7["=== INDIVIDUAL SCENARIOS ===  one row per scenario (per-species columns)"]
+        AG1 --> AG2 --> AG3 --> AG4 --> AG5 --> AG6 --> AG7
+    end
 
-    Agg --> AH["=== TINYSEA AGGREGATE RESULTS ===<br/># metadata (generated timestamp, config summary)"]
-    Agg --> AS["=== SUMMARY ===<br/>Scenarios Run, Survived, Crashed,<br/>Crash Rate, Avg Crash Day"]
-    Agg --> APop["=== POPULATION STATS (Survived Only) ===<br/>Avg/Min/Max Final T1 and T2"]
-    Agg --> APer["=== PER-SPECIES POPULATION STATS ===<br/>Avg, SurvivedAvg, Min, Max,<br/>Extinct, Survived, ExtinctionRate"]
-    Agg --> ACond["=== CONDITION STATS ===<br/>Avg and Final Condition per tier"]
-    Agg --> AInd["=== INDIVIDUAL SCENARIOS ===<br/>one row per scenario"]
-    Agg --> AGrand["=== SUMMARY STATISTICS<br/>(Grand Mean Across All Runs) ===<br/>GrandMean of Mean/Max/Min/StdDev"]
-    Agg --> AExt["=== EXTINCTION TIMING ===<br/>Min/Max/Avg days; extinct vs survived counts"]
+    subgraph BLK["bulk_summary.csv  -  per Bulk, ZIP root  (GenerateBulkSummary, cs:428)"]
+        direction TB
+        BK1["=== TINYSEA BULK SUMMARY (Across All Runs) === + # Model Version / Total Runs / Generated"]
+        BK2["=== PER-RUN RESULTS - TIER LEVEL ===  Run,Scenarios,Survived,Crashed,CrashRate,BaseTemp,ClimateTrend,{species...}"]
+        BK3["=== PER-RUN RESULTS - PER SPECIES ===  Run,Species,Variant,Tier,AvgPop,SurvivedAvgPop"]
+        BK4["=== PER-SPECIES AGGREGATE (Across All Runs) ===<br/>Species,Variant,Tier,GrandMean,SurvivedMean,RunsExtinct,RunsSurvived,ExtinctionRate"]
+        BK5["v12 (only if any run carries PerSpeciesMetrics):<br/>=== PER-RUN PER-SPECIES FINAL YEAR ===<br/>=== CROSS-RUN PER-SPECIES FINAL YEAR (Mean of per-run means) ===<br/>=== CROSS-RUN STABILITY ==="]
+        BK1 --> BK2 --> BK3 --> BK4 --> BK5
+    end
 
-    Cfg --> CH["=== section headers ===<br/># metadata lines<br/>Parameter,Value rows for environment"]
-    Cfg --> CSpc["=== SPECIES ===<br/>(same 26-column table as #species: in scenario CSV)"]
-
-    Bulk[Bulk upload] --> BulkSum["bulk_summary.csv<br/>(ZIP root, one per bulk)"]
-    BulkSum --> BS1["=== TINYSEA BULK SUMMARY ===<br/># Total Runs, # Generated"]
-    BulkSum --> BS2["=== PER-RUN RESULTS ===<br/>Run, Scenarios, Survived, Crashed,<br/>CrashRate, BaseTemp, ClimateTrend,<br/>per-species average populations"]
-    BulkSum --> BS3["=== PER-SPECIES AGGREGATE (Across All Runs) ===<br/>Species, GrandMean, SurvivedMean,<br/>RunsExtinct, RunsSurvived, ExtinctionRate"]
+    SC3 -. "N scenario files aggregate into one run file" .-> AG7
+    AG4 -. "per-run summaries aggregate into one bulk file" .-> BK4
 ```
-
-## Section conventions
-
-| Token | Meaning |
-|-------|---------|
-| `#config:key,value` | R-compatible comment (ignored by `read.csv` default). One line per config key. |
-| `#species:col,col,...` | R-compatible comment carrying a header + data rows. Columns include both `OptimalTempK` and `OptimalTempC` (and same for LowerBound/UpperBound) for convenience. |
-| `#summary:key,…` | Per-scenario summary statistics block. |
-| `#extinction:variant,day` | Per-variant extinction day; `-1` means never extinct during the scenario. |
-| `=== TITLE ===` | Section delimiter used by aggregate, config, and bulk-summary CSVs. |
-| `# Key,Value` | Metadata line inside a `=== section ===` (not the same as `#config:` — no prefix after the `#`). |
-
-## Column lists (exact)
-
-### `StepRecord.CsvHeader()` daily columns (39 columns):
-
-```
-Day, Year, Temperature, BiologyCycle,
-StartPop, EndPop,
-Tier1Pop, Tier2Pop,
-Tier1Arctic, Tier1Common, Tier1Tropical, Tier1Custom,
-Tier2Arctic, Tier2Common, Tier2Tropical, Tier2Custom,
-EatenT1, TempDeathsT1, TempDeathsT2,
-ConditionDeathsT1, ConditionDeathsT2,
-NaturalDeathsT1, NaturalDeathsT2,
-TotalDeaths,
-BirthsT1, BirthsT2,
-FedRateT2, AvgHuntingEff,
-AvgConditionT1, AvgConditionT2,
-BirthAccumT1, BirthAccumT2,
-NaturalDeathAccumT1, NaturalDeathAccumT2,
-ConditionDeathAccumT1, ConditionDeathAccumT2,
-PredationAccumT1,
-ReproScaleT1, ReproScaleT2
-```
-
-Populations use `long` to prevent overflow on large ecosystems.
-
-### `#species:` / config-CSV species columns (26 columns):
-
-```
-Name, Variant, Tier, InitialCount,
-EatingAmount, ReproductionMultiplier,
-DeathThreshold, DeathRate, ReproThreshold,
-NaturalDeathRate, NaturalDeathVariance,
-HuntingEfficiency, HuntingVariance,
-OptimalTempK, OptimalTempC,
-ArrhenBreadth, ArrhenLower, ArrhenUpper,
-LowerBoundK, LowerBoundC, UpperBoundK, UpperBoundC,
-Pmax, CTminC, CTmaxC, TemperatureDebuff
-```
-
-## ZIP layout
-
-- **Single-run**: `scenario_*.csv` + `aggregate.csv` + `config.csv` at the ZIP root.
-- **Bulk**: `bulk_summary.csv` at the root; one subfolder per run (named by `batch_name`) containing `scenario_*.csv` + `aggregate.csv` + `config.csv`.

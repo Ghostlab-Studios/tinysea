@@ -1,12 +1,24 @@
 using UnityEngine;
 
 /// <summary>
-/// ScriptableObject configuration for TinySea simulation v6.
+/// ScriptableObject configuration for the TinySea simulation.
 /// All simulation parameters in one place for easy modification.
-/// 
+///
 /// v6 CHANGES:
 /// - Replaced MaxYears with DaysPerScenario (direct day control)
 /// - Clarified NumberOfScenarios (how many times to run the same scenario)
+///
+/// v10 CHANGES:
+/// - Carrying capacity is now a shared food/resource pool (drives Tier 1 FedRate),
+///   not a soft cap on births. Tooltips on UseCarryingCapacity / CarryingCapacityTier1
+///   updated to reflect the new semantic.
+/// - IsValid emits a Debug.LogWarning (non-fatal) when initial Tier 1 pop exceeds
+///   the cap — the simulation handles it, but unintentional over-seeding is a
+///   common mistake worth flagging.
+///
+/// v11.1 CHANGES:
+/// - UseCarryingCapacity field removed. Carrying capacity is always on.
+///   CarryingCapacityTier1 must be > 0 (validated in IsValid).
 /// </summary>
 [CreateAssetMenu(fileName = "SimulationConfig", menuName = "TinySea/Simulation Config")]
 public class SimulationConfig : ScriptableObject
@@ -31,21 +43,18 @@ public class SimulationConfig : ScriptableObject
     [Range(1, 100)]
     public int NumberOfScenarios = 5;
 
-    // ==================== CARRYING CAPACITY (Soft Limit) ====================
+    // ==================== CARRYING CAPACITY (Shared Resource Pool, v10) ====================
 
-    [Header("=== CARRYING CAPACITY (Soft Limit - Tier 1 Only) ===")]
-    [Tooltip("Enable carrying capacity to slow Tier 1 population growth.\n\n" +
-             "This is a SOFT LIMIT - it reduces birth rate as population approaches the limit.\n" +
-             "It does NOT kill creatures, only slows reproduction.\n" +
-             "ONLY applies to Tier 1 (prey).\n\n" +
-             "Formula: births = rawBirths × (1 - tierPop/capacity)\n" +
-             "At 50% capacity → 50% birth rate\n" +
-             "At 100% capacity → 0% birth rate")]
-    public bool UseCarryingCapacity = true;
-
-    [Tooltip("Maximum sustainable population for Tier 1.\n\n" +
-             "Represents the resource limit of the environment.\n" +
-             "Recommended: 1000-10000 depending on desired ecosystem size.")]
+    [Header("=== CARRYING CAPACITY (Shared Resource Pool — Tier 1 Only) ===")]
+    [Tooltip("Tier 1 shared resource pool capacity.\n\n" +
+             "Represents the environmental food/resource pool that all Tier 1 species draw from.\n" +
+             "Feeds the FedRate calculation in Step 2: food_density = max(0, 1 − tier1Pop/capacity).\n\n" +
+             "Always ON as of v11.1 — Tier 1 species without a resource ceiling grow without\n" +
+             "bound, which is biologically meaningless. The previous UseCarryingCapacity toggle\n" +
+             "was removed.\n\n" +
+             "NOTE: equilibrium populations under v10 may oscillate around 80–95% of this value\n" +
+             "(logistic-overshoot dynamics) rather than sitting smoothly at it.\n" +
+             "Recommended: 1000–10000 depending on desired ecosystem size.")]
     [Range(100, 100000)]
     public float CarryingCapacityTier1 = 5000f;
 
@@ -113,6 +122,13 @@ public class SimulationConfig : ScriptableObject
              "Use this instead of SpeciesDatabase for runtime configuration.")]
     public RunSpeciesList RunSpecies;
 
+    // ==================== TIER 2 (PREDATOR) — disabled (Tier-1-only build) ====================
+    [Header("=== TIER 2 (PREDATOR) — disabled ===")]
+    [Tooltip("Tier-1-only simulator: Tier 2 (predator) is OFF by default. Tier-2 species are " +
+             "excluded before the sim and Tier-2 output columns are suppressed; CSV input with " +
+             "tier != 0 is rejected at parse. Tier-2 engine code stays intact behind this flag.")]
+    public bool Tier2Enabled = false;
+
     // ==================== RANDOM SEED ====================
 
     [Header("=== RANDOMNESS ===")]
@@ -145,6 +161,33 @@ public class SimulationConfig : ScriptableObject
         {
             errorMessage = "No species configured. Please add species to RunSpeciesList.";
             return false;
+        }
+
+        // v11.1: hard requirement that the cap is positive — carrying capacity is always on.
+        if (CarryingCapacityTier1 <= 0f)
+        {
+            errorMessage = "CarryingCapacityTier1 must be > 0 (carrying capacity is always on).";
+            return false;
+        }
+
+        // Warn (don't fail) if initial Tier 1 population exceeds the food-pool cap.
+        // Over-cap starts are valid for studying crash dynamics; the Condition system
+        // handles graceful decline over ~8-10 days. But it's a common mis-configuration
+        // to forget the cap when seeding a high initial population, so log a heads-up.
+        int tier1InitialPop = 0;
+        foreach (var sp in RunSpecies.speciesList)
+        {
+            // SpeciesData.tier is 0-based: 0 = Tier 1 prey, 1 = Tier 2 predator.
+            if (sp.tier == 0) tier1InitialPop += sp.count;
+        }
+        if (tier1InitialPop > CarryingCapacityTier1)
+        {
+            Debug.LogWarning(
+                $"[SimulationConfig] Initial Tier 1 population ({tier1InitialPop}) exceeds " +
+                $"CarryingCapacityTier1 ({CarryingCapacityTier1:F0}). " +
+                "This is a valid scenario (the Condition system will produce a graceful " +
+                "decline over ~8-10 days), but if it's unintentional, lower initial " +
+                "populations or raise the capacity.");
         }
 
         errorMessage = null;

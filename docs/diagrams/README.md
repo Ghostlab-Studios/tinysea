@@ -1,27 +1,10 @@
 # Simulation Diagrams
 
-One Mermaid diagram per file, each focused on a single flow. Render inline in GitHub, VS Code, Obsidian, or any Mermaid-capable viewer.
+Mermaid diagrams for the TinySea headless ecosystem simulation. Each file holds one fenced `mermaid` block with a one-paragraph caption above it. The diagrams summarize flows whose authoritative detail lives in the sibling documents under `tinysea/docs/` and in the C# source under `tinysea/Assets/scripts/Simulation/`. The current shipping configuration is Tier 1 (prey) only; Tier 2 (predator) paths are marked as dormant legacy where they appear.
 
-All diagrams are derived from the C# source in `Assets/scripts/Simulation/`. If the code changes, update the diagram — do not rely on external references.
-
-## Diagram index
-
-| File | Covers | Primary source |
-|------|--------|----------------|
-| [bulk-hierarchy.md](./bulk-hierarchy.md) | Bulk CSV → Runs → Scenarios → output files. | `BulkSimulationController.cs` |
-| [scenario-flow.md](./scenario-flow.md) | The per-scenario day loop, biology dispatch, crash detection, CSV emission. | `SimulationRunner.cs` |
-| [temperature-model.md](./temperature-model.md) | Daily temperature = base + seasonal + trend + interannual + daily noise, clamped. | `TemperatureCalculator.cs` |
-| [biology-overview.md](./biology-overview.md) | The 10-step biology sequence invoked each day. | `EcosystemSimulator.ProcessBiologyStep` |
-| [biology-performance-phase.md](./biology-performance-phase.md) | Steps 1–5 in detail: Arrhenius, feeding, Condition update. | `EcosystemSimulator.cs`, `SimSpecies.cs` |
-| [biology-death-phase.md](./biology-death-phase.md) | Steps 6–7: thermal death (instant) and condition death (graduated + survivor boost). | `EcosystemSimulator.ApplyThermalDeath`, `ApplyConditionDeath` |
-| [biology-life-phase.md](./biology-life-phase.md) | Steps 8–9: reproduction (reproScale × Pmax, accumulator, penalties) and natural death. | `EcosystemSimulator.ApplyReproduction`, `ApplyNaturalDeathWithAccumulator` |
-| [pmax-flow.md](./pmax-flow.md) | Every place Pmax enters the pipeline, post-v9. | `EcosystemSimulator.cs` |
-| [csv-output-shape.md](./csv-output-shape.md) | Per-scenario, aggregate, and bulk-summary CSV section layout. | `SimulationRunner.ToCsv`, `ScenarioResult.ToAggregateCsv`, `BulkSimulationController.GenerateBulkSummary` |
-| [accumulator-pattern.md](./accumulator-pattern.md) | Fractional-event accumulator used by births, condition deaths, natural deaths, predation. | `EcosystemSimulator.cs` |
-
-## Conventions
-
-- **Tier 1** = prey; **Tier 2** = predator.
-- **Species order** is the order species appear in `RunSpeciesList`. Many biology steps iterate in this order.
-- **Pmax** is clamped to `max(Pmax, 1e-4)` before any divisions in the Condition update (`pmaxSafe`) to guard against divide-by-zero.
-- **BiologyStep** controls how many simulated days elapse per biology evaluation (default 1). All rate formulas multiply by `BiologyStep`.
+| Diagram | What it shows | Companion doc |
+|---------|---------------|---------------|
+| [biology-day-sequence.md](biology-day-sequence.md) | The ten ordered steps `EcosystemSimulator.ProcessBiologyStep` runs per biology day, with the snapshot/reset and end-of-day rollup. | `biology-and-formulas.md`, `simulation-spec.md` |
+| [temperature-model.md](temperature-model.md) | How `TemperatureCalculator.GetTemperature` assembles one daily Celsius value: the timeseries override path and the five-component parametric sum with final clamp. | `temperature-model.md` |
+| [run-scenario-bulk.md](run-scenario-bulk.md) | The Bulk to Run to Scenario to Day nesting, seeding rule, and the output artifact emitted at each level. | `run-scenario-batch.md`, `bulk-system.md` |
+| [csv-output-shape.md](csv-output-shape.md) | The block layout of `scenario_N.csv`, `aggregate.csv`, and `bulk_summary.csv`, including the per-species column appendix and the tier-rollup invariant. | `csv-output-formats.md` |

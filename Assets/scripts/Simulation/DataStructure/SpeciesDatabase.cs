@@ -20,9 +20,12 @@ public enum SpeciesName
 
 public enum SpeciesVariant
 {
-    Common,
-    Tropical,
-    Arctic,
+    ColdSpecialist,
+    WarmSpecialist,
+    HotSpecialist,
+    ColdGeneralist,
+    WarmGeneralist,
+    HotGeneralist,
     Custom
 }
 
@@ -33,7 +36,14 @@ public class SpeciesData
     public int index;
     public SpeciesName speciesName;
     public SpeciesVariant variant;
-    public string displayName;
+    // Free-text variant label (Batch 1A). When set, used for FullName/output; the
+    // `variant` enum stays for legacy bucket columns + default-parameter lookup.
+    public string variantLabel;
+    // Free-text species name (mirrors variantLabel). When set, used for FullName/output;
+    // the `speciesName` enum stays for UI presets + fallback. CSV writes the raw name here.
+    public string speciesLabel;
+    // Computed UI label = "{species} {variant}" (e.g. "Hexapod Cold"). NOT serialized/stored.
+    public string DisplayName => $"{(string.IsNullOrEmpty(speciesLabel) ? speciesName.ToString() : speciesLabel)} {(string.IsNullOrEmpty(variantLabel) ? variant.ToString() : variantLabel)}";
     public Sprite icon;
     public int count;
 
@@ -44,7 +54,14 @@ public class SpeciesData
     public float deathThreshold = 0.3f;     // FinalPerf below this triggers thermal death
     public float deathRate;                 // Fraction dying when thermal death triggers
     public float TemperatureDebuff = 0.0f;  // Additional performance debuff from temperature applied after thermal curve 
-    public float reproThreshold = 0.25f;    // FinalPerf required to reproduce
+    public float reproThreshold = 0.25f;
+
+    [Header("Condition Timescale (per-species τ, Batch 2)")]
+    // Database/UI default = explicit 0.15 / 0.10 so the inspector never shows a bare -1.
+    // The bulk-CSV parser keeps its own negative sentinel (a blank per-species column -> -1
+    // = inherit the simulator-global rate), so legacy CSV batches stay backward compatible.
+    public float conditionDrainRate = 0.15f;
+    public float conditionRecoveryRate = 0.10f;
     
     
     [Header("Natural Mortality")]
@@ -100,22 +117,163 @@ public class SpeciesData
     {
         switch (variant)
         {
-            case SpeciesVariant.Tropical:
-                pmax = 0.85f;
-                ctMinC = 0f;
-                ctMaxC = 40f;
-                break;
-            case SpeciesVariant.Arctic:
-                pmax = 0.85f;
-                ctMinC = 0f;
-                ctMaxC = 40f;
-                break;
-            default: // Common and Custom
-                pmax = 0.65f;
-                ctMinC = 0f;
-                ctMaxC = 40f;
-                break;
+            case SpeciesVariant.ColdSpecialist:
+                pmax = 0.9843f; ctMinC = 0f; ctMaxC = 35f; break;
+            case SpeciesVariant.WarmSpecialist:
+                pmax = 0.972f; ctMinC = 2f; ctMaxC = 37f; break;
+            case SpeciesVariant.HotSpecialist:
+                pmax = 0.96f; ctMinC = 4f; ctMaxC = 39f; break;
+            case SpeciesVariant.ColdGeneralist:
+                pmax = 0.6616f; ctMinC = 0f; ctMaxC = 35f; break;
+            case SpeciesVariant.WarmGeneralist:
+                pmax = 0.6547f; ctMinC = 2f; ctMaxC = 37f; break;
+            case SpeciesVariant.HotGeneralist:
+                pmax = 0.6481f; ctMinC = 4f; ctMaxC = 39f; break;
+            default: // Custom / unknown
+                pmax = 0.65f; ctMinC = 0f; ctMaxC = 40f; break;
         }
+    }
+
+    /// <summary>
+    /// Batch 1A: canonical-case the four legacy variant names (Common/Tropical/
+    /// Arctic/Custom, case-insensitive) and pass through any other free-text label
+    /// unchanged. Keeps legacy output byte-identical while allowing new labels.
+    /// </summary>
+    public static string NormalizeVariantLabel(string raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw)) return raw;
+        raw = raw.Trim();
+        return System.Enum.TryParse<SpeciesVariant>(raw, true, out var v) ? v.ToString() : raw;
+    }
+
+    /// <summary>
+    /// Modular default-derivation for the variant label. Rule:
+    ///   - already set (CSV / custom free-text) -> keep it untouched;
+    ///   - Custom variant with no label -> leave blank (free-text comes from elsewhere);
+    ///   - otherwise -> derive from the enum (variant.ToString()), so a preset like
+    ///     WarmGeneralist gets variantLabel "WarmGeneralist", not a hardcoded "Warm".
+    /// </summary>
+    public static string DeriveVariantLabel(SpeciesVariant variant, string existing)
+    {
+        if (!string.IsNullOrEmpty(existing)) return existing;
+        return variant == SpeciesVariant.Custom ? existing : NicifyEnumName(variant.ToString());
+    }
+
+    /// <summary>
+    /// Insert a space before each interior capital so an enum name reads naturally:
+    /// "WarmGeneralist" -> "Warm Generalist", "ColdSpecialist" -> "Cold Specialist".
+    /// (CSV / custom labels are never passed here — they keep whatever the user typed.)
+    /// </summary>
+    public static string NicifyEnumName(string s)
+    {
+        if (string.IsNullOrEmpty(s)) return s;
+        var sb = new System.Text.StringBuilder(s.Length + 4);
+        for (int i = 0; i < s.Length; i++)
+        {
+            char c = s[i];
+            if (i > 0 && char.IsUpper(c) && !char.IsUpper(s[i - 1])) sb.Append(' ');
+            sb.Append(c);
+        }
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Batch 1B: resolve a variant label to its SpeciesVariant enum bucket, accepting
+    /// the new names (Cold/Warm/Hot) and the legacy aliases (Arctic/Common/Tropical).
+    /// Cold=Arctic, Warm=Common, Hot=Tropical; unknown labels => Custom. Used only for
+    /// default-parameter lookup + legacy bucket columns — the display label is kept
+    /// separately via variantLabel/NormalizeVariantLabel.
+    /// </summary>
+    public static SpeciesVariant ResolveVariantEnum(string label)
+    {
+        if (string.IsNullOrWhiteSpace(label)) return SpeciesVariant.Custom;
+        switch (label.Trim().ToLowerInvariant())
+        {
+            // Legacy temp aliases (fallback-only; Brian's CSVs pass explicit params).
+            // Bare temp strings map to the Specialist buckets; Generalist buckets are
+            // reached via the new names or the asset, not these bare strings.
+            case "cold": case "arctic":   return SpeciesVariant.ColdSpecialist;
+            case "warm": case "common":   return SpeciesVariant.WarmSpecialist;
+            case "hot":  case "tropical": return SpeciesVariant.HotSpecialist;
+            // New names accepted directly.
+            case "coldspecialist":        return SpeciesVariant.ColdSpecialist;
+            case "warmspecialist":        return SpeciesVariant.WarmSpecialist;
+            case "hotspecialist":         return SpeciesVariant.HotSpecialist;
+            case "coldgeneralist":        return SpeciesVariant.ColdGeneralist;
+            case "warmgeneralist":        return SpeciesVariant.WarmGeneralist;
+            case "hotgeneralist":         return SpeciesVariant.HotGeneralist;
+            case "custom":                return SpeciesVariant.Custom;
+            default:
+                return System.Enum.TryParse<SpeciesVariant>(label.Trim(), true, out var e) ? e : SpeciesVariant.Custom;
+        }
+    }
+
+    /// <summary>
+    /// Group 2: normalized match-key for a variant label — lowercase, keep only [a-z0-9]
+    /// (strips spaces/dashes/underscores/punctuation). Two labels that normalize equal are
+    /// the same variant. "Common-Leaning Tropic" -> "commonleaningtropic"; "topic3" != "topic4".
+    /// </summary>
+    public static string VariantMatchKey(string raw)
+    {
+        if (string.IsNullOrEmpty(raw)) return "";
+        var sb = new System.Text.StringBuilder(raw.Length);
+        foreach (char ch in raw)
+        {
+            char c = char.ToLowerInvariant(ch);
+            if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) sb.Append(c);
+        }
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Mirror of NormalizeVariantLabel for the species name: canonical-case a known
+    /// SpeciesName enum value, pass through any other free-text name unchanged.
+    /// </summary>
+    public static string NormalizeSpeciesName(string raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw)) return raw;
+        raw = raw.Trim();
+        return System.Enum.TryParse<SpeciesName>(raw, true, out var n) ? n.ToString() : raw;
+    }
+
+    /// <summary>
+    /// Mirror of VariantMatchKey for the species name — lowercase, keep only [a-z0-9].
+    /// Two species names that normalize equal are the same species for grouping.
+    /// </summary>
+    public static string SpeciesNameMatchKey(string raw)
+    {
+        if (string.IsNullOrEmpty(raw)) return "";
+        var sb = new System.Text.StringBuilder(raw.Length);
+        foreach (char ch in raw)
+        {
+            char c = char.ToLowerInvariant(ch);
+            if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) sb.Append(c);
+        }
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Variant-selector redesign: canonical deep copy of every serialized field
+    /// (thermal + biology + variantLabel + speciesLabel + condition rates + icon ref).
+    /// Single source of copy truth — reuse wherever a catalog template is instantiated
+    /// into a RunSpeciesList working entry.
+    /// </summary>
+    public SpeciesData DeepCopy()
+    {
+        var c = UnityEngine.JsonUtility.FromJson<SpeciesData>(UnityEngine.JsonUtility.ToJson(this));
+        c.icon = this.icon;  // UnityEngine.Object ref isn't round-tripped by JsonUtility
+        return c;
+    }
+
+    /// <summary>
+    /// Variant-selector redesign: overwrite EVERY serialized field of THIS instance from
+    /// <paramref name="src"/> while preserving this object's reference (so callers holding
+    /// the RunSpeciesList entry keep their pointer). Counterpart to DeepCopy.
+    /// </summary>
+    public void CopyFrom(SpeciesData src)
+    {
+        UnityEngine.JsonUtility.FromJsonOverwrite(UnityEngine.JsonUtility.ToJson(src), this);
+        this.icon = src.icon;
     }
 }
 
@@ -134,9 +292,9 @@ public class SpeciesDatabase : ScriptableObject
         return speciesList.Find(s => s.speciesName == name && s.variant == variant);
     }
 
-    public SpeciesData GetSpeciesByName(string displayName)
+    public SpeciesData GetSpeciesByName(string speciesLabel)
     {
-        return speciesList.Find(s => s.displayName == displayName);
+        return speciesList.Find(s => s.speciesLabel == speciesLabel);
     }
 
     // Get all species of a specific tier
@@ -157,181 +315,123 @@ public class SpeciesDatabase : ScriptableObject
     {
         speciesList.Clear();
 
-        // ===== HEXAPOD (Tier 1 - Prey) =====
-        // DeathRate 0.6 — smaller prey have less physiological buffering against
-        // chronic stress (allometric scaling: M ∝ W^-0.25, Peterson & Wroblewski 1984)
-        // Natural death: 2% base ±1% variance
-        // Hunting: N/A (Tier 1 doesn't hunt)
+        // ===== Six-organism canonical default family (Tier 1 / prey only) =====
+        // Source of truth: Phase2plus_SixOrganismDefaults_Kelvin.csv (2026-06-05).
+        // Hex = narrow-breadth specialist (B=5000) -> SpeciesName.Hexapod.
+        // Gol = broad-breadth  generalist (B=7000) -> SpeciesName.Gelgi.
+        // Variant Cold/Warm/Hot => Topt 20/22/24 °C (= 293.15/295.15/297.15 K).
+        // Display label is Cold/Warm/Hot (variantLabel); the legacy `variant`
+        // enum bucket is resolved via the alias map (Cold->Arctic, Warm->Common,
+        // Hot->Tropical) so legacy bucket columns / param lookups stay valid.
+        // Shared non-thermal defaults: eating=3, repro=0.45, deathThresh=0.3,
+        // deathRate=0.6, reproThresh=0.25, naturalDeath=0.02±0.01, tempOffset=0,
+        // hunting N/A (Tier 1), conditionDrain=0.15, conditionRecovery=0.10.
+        // NO Tier-2 / NO Sheplik here — that is a separate, pending decision.
 
+        const float SHARED_EATING = 3f;
+        const float SHARED_REPRO = 0.45f;
+        const float SHARED_DEATH_THRESH = 0.3f;
+        const float SHARED_DEATH_RATE = 0.6f;
+        const float SHARED_REPRO_THRESH = 0.25f;
+        const float SHARED_NATURAL_DEATH = 0.02f;
+        const float SHARED_NATURAL_DEATH_VAR = 0.01f;
+        const float SHARED_HUNT_EFF = 1.0f;   // Tier 1 ignores hunting
+        const float SHARED_HUNT_VAR = 0f;
+        const float SHARED_COND_DRAIN = 0.15f;
+        const float SHARED_COND_RECOVERY = 0.10f;
+
+        // ----- HEXAPOD (specialist, B=5000) -----
         AddSpecies(
-            index: 0,
-            name: SpeciesName.Hexapod,
-            variant: SpeciesVariant.Common,
-            tier: 0,
+            index: 0, name: SpeciesName.Hexapod, variant: SpeciesVariant.ColdSpecialist, tier: 0,
             count: DEFAULT_T1_COUNT,
-            eating: 0f,
-            repro: 0.45f,
-            deathThresh: 0.3f,
-            deathRate: 0.6f,
-            reproThresh: 0.25f,
-            naturalDeathRate: 0.02f,
-            naturalDeathVariance: 0.01f,
-            huntingEfficiency: 1.0f,
-            huntingVariance: 0f,
-            optimalK: 297.0f,       // 24°C
-            arrhenBreadth: 8000.0f,
-            arrhenLower: 3000.0f,
-            arrhenUpper: 35000.0f,
-            lowerBound: 296.0f,     // 23°C
-            upperBound: 298.0f,     // 25°C
-            pmax: 0.65f,
-            ctMinC: 0f,
-            ctMaxC: 40f
+            eating: SHARED_EATING, repro: SHARED_REPRO, deathThresh: SHARED_DEATH_THRESH,
+            deathRate: SHARED_DEATH_RATE, reproThresh: SHARED_REPRO_THRESH,
+            naturalDeathRate: SHARED_NATURAL_DEATH, naturalDeathVariance: SHARED_NATURAL_DEATH_VAR,
+            huntingEfficiency: SHARED_HUNT_EFF, huntingVariance: SHARED_HUNT_VAR,
+            optimalK: 293.15f, arrhenBreadth: 5000f, arrhenLower: 15998f, arrhenUpper: 43798f,
+            lowerBound: 292.4f, upperBound: 293.9f,
+            pmax: 0.9843f, ctMinC: 0f, ctMaxC: 35f,
+            conditionDrainRate: SHARED_COND_DRAIN, conditionRecoveryRate: SHARED_COND_RECOVERY,
+            speciesLabel: "Hexapod"
         );
 
         AddSpecies(
-            index: 1,
-            name: SpeciesName.Hexapod,
-            variant: SpeciesVariant.Tropical,
-            tier: 0,
+            index: 1, name: SpeciesName.Hexapod, variant: SpeciesVariant.WarmSpecialist, tier: 0,
             count: DEFAULT_T1_COUNT,
-            eating: 0f,
-            repro: 0.45f,
-            deathThresh: 0.3f,
-            deathRate: 0.6f,
-            reproThresh: 0.25f,
-            naturalDeathRate: 0.02f,
-            naturalDeathVariance: 0.01f,
-            huntingEfficiency: 1.0f,
-            huntingVariance: 0f,
-            optimalK: 303.0f,       // 30°C
-            arrhenBreadth: 4000.0f,
-            arrhenLower: 15827.0f,
-            arrhenUpper: 35000.0f,
-            lowerBound: 302.9f,     // 29.75°C
-            upperBound: 303.1f,     // 29.95°C
-            pmax: 0.85f,
-            ctMinC: 0f,
-            ctMaxC: 40f
+            eating: SHARED_EATING, repro: SHARED_REPRO, deathThresh: SHARED_DEATH_THRESH,
+            deathRate: SHARED_DEATH_RATE, reproThresh: SHARED_REPRO_THRESH,
+            naturalDeathRate: SHARED_NATURAL_DEATH, naturalDeathVariance: SHARED_NATURAL_DEATH_VAR,
+            huntingEfficiency: SHARED_HUNT_EFF, huntingVariance: SHARED_HUNT_VAR,
+            optimalK: 295.15f, arrhenBreadth: 5000f, arrhenLower: 16000f, arrhenUpper: 43800f,
+            lowerBound: 294.4f, upperBound: 295.9f,
+            pmax: 0.972f, ctMinC: 2f, ctMaxC: 37f,
+            conditionDrainRate: SHARED_COND_DRAIN, conditionRecoveryRate: SHARED_COND_RECOVERY,
+            speciesLabel: "Hexapod"
         );
 
         AddSpecies(
-            index: 2,
-            name: SpeciesName.Hexapod,
-            variant: SpeciesVariant.Arctic,
-            tier: 0,
+            index: 2, name: SpeciesName.Hexapod, variant: SpeciesVariant.HotSpecialist, tier: 0,
             count: DEFAULT_T1_COUNT,
-            eating: 0f,
-            repro: 0.45f,
-            deathThresh: 0.3f,
-            deathRate: 0.6f,
-            reproThresh: 0.25f,
-            naturalDeathRate: 0.02f,
-            naturalDeathVariance: 0.01f,
-            huntingEfficiency: 1.0f,
-            huntingVariance: 0f,
-            optimalK: 291.0f,       // 18°C
-            arrhenBreadth: 4000.0f,
-            arrhenLower: 13974.0f,
-            arrhenUpper: 35000.0f,
-            lowerBound: 290.9f,     // 17.75°C
-            upperBound: 291.1f,     // 17.95°C
-            pmax: 0.85f,
-            ctMinC: 0f,
-            ctMaxC: 40f
+            eating: SHARED_EATING, repro: SHARED_REPRO, deathThresh: SHARED_DEATH_THRESH,
+            deathRate: SHARED_DEATH_RATE, reproThresh: SHARED_REPRO_THRESH,
+            naturalDeathRate: SHARED_NATURAL_DEATH, naturalDeathVariance: SHARED_NATURAL_DEATH_VAR,
+            huntingEfficiency: SHARED_HUNT_EFF, huntingVariance: SHARED_HUNT_VAR,
+            optimalK: 297.15f, arrhenBreadth: 5000f, arrhenLower: 16002f, arrhenUpper: 43802f,
+            lowerBound: 296.4f, upperBound: 297.9f,
+            pmax: 0.96f, ctMinC: 4f, ctMaxC: 39f,
+            conditionDrainRate: SHARED_COND_DRAIN, conditionRecoveryRate: SHARED_COND_RECOVERY,
+            speciesLabel: "Hexapod"
         );
 
-        // ===== SHEPLIK (Tier 2 - Predator) =====
-        // DeathRate 0.3 — larger predators have greater energy reserves and stress
-        // tolerance, dying at roughly half the rate of prey (allometric scaling:
-        // M ∝ W^-0.25; cod M≈0.2 vs capelin M≈0.8, McCoy & Gillooly 2008)
-        // Natural death: 2% base ±1% variance
-        // Hunting: 75% base ±15% variance
-
+        // ----- GELGI (generalist, B=7000) -----
         AddSpecies(
-            index: 3,
-            name: SpeciesName.Sheplik,
-            variant: SpeciesVariant.Common,
-            tier: 1,
-            count: DEFAULT_T2_COUNT,
-            eating: 1.5f,
-            repro: 0.1f,
-            deathThresh: 0.3f,
-            deathRate: 0.3f,
-            reproThresh: 0.25f,
-            naturalDeathRate: 0.01f,      // Allometric: larger predators have lower background mortality
-            naturalDeathVariance: 0.005f,
-            huntingEfficiency: 0.75f,
-            huntingVariance: 0.15f,
-            optimalK: 297.0f,       // 24°C
-            arrhenBreadth: 8000.0f,
-            arrhenLower: 3000.0f,
-            arrhenUpper: 35000.0f,
-            lowerBound: 296.0f,     // 23°C
-            upperBound: 298.0f,     // 25°C
-            pmax: 0.65f,
-            ctMinC: 0f,
-            ctMaxC: 40f
+            index: 3, name: SpeciesName.Gelgi, variant: SpeciesVariant.ColdGeneralist, tier: 0,
+            count: DEFAULT_T1_COUNT,
+            eating: SHARED_EATING, repro: SHARED_REPRO, deathThresh: SHARED_DEATH_THRESH,
+            deathRate: SHARED_DEATH_RATE, reproThresh: SHARED_REPRO_THRESH,
+            naturalDeathRate: SHARED_NATURAL_DEATH, naturalDeathVariance: SHARED_NATURAL_DEATH_VAR,
+            huntingEfficiency: SHARED_HUNT_EFF, huntingVariance: SHARED_HUNT_VAR,
+            optimalK: 293.15f, arrhenBreadth: 7000f, arrhenLower: 4998f, arrhenUpper: 31098f,
+            lowerBound: 292.4f, upperBound: 293.9f,
+            pmax: 0.6616f, ctMinC: 0f, ctMaxC: 35f,
+            conditionDrainRate: SHARED_COND_DRAIN, conditionRecoveryRate: SHARED_COND_RECOVERY,
+            speciesLabel: "Gelgi"
         );
 
         AddSpecies(
-            index: 4,
-            name: SpeciesName.Sheplik,
-            variant: SpeciesVariant.Tropical,
-            tier: 1,
-            count: DEFAULT_T2_COUNT,
-            eating: 1.5f,
-            repro: 0.1f,
-            deathThresh: 0.3f,
-            deathRate: 0.3f,
-            reproThresh: 0.25f,
-            naturalDeathRate: 0.01f,      // Allometric: larger predators have lower background mortality
-            naturalDeathVariance: 0.005f,
-            huntingEfficiency: 0.75f,
-            huntingVariance: 0.15f,
-            optimalK: 303.0f,       // 30°C
-            arrhenBreadth: 4000.0f,
-            arrhenLower: 15827.0f,
-            arrhenUpper: 35000.0f,
-            lowerBound: 302.9f,     // 29.75°C
-            upperBound: 303.1f,     // 29.95°C
-            pmax: 0.85f,
-            ctMinC: 0f,
-            ctMaxC: 40f
+            index: 4, name: SpeciesName.Gelgi, variant: SpeciesVariant.WarmGeneralist, tier: 0,
+            count: DEFAULT_T1_COUNT,
+            eating: SHARED_EATING, repro: SHARED_REPRO, deathThresh: SHARED_DEATH_THRESH,
+            deathRate: SHARED_DEATH_RATE, reproThresh: SHARED_REPRO_THRESH,
+            naturalDeathRate: SHARED_NATURAL_DEATH, naturalDeathVariance: SHARED_NATURAL_DEATH_VAR,
+            huntingEfficiency: SHARED_HUNT_EFF, huntingVariance: SHARED_HUNT_VAR,
+            optimalK: 295.15f, arrhenBreadth: 7000f, arrhenLower: 5000f, arrhenUpper: 31100f,
+            lowerBound: 294.4f, upperBound: 295.9f,
+            pmax: 0.6547f, ctMinC: 2f, ctMaxC: 37f,
+            conditionDrainRate: SHARED_COND_DRAIN, conditionRecoveryRate: SHARED_COND_RECOVERY,
+            speciesLabel: "Gelgi"
         );
 
         AddSpecies(
-            index: 5,
-            name: SpeciesName.Sheplik,
-            variant: SpeciesVariant.Arctic,
-            tier: 1,
-            count: DEFAULT_T2_COUNT,
-            eating: 1.5f,
-            repro: 0.1f,
-            deathThresh: 0.3f,
-            deathRate: 0.3f,
-            reproThresh: 0.25f,
-            naturalDeathRate: 0.01f,      // Allometric: larger predators have lower background mortality
-            naturalDeathVariance: 0.005f,
-            huntingEfficiency: 0.75f,
-            huntingVariance: 0.15f,
-            optimalK: 291.0f,       // 18°C
-            arrhenBreadth: 4000.0f,
-            arrhenLower: 13974.0f,
-            arrhenUpper: 35000.0f,
-            lowerBound: 290.9f,     // 17.75°C
-            upperBound: 291.1f,     // 17.95°C
-            pmax: 0.85f,
-            ctMinC: 0f,
-            ctMaxC: 40f
+            index: 5, name: SpeciesName.Gelgi, variant: SpeciesVariant.HotGeneralist, tier: 0,
+            count: DEFAULT_T1_COUNT,
+            eating: SHARED_EATING, repro: SHARED_REPRO, deathThresh: SHARED_DEATH_THRESH,
+            deathRate: SHARED_DEATH_RATE, reproThresh: SHARED_REPRO_THRESH,
+            naturalDeathRate: SHARED_NATURAL_DEATH, naturalDeathVariance: SHARED_NATURAL_DEATH_VAR,
+            huntingEfficiency: SHARED_HUNT_EFF, huntingVariance: SHARED_HUNT_VAR,
+            optimalK: 297.15f, arrhenBreadth: 7000f, arrhenLower: 5002f, arrhenUpper: 31102f,
+            lowerBound: 296.4f, upperBound: 297.9f,
+            pmax: 0.6481f, ctMinC: 4f, ctMaxC: 39f,
+            conditionDrainRate: SHARED_COND_DRAIN, conditionRecoveryRate: SHARED_COND_RECOVERY,
+            speciesLabel: "Gelgi"
         );
 
         EditorUtility.SetDirty(this);
         AssetDatabase.SaveAssets();
 
-        Debug.Log($"Populated {speciesList.Count} species entries");
-        Debug.Log("Tier 1 (Hexapod): NaturalDeath=2%±1%, Hunting=N/A");
-        Debug.Log("Tier 2 (Sheplik): NaturalDeath=2%±1%, Hunting=75%±15%");
+        Debug.Log($"Populated {speciesList.Count} species entries (6 Tier-1 Cold/Warm/Hot organisms)");
+        Debug.Log("Hexapod (specialist B=5000) x Cold/Warm/Hot; Gelgi (generalist B=7000) x Cold/Warm/Hot");
+        Debug.Log("conditionDrain=0.15, conditionRecovery=0.10; eating=3, repro=0.45, deathRate=0.6");
     }
 
     private void AddSpecies(int index, SpeciesName name, SpeciesVariant variant, int tier, int count,
@@ -341,14 +441,17 @@ public class SpeciesDatabase : ScriptableObject
                            float huntingEfficiency, float huntingVariance,
                            float optimalK, float arrhenBreadth, float arrhenLower, float arrhenUpper,
                            float lowerBound, float upperBound,
-                           float pmax, float ctMinC, float ctMaxC)
+                           float pmax, float ctMinC, float ctMaxC,
+                           float conditionDrainRate = -1f, float conditionRecoveryRate = -1f,
+                           string variantLabel = null, string speciesLabel = null)
     {
         var data = new SpeciesData
         {
             index = index,
             speciesName = name,
             variant = variant,
-            displayName = name.ToString(),
+            variantLabel = SpeciesData.DeriveVariantLabel(variant, variantLabel),
+            speciesLabel = string.IsNullOrEmpty(speciesLabel) ? name.ToString() : speciesLabel,
             tier = tier,
             count = count,
             eatingAmount = eating,
@@ -356,6 +459,8 @@ public class SpeciesDatabase : ScriptableObject
             deathThreshold = deathThresh,
             deathRate = deathRate,
             reproThreshold = reproThresh,
+            conditionDrainRate = conditionDrainRate,
+            conditionRecoveryRate = conditionRecoveryRate,
             naturalDeathRate = naturalDeathRate,
             naturalDeathVariance = naturalDeathVariance,
             huntingEfficiency = huntingEfficiency,
@@ -379,7 +484,7 @@ public class SpeciesDatabase : ScriptableObject
             thermalBreadthStars = 5,
             temperatureThresholdText = "High",
             reproductionRateText = "Low",
-            description = $"{name} - {variant} variant"
+            description = $"{name} - {(string.IsNullOrEmpty(variantLabel) ? variant.ToString() : variantLabel)} variant"
         };
 
         speciesList.Add(data);
@@ -392,93 +497,44 @@ public class SpeciesDatabase : ScriptableObject
 
         foreach (var data in speciesList)
         {
-            // Preserve: icon, index, speciesName, variant, displayName, count
+            // Preserve: icon, index, speciesName, variant, speciesLabel, count.
+            // Canonical source: Phase2plus_SixOrganismDefaults_Kelvin.csv (2026-06-05).
+            // Thermal params are keyed on BOTH speciesName AND variant — Hexapod
+            // (specialist B=5000) and Gelgi (generalist B=7000) differ in B/L/U/Pmax.
+            // Variant enum bucket -> display label: Arctic=Cold, Common=Warm, Tropical=Hot.
 
-            // --- Universal defaults ---
+            // --- Universal (shared Tier-1) defaults ---
             data.deathThreshold = 0.3f;
             data.reproThreshold = 0.25f;
             data.TemperatureDebuff = 0f;
-            data.ctMinC = 0f;
-            data.ctMaxC = 40f;
+            data.eatingAmount = 3f;
+            data.reproductionMultiplier = 0.45f;
+            data.deathRate = 0.6f;
+            data.naturalDeathRate = 0.02f;
+            data.naturalDeathVariance = 0.01f;
+            data.huntingEfficiency = 1.0f;   // Tier 1 ignores hunting
+            data.huntingVariance = 0f;
+            data.conditionDrainRate = 0.15f;
+            data.conditionRecoveryRate = 0.10f;
+            data.tier = 0;
 
-            // --- Variant-based defaults (thermal params) ---
-            switch (data.variant)
+            // --- Per-(species, variant) thermal params + variant label ---
+            bool thermalSet = ApplyCanonicalThermal(data);
+            if (!thermalSet)
             {
-                case SpeciesVariant.Common:
-                    data.optimalTempK = 297.0f;
-                    data.arrhenBreadth = 8000.0f;
-                    data.arrhenLower = 3000.0f;
-                    data.arrhenUpper = 35000.0f;
-                    data.lowerBoundK = 296.0f;
-                    data.upperBoundK = 298.0f;
-                    data.pmax = 0.65f;
-                    break;
-                case SpeciesVariant.Tropical:
-                    data.optimalTempK = 303.0f;
-                    data.arrhenBreadth = 4000.0f;
-                    data.arrhenLower = 15827.0f;
-                    data.arrhenUpper = 35000.0f;
-                    data.lowerBoundK = 302.9f;
-                    data.upperBoundK = 303.1f;
-                    data.pmax = 0.85f;
-                    break;
-                case SpeciesVariant.Arctic:
-                    data.optimalTempK = 291.0f;
-                    data.arrhenBreadth = 4000.0f;
-                    data.arrhenLower = 13974.0f;
-                    data.arrhenUpper = 35000.0f;
-                    data.lowerBoundK = 290.9f;
-                    data.upperBoundK = 291.1f;
-                    data.pmax = 0.85f;
-                    break;
-                default:
-                    Debug.LogWarning($"Skipping thermal reset for Custom variant: {data.displayName}");
-                    break;
+                Debug.LogWarning($"No canonical thermal defaults for {data.speciesName} {data.variant} — skipping reset");
+                continue;
             }
 
-            // --- Per-species defaults (biology + UI) ---
-            switch (data.speciesName)
-            {
-                case SpeciesName.Hexapod:
-                    data.tier = 0;
-                    data.eatingAmount = 0f;
-                    data.reproductionMultiplier = 0.45f;
-                    data.deathRate = 0.6f;
-                    data.naturalDeathRate = 0.02f;
-                    data.naturalDeathVariance = 0.01f;
-                    data.huntingEfficiency = 1.0f;
-                    data.huntingVariance = 0f;
-                    data.eatingStars = 0;
-                    data.reproductionStars = 4;
-                    data.deathThresholdStars = 3;
-                    data.deathRateStars = 2;
-                    data.thermalBreadthStars = 5;
-                    data.temperatureThresholdText = "High";
-                    data.reproductionRateText = "Low";
-                    data.description = $"Hexapod - {data.variant} variant";
-                    break;
-                case SpeciesName.Sheplik:
-                    data.tier = 1;
-                    data.eatingAmount = 1.5f;
-                    data.reproductionMultiplier = 0.1f;
-                    data.deathRate = 0.3f;  // Predators die at half prey rate (allometric scaling)
-                    data.naturalDeathRate = 0.01f;   // Allometric: larger predators have lower background mortality
-                    data.naturalDeathVariance = 0.005f;
-                    data.huntingEfficiency = 0.75f;
-                    data.huntingVariance = 0.15f;
-                    data.eatingStars = 4;
-                    data.reproductionStars = 2;
-                    data.deathThresholdStars = 4;
-                    data.deathRateStars = 4;
-                    data.thermalBreadthStars = data.variant == SpeciesVariant.Common ? 5 : 3;
-                    data.temperatureThresholdText = "High";
-                    data.reproductionRateText = "Low";
-                    data.description = $"Sheplik - {data.variant} variant";
-                    break;
-                default:
-                    Debug.LogWarning($"No per-species defaults for: {data.speciesName} {data.variant} — skipping biology reset");
-                    continue;
-            }
+            // --- Shared Tier-1 UI defaults ---
+            data.eatingStars = 0;
+            data.reproductionStars = 4;
+            data.deathThresholdStars = 3;
+            data.deathRateStars = 2;
+            data.thermalBreadthStars = 5;
+            data.temperatureThresholdText = "High";
+            data.reproductionRateText = "Low";
+            data.description = $"{data.speciesName} - {(string.IsNullOrEmpty(data.variantLabel) ? data.variant.ToString() : data.variantLabel)} variant";
 
             resetCount++;
         }
@@ -486,6 +542,60 @@ public class SpeciesDatabase : ScriptableObject
         EditorUtility.SetDirty(this);
         AssetDatabase.SaveAssets();
         Debug.Log($"Reset {resetCount}/{speciesList.Count} species values (icons preserved)");
+    }
+
+    /// <summary>
+    /// Apply the canonical Cold/Warm/Hot thermal params (optimalK, B, L, U, bounds,
+    /// pmax, CTmin/max) for the given species, keyed on BOTH speciesName AND variant.
+    /// Also sets variantLabel to Cold/Warm/Hot. Source: Phase2plus_SixOrganismDefaults_Kelvin.csv.
+    /// Returns false (caller skips) for species/variant combos that have no canonical entry.
+    /// </summary>
+    private static bool ApplyCanonicalThermal(SpeciesData data)
+    {
+        // The 7-value variant now fully identifies the organism (Specialist B=5000 /
+        // Generalist B=7000 baked into the bucket), so speciesName is no longer needed
+        // to disambiguate. Custom => skip (return false).
+        switch (data.variant)
+        {
+            case SpeciesVariant.ColdSpecialist:  // Cold, Topt 20 °C, B=5000
+                data.optimalTempK = 293.15f; data.arrhenBreadth = 5000f;
+                data.arrhenLower = 15998f; data.arrhenUpper = 43798f;
+                data.lowerBoundK = 292.4f; data.upperBoundK = 293.9f;
+                data.pmax = 0.9843f; data.ctMinC = 0f; data.ctMaxC = 35f;
+                data.variantLabel = SpeciesData.DeriveVariantLabel(data.variant, null); return true;
+            case SpeciesVariant.WarmSpecialist:  // Warm, Topt 22 °C, B=5000
+                data.optimalTempK = 295.15f; data.arrhenBreadth = 5000f;
+                data.arrhenLower = 16000f; data.arrhenUpper = 43800f;
+                data.lowerBoundK = 294.4f; data.upperBoundK = 295.9f;
+                data.pmax = 0.972f; data.ctMinC = 2f; data.ctMaxC = 37f;
+                data.variantLabel = SpeciesData.DeriveVariantLabel(data.variant, null); return true;
+            case SpeciesVariant.HotSpecialist:   // Hot, Topt 24 °C, B=5000
+                data.optimalTempK = 297.15f; data.arrhenBreadth = 5000f;
+                data.arrhenLower = 16002f; data.arrhenUpper = 43802f;
+                data.lowerBoundK = 296.4f; data.upperBoundK = 297.9f;
+                data.pmax = 0.96f; data.ctMinC = 4f; data.ctMaxC = 39f;
+                data.variantLabel = SpeciesData.DeriveVariantLabel(data.variant, null); return true;
+            case SpeciesVariant.ColdGeneralist:  // Cold, Topt 20 °C, B=7000
+                data.optimalTempK = 293.15f; data.arrhenBreadth = 7000f;
+                data.arrhenLower = 4998f; data.arrhenUpper = 31098f;
+                data.lowerBoundK = 292.4f; data.upperBoundK = 293.9f;
+                data.pmax = 0.6616f; data.ctMinC = 0f; data.ctMaxC = 35f;
+                data.variantLabel = SpeciesData.DeriveVariantLabel(data.variant, null); return true;
+            case SpeciesVariant.WarmGeneralist:  // Warm, Topt 22 °C, B=7000
+                data.optimalTempK = 295.15f; data.arrhenBreadth = 7000f;
+                data.arrhenLower = 5000f; data.arrhenUpper = 31100f;
+                data.lowerBoundK = 294.4f; data.upperBoundK = 295.9f;
+                data.pmax = 0.6547f; data.ctMinC = 2f; data.ctMaxC = 37f;
+                data.variantLabel = SpeciesData.DeriveVariantLabel(data.variant, null); return true;
+            case SpeciesVariant.HotGeneralist:   // Hot, Topt 24 °C, B=7000
+                data.optimalTempK = 297.15f; data.arrhenBreadth = 7000f;
+                data.arrhenLower = 5002f; data.arrhenUpper = 31102f;
+                data.lowerBoundK = 296.4f; data.upperBoundK = 297.9f;
+                data.pmax = 0.6481f; data.ctMinC = 4f; data.ctMaxC = 39f;
+                data.variantLabel = SpeciesData.DeriveVariantLabel(data.variant, null); return true;
+            default: // Custom / unknown — no canonical preset
+                return false;
+        }
     }
 
     private void AddSpecies(int index, string displayname, int tier, int count,
@@ -500,7 +610,7 @@ public class SpeciesDatabase : ScriptableObject
             index = index,
             speciesName = SpeciesName.Custom,
             variant = SpeciesVariant.Custom,
-            displayName = displayname,
+            speciesLabel = displayname,
             tier = tier,
             count = count,
             eatingAmount = eating,

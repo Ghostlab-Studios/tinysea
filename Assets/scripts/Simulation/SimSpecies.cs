@@ -13,6 +13,9 @@ public class SimSpecies
     // ==================== IDENTITY ====================
     public string Name;
     public ThermalVariant Variant;
+    // Free-text variant label for identity/output (Batch 1A). When empty, FullName
+    // falls back to the ThermalVariant enum name, so legacy species are unchanged.
+    public string VariantLabel;
     public int Tier;  // 1 = Hexapod (prey), 2 = Sheplik (predator)
 
     // ==================== POPULATION ====================
@@ -25,13 +28,28 @@ public class SimSpecies
     public float DeathRate;                 // Fraction dying when thermal death triggers
     public float ReproThreshold;            // Condition inflection point: above = healthy reproduction ramp, below = struggling but non-zero (default 0.25)
 
+    // ==================== CONDITION TIMESCALE (per-species τ, Batch 2) ====================
+    // Per-species condition drain / recovery rates. A negative value (the default) means
+    // "inherit the simulator-global rate", so blank CSV columns stay backward compatible.
+    // Two species with the same TPC but different rates integrate condition over different
+    // timescales τ ≈ 1/rate — the core Paper 2 design.
+    public float ConditionDrainRate = -1f;
+    public float ConditionRecoveryRate = -1f;
+
     // ==================== NATURAL MORTALITY ====================
     public float NaturalDeathRate = 0.02f;      // Base natural death rate (all species: 2%)
     public float NaturalDeathVariance = 0.01f;  // Random variance range (±1%)
 
-    // ==================== HUNTING EFFICIENCY (Tier 2 only) ====================
-    public float HuntingEfficiency = 0.75f;     // Base hunting success rate (75%)
-    public float HuntingVariance = 0.15f;       // Random variance range (±15%)
+    // ==================== HUNTING / EXTRACTION EFFICIENCY ====================
+    // Dual semantic by tier (v10):
+    //   Tier 2 (predators): base hunting success at NORMAL_PREY_RATIO; feeds Holling II.
+    //   Tier 1 (prey):       resource extraction efficiency from the shared food pool.
+    //                        Default 1.0 = perfect plankton-style passive extraction.
+    //                        Lower values represent imperfect foragers.
+    // Used by EcosystemSimulator.ProcessFeedingWithAccumulator in two distinct
+    // formulas: linear for Tier 1 (FedRate = HE × food_density), Holling II for Tier 2.
+    public float HuntingEfficiency = 0.75f;     // Base extraction/hunting success (Tier 2 default; Tier 1 uses 1.0 by convention)
+    public float HuntingVariance = 0.15f;       // Random variance range (±15%) — applied to Tier 2 only
 
     // ==================== CONSTANTS ====================
     public const float NO_PREDATOR_PENALTY = 0.85f;           // 15% birth reduction when no predators
@@ -55,16 +73,20 @@ public class SimSpecies
     // ==================== RUNTIME VALUES (calculated each step) ====================
     public float RawThermalPerformance;     // Arrhenius + CTmin/CTmax fade, WITHOUT Pmax
     public float ThermalPerformance;        // RawThermalPerformance × Pmax (used for predator hunting demand and logging)
-    public float FedRate = 1f;              // Feeding satisfaction (0-1), Tier 1 always 1.0
+    public float FedRate = 1f;              // Feeding satisfaction (0-1). Tier 1: density-dependent from food pool (v10). Tier 2: from Holling II.
     public float RawFinalPerformance;       // RawThermalPerformance × FedRate — Condition drain target
     public float FinalPerformance;          // ThermalPerf × FedRate — computed for logging/CSV output only (not a biology input as of v8)
     public float CurrentHuntingSuccess;     // This step's hunting success (for tracking)
     public float Condition = 1.0f;          // Health/energy reserves [0-1], starts at 1.0
 
     /// <summary>
-    /// Full name for display (e.g., "Hexapod_Arctic")
+    /// Full name for display (e.g., "Hexapod_Cold", "Coral_M2").
+    /// Uses the free-text VariantLabel only — the legacy ThermalVariant enum name
+    /// (Arctic/Common/Tropical/Custom) is never emitted. When VariantLabel is empty
+    /// (defensive — it is set for every code path that reaches output), FullName is
+    /// just the species Name with no variant suffix.
     /// </summary>
-    public string FullName => $"{Name}_{Variant}";
+    public string FullName => string.IsNullOrEmpty(VariantLabel) ? Name : $"{Name}_{VariantLabel}";
 
     /// <summary>
     /// Calculate thermal performance using Arrhenius formula.
@@ -130,39 +152,49 @@ public class SimSpecies
             ReproThreshold = 0.25f,
             NaturalDeathRate = 0.02f,       // 2% base
             NaturalDeathVariance = 0.01f,   // ±1%
-            HuntingEfficiency = 1.0f,       // Ignored for Tier 1
+            HuntingEfficiency = 1.0f,       // Tier 1 (v10): perfect resource extraction from shared food pool
             HuntingVariance = 0f,
-            ArrhenBreadth = 5273.15f,
-            ArrhenLower = 10273.15f,
-            ArrhenUpper = 21273.15f
+            // Batch 1B: canonical "Hexapod v2" TPC shape (constant across variants);
+            // only Topt shifts (Cold 20 / Warm 22 / Hot 24 C). The Arctic/Common/Tropical
+            // enum slots now carry the Cold/Warm/Hot labels + paper-canonical params.
+            ArrhenBreadth = 5000f,
+            ArrhenLower = 16000f,
+            ArrhenUpper = 43800f
         };
 
-        // Set temperature ranges and thermal limits based on variant
+        // Set temperature ranges, thermal limits, and Cold/Warm/Hot label by variant
         switch (variant)
         {
-            case ThermalVariant.Arctic:
-                species.OptimalTempK = 278.15f;   // 5°C optimal
-                species.LowerBoundK = 270.15f;    // -3°C
-                species.UpperBoundK = 280.15f;    // 7°C
-                species.Pmax = 1.0f;
-                species.CTminC = -30f;
-                species.CTmaxC = 20f;
-                break;
-            case ThermalVariant.Common:
-                species.OptimalTempK = 293.15f;   // 20°C optimal
-                species.LowerBoundK = 285.15f;    // 12°C
-                species.UpperBoundK = 295.15f;    // 22°C
-                species.Pmax = 0.9f;
-                species.CTminC = -5f;
-                species.CTmaxC = 40f;
-                break;
-            case ThermalVariant.Tropical:
-                species.OptimalTempK = 308.65f;   // 35.5°C optimal
-                species.LowerBoundK = 300.15f;    // 27°C
-                species.UpperBoundK = 310.15f;    // 37°C
-                species.Pmax = 1.0f;
+            case ThermalVariant.Arctic:   // Cold anchor — Topt 20 C
+                species.VariantLabel = "Cold";
+                species.OptimalTempK = 293.15f;   // 20 C
+                species.LowerBoundK = 292.40f;    // 19.25 C
+                species.UpperBoundK = 293.90f;    // 20.75 C
+                species.ArrhenLower = 15998f;     // canonical per-variant L/U (±2 translate)
+                species.ArrhenUpper = 43798f;
+                species.Pmax = 0.9843f;           // canonical Cold Pmax
                 species.CTminC = 0f;
-                species.CTmaxC = 80f;
+                species.CTmaxC = 35f;
+                break;
+            case ThermalVariant.Common:   // Warm anchor — Topt 22 C
+                species.VariantLabel = "Warm";
+                species.OptimalTempK = 295.15f;   // 22 C
+                species.LowerBoundK = 294.40f;    // 21.25 C
+                species.UpperBoundK = 295.90f;    // 22.75 C
+                species.Pmax = 0.972f;
+                species.CTminC = 2f;
+                species.CTmaxC = 37f;
+                break;
+            case ThermalVariant.Tropical: // Hot anchor — Topt 24 C
+                species.VariantLabel = "Hot";
+                species.OptimalTempK = 297.15f;   // 24 C
+                species.LowerBoundK = 296.40f;    // 23.25 C
+                species.UpperBoundK = 297.90f;    // 24.75 C
+                species.ArrhenLower = 16002f;     // canonical per-variant L/U (±2 translate)
+                species.ArrhenUpper = 43802f;
+                species.Pmax = 0.96f;             // canonical Hot Pmax
+                species.CTminC = 4f;
+                species.CTmaxC = 39f;
                 break;
         }
 

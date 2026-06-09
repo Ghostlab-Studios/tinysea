@@ -36,6 +36,19 @@ public class ResultsScreenUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI progressText;
     [SerializeField] private Button cancelButton;
 
+    [Header("Pause / Resume Toggle (ONE button)")]
+    [Tooltip("A single toggle button. Gray + 'Pause' while running; click to pause -> green + " +
+             "'Resume'; click again to resume. Replaces the old separate Pause and Resume buttons.")]
+    [SerializeField] private Button pauseResumeButton;
+    [SerializeField] private TextMeshProUGUI pauseResumeLabel;
+    [Tooltip("Background image to recolor. If empty, the button's own Image is used. " +
+             "If the button's Transition is ColorTint, keep this image white.")]
+    [SerializeField] private Image pauseResumeTarget;
+    [SerializeField] private Color runningColor = new Color(0.55f, 0.55f, 0.55f, 1f); // gray
+    [SerializeField] private Color pausedColor = new Color(0.30f, 0.78f, 0.36f, 1f);  // green
+    [SerializeField] private string pauseLabelText = "Pause";
+    [SerializeField] private string resumeLabelText = "Resume";
+
     [Header("Results Section")]
     [SerializeField] private GameObject resultsSection;
     [SerializeField] private TextMeshProUGUI quickStatsText;
@@ -59,6 +72,7 @@ public class ResultsScreenUI : MonoBehaviour
     private bool _bulkServerReady = false;
     private bool _isRunning = false;
     private bool _cancelRequested = false;
+    private bool _isPaused = false;
     private List<GameObject> _scenarioRows = new List<GameObject>();
 
     // Animated dots state — cycles between ".", "..", "..." to show activity
@@ -70,6 +84,11 @@ public class ResultsScreenUI : MonoBehaviour
     public System.Action OnCancelRequested;
     public System.Action OnCloseRequested;
 
+    /// <summary>True while the user has paused the run via the toggle. The bulk run loop polls this.</summary>
+    public bool IsPaused => _isPaused;
+    /// <summary>Fired when the pause toggle flips (true = paused). Single-run controllers may subscribe.</summary>
+    public System.Action<bool> OnPauseToggled;
+
     private void Awake()
     {
         // Wire up buttons
@@ -78,6 +97,9 @@ public class ResultsScreenUI : MonoBehaviour
 
         if (cancelButton != null)
             cancelButton.onClick.AddListener(OnCancelClicked);
+
+        if (pauseResumeButton != null)
+            pauseResumeButton.onClick.AddListener(OnPauseResumeClicked);
 
         if (downloadAggregateButton != null)
             downloadAggregateButton.onClick.AddListener(OnDownloadAggregateClicked);
@@ -114,6 +136,18 @@ public class ResultsScreenUI : MonoBehaviour
         // Re-enable cancel button
         if (cancelButton != null)
             cancelButton.interactable = true;
+
+        // Reset the pause toggle to the running state (gray, "Pause").
+        // Re-attach the click handler here too (idempotent) so it works even if the button
+        // reference was assigned after Awake ran.
+        _isPaused = false;
+        if (pauseResumeButton != null)
+        {
+            pauseResumeButton.onClick.RemoveListener(OnPauseResumeClicked);
+            pauseResumeButton.onClick.AddListener(OnPauseResumeClicked);
+            pauseResumeButton.interactable = true;
+        }
+        UpdatePauseResumeVisual();
 
         // Re-enable all download button GameObjects (bulk may have hidden some)
         if (downloadConfigButton != null)
@@ -419,7 +453,43 @@ public class ResultsScreenUI : MonoBehaviour
         if (cancelButton != null)
             cancelButton.interactable = false;
 
+        // Can't pause a run that's being cancelled.
+        if (pauseResumeButton != null)
+            pauseResumeButton.interactable = false;
+
         OnCancelRequested?.Invoke();
+    }
+
+    /// <summary>
+    /// ONE toggle button: running -> gray "Pause"; paused -> green "Resume". The bulk run
+    /// loop polls IsPaused to actually pause; single-run controllers can use OnPauseToggled.
+    /// </summary>
+    private void OnPauseResumeClicked()
+    {
+        _isPaused = !_isPaused;
+        UpdatePauseResumeVisual();
+        OnPauseToggled?.Invoke(_isPaused);
+    }
+
+    private void UpdatePauseResumeVisual()
+    {
+        // Text: "Pause" while running, "Resume" while paused.
+        if (pauseResumeLabel != null)
+            pauseResumeLabel.text = _isPaused ? resumeLabelText : pauseLabelText;
+
+        Color c = _isPaused ? pausedColor : runningColor;
+
+        // Resolve the image to recolor: the explicit target if set, else the button's own graphic.
+        Image img = pauseResumeTarget;
+        if (img == null && pauseResumeButton != null) img = pauseResumeButton.targetGraphic as Image;
+        if (img == null && pauseResumeButton != null) img = pauseResumeButton.GetComponent<Image>();
+
+        // Turn the Button's colour transition OFF so it can't tint over our flat colour, then set
+        // the image colour directly. Clean gray/green regardless of sprite base or transition setup.
+        if (pauseResumeButton != null)
+            pauseResumeButton.transition = Selectable.Transition.None;
+        if (img != null)
+            img.color = c;
     }
 
     private void OnCloseClicked()

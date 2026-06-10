@@ -16,7 +16,7 @@ using UnityEngine;
 /// 5. Final Performance - ThermalPerf x FedRate (computed for logging; not a biology input)
 /// 6. Thermal Death - INSTANT kill at lethal limits (RawThermalPerf == 0)
 /// 7. Condition Death - GRADUATED: severity scales with how far below threshold + survivor fitness boost
-/// 8. Reproduction - CONDITION-BASED GRADUATED SCALE x Pmax + BIRTH ACCUMULATOR + Tier 1 penalty
+/// 8. Reproduction - CONDITION-BASED GRADUATED SCALE x Pmax + BIRTH ACCUMULATOR
 ///                   (no more soft-cap-on-births — throttling is via Condition pathway in v10)
 ///                   (newborns inherit parent group Condition — no fixed constant)
 /// 9. Natural Death - FLAT RATE + NATURAL DEATH ACCUMULATOR
@@ -541,7 +541,7 @@ public class EcosystemSimulator
     /// 5. Final Performance - ThermalPerf x FedRate (computed for logging; not a biology input)
     /// 6. Thermal Death - INSTANT kill at lethal limits (RawThermalPerf == 0)
     /// 7. Condition Death - GRADUATED: severity scales with how far below threshold
-    /// 8. Reproduction - CONDITION-BASED GRADUATED SCALE x Pmax + BIRTH ACCUMULATOR + Tier 1 penalty
+    /// 8. Reproduction - CONDITION-BASED GRADUATED SCALE x Pmax + BIRTH ACCUMULATOR
     ///                   (no soft-cap-on-births; throttling via Condition pathway, v10)
     /// 9. Natural Death - FLAT RATE + NATURAL DEATH ACCUMULATOR
     /// 10. Population Rounding - All populations become integers
@@ -1142,8 +1142,8 @@ public class EcosystemSimulator
     }
 
     /// <summary>
-    /// Apply reproduction with CONDITION-BASED GRADUATED SCALE, BIRTH ACCUMULATOR,
-    /// Tier 1 penalty, and BIRTH ACCUMULATOR. (Soft cap on births was REMOVED in v10 —
+    /// Apply reproduction with CONDITION-BASED GRADUATED SCALE and BIRTH ACCUMULATOR.
+    /// (Soft cap on births was REMOVED in v10 —
     /// see Tier 1 throttling note below.)
     ///
     /// CONDITION-BASED REPRODUCTION (v8) + Pmax MULTIPLIER (v9) + parent-condition newborn (v10):

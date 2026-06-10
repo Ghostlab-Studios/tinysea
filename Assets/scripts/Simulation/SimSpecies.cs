@@ -53,7 +53,6 @@ public class SimSpecies
     public float HuntingVariance = 0.15f;       // Random +/- variance on foraging success [0..1]. 0 = deterministic. Applies to all tiers.
 
     // ==================== CONSTANTS ====================
-    public const float NO_PREDATOR_PENALTY = 0.85f;           // 15% birth reduction when no predators
     public const float MIN_FINAL_PERF_FOR_NATURAL_DEATH = 0.1f; // Floor to prevent division by zero
     private const float LETHAL_TRANSITION_WIDTH = 2.0f; // Smooth fade width in degrees Celsius
 

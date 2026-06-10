@@ -1246,17 +1246,6 @@ public class EcosystemSimulator
         // application; no separate dilution step.
         float births = sp.Population * reproScale * sp.ReproductionMultiplier * sp.Pmax * BiologyStep;
 
-        // Tier 1 penalty if no predators exist
-        if (sp.Tier == 1)
-        {
-            float tier2Pop = GetTierPopulation(2);
-            if (tier2Pop < MIN_ALIVE_POP)
-            {
-                births *= SimSpecies.NO_PREDATOR_PENALTY;
-                SimLog($"  {sp.FullName}: No predator penalty applied ({SimSpecies.NO_PREDATOR_PENALTY:P0})");
-            }
-        }
-
         // Carrying-capacity soft cap on births was REMOVED in v10. Tier 1 reproduction
         // is now throttled indirectly through the Condition pathway: high population →
         // low food density (in Step 2) → low FedRate → low RawFinalPerformance target →

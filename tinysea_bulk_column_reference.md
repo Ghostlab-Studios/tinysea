@@ -116,15 +116,15 @@ If temperature goes outside a species' absolute survival range, the species dies
 | `ctmin` | number | *(Optional)* Critical thermal minimum (C). Below this temperature, species dies instantly. Default: -5 |
 | `ctmax` | number | *(Optional)* Critical thermal maximum (C). Above this temperature, species dies instantly. Default: 40 |
 
-### Feeding (Predators Only)
+### Feeding / Foraging (all tiers)
 
-These values are ignored for Tier 1 (prey) species since they don't hunt.
+These now apply to all tiers. Tier 1 (prey) forages the shared resource pool with the same Holling Type II mechanism Tier 2 predators use to hunt, so `eating`, `hunt_eff`, and `hunt_var` all affect Tier 1.
 
 | Column Suffix | Type | Default (T2) | Description |
 |---------------|------|-------------|-------------|
-| `eating` | number | 1.5 | Food demand per individual per day (in units of prey). Raw demand = `population x eating x ThermalPerformance` |
-| `hunt_eff` | number | 0.75 | Base hunting efficiency (0-1). Modified by Holling Type II functional response based on prey-to-predator ratio. At normal ratio (~20:1), efficiency equals this base value. At lower ratios, efficiency drops toward 0. At higher ratios, efficiency approaches 1.0 |
-| `hunt_var` | number | 0.15 | Random daily variance on hunting success. Actual efficiency = `HollingEfficiency +/- random(hunt_var)` |
+| `eating` | number | 1.5 | Tier 2: prey eaten per predator per day (raw demand = `population x eating x ThermalPerformance`). Tier 1: resource units each individual draws from the shared pool, floored at 1, so a higher value feeds fewer individuals |
+| `hunt_eff` | number | 0.75 | Base foraging/hunting efficiency (0-1), driving a Holling Type II response on availability (prey-to-predator ratio for Tier 2, resource-per-forager for Tier 1). At the normal ratio (~20:1) efficiency equals this base value; at lower ratios it drops toward 0, at higher ratios it approaches 1.0 |
+| `hunt_var` | number | 0.15 | Random daily variance on foraging/hunting success (all tiers). Actual efficiency = `HollingEfficiency +/- random(hunt_var)`; 0 = deterministic |
 
 ### Thermal Performance Curve (Arrhenius Parameters)
 
@@ -154,15 +154,15 @@ Biology parameters (reproduction, death, feeding) are the same across all varian
 | Parameter | Hexapod (Prey, Tier 0) | Sheplik (Predator, Tier 1) |
 |-----------|----------------------|--------------------------|
 | Population | 20 | 4 |
-| Eating | 0 (prey don't hunt) | 1.5 |
+| Eating | 3 (resource units drawn from the pool) | 1.5 |
 | Repro Mult | 0.45 | 0.1 |
 | Death Threshold | 0.3 | 0.3 |
 | Death Rate | 0.6 | 0.3 |
 | Repro Threshold | 0.25 | 0.25 |
 | Natural Death Rate | 0.02 (2%/day) | 0.01 (1%/day) |
 | Natural Death Var | 0.01 | 0.005 |
-| Hunting Efficiency | 1.0 (ignored for prey) | 0.75 |
-| Hunting Variance | 0 (ignored for prey) | 0.15 |
+| Hunting Efficiency | 1.0 (foraging the pool) | 0.75 |
+| Hunting Variance | 0 (no foraging variance) | 0.15 |
 
 ### Thermal Curve Defaults (Vary by Variant)
 

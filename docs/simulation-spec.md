@@ -629,7 +629,7 @@ A few parameters live on the engine or runner with their own defaults and are no
 |-------|-------|---------|----------|---------|
 | `TotalDays` | `SimulationRunner` | `365` | SimulationRunner.cs:354 | Set from `DaysPerScenario` before each scenario; the standalone default matches. |
 | `BiologyStep` | `SimulationRunner` | `1` | SimulationRunner.cs:355 | Set from config before each scenario. |
-| `CarryingCapacityPerTier` | `EcosystemSimulator` | `5000f` | EcosystemSimulator.cs:237 | Set from `CarryingCapacityTier1`. Drives food density in Step 2 (`foodDensity = max(0, 1 - tier1Pop / capSafe)`), the `capSafe = max(cap, 1)` floor, and the Step 10 overflow cap `100 * CarryingCapacityPerTier` (with the default that ceiling is 500000). |
+| `CarryingCapacityPerTier` | `EcosystemSimulator` | `5000f` | EcosystemSimulator.cs:237 | Set from `CarryingCapacityTier1`. Drives food density in Step 2 (`foodDensity = max(0, 1 - tier1Consumption / capSafe)`), the `capSafe = max(cap, 1)` floor, and the Step 10 overflow cap `100 * CarryingCapacityPerTier` (with the default that ceiling is 500000). |
 | `ConditionDrainRate` | `EcosystemSimulator` | `0.15f` | EcosystemSimulator.cs:240 | Global drain rate; set from config. |
 | `ConditionRecoveryRate` | `EcosystemSimulator` | `0.10f` | EcosystemSimulator.cs:241 | Global recovery rate; set from config. |
 | `Tier2Enabled` | `EcosystemSimulator` | `false` | EcosystemSimulator.cs:245 | Tier 2 gate; set from config. |

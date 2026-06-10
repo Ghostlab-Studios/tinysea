@@ -141,16 +141,19 @@ At the top of the step, the engine snapshots each tier's starting population, re
 
 1. **Thermal performance.** For each species, `RawThermalPerformance = CalculatePerformance(temperature)` and `ThermalPerformance = RawThermalPerformance * Pmax`. `FedRate` is initialized to 1 (`EcosystemSimulator.cs:589-598`). `RawThermalPerformance` excludes `Pmax`; `ThermalPerformance` includes it.
 
-2. **Feeding.** Tier 1 feeding is density-dependent extraction from a shared food pool (`EcosystemSimulator.cs:728-781`). Define:
+2. **Feeding.** Tier 1 feeding uses the same foraging mechanism as Tier 2 hunting, applied to a shared resource pool (`EcosystemSimulator.cs:765-804`). Define:
 
    ```
-   tier1Pop     = max(0, total Tier 1 population)
-   capSafe      = max(CarryingCapacityPerTier, 1)
-   foodDensity  = max(0, 1 - tier1Pop / capSafe)        // 1 = empty pool, 0 = full pool
-   FedRate_i    = min(1, HuntingEfficiency_i * foodDensity)   // per Tier 1 species i
+   tier1Pop         = max(0, total Tier 1 population)
+   capSafe          = max(CarryingCapacityPerTier, 1)
+   tier1Consumption = sum over Tier 1 of Population * max(1, EatingAmount)   // appetite floored at 1
+   foodDensity      = max(0, 1 - tier1Consumption / capSafe)   // fraction of pool still available; 1 = plenty, 0 = exhausted
+   resourceRatio    = capSafe / max(tier1Pop, 1)               // resource available per forager
+   gatherSuccess_i  = HollingII(HuntingEfficiency_i, resourceRatio) + optional HuntingVariance
+   FedRate_i        = min(1, gatherSuccess_i * foodDensity)    // per Tier 1 species i
    ```
 
-   Plain language: there is one shared pool of food. The more crowded the prey are, the less food each one gets. `foodDensity` is the fraction of the pool still available; it falls linearly from 1 (empty, plenty of food) toward 0 as the population approaches the carrying capacity. Each species converts available food into a feeding satisfaction `FedRate` between 0 and 1, scaled by its own `HuntingEfficiency` (for Tier 1, this means *resource extraction efficiency*; the default 1.0 represents perfect plankton-style passive uptake, `SimSpecies.cs:43-52`, `SimSpecies.cs:155`). A species below the minimum-alive population of 1.0 gets `FedRate = 0` (`EcosystemSimulator.cs:767-776`). The relationship is intentionally **linear**, not a Holling saturating curve, because passive extractors have no search/handling phases and because the Holling form collapses to 1 at the common `HuntingEfficiency = 1` setting (`EcosystemSimulator.cs:736-757`). The population-weighted average Tier 1 FedRate and the day's `foodDensity` are recorded for output (`EcosystemSimulator.cs:780-781`).
+   Plain language: there is one shared pool of resources. Each individual draws `EatingAmount` units from it (floored at 1), so a larger or hungrier population depletes the pool faster. `foodDensity` is the fraction still available, falling toward 0 as total consumption approaches the carrying capacity. Each species' foraging success follows a Holling Type II curve on how much resource is available per forager (`resourceRatio`), scaled by its own `HuntingEfficiency`, with an optional random `HuntingVariance` so a fixed share may fail to find food on a given day. The final `FedRate` (0 to 1) is that success capped by what the pool can supply (`foodDensity`). This is the same mechanism Tier 2 predators use to hunt, with prey searching a resource pool instead of chasing prey (`SimSpecies.cs:43-53`, `EcosystemSimulator.cs:931-940`). At the defaults `HuntingEfficiency = 1`, `HuntingVariance = 0`, `EatingAmount = 1` it reduces exactly to `FedRate = foodDensity`, matching the simpler earlier model; richer behavior appears only when those are tuned. A species below the minimum-alive population of 1.0 gets `FedRate = 0` (`EcosystemSimulator.cs:785-802`). The population-weighted average Tier 1 FedRate and the day's `foodDensity` are recorded for output (`EcosystemSimulator.cs:792-803`).
 
    Carrying capacity is **always on**. `CarryingCapacityPerTier` defaults to 5000 (`EcosystemSimulator.cs:237`) and must be greater than 0 (validated at config and parse time). Without a ceiling, Tier 1 grows without bound, which is biologically meaningless and overflows the birth counters (`EcosystemSimulator.cs:121-135`, `SimulationConfig.cs:166-171`).
 
@@ -204,7 +207,7 @@ At the top of the step, the engine snapshots each tier's starting population, re
 
    (Edge cases when `ReproThreshold >= 1` or `<= 0` are handled at `EcosystemSimulator.cs:1169-1178`.) A species needs at least `MIN_POPULATION_FOR_REPRODUCTION = 2` to reproduce (`EcosystemSimulator.cs:274`, `EcosystemSimulator.cs:1152-1156`). Plain language: reproduction tracks the slow Condition reserve rather than instantaneous performance, so animals with reserves keep breeding (at reduced rates) through harsh stretches instead of stopping dead in winter. `Pmax` makes high-peak species convert health into offspring more efficiently. Newborns inherit the group's current Condition, so no separate dilution step is applied (`EcosystemSimulator.cs:1240-1253`).
 
-   **Tier 1 throttling is indirect.** There is no hard cap on Tier 1 births. High population lowers food density (step 2), which lowers FedRate, which lowers the Condition target (step 3), which drains Condition (step 4), which both shrinks `reproScale` and fires condition deaths (step 7). Logistic-overshoot dynamics emerge from this feedback rather than from a births cap (`EcosystemSimulator.cs:1132-1138`, `EcosystemSimulator.cs:1217-1222`). One consequence: equilibrium populations under this model oscillate around roughly 80 to 95 percent of the carrying capacity rather than sitting exactly at it (`SimulationConfig.cs:55-56`).
+   **Tier 1 throttling is indirect.** There is no hard cap on Tier 1 births. High population lowers food density (step 2), which lowers FedRate, which lowers the Condition target (step 3), which drains Condition (step 4), which both shrinks `reproScale` and fires condition deaths (step 7). Logistic-overshoot dynamics emerge from this feedback rather than from a births cap (`EcosystemSimulator.cs:1132-1138`, `EcosystemSimulator.cs:1217-1222`). Where populations settle scales inversely with `EatingAmount`: at the default appetite of 1 they oscillate at roughly 70 to 95 percent of the carrying capacity, while the shipped `EatingAmount = 3` lowers the effective ceiling to about a third of it (each individual draws three resource units), so populations settle proportionally lower (`SimulationConfig.cs:55-56`).
 
 9. **Natural death (flat rate).** Independent of performance, each species loses `Population * effectiveRate * BiologyStep`, where `effectiveRate = max(0, NaturalDeathRate + variance)` and `variance ~ uniform(-NaturalDeathVariance, +NaturalDeathVariance)` (`EcosystemSimulator.cs:1270-1319`). Defaults: `NaturalDeathRate = 0.02` (2 percent) with `NaturalDeathVariance = 0.01` (plus or minus 1 percent) (`SimSpecies.cs:40-41`). This represents old age, disease, and accidents.
 
@@ -265,7 +268,7 @@ Each species in a `RunSpeciesList` is a `SpeciesData` (`DataStructure/SpeciesDat
 |---|---|---|
 | `tier` | 0 | 0 = Tier 1 prey, 1 = Tier 2 predator (legacy). (`SpeciesDatabase.cs:51`) |
 | `count` | 0 | Initial population (whole individuals). (`SpeciesDatabase.cs:48`) |
-| `eatingAmount` | 0 | Prey consumed per predator per step; 0 for Tier 1. (`SpeciesDatabase.cs:52`) |
+| `eatingAmount` | 0 | Resource units each individual consumes per step (floored at 1 in use). Tier 2: prey per predator. Tier 1: units drawn from the shared pool, so higher values feed fewer individuals (shipped species use 3). (`SpeciesDatabase.cs:52`) |
 | `reproductionMultiplier` | 0 | Birth-rate multiplier. (`SpeciesDatabase.cs:53`) |
 | `deathThreshold` | 0.3 | Condition below this triggers graduated condition death. (`SpeciesDatabase.cs:54`) |
 | `deathRate` | 0 | Fraction dying at maximum condition severity. (`SpeciesDatabase.cs:55`) |
@@ -274,8 +277,8 @@ Each species in a `RunSpeciesList` is a `SpeciesData` (`DataStructure/SpeciesDat
 | `conditionRecoveryRate` | 0.10 | Per-species recovery speed. (`SpeciesDatabase.cs:64`) |
 | `naturalDeathRate` | 0.02 | Flat background death fraction per step. (`SpeciesDatabase.cs:71`) |
 | `naturalDeathVariance` | 0.01 | Plus/minus range on natural death. (`SpeciesDatabase.cs:73`) |
-| `huntingEfficiency` | 0.75 | Tier 2: base hunting success. Tier 1: resource extraction efficiency (use 1.0). (`SpeciesDatabase.cs:78`) |
-| `huntingVariance` | 0.15 | Plus/minus range on hunting (Tier 2 only). (`SpeciesDatabase.cs:80`) |
+| `huntingEfficiency` | 0.75 | Base foraging success driving the shared Holling II curve for both tiers. Tier 2: hunting prey. Tier 1: searching the resource pool. 1.0 = no search penalty. (`SpeciesDatabase.cs:78`) |
+| `huntingVariance` | 0.15 | Plus/minus random range on foraging success; applies to all tiers. 0 = deterministic. (`SpeciesDatabase.cs:80`) |
 | `optimalTempK` | 297.0 | Peak-performance temperature, Kelvin. (`SpeciesDatabase.cs:95`) |
 | `arrhenBreadth` | 8000 | Arrhenius breadth. (`SpeciesDatabase.cs:96`) |
 | `arrhenLower` / `arrhenUpper` | 3000 / 35000 | Arrhenius shoulder constants. (`SpeciesDatabase.cs:97-98`) |

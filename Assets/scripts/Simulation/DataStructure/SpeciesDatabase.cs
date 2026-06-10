@@ -73,10 +73,10 @@ public class SpeciesData
     public float naturalDeathVariance = 0.01f;
 
 
-    [Header("Hunting Efficiency (Tier 2 only)")]
-    [Tooltip("Base hunting success rate (e.g., 0.75 = 75%). Tier 1 ignores this.")]
+    [Header("Foraging / Hunting Efficiency")]
+    [Tooltip("Foraging success rate [0..1]. Tier 1: resource-gathering from the land pool. Tier 2/3: hunting the tier below. 1 = perfect forager.")]
     public float huntingEfficiency = 0.75f;
-    [Tooltip("Random variance range (e.g., 0.15 = ±15%)")]
+    [Tooltip("Random variance on foraging success [0..1] (e.g. 0.15 = plus/minus 15%). 0 = deterministic. Applies to all tiers.")]
     public float huntingVariance = 0.15f;
 
     [Header("Star Ratings (UI)")]

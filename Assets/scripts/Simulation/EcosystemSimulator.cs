@@ -706,13 +706,16 @@ public class EcosystemSimulator
     }
 
     /// <summary>
-    /// Process Tier 1 FedRate (v10 — density-dependent extraction from shared food pool)
-    /// AND Tier 2 feeding with Holling Type II + per-predator FedRate (v11) + PREDATION ACCUMULATOR.
+    /// Process Tier 1 FedRate AND Tier 2 feeding. Both tiers share ONE mechanism: a Holling
+    /// Type II foraging efficiency on food availability plus optional variance
+    /// (ComputeForagingSuccess), capped by what the food source can actually supply.
     ///
-    /// Tier 1 (passive extractors / plankton-style):
-    ///   food_density = max(0, 1 - tier1Pop / CarryingCapacityPerTier)  [or 1.0 if cap disabled]
-    ///   FedRate_T1   = min(1, HuntingEfficiency × food_density)
-    /// LINEAR, not Holling II — see in-code comment block for biological reasoning.
+    /// Tier 1 (searches the shared land resource pool):
+    ///   food_density  = max(0, 1 - tier1Pop / CarryingCapacityPerTier)   (the supply cap)
+    ///   resourceRatio = CarryingCapacityPerTier / tier1Pop               (resource per consumer)
+    ///   FedRate_T1    = min(1, ComputeForagingSuccess(sp, resourceRatio) × food_density)
+    /// At efficiency 1 / variance 0 this reduces to min(1, food_density), identical to the
+    /// previous linear model, so existing runs are unchanged.
     /// Tier 1 FedRate is computed before the predator section so it is available to
     /// downstream Steps 3 (Raw Final Performance) and 4 (Update Condition).
     ///
@@ -747,14 +750,11 @@ public class EcosystemSimulator
         // scales by its HuntingEfficiency (semantically: resource extraction
         // efficiency for Tier 1 — passive extractors like plankton are at HE=1).
         //
-        // LINEAR, not Holling II: prey are passive extractors (filter feeding,
-        // surface-area-driven uptake) — no search-time + handling-time structure
-        // that motivates Holling II. Holling II also collapses at HE=1 default
-        // (halfSat = REF × (1-HE)/HE = 0 when HE=1, so FedRate → 1 whenever any
-        // food exists), defeating the food-pool effect entirely at the common
-        // setting. Linear avoids both problems and matches plankton-style
-        // extraction biology directly. Tier 2 keeps Holling II below — active
-        // predation does have search/handling phases that justify it.
+        // Tier 1 now uses the SAME Holling II + variance mechanism as Tier 2 (via
+        // ComputeForagingSuccess), searching the land pool instead of hunting prey.
+        // The Holling response saturates toward 1 at efficiency = 1, but foodDensity
+        // (applied as the supply cap below) still limits feeding, so the carrying-capacity
+        // effect holds at every efficiency, exactly like Tier 2's scarcityFactor.
         //
         // v11.1: carrying capacity is always on. CarryingCapacityPerTier must be
         // > 0 (validated at parse/inspect time). The previous off-mode is gone:
@@ -766,13 +766,19 @@ public class EcosystemSimulator
         float capSafe = Math.Max(CarryingCapacityPerTier, 1f);    // floor of 1 to guard against misconfig
         float foodDensity = Math.Max(0f, 1f - (tier1Pop / capSafe));
         LastFoodDensityT1 = foodDensity;
+        // Land-pool analog of Tier 2's prey:predator ratio. Shared across all Tier 1
+        // species because they draw from the one pool (like foodDensity).
+        float resourceRatio = capSafe / Math.Max(tier1Pop, 1f);
         float fedRateSumT1 = 0f;
         float fedRatePopT1 = 0f;
         foreach (var sp in Species.Where(s => s.Tier == 1))
         {
             if (sp.Population >= MIN_ALIVE_POP)
             {
-                sp.FedRate = Math.Min(1f, sp.HuntingEfficiency * foodDensity);
+                // Holling II foraging success on resource availability + variance,
+                // then capped by what the pool can supply (foodDensity).
+                float gatherSuccess = ComputeForagingSuccess(sp, resourceRatio);
+                sp.FedRate = Math.Min(1f, gatherSuccess * foodDensity);
                 fedRateSumT1 += sp.FedRate * sp.Population;
                 fedRatePopT1 += sp.Population;
             }
@@ -810,10 +816,9 @@ public class EcosystemSimulator
 
         foreach (var pred in predators)
         {
-            // Holling Type II: hunting efficiency scales with prey availability
-            float hollingEff = CalculateHollingEfficiency(pred.HuntingEfficiency, preyRatio);
-            float variance = (float)((_rng.NextDouble() * 2 - 1) * pred.HuntingVariance);
-            float huntingSuccess = Math.Max(MIN_HUNTING_SUCCESS, Math.Min(MAX_HUNTING_SUCCESS, hollingEff + variance));
+            // Same mechanism as Tier 1, on prey availability (preyRatio) instead of land
+            // resources. Holling II hunting success + variance, via the shared helper.
+            float huntingSuccess = ComputeForagingSuccess(pred, preyRatio);
             pred.CurrentHuntingSuccess = huntingSuccess;
 
             // Raw demand (what they NEED) — uses ThermalPerformance (with Pmax)
@@ -827,7 +832,7 @@ public class EcosystemSimulator
             huntingEfficiencySum += huntingSuccess;
             predatorCount++;
 
-            SimLog($"  {pred.FullName}: Hunting={huntingSuccess:P0} (holling={hollingEff:F3}, variance={variance:+0.00;-0.00;0}), RawDemand={rawDemand:F1}, ActualDemand={actualDemand:F1}");
+            SimLog($"  {pred.FullName}: Hunting={huntingSuccess:P0}, RawDemand={rawDemand:F1}, ActualDemand={actualDemand:F1}");
         }
 
         LastAvgHuntingEfficiency = predatorCount > 0 ? huntingEfficiencySum / predatorCount : 1f;
@@ -900,6 +905,27 @@ public class EcosystemSimulator
                 SimLog($"    {p.FullName}: share={share:F3}, lost={preyLost:F2}, accum={accumulated:F2}, deaths={wholeDeaths}, Pop {oldPop:F0} → {p.Population:F0}");
             }
         }
+    }
+
+    /// <summary>
+    /// Foraging success, shared by every consuming tier. Tier 1 searches the land resource
+    /// pool; Tier 2 (and a future Tier 3) hunt the tier below. The only per-tier differences
+    /// are the availability ratio passed in here and the supply cap the caller applies after.
+    ///
+    /// success = Holling II efficiency on availability, then (if variance > 0) a random
+    /// plus/minus HuntingVariance perturbation, clamped to [MIN, MAX]_HUNTING_SUCCESS.
+    /// variance == 0 is fully deterministic and draws no RNG, so a species left at the
+    /// default (efficiency 1, variance 0) behaves exactly as before this generalization.
+    /// </summary>
+    private float ComputeForagingSuccess(SimSpecies sp, float availabilityRatio)
+    {
+        float eff = CalculateHollingEfficiency(sp.HuntingEfficiency, availabilityRatio);
+        if (sp.HuntingVariance > 0f)
+        {
+            float variance = (float)((_rng.NextDouble() * 2 - 1) * sp.HuntingVariance);
+            eff = Math.Max(MIN_HUNTING_SUCCESS, Math.Min(MAX_HUNTING_SUCCESS, eff + variance));
+        }
+        return eff;
     }
 
     /// <summary>

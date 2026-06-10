@@ -51,7 +51,7 @@ public class EditSpeciesUI : MonoBehaviour
     [SerializeField] private TMP_InputField conditionDrainRateField;
     [SerializeField] private TMP_InputField conditionRecoveryRateField;
 
-    [Header("UI Fields - Hunting (Tier 2+ only)")]
+    [Header("UI Fields - Foraging / Hunting Efficiency (all tiers)")]
     [SerializeField] private GameObject huntingSection;
     [SerializeField] private TMP_InputField huntingEfficiencyField;
     [SerializeField] private TMP_InputField huntingVarianceField;
@@ -446,8 +446,10 @@ public class EditSpeciesUI : MonoBehaviour
         if (naturalDeathRateField != null)
             naturalDeathRateField.text = currentEditingData.naturalDeathRate.ToString("F3", CultureInfo.InvariantCulture);
 
-        // === HUNTING SECTION (Tier 2+ only) ===
-        bool showHunting = currentEditingData.tier >= 1;
+        // === FORAGING EFFICIENCY SECTION (all tiers) ===
+        // Every tier forages: Tier 1 gathers from the land resource pool, Tier 2/3 hunt the
+        // tier below. Same fields (huntingEfficiency / huntingVariance), shown for all tiers.
+        bool showHunting = true;
 
         if (huntingSection != null)
             huntingSection.SetActive(showHunting);
@@ -597,12 +599,9 @@ public class EditSpeciesUI : MonoBehaviour
         allValid &= TryReadFloat(naturalDeathVarianceField, out naturalDeathVariance, min: 0f);
         allValid &= TryReadFloat(naturalDeathRateField, out naturalDeathRate, min: 0f);
 
-        // Validate hunting fields only for Tier 2+
-        if (currentEditingData.tier >= 1)
-        {
-            allValid &= TryReadFloat(huntingEfficiencyField, out huntingEfficiency, min: 0f, max: 1f);
-            allValid &= TryReadFloat(huntingVarianceField, out huntingVariance, min: 0f);
-        }
+        // Validate foraging fields for all tiers (Tier 1 resource gathering, Tier 2/3 hunting).
+        allValid &= TryReadFloat(huntingEfficiencyField, out huntingEfficiency, min: 0f, max: 1f);
+        allValid &= TryReadFloat(huntingVarianceField, out huntingVariance, min: 0f);
 
         // If any validation failed, stop here and don't save
         if (!allValid)
@@ -642,12 +641,9 @@ public class EditSpeciesUI : MonoBehaviour
         currentEditingData.conditionDrainRate = ParseRateOrInherit(conditionDrainRateField);
         currentEditingData.conditionRecoveryRate = ParseRateOrInherit(conditionRecoveryRateField);
 
-        // Save hunting fields (Tier 2+ only)
-        if (currentEditingData.tier >= 1)
-        {
-            currentEditingData.huntingEfficiency = huntingEfficiency;
-            currentEditingData.huntingVariance = huntingVariance;
-        }
+        // Save foraging fields (all tiers).
+        currentEditingData.huntingEfficiency = huntingEfficiency;
+        currentEditingData.huntingVariance = huntingVariance;
 
         // Save thermal parameters from controller
         if (thermalController != null)

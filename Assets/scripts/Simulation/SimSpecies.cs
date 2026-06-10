@@ -47,9 +47,10 @@ public class SimSpecies
     //                        Default 1.0 = perfect plankton-style passive extraction.
     //                        Lower values represent imperfect foragers.
     // Used by EcosystemSimulator.ProcessFeedingWithAccumulator in two distinct
-    // formulas: linear for Tier 1 (FedRate = HE × food_density), Holling II for Tier 2.
-    public float HuntingEfficiency = 0.75f;     // Base extraction/hunting success (Tier 2 default; Tier 1 uses 1.0 by convention)
-    public float HuntingVariance = 0.15f;       // Random variance range (±15%) — applied to Tier 2 only
+    // ComputeForagingSuccess (Holling II + variance) for every tier; only the food source
+    // and wording differ (Tier 1 searches the land pool, Tier 2/3 hunt the tier below).
+    public float HuntingEfficiency = 0.75f;     // Foraging/hunting success [0..1]. Tier 1: resource gathering; Tier 2/3: hunting. Default species use 1.0.
+    public float HuntingVariance = 0.15f;       // Random +/- variance on foraging success [0..1]. 0 = deterministic. Applies to all tiers.
 
     // ==================== CONSTANTS ====================
     public const float NO_PREDATOR_PENALTY = 0.85f;           // 15% birth reduction when no predators

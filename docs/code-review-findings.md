@@ -10,8 +10,8 @@ Reviewed at: (fill in)
 
 Fixed in code this session (pending a Unity compile at time of writing). Design and reporting-definition items are left for the team and Brian.
 
-- **Fixed:** F1 (asset `Tier2Enabled` set to 0), F2 (follows F1), F4 (invariant CSV number formatting), F8 (rate columns written as fractions, not `"20.0 %"`), F12 (NaN guard in thermal performance), F14 (carrying-capacity floor and temperature-bounds-order validation), F15 (`AddSpecies` overload now adds), F17 (fallback predators gated by `Tier2Enabled`), F19 (independent biology RNG seed), F21 (bulk summary uses the completed scenario count), F22 (blank, not 0, for no-survivor cross-run metrics). The bulk CSV error panel also now lists every error instead of capping at 10.
-- **Deferred to design / Brian:** F3 (no-predator birth penalty), F5 (Pmax ceiling semantics), F6/F7/F10 (BiologyStep semantics), F11 (death-then-birth ordering), F13 (carrying-capacity cap shape), F20 (which extinction definition is canonical).
+- **Fixed:** F1 (asset `Tier2Enabled` set to 0), F2 (follows F1), F4 (invariant CSV number formatting), F8 (rate columns written as fractions, not `"20.0 %"`), F9 (Tier-1 now consumes `EatingAmount` floored at 1 and uses `HuntingEfficiency` through the shared Holling foraging path, so `eatingAmount`/efficiency are no longer inert for Tier 1, `EcosystemSimulator.cs:774-792`), F12 (NaN guard in thermal performance), F14 (carrying-capacity floor and temperature-bounds-order validation), F15 (`AddSpecies` overload now adds), F17 (fallback predators gated by `Tier2Enabled`), F19 (independent biology RNG seed), F21 (bulk summary uses the completed scenario count), F22 (blank, not 0, for no-survivor cross-run metrics). The bulk CSV error panel also now lists every error instead of capping at 10.
+- **Deferred to design / Brian:** F5 (Pmax ceiling semantics), F6/F7/F10 (BiologyStep semantics), F11 (death-then-birth ordering), F13 (carrying-capacity cap shape), F20 (which extinction definition is canonical).
 - **Deferred (low impact, do with compile verification):** F24 (float to double accumulators and dead-member cleanup).
 - **Pending Unity scene work:** the bulk CSV error panel needs a ScrollRect and auto-size disabled on its text so the full list is readable at a fixed size (the code now emits the full list).
 
@@ -31,24 +31,24 @@ Confirmed findings by severity:
 | Severity | Count |
 |----------|-------|
 | blocker  | 0 |
-| major    | 4 |
+| major    | 3 |
 | minor    | 11 |
 | info     | 9 |
-| Total    | 24 |
+| Total    | 23 |
 
 Confirmed findings by category:
 
 | Category | Count |
 |----------|-------|
 | tier-leftover | 4 |
-| logic | 6 |
+| logic | 5 |
 | numerical | 6 |
 | inconsistency | 3 |
 | dead-code | 3 |
 | unused-input | 1 |
 | units | 1 |
 
-Note: the single most-reported issue is the shipped `Tier2Enabled: 1` asset value, which seven of ten dimensions raised against different downstream effects. It is consolidated into F1, with its distinct consequences (CSV schema, no-predator penalty) split into F2 and F3 where they are independent issues.
+Note: the single most-reported issue is the shipped `Tier2Enabled: 1` asset value, which seven of ten dimensions raised against different downstream effects. It is consolidated into F1, with its distinct CSV-schema consequence split into F2.
 
 ---
 
@@ -71,15 +71,6 @@ Note: the single most-reported issue is the shipped `Tier2Enabled: 1` asset valu
 - Recommendation: fixing F1 (set `Tier2Enabled: 0`) drops these columns. Verify a fresh `scenario_N.csv` contains no `*T2` columns after the fix.
 - Confidence: high.
 - Verdict: confirmed. The `if (tier2)` branches in `CsvHeader`/`ToCsvLine` (lines 216-232, 270-286) and the summary blocks gate exactly these columns; with the asset flag true they are all written and zero.
-
-### F3. No-predator birth penalty (0.85) is applied unconditionally to every prey species every step
-
-- Location: `EcosystemSimulator.cs:1206-1215`; constant `SimSpecies.cs:55`; `GetTierPopulation` at `EcosystemSimulator.cs:1384`.
-- What the code does: in `ApplyReproduction`, for every Tier-1 species the code reads `GetTierPopulation(2)` and, when it is below `MIN_ALIVE_POP` (1.0), multiplies births by `NO_PREDATOR_PENALTY = 0.85f`. In the prey-only build there are never any Tier-2 species, so `GetTierPopulation(2)` is always 0 and the 15 percent birth reduction fires on every biology step for every prey species.
-- Why it is a red flag: this is a two-tier-era assumption ("prey overbreed when predators are absent, so penalize them") that no longer makes sense in a prey-only simulator. It is not an occasional event; it is a permanent, silent 0.85x scalar on all reproduction that biases every population trajectory and equilibrium downward, with nothing in the config or output surfacing that it is active. It is also not gated by `Tier2Enabled`, so it would persist even with the gate set to its intended false.
-- Recommendation: decide intent explicitly. If the prey-only sim should not carry a no-predator penalty, gate the block on `Tier2Enabled` or remove it. If a baseline birth discount is genuinely wanted, fold it into `ReproductionMultiplier` so it is visible and tunable rather than hidden behind a now-always-true branch.
-- Confidence: high.
-- Verdict: confirmed. The branch and constant match; `GetTierPopulation(2)` sums only `Tier == 2` species, which never exist in this build, so the penalty is unconditional.
 
 ### F4. CSV writers format floats with current culture, corrupting output on comma-decimal locales
 
@@ -173,7 +164,7 @@ Note: the single most-reported issue is the shipped `Tier2Enabled: 1` asset valu
 - Why it is a red flag: carrying capacity does not bound growth on the step it is exceeded; it relies on the Condition feedback loop, so population can overshoot K before settling. The per-species guard does not bound the ecosystem total at `100*K` as the comment at lines 661-666 implies.
 - Recommendation: if the intent is to bound the tier total, cap on `GetTier1Population()` or divide `popCap` by live species count; otherwise reword the comment to "per species". Confirm the startup transient stays well below `100*K` for the shipped config.
 - Confidence: medium.
-- Verdict: uncertain on the original "load-bearing ceiling / hard overshoot" framing; confirmed on the mechanics. Verification simulated the shipped aggregate (K=5000, ReproMult=0.45, Pmax ~0.97, near-optimal temps, no-predator penalty 0.85): drain accelerates quadratically (`effectiveDrain = drainRate*(1+severity)/Pmax`, ~0.30/day at target 0), population peaks near 1.003xK on ~day 16, then settles to ~0.7xK. The `100*K` guard is essentially never engaged at shipped parameters, so it is a defensive catch, not the operative equilibrium. The per-species-vs-tier comment mismatch and the indirect-throttle description are both accurate.
+- Verdict: uncertain on the original "load-bearing ceiling / hard overshoot" framing; confirmed on the mechanics. Verification simulated the shipped aggregate (K=5000, ReproMult=0.45, Pmax ~0.97, near-optimal temps): drain accelerates quadratically (`effectiveDrain = drainRate*(1+severity)/Pmax`, ~0.30/day at target 0), population peaks near 1.003xK on ~day 16, then settles to ~0.7xK. The `100*K` guard is essentially never engaged at shipped parameters, so it is a defensive catch, not the operative equilibrium. The per-species-vs-tier comment mismatch and the indirect-throttle description are both accurate.
 
 ### F14. CarryingCapacity Range(100) lower bound and temperature-bounds ordering are not enforced at runtime
 
@@ -355,5 +346,5 @@ Claims that verification knocked down or substantially narrowed. Kept for tracea
 - Low confidence / latent only: speciesMeta lookup key `{name}_{vlabel}` vs `SimSpecies.FullName` fallback divergence (`ScenarioResult.cs:594-610`). Real difference between the two empty-label fallback rules, but the validated bulk path requires a non-empty variant, so it is not currently reachable; an empty label would mislabel Variant/Tier as Unknown/?.
 - Narrowed: cross-scenario `ComputeAggStat` float variance (`ScenarioResult.cs:484-520`). Confirmed float sums risk cancellation for population-magnitude metrics, but the only population-magnitude StdDev actually emitted to CSV is `MeanPop_StdDev`; the per-scenario stats paths use double. Folded into the float-precision theme; visible CSV symptom is one column.
 - Narrowed: GetSummary min (pop >= 1) vs ComputePopulationStats min (includes 0) (`SimulationRunner.cs:963-965` vs `657-663`). Both definitions exist in the data model, but the lowest-nonzero value is not written to any CSV (results UI only), so the aggregate file itself does not show the conflict.
-- Refuted (justification only): the claim that flipping `Tier2Enabled` changes biology for the shipped data. It changes only the CSV column schema (F2); population numbers are unchanged because no Tier-2 species exist and the no-predator penalty (F3) is not gated by the flag.
+- Refuted (justification only): the claim that flipping `Tier2Enabled` changes biology for the shipped data. It changes only the CSV column schema (F2); population numbers are unchanged because no Tier-2 species exist.
 - Noted and safe (not findings): the seasonal phase comment at `TemperatureCalculator.cs:124` is wrong ("coldest at day 0" but the sinusoid puts the mean at day 0); the final temperature clamp can mask a positive climate trend on multi-decade runs once it saturates at MaxTemp; the shipped asset zeroes the climate/interannual fields so the warming features the calculator advertises are inert by default; `HasCrashed` uses float `== 0` but is safe because Step 10 rounds populations to integers (a NaN population would evade detection, but per F12 the population never actually goes NaN). The narrow-band lethal-fade midpoint artifact (`SimSpecies.cs:99-114`, fadeFactor stays 1.0 at the center of a sub-4-degree band) affects only pathological custom configs; shipped CTmax-CTmin is 35.

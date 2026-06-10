@@ -122,7 +122,8 @@ Kelvin internally, but nothing on this input panel is in Kelvin.
 | `NumberOfScenariosInput` | `NumberOfScenarios` | int | count | `[1, 100]` |
 
 `CarryingCapacityTier1` is the Tier 1 shared resource-pool capacity in individuals.
-It feeds the FedRate term `food_density = max(0, 1 - tier1Pop/capacity)` in the
+It feeds the FedRate term `food_density = max(0, 1 - tier1Consumption/capacity)`,
+where `tier1Consumption = sum of Population*max(1, eatingAmount)`, in the
 biology loop (`SimulationConfig.cs:48-59`); the inspector `[Range]` attribute is
 `[100, 100000]` with default `5000`, but the input panel does not re-enforce that
 range on Run. `ConditionDrainRate` and `ConditionRecoveryRate` are the
@@ -385,15 +386,15 @@ The editor exposes these controls (`EditSpeciesUI.cs:31-64`):
 | Gameplay | `naturalDeathRateField` | `naturalDeathRate` | float, `>= 0` |
 | Condition | `conditionDrainRateField` | `conditionDrainRate` | blank means inherit |
 | Condition | `conditionRecoveryRateField` | `conditionRecoveryRate` | blank means inherit |
-| Hunting (Tier 2+) | `huntingEfficiencyField` | `huntingEfficiency` | float, `[0, 1]` |
-| Hunting (Tier 2+) | `huntingVarianceField` | `huntingVariance` | float, `>= 0` |
+| Foraging (all tiers) | `resourceFindingEfficiencyField` | `huntingEfficiency` | float, `[0, 1]` |
+| Foraging (all tiers) | `resourceFindingVarianceField` | `huntingVariance` | float, `>= 0` |
 
 The validation ranges are exactly as passed to `TryReadFloat` and `TryReadInt` at
-`EditSpeciesUI.cs:588-604`. Every bracketed range is inclusive on both endpoints:
+`EditSpeciesUI.cs:584-598`. Every bracketed range is inclusive on both endpoints:
 `TryReadFloat` rejects only when `value < min || value > max`
-(`EditSpeciesUI.cs:792`) and `TryReadInt` likewise (`EditSpeciesUI.cs:836`), so
+(`EditSpeciesUI.cs:782`) and `TryReadInt` likewise (`EditSpeciesUI.cs:826`), so
 `[0, 1]` accepts both `0` and `1`. A `>= 0` field has no upper bound (the max
-defaults to `float.MaxValue`/`int.MaxValue`, `EditSpeciesUI.cs:773, 817`). `Start`
+defaults to `float.MaxValue`/`int.MaxValue`, `EditSpeciesUI.cs:763, 807`). `Start`
 forces the content type of each numeric field to `IntegerNumber` or `DecimalNumber`
 so the on-screen keyboard restricts input (`EditSpeciesUI.cs:246-258`).
 
@@ -410,13 +411,17 @@ degrees of zero. The inline comment at `SpeciesDatabase.cs:56` calls it a
 "performance debuff", but the actual runtime effect is the additive Celsius offset
 shown above.
 
-The hunting section is Tier 2 only. `PopulateFields` sets
-`bool showHunting = currentEditingData.tier >= 1` and toggles the section active
-state (`EditSpeciesUI.cs:449-462`); Save only validates and writes the hunting
-fields when `tier >= 1` (`EditSpeciesUI.cs:600-605, 645-650`). Current runs are
-Tier 1 only, so this section is hidden in practice. See `bulk-system.md` and
-`run-scenario-batch.md` for the Tier 2 gate (`EcosystemSimulator.Tier2Enabled`
-defaults false).
+The foraging section applies to all tiers. It has two inputs,
+`resourceFindingEfficiencyField` and `resourceFindingVarianceField`, shown for every
+tier with plain scene labels and no per-tier label or visibility logic
+(`EditSpeciesUI.cs:54-60, 452-458`). Tier 1 forages the shared resource pool, Tier 2
+and a future Tier 3 hunt the tier below; the same two fields edit
+`SpeciesData.huntingEfficiency` and `huntingVariance` in every case. `PopulateFields`
+always populates them (`EditSpeciesUI.cs:454-458`) and `SaveData` always validates and
+writes them, efficiency in `[0, 1]` and variance `>= 0` (`EditSpeciesUI.cs:596-598,
+638-640`). The earlier Tier-2-only hunting section and its `showHunting`/`tier >= 1`
+gate were removed. See `bulk-system.md` and `run-scenario-batch.md` for the Tier 2 gate
+(`EcosystemSimulator.Tier2Enabled` defaults false).
 
 ### Condition rate inherit sentinel
 

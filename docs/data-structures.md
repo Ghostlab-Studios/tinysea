@@ -141,7 +141,7 @@ conversion `Tier = data.tier + 1` happens at load (EcosystemSimulator.cs:356).
 
 | Field | Default | Meaning |
 |---|---|---|
-| `EatingAmount` | 0 (field); set from config. Tier 1 = 0 | Prey consumed per predator per step. The C# field has no initializer (SimSpecies.cs:25), so an unset instance is 0. Loaded from `eatingAmount` (EcosystemSimulator.cs:358); SpeciesData has no asset default for it, so a blank source value is 0 |
+| `EatingAmount` | 0 (field); set from config | Per-individual consumption, used by both tiers. Tier 2: prey eaten per predator per step. Tier 1: resource points each individual draws from the shared pool, floored at 1 in the consumption sum (EcosystemSimulator.cs:776), so a higher appetite drains the pool faster; at the floored 0 default it behaves as appetite 1. The C# field has no initializer (SimSpecies.cs:25), so an unset instance is 0. Loaded from `eatingAmount` (EcosystemSimulator.cs:358); SpeciesData has no asset default, so a blank source value is 0 |
 | `ReproductionMultiplier` | 0 (field); set from config | Birth rate multiplier. Bare field declaration, no initializer (SimSpecies.cs:26). Loaded from `reproductionMultiplier` (EcosystemSimulator.cs:359); SpeciesData has no asset default, so a blank value is 0 |
 | `DeathThreshold` | 0 (field); SpeciesData asset default 0.3 | Condition below this triggers graduated condition death. The `SimSpecies` field is a bare declaration with no initializer, so its real C# default is 0f (SimSpecies.cs:27); the 0.3 comes from `SpeciesData.deathThreshold` (SpeciesDatabase.cs:54) and is copied in at load (EcosystemSimulator.cs:360). The `ApplyConditionDeath` gate is `sp.Condition >= sp.DeathThreshold` (EcosystemSimulator.cs:1059). Note: the inline comment on SimSpecies.cs:27 is stale. It reads "FinalPerf below this triggers thermal death", but the code compares `Condition` against `DeathThreshold` for condition death (EcosystemSimulator.cs:1056-1062), not FinalPerf for thermal death |
 | `DeathRate` | 0 (field); set from config | Fraction dying when condition death fires. Bare field declaration, no initializer (SimSpecies.cs:28); loaded from `deathRate` (EcosystemSimulator.cs:361), SpeciesData has no asset default, so a blank value is 0. The inline comment on SimSpecies.cs:28 ("thermal death") is stale for the same reason as `DeathThreshold`; the field feeds graduated condition death (EcosystemSimulator.cs:1063) |
@@ -150,8 +150,8 @@ conversion `Tier = data.tier + 1` happens at load (EcosystemSimulator.cs:356).
 | `ConditionRecoveryRate` | -1 | Per-species condition recovery rate. Negative means inherit the global rate (SimSpecies.cs:37) |
 | `NaturalDeathRate` | 0.02 | Flat per-step natural mortality rate (SimSpecies.cs:40) |
 | `NaturalDeathVariance` | 0.01 | Half-width of a symmetric uniform variance on the natural death rate. Each step the simulator draws `variance = (_rng.NextDouble() * 2 - 1) * NaturalDeathVariance`, uniform in `[-NaturalDeathVariance, +NaturalDeathVariance]`, adds it to `NaturalDeathRate`, then clamps the sum to be non-negative (EcosystemSimulator.cs:1278-1279). `_rng` is the scenario's seeded `System.Random` (SimSpecies.cs:41) |
-| `HuntingEfficiency` | 0.75 (field initializer) | Tier 1: resource extraction efficiency from the shared food pool, used in the Tier 1 `FedRate` formula in section 3.3. Tier 2: base hunting success feeding Holling II. The field initializer is `0.75f` (SimSpecies.cs:51). At load the field is copied straight from `SpeciesData.huntingEfficiency` (EcosystemSimulator.cs:365) with no Tier-based override, so a `SimSpecies` holds exactly whatever the config supplies. The value 1.0 for Tier 1 is a data convention, not a code path: the canonical Tier 1 species set `huntingEfficiency = 1.0f` in `SpeciesDatabase` (SpeciesDatabase.cs:338,515), and bulk CSV rows are expected to do the same. No code forces 1.0 for Tier 1 at any line; a Tier 1 species configured with 0.75 keeps 0.75 |
-| `HuntingVariance` | 0.15 | Half-width of a symmetric uniform variance on hunting success, applied to Tier 2 only. Each step the simulator draws `variance = (_rng.NextDouble() * 2 - 1) * HuntingVariance`, uniform in `[-HuntingVariance, +HuntingVariance]`, adds it to the Holling efficiency, then clamps the result to `[MIN_HUNTING_SUCCESS, MAX_HUNTING_SUCCESS]` (EcosystemSimulator.cs:809-810). `_rng` is the scenario's seeded `System.Random` (SimSpecies.cs:52) |
+| `HuntingEfficiency` | 0.75 (field initializer) | Base foraging success at the normal availability ratio; drives the shared Holling II curve (`ComputeForagingSuccess`) for every tier. Tier 1 searches the resource pool, Tier 2 hunts prey, used in the Tier 1 `FedRate` formula in section 3.3. The field initializer is `0.75f` (SimSpecies.cs:52). At load the field is copied straight from `SpeciesData.huntingEfficiency` (EcosystemSimulator.cs:365) with no Tier-based override, so a `SimSpecies` holds exactly whatever the config supplies. The value 1.0 for Tier 1 is a data convention, not a code path: the canonical Tier 1 species set `huntingEfficiency = 1.0f` in `SpeciesDatabase` (SpeciesDatabase.cs:338,515), at which the Holling curve returns 1 (EcosystemSimulator.cs:971). No code forces 1.0 for Tier 1 at any line; a Tier 1 species configured with 0.75 keeps 0.75 |
+| `HuntingVariance` | 0.15 | Half-width of a symmetric uniform variance on foraging success, applied to all tiers (0 = deterministic). When `> 0`, the simulator draws `variance = (_rng.NextDouble() * 2 - 1) * HuntingVariance`, uniform in `[-HuntingVariance, +HuntingVariance]`, adds it to the Holling efficiency, then clamps the result to `[MIN_HUNTING_SUCCESS, MAX_HUNTING_SUCCESS]` (EcosystemSimulator.cs:934-937). `_rng` is the scenario's seeded `System.Random` (SimSpecies.cs:53) |
 
 Thermal-curve parameters in Kelvin (SimSpecies.cs:60-65): `OptimalTempK`, `ArrhenBreadth`,
 `ArrhenLower`, `ArrhenUpper`, `LowerBoundK`, `UpperBoundK`.
@@ -165,11 +165,10 @@ Peak and lethal-limit parameters (SimSpecies.cs:68-71):
 | `CTmaxC` | 40.0 (field and asset agree) | Critical thermal maximum in Celsius. At or above, performance is 0. Field initializer 40.0 (SimSpecies.cs:70); load copies `SpeciesData.ctMaxC`, asset default also 40.0 (SpeciesDatabase.cs:109; EcosystemSimulator.cs:375) |
 | `TemperatureDebuff` | 0 | Per-species offset in degrees Celsius, added to the experienced temperature. It is applied as the first line of `CalculatePerformance`, `temperatureCelsius += TemperatureDebuff` (SimSpecies.cs:97), so it shifts the input before the CTmin/CTmax lethal fade and before the Celsius-to-Kelvin conversion at SimSpecies.cs:116. A positive value makes the species behave as if the water were warmer (SimSpecies.cs:71) |
 
-Constants on the type (SimSpecies.cs:55-57), with where each is used:
+Constants on the type (SimSpecies.cs:56-57), with where each is used:
 
 | Constant | Value | Where used |
 |---|---|---|
-| `NO_PREDATOR_PENALTY` | 0.85 | Step 8 reproduction. When a Tier 1 species has no live Tier 2 predators (Tier 2 population below `MIN_ALIVE_POP`), its raw birth count is multiplied by 0.85, a 15% reduction (EcosystemSimulator.cs:1207-1214) |
 | `MIN_FINAL_PERF_FOR_NATURAL_DEATH` | 0.1 | Declared but unused. No biology step references it; natural death (Step 9) applies a flat rate with no performance floor (EcosystemSimulator.cs:1270-1319). Treat it as inert |
 | `LETHAL_TRANSITION_WIDTH` | 2.0 (private) | Inside `CalculatePerformance`. It is the half-width in degrees Celsius of the cosine fade that ramps thermal performance to 0 as temperature approaches `CTminC` or `CTmaxC`, capped at half the lethal range (SimSpecies.cs:99-112) |
 
@@ -204,7 +203,7 @@ values are dimensionless in [0,1].
 |---|---|---|---|
 | `RawThermalPerformance` | 0 (no initializer) | Step 1 reset+write (EcosystemSimulator.cs:593) | Arrhenius performance with lethal fade, without `Pmax`. Recomputed for every species at the top of Step 1 |
 | `ThermalPerformance` | 0 (no initializer) | Step 1 reset+write (EcosystemSimulator.cs:594) | `RawThermalPerformance * Pmax`. Drives predator demand and logging. Recomputed every Step 1 |
-| `FedRate` | 1 (field initializer `FedRate = 1f`, SimSpecies.cs:76) | Step 1 reset to 1 (cs:595); Step 2 sets the live value (cs:769 Tier 1, cs:857 Tier 2) or forces 0 for dead/low-pop species (cs:775) and for predators with no prey (cs:785) | Feeding satisfaction in [0,1]. Tier 1: `FedRate = min(1, HuntingEfficiency * foodDensity)`, where `foodDensity = max(0, 1 - tier1Pop / capSafe)` (EcosystemSimulator.cs:759-769; see note below the table). Tier 2: Holling II per-predator value |
+| `FedRate` | 1 (field initializer `FedRate = 1f`, SimSpecies.cs:77) | Step 1 reset to 1 (cs:595); Step 2 sets the live value (cs:792 Tier 1, cs:857 Tier 2) or forces 0 for dead/low-pop species (cs:798) and for predators with no prey (cs:785) | Feeding satisfaction in [0,1]. Tier 1: `FedRate = min(1, gatherSuccess * foodDensity)` where `gatherSuccess = ComputeForagingSuccess(sp, resourceRatio)` (Holling II + variance) and `foodDensity = max(0, 1 - tier1Consumption / capSafe)` (EcosystemSimulator.cs:777-792; see note below the table). Tier 2: Holling II per-predator value |
 | `RawFinalPerformance` | 0 (no initializer) | Step 3 (EcosystemSimulator.cs:608) | `RawThermalPerformance * FedRate`. The condition drain target. Uses the raw (non-`Pmax`) thermal value on purpose, see the note below the table |
 | `FinalPerformance` | 0 (no initializer) | Step 5 (EcosystemSimulator.cs:628) | `ThermalPerformance * FedRate`. Logging/CSV only, never read by a later step. Uses the `Pmax`-scaled `ThermalPerformance`, see the note below the table |
 | `CurrentHuntingSuccess` | 1 in practice on a biology day (no field initializer, so the bare C# default is 0, SimSpecies.cs:79) | Step 1 reset to 1 (cs:596); Step 2 sets the predator value (cs:811) | This step's hunting success. Tier 2 species get a real value in Step 2; Tier 1 species are reset to 1 in Step 1 and never overwritten, so they stay at 1 on any day biology runs |
@@ -224,24 +223,29 @@ record: on a day where biology does not run, `SimulationRunner.RecordStep` reuse
 species' current `FedRate` field for the `FedRate` column (SimulationRunner.cs:567), which is
 the value Step 1 last wrote. So a Tier 1 species that is never processed because it is
 extinct (population below `MIN_ALIVE_POP = 1.0`, EcosystemSimulator.cs:248) has its `FedRate`
-forced to 0 in Step 2 (EcosystemSimulator.cs:775) on every biology day, and reports 0, not 1.
+forced to 0 in Step 2 (EcosystemSimulator.cs:798) on every biology day, and reports 0, not 1.
 
-`foodDensity` (Tier 1 only). It is the shared-resource fill level of the single Tier 1 food
-pool on the current day, dimensionless in [0,1]. It is computed once per biology step before
-the per-species `FedRate` loop (EcosystemSimulator.cs:759-769):
+`foodDensity` (Tier 1 only). It is the supply cap of the single Tier 1 food pool on the
+current day, dimensionless in [0,1], the Tier 1 analog of Tier 2's scarcity factor. It and
+the search ratio are computed once per biology step before the per-species `FedRate` loop
+(EcosystemSimulator.cs:765-782):
 
 ```text
-tier1Pop    = max(0, total live Tier 1 population)          // sum of Tier 1 Population, clamped >= 0
-capSafe     = max(CarryingCapacityPerTier, 1)               // floor of 1 to guard misconfig
-foodDensity = max(0, 1 - tier1Pop / capSafe)                // 1 when empty, 0 at/over capacity
+tier1Pop         = max(0, total live Tier 1 population)     // sum of Tier 1 Population, clamped >= 0
+capSafe          = max(CarryingCapacityPerTier, 1)          // floor of 1 to guard misconfig
+tier1Consumption = sum over live Tier 1 of Population * max(1, EatingAmount)   // appetite floored at 1
+foodDensity      = max(0, 1 - tier1Consumption / capSafe)   // 1 when empty, 0 at/over capacity
+resourceRatio    = capSafe / max(tier1Pop, 1)               // Holling search ratio
 ```
 
 `CarryingCapacityPerTier` is the per-tier carrying capacity from config (always on as of
-v11.1, validated > 0). `foodDensity` falls linearly as Tier 1 population fills the pool and
-hits 0 once Tier 1 population reaches `capSafe`. The full Step 2 feeding equations, including
-the per-species `FedRate` and the legacy Tier 2 Holling II path, are in section 14, Step 2.
-The exact biological reasoning for the linear (not Holling II) form is in the in-code comment
-block (EcosystemSimulator.cs:736-758).
+v11.1, validated > 0). `foodDensity` falls with total consumption (`Population * EatingAmount`,
+not head count) and hits 0 once consumption reaches `capSafe`, so a higher appetite occupies
+the pool with fewer individuals. `resourceRatio` drives the shared Holling foraging curve;
+appetite stays out of it, entering only through `foodDensity`, mirroring Tier 2's `preyRatio`.
+The full Step 2 feeding equations, including the per-species `FedRate` and the legacy Tier 2
+Holling II path, are in section 14, Step 2. The in-code comment block explains the shared
+foraging model (EcosystemSimulator.cs:745-782).
 
 Raw versus `Pmax`-scaled final performance. `RawFinalPerformance` (the condition target,
 Step 3) multiplies the raw thermal value by `FedRate`, while `FinalPerformance` (logging,
@@ -290,15 +294,15 @@ hard-coded in the factory bodies and are listed in full below.
 |---|---|
 | `Name` | `"Hexapod"` |
 | `Tier` | 1 |
-| `EatingAmount` | 0 (Tier 1 does not eat) |
+| `EatingAmount` | 0 (floored to 1 per individual in the pool draw, EcosystemSimulator.cs:776) |
 | `ReproductionMultiplier` | 0.45 |
 | `DeathThreshold` | 0.3 |
 | `DeathRate` | 0.6 |
 | `ReproThreshold` | 0.25 |
 | `NaturalDeathRate` | 0.02 |
 | `NaturalDeathVariance` | 0.01 |
-| `HuntingEfficiency` | 1.0 (perfect resource extraction from the shared food pool) |
-| `HuntingVariance` | 0 |
+| `HuntingEfficiency` | 1.0 (foraging success >= 1 makes the shared Holling curve return 1, EcosystemSimulator.cs:971) |
+| `HuntingVariance` | 0 (deterministic foraging, draws no RNG) |
 | `ArrhenBreadth` | 5000 |
 | `ArrhenLower` | 16000 (then overwritten per variant) |
 | `ArrhenUpper` | 43800 (then overwritten per variant) |
@@ -454,7 +458,7 @@ fields. The field-name mapping a reimplementation must follow:
 | `VariantLabel` | `variantLabel` (fallback `variant.ToString()`) | SpeciesDatabase.cs:41; EcosystemSimulator.cs:355 |
 | `Tier` | `tier + 1` | 0-based to 1-based (SpeciesDatabase.cs:51; EcosystemSimulator.cs:356) |
 | `Population` | `count` | EcosystemSimulator.cs:357 |
-| `EatingAmount` | `eatingAmount` (no asset default; blank source is 0) | The `SpeciesData` field has no initializer (SpeciesDatabase.cs:52), so a missing value is 0f. Copied at EcosystemSimulator.cs:358. Tier 1 is expected to be 0 |
+| `EatingAmount` | `eatingAmount` (no asset default; blank source is 0) | The `SpeciesData` field has no initializer (SpeciesDatabase.cs:52), so a missing value is 0f. Copied at EcosystemSimulator.cs:358. For Tier 1 it sets the per-individual pool draw, floored at 1 in the consumption sum (EcosystemSimulator.cs:776), so a 0 behaves as appetite 1; the shipped Tier 1 list uses 3 |
 | `ReproductionMultiplier` | `reproductionMultiplier` (no asset default; blank source is 0) | No initializer on `SpeciesData` (SpeciesDatabase.cs:53), missing value is 0f. Copied at EcosystemSimulator.cs:359 |
 | `DeathThreshold` | `deathThreshold` (asset default 0.3) | SpeciesDatabase.cs:54; copied at EcosystemSimulator.cs:360 |
 | `DeathRate` | `deathRate` (no asset default; blank source is 0) | No initializer on `SpeciesData` (SpeciesDatabase.cs:55), missing value is 0f. Copied at EcosystemSimulator.cs:361 |
@@ -558,7 +562,7 @@ expression for each of the four live accumulators is:
 
 | Event (step) | `rawAmount` expression | Code |
 |---|---|---|
-| Births (8) | `Population * reproScale * ReproductionMultiplier * Pmax * BiologyStep`, then `* NO_PREDATOR_PENALTY` (0.85) for a Tier 1 species with no live predators | EcosystemSimulator.cs:1204,1212,1228 |
+| Births (8) | `Population * reproScale * ReproductionMultiplier * Pmax * BiologyStep` | EcosystemSimulator.cs:1247,1260 |
 | Predation (2) | per prey species, `totalEaten * (Population / availablePrey)`, the prey's proportional share of the day's total catch | EcosystemSimulator.cs:872-879 |
 | Condition death (7) | `Population * severity * DeathRate * BiologyStep`, where `severity = (DeathThreshold - Condition) / DeathThreshold` | EcosystemSimulator.cs:1062-1067 |
 | Natural death (9) | `Population * effectiveRate * BiologyStep`, where `effectiveRate = max(0, NaturalDeathRate + uniform variance)` | EcosystemSimulator.cs:1278-1291 |
@@ -622,7 +626,7 @@ that hold whole-event counts for the current day only. They are reset at the top
 | `LastNaturalDeathsBySpecies` | long | step 9 (EcosystemSimulator.cs:1313) | Natural deaths this day |
 | `LastEatenBySpecies` | long | step 2 (EcosystemSimulator.cs:892) | Prey eaten this day. Tier 1 only |
 | `LastReproScaleBySpecies` | float | step 8 (EcosystemSimulator.cs:1198) | Reproduction scale [0,1] this day |
-| `LastFedRateBySpecies` | float | step 2 (EcosystemSimulator.cs:778,861) | This day's `FedRate` |
+| `LastFedRateBySpecies` | float | step 2 (EcosystemSimulator.cs:801,861) | This day's `FedRate` |
 | `StartPopBySpecies` | long | top of step (EcosystemSimulator.cs:583) | Rounded population at start of day |
 
 All are keyed by `FullName` (EcosystemSimulator.cs:210). `StartPopBySpecies` is the
@@ -1090,26 +1094,33 @@ CurrentHuntingSuccess = 1                                           // reset; St
 
 ### Step 2, feeding and predation
 
-Tier 1 (prey, primary). One shared food pool. `foodDensity` is computed once before the
-per-species loop (EcosystemSimulator.cs:759-762), then each live Tier 1 species takes a fed
-rate scaled by its `HuntingEfficiency` (EcosystemSimulator.cs:765-779):
+Tier 1 (prey, primary). One shared food pool, foraged with the same Holling II mechanism as
+Tier 2 (via `ComputeForagingSuccess`). The supply cap `foodDensity` and the search ratio are
+computed once before the per-species loop (EcosystemSimulator.cs:765-782), then each live Tier 1
+species takes a fed rate from its foraging success capped by supply (EcosystemSimulator.cs:785-802):
 
 ```text
-tier1Pop    = max(0, total live Tier 1 Population)
-capSafe     = max(CarryingCapacityPerTier, 1)
-foodDensity = max(0, 1 - tier1Pop / capSafe)            // 1 empty, 0 at/over capacity
+tier1Pop         = max(0, total live Tier 1 Population)
+capSafe          = max(CarryingCapacityPerTier, 1)
+tier1Consumption = sum over live Tier 1 of Population * max(1, EatingAmount)
+foodDensity      = max(0, 1 - tier1Consumption / capSafe)   // 1 empty, 0 at/over capacity
+resourceRatio    = capSafe / max(tier1Pop, 1)               // Holling search ratio
 
 for each Tier 1 species sp:
     if sp.Population >= MIN_ALIVE_POP:                   // 1.0
-        sp.FedRate = min(1, sp.HuntingEfficiency * foodDensity)
+        gatherSuccess = ComputeForagingSuccess(sp, resourceRatio)   // Holling II + variance
+        sp.FedRate    = min(1, gatherSuccess * foodDensity)
     else:
         sp.FedRate = 0                                   // dead/low-pop record 0
 ```
 
 `CarryingCapacityPerTier` is the per-tier carrying capacity from config, always on as of
-v11.1 and validated > 0; its default on the simulator is 5000 (EcosystemSimulator.cs:237). The
-linear (not Holling II) form is deliberate for passive Tier 1 extractors
-(EcosystemSimulator.cs:736-758).
+v11.1 and validated > 0; its default on the simulator is 5000 (EcosystemSimulator.cs:237).
+`ComputeForagingSuccess` is `CalculateHollingEfficiency(HuntingEfficiency, resourceRatio)`
+(returns 1 when efficiency >= 1) plus a random `HuntingVariance` term when that variance is > 0
+(EcosystemSimulator.cs:931-940). At `HuntingEfficiency = 1`, `HuntingVariance = 0`,
+`EatingAmount = 1` this reduces to `FedRate = foodDensity`, identical to the old linear model.
+The in-code comment block explains the shared foraging model (EcosystemSimulator.cs:745-782).
 
 Tier 2 (predator, legacy, secondary). Current runs disable Tier 2, so this path is inactive
 by default; it is documented because it is part of the model and runs when Tier 2 is enabled.
@@ -1285,12 +1296,10 @@ The healthy branch ramps `reproScale` linearly from 0.10 at `Condition == ReproT
 0.10 at `Condition == ReproThreshold`. The two branches meet at 0.10, so there is no
 discontinuity at the threshold. Only a truly dead species (`Condition == 0`) gets
 `reproScale == 0`. The raw birth count then uses the birth accumulator (section 5.2) with
-(EcosystemSimulator.cs:1204,1207-1214):
+(EcosystemSimulator.cs:1247,1260):
 
 ```text
 births = Population * reproScale * ReproductionMultiplier * Pmax * BiologyStep
-if Tier == 1 and total Tier 2 population < MIN_ALIVE_POP:
-    births *= NO_PREDATOR_PENALTY                    // 0.85, a 15% reduction
 // accumulator pattern (section 5.2) -> wholeBirths added to Population (no clamp)
 ```
 

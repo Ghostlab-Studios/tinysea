@@ -8,7 +8,7 @@ flowchart TD
 
     RESET --> S1["STEP 1 Thermal performance (cs:589-598)<br/>RawThermalPerformance = CalculatePerformance(temp)  [0,1], no Pmax<br/>ThermalPerformance = RawThermalPerformance * Pmax<br/>FedRate = 1; CurrentHuntingSuccess = 1"]
 
-    S1 --> S2["STEP 2 Feeding / predation (cs:600-602, body 728)<br/>Tier 1: foodDensity = max(0, 1 - tier1Pop/capSafe)<br/>FedRate_i = min(1, HuntingEfficiency_i * foodDensity)<br/>LastFedRateT1 = pop-weighted mean (1 if none alive)<br/>Tier 2 (legacy, dormant): Holling II, prey removed via accumulator"]
+    S1 --> S2["STEP 2 Feeding / predation (cs:600-602, body 728)<br/>Tier 1: foodDensity = max(0, 1 - sum(pop*max(1,eatingAmount))/capSafe)<br/>resourceRatio = capSafe / max(tier1Pop, 1)<br/>gatherSuccess_i = Holling(HuntingEfficiency_i, resourceRatio) + variance<br/>FedRate_i = min(1, gatherSuccess_i * foodDensity)<br/>LastFedRateT1 = pop-weighted mean (1 if none alive)<br/>Tier 2 (legacy, dormant): Holling II, prey removed via accumulator"]
 
     S2 --> S3["STEP 3 Raw final performance (cs:604-610)<br/>RawFinalPerformance = RawThermalPerformance * FedRate<br/>(this is the Condition drain target)"]
 
@@ -20,7 +20,7 @@ flowchart TD
 
     S6 --> S7["STEP 7 Condition death (cs:639-644, body 1056)<br/>fires only when Condition < DeathThreshold<br/>severity = (DeathThreshold - Condition)/DeathThreshold<br/>rawDeaths = Population * severity * DeathRate * BiologyStep<br/>accumulator -> whole deaths capped at Population<br/>survivor boost: Condition = min(1, oldCond*oldPop/newPop)"]
 
-    S7 --> S8["STEP 8 Reproduction (cs:646-651, body 1150)<br/>require Population >= 2 (MIN_POPULATION_FOR_REPRODUCTION)<br/>reproScale from Condition vs ReproThreshold (piecewise, joins at 0.10)<br/>births = Population * reproScale * ReproductionMultiplier * Pmax * BiologyStep<br/>if Tier1 and GetTierPopulation(2) < 1: births *= 0.85 (NO_PREDATOR_PENALTY)<br/>accumulator -> whole births ADDED, no cap; newborns inherit Condition"]
+    S7 --> S8["STEP 8 Reproduction (cs:646-651, body 1150)<br/>require Population >= 2 (MIN_POPULATION_FOR_REPRODUCTION)<br/>reproScale from Condition vs ReproThreshold (piecewise, joins at 0.10)<br/>births = Population * reproScale * ReproductionMultiplier * Pmax * BiologyStep<br/>accumulator -> whole births ADDED, no cap; newborns inherit Condition"]
 
     S8 --> S9["STEP 9 Natural death (cs:653-658, body 1270)<br/>variance = (rng.NextDouble()*2-1) * NaturalDeathVariance<br/>baseRate = max(0, NaturalDeathRate + variance)<br/>deaths = Population * baseRate * BiologyStep<br/>accumulator -> whole deaths capped at Population"]
 

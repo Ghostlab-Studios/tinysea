@@ -711,7 +711,7 @@ public class EcosystemSimulator
     /// (ComputeForagingSuccess), capped by what the food source can actually supply.
     ///
     /// Tier 1 (searches the shared land resource pool):
-    ///   food_density  = max(0, 1 - tier1Pop / CarryingCapacityPerTier)   (the supply cap)
+    ///   food_density  = max(0, 1 - sum(pop x EatingAmount) / CarryingCapacityPerTier)  (supply cap)
     ///   resourceRatio = CarryingCapacityPerTier / tier1Pop               (resource per consumer)
     ///   FedRate_T1    = min(1, ComputeForagingSuccess(sp, resourceRatio) × food_density)
     /// At efficiency 1 / variance 0 this reduces to min(1, food_density), identical to the
@@ -764,10 +764,21 @@ public class EcosystemSimulator
         // foodDensity blow up (the cascading-failure path of the long-τ bug).
         float tier1Pop = Math.Max(0f, GetTierPopulation(1));
         float capSafe = Math.Max(CarryingCapacityPerTier, 1f);    // floor of 1 to guard against misconfig
-        float foodDensity = Math.Max(0f, 1f - (tier1Pop / capSafe));
+        // Consumption pressure on the pool: each individual draws its EatingAmount in resource
+        // points (the analog of Tier 2's per-predator demand = population x EatingAmount). At
+        // EatingAmount 1 this equals the head count, so existing runs are unchanged; at 3 the
+        // pool feeds ~1/3 as many (a 5000 pool supports ~1667 individuals at appetite 3).
+        // EatingAmount is floored at 1: each individual occupies at least one resource point, so
+        // a 0 / unset appetite behaves like the old head-count model and the carrying-capacity
+        // limit can never be switched off (a 0 appetite would otherwise let Tier 1 grow unbounded).
+        float tier1Consumption = 0f;
+        foreach (var sp in Species.Where(s => s.Tier == 1 && s.Population >= MIN_ALIVE_POP))
+            tier1Consumption += sp.Population * Math.Max(1f, sp.EatingAmount);
+        float foodDensity = Math.Max(0f, 1f - (tier1Consumption / capSafe));
         LastFoodDensityT1 = foodDensity;
-        // Land-pool analog of Tier 2's prey:predator ratio. Shared across all Tier 1
-        // species because they draw from the one pool (like foodDensity).
+        // Land-pool analog of Tier 2's prey:predator ratio (head count, like preyRatio). Drives
+        // the Holling search efficiency; appetite enters via foodDensity above, mirroring how
+        // Tier 2 keeps EatingAmount out of preyRatio.
         float resourceRatio = capSafe / Math.Max(tier1Pop, 1f);
         float fedRateSumT1 = 0f;
         float fedRatePopT1 = 0f;
@@ -790,7 +801,7 @@ public class EcosystemSimulator
             LastFedRateBySpecies[sp.FullName] = sp.FedRate;
         }
         LastFedRateT1 = fedRatePopT1 > 0f ? fedRateSumT1 / fedRatePopT1 : 1f;
-        SimLog($"  Tier 1 food: tier1Pop={tier1Pop:F0}, foodDensity={foodDensity:F3}, avgFedRateT1={LastFedRateT1:F3}");
+        SimLog($"  Tier 1 food: tier1Pop={tier1Pop:F0}, consumption={tier1Consumption:F0}, foodDensity={foodDensity:F3}, avgFedRateT1={LastFedRateT1:F3}");
 
         if (predators.Count == 0 || prey.Count == 0)
         {

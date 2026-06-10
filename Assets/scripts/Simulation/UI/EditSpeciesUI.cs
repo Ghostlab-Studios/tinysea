@@ -51,15 +51,13 @@ public class EditSpeciesUI : MonoBehaviour
     [SerializeField] private TMP_InputField conditionDrainRateField;
     [SerializeField] private TMP_InputField conditionRecoveryRateField;
 
-    [Header("UI Fields - Resource Finding / Foraging (all tiers)")]
-    // The Tier-2-only "hunting section" wrapper is gone. These foraging fields live directly in
-    // the species editor for every tier; their on-screen labels are set from the constants below
-    // (Resource Finding for prey, Hunting for predators). They edit the same data as before,
-    // SpeciesData.huntingEfficiency / huntingVariance (CSV columns hunt_eff / hunt_var).
+    [Header("UI Fields - Foraging (efficiency + variance, all tiers)")]
+    // These two inputs are used for every tier (Tier 1 forages for resources, Tier 2/3 hunt the
+    // tier below). The on-screen labels are plain scene text, set manually and identical for all
+    // tiers, so there is no per-tier label logic here. They edit SpeciesData.huntingEfficiency /
+    // huntingVariance (CSV columns hunt_eff / hunt_var).
     [SerializeField] private TMP_InputField resourceFindingEfficiencyField;
     [SerializeField] private TMP_InputField resourceFindingVarianceField;
-    [SerializeField] private TMP_Text resourceFindingEfficiencyLabel;
-    [SerializeField] private TMP_Text resourceFindingVarianceLabel;
 
     [Header("Buttons")]
     [SerializeField] private Button closeButton;
@@ -76,12 +74,6 @@ public class EditSpeciesUI : MonoBehaviour
     private readonly System.Collections.Generic.List<int> _organismCatalogIndices = new System.Collections.Generic.List<int>();
     private bool _suppressOrganismCallback = false;
     private const string CUSTOM_OPTION = "Custom";
-
-    // On-screen labels for the foraging fields, kept as constants so the wording is a one-line
-    // change. Tier 1 forages for resources; for Tier 2/3 (when re-enabled) change these to
-    // "Hunting Efficiency" / "Hunting Variance". Field, data, and validation stay identical.
-    private const string FORAGING_EFFICIENCY_LABEL = "Resource Finding Efficiency";
-    private const string FORAGING_VARIANCE_LABEL = "Resource Finding Variance";
 
     // Validation colors
     private static readonly Color InvalidColor = new Color(1f, 0.80f, 0.80f, 1f);
@@ -457,14 +449,8 @@ public class EditSpeciesUI : MonoBehaviour
         if (naturalDeathRateField != null)
             naturalDeathRateField.text = currentEditingData.naturalDeathRate.ToString("F3", CultureInfo.InvariantCulture);
 
-        // === RESOURCE FINDING (foraging) FIELDS (all tiers) ===
-        // Labels come from constants so the wording swaps per tier (Resource Finding for prey,
-        // Hunting for predators) without touching the data or validation.
-        if (resourceFindingEfficiencyLabel != null)
-            resourceFindingEfficiencyLabel.text = FORAGING_EFFICIENCY_LABEL;
-        if (resourceFindingVarianceLabel != null)
-            resourceFindingVarianceLabel.text = FORAGING_VARIANCE_LABEL;
-
+        // === FORAGING FIELDS (efficiency + variance, all tiers) ===
+        // Labels are plain scene text (set manually, identical for every tier), nothing to set here.
         if (resourceFindingEfficiencyField != null)
             resourceFindingEfficiencyField.text = currentEditingData.huntingEfficiency.ToString("F2", CultureInfo.InvariantCulture);
 

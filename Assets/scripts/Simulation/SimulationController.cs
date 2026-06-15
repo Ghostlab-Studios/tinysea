@@ -308,6 +308,7 @@ public class SimulationController : MonoBehaviour
         runner.TempCalc.BaseRandomness = batch.DailyVarRange;
         runner.TempCalc.RandomnessGrowthRate = batch.RandomnessGrowth;
         runner.TempCalc.UseAutocorrelation = batch.Autocorrelated;
+        runner.TempCalc.AutocorrelationCoefficient = batch.AutocorrelationCoefficient;
         runner.TempCalc.UseInterannualVariation = batch.InterannualVariation;
         runner.TempCalc.MinTemp = batch.TempMin;
         runner.TempCalc.MaxTemp = batch.TempMax;
@@ -366,6 +367,7 @@ public class SimulationController : MonoBehaviour
         runner.TempCalc.BaseRandomness = config.DailyVariationRange;
         runner.TempCalc.RandomnessGrowthRate = config.RandomnessGrowthRate;
         runner.TempCalc.UseAutocorrelation = config.Autocorrelated;
+        runner.TempCalc.AutocorrelationCoefficient = config.AutocorrelationCoefficient;
         runner.TempCalc.UseInterannualVariation = config.InterannualVariation;
         runner.TempCalc.MinTemp = config.TemperatureBoundsMin;
         runner.TempCalc.MaxTemp = config.TemperatureBoundsMax;

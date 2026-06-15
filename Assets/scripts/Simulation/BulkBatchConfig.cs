@@ -32,6 +32,9 @@ public class BulkSpeciesConfig
     // Per-species condition timescale (Batch 2). Negative = inherit the row-global rate.
     public float ConditionDrainRate = -1f;
     public float ConditionRecoveryRate = -1f;
+    // Batch 4: per-species temperature multiplier (1 = no change; <1 dampens swing) and Day-0 condition seed.
+    public float TempMultiplier = 1.0f;
+    public float InitialCondition = 1.0f;
 }
 
 /// <summary>
@@ -58,6 +61,8 @@ public class BulkBatchConfig
     public float CarryingCapT1;
     public float ConditionDrainRate = 0.15f;
     public float ConditionRecoveryRate = 0.10f;
+    // Batch 4: AR(1) autocorrelation coefficient for daily variation (0 = white noise, 0.7 = default smoothing).
+    public float AutocorrelationCoefficient = 0.7f;
     // Batch 3: optional path to a "Day,Temperature_C" CSV. Empty => parametric model.
     public string TemperatureTimeseriesFile = "";
     public List<BulkSpeciesConfig> Species = new List<BulkSpeciesConfig>();

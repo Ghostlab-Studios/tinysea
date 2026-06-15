@@ -35,6 +35,7 @@ public static class CsvBatchParser
     private static readonly string[] OPTIONAL_GLOBAL_COLUMNS =
     {
         "condition_drain_rate", "condition_recovery_rate",
+        "autocorrelation_coefficient",
         "temperature_timeseries_file",
         "use_carrying_cap"
     };
@@ -55,7 +56,8 @@ public static class CsvBatchParser
     private static readonly string[] OPTIONAL_SPECIES_COLUMNS =
     {
         "pmax", "ctmin", "ctmax", "temp_offset",
-        "condition_drain_rate", "condition_recovery_rate"
+        "condition_drain_rate", "condition_recovery_rate",
+        "temp_multiplier", "initial_condition"
     };
 
     /// <summary>
@@ -187,8 +189,10 @@ public static class CsvBatchParser
             batch.CarryingCapT1 = GetFloat(fields, columnIndex, "carrying_cap_t1", rowNum, errors);
 
             // Optional global columns (backward compatible — missing columns use defaults)
-            batch.ConditionDrainRate = GetFloatOptional(fields, columnIndex, "condition_drain_rate", 0.15f);
-            batch.ConditionRecoveryRate = GetFloatOptional(fields, columnIndex, "condition_recovery_rate", 0.10f);
+            batch.ConditionDrainRate = GetFloatOptional(fields, columnIndex, "condition_drain_rate", 0.15f, rowNum, errors);
+            batch.ConditionRecoveryRate = GetFloatOptional(fields, columnIndex, "condition_recovery_rate", 0.10f, rowNum, errors);
+            // Batch 4: AR(1) autocorrelation coefficient (default 0.7 = legacy 0.7/0.3 blend).
+            batch.AutocorrelationCoefficient = GetFloatOptional(fields, columnIndex, "autocorrelation_coefficient", 0.7f, rowNum, errors);
             // Batch 3: optional environmental temperature timeseries file path (empty => parametric model).
             batch.TemperatureTimeseriesFile = GetString(fields, columnIndex, "temperature_timeseries_file");
 
@@ -268,13 +272,16 @@ public static class CsvBatchParser
         var parsedVariant = SpeciesData.ResolveVariantEnum(species.Variant);  // Batch 1B: Cold/Warm/Hot + legacy aliases
         SpeciesData.GetVariantThermalDefaults(parsedVariant, out float defPmax, out float defCtMin, out float defCtMax);
 
-        species.Pmax = GetFloatOptional(fields, columnIndex, prefix + "pmax", defPmax);
-        species.CTminC = GetFloatOptional(fields, columnIndex, prefix + "ctmin", defCtMin);
-        species.CTmaxC = GetFloatOptional(fields, columnIndex, prefix + "ctmax", defCtMax);
-        species.TempOffset = GetFloatOptional(fields, columnIndex, prefix + "temp_offset", 0f);
+        species.Pmax = GetFloatOptional(fields, columnIndex, prefix + "pmax", defPmax, rowNum, errors);
+        species.CTminC = GetFloatOptional(fields, columnIndex, prefix + "ctmin", defCtMin, rowNum, errors);
+        species.CTmaxC = GetFloatOptional(fields, columnIndex, prefix + "ctmax", defCtMax, rowNum, errors);
+        species.TempOffset = GetFloatOptional(fields, columnIndex, prefix + "temp_offset", 0f, rowNum, errors);
         // Batch 2: per-species condition timescale. Default -1 => inherit the row-global rate.
-        species.ConditionDrainRate = GetFloatOptional(fields, columnIndex, prefix + "condition_drain_rate", -1f);
-        species.ConditionRecoveryRate = GetFloatOptional(fields, columnIndex, prefix + "condition_recovery_rate", -1f);
+        species.ConditionDrainRate = GetFloatOptional(fields, columnIndex, prefix + "condition_drain_rate", -1f, rowNum, errors);
+        species.ConditionRecoveryRate = GetFloatOptional(fields, columnIndex, prefix + "condition_recovery_rate", -1f, rowNum, errors);
+        // Batch 4: per-species temperature multiplier (1 = no change) and Day-0 condition seed (1 = fully charged).
+        species.TempMultiplier = GetFloatOptional(fields, columnIndex, prefix + "temp_multiplier", 1.0f, rowNum, errors);
+        species.InitialCondition = GetFloatOptional(fields, columnIndex, prefix + "initial_condition", 1.0f, rowNum, errors);
     }
 
     // ==================== VALIDATION ====================
@@ -296,6 +303,10 @@ public static class CsvBatchParser
         // Carrying capacity is always on (v11.1) — cap value must always be positive.
         if (batch.CarryingCapT1 <= 0)
             errors.Add($"Row {rowNum}: carrying_cap_t1 must be positive (carrying capacity is always on).");
+
+        // Batch 4: AR(1) coefficient must stay in [0,1] (>=1 makes the daily noise diverge).
+        if (batch.AutocorrelationCoefficient < 0f || batch.AutocorrelationCoefficient > 1f)
+            errors.Add($"Row {rowNum}: autocorrelation_coefficient must be between 0 and 1.");
 
         for (int s = 0; s < batch.Species.Count; s++)
             ValidateSpecies(batch.Species[s], $"sp{s + 1}", rowNum, errors);
@@ -347,6 +358,13 @@ public static class CsvBatchParser
 
         if (sp.UpperBoundC <= sp.LowerBoundC)
             errors.Add($"Row {rowNum}: {prefix}_upper_bound_c ({sp.UpperBoundC}) must be greater than {prefix}_lower_bound_c ({sp.LowerBoundC}).");
+
+        // Batch 4
+        if (sp.TempMultiplier < 0)
+            errors.Add($"Row {rowNum}: {prefix}_temp_multiplier must be non-negative (1 = no change, <1 dampens the signal).");
+
+        if (sp.InitialCondition < 0 || sp.InitialCondition > 1)
+            errors.Add($"Row {rowNum}: {prefix}_initial_condition must be between 0 and 1.");
     }
 
     // ==================== VALUE EXTRACTION ====================
@@ -388,8 +406,12 @@ public static class CsvBatchParser
         return 0f;
     }
 
+    // Optional numeric column. A missing column or a blank cell falls back to the default
+    // (this is what keeps older CSVs without the column backward compatible). A value that
+    // IS present but cannot be parsed is flagged as an error so typos are rejected rather
+    // than silently falling through to the default.
     private static float GetFloatOptional(string[] fields, Dictionary<string, int> columnIndex,
-        string column, float defaultValue)
+        string column, float defaultValue, int rowNum, List<string> errors)
     {
         if (!columnIndex.TryGetValue(column, out int idx) || idx >= fields.Length)
             return defaultValue;
@@ -398,6 +420,7 @@ public static class CsvBatchParser
             return defaultValue;
         if (float.TryParse(val, NumberStyles.Float, CultureInfo.InvariantCulture, out float result))
             return result;
+        errors.Add($"Row {rowNum}: '{column}' value '{val}' is not a valid number.");
         return defaultValue;
     }
 
@@ -477,8 +500,8 @@ public static class CsvBatchParser
         //   batch_name, days, num_scenarios, base_temp, seasonal_amp, climate_trend,
         //   variability_mag, warming_bias, daily_var_range, randomness_growth, autocorrelated,
         //   interannual_variation, temp_min, temp_max, carrying_cap_t1, condition_drain_rate,
-        //   condition_recovery_rate, temperature_timeseries_file(empty=parametric model)
-        sb.Append("default_batch,365,5,20,5,0,0,0,5,0,true,false,0,40,5000,0.15,0.1,,");
+        //   condition_recovery_rate, autocorrelation_coefficient, temperature_timeseries_file(empty=parametric model)
+        sb.Append("default_batch,365,5,20,5,0,0,0,5,0,true,false,0,40,5000,0.15,0.1,0.7,,");
 
         // ---------- Data row: one block per species, mirroring ConvertSpecies ----------
         // ConvertSpecies does Celsius -> Kelvin (+273.15) on opt/lower/upper temps, so we
@@ -514,6 +537,8 @@ public static class CsvBatchParser
             sb.Append(sp.TemperatureDebuff.ToString(ci)).Append(',');
             sb.Append(sp.conditionDrainRate.ToString(ci)).Append(',');
             sb.Append(sp.conditionRecoveryRate.ToString(ci)).Append(',');
+            sb.Append(sp.tempMultiplier.ToString(ci)).Append(',');
+            sb.Append(sp.initialCondition.ToString(ci)).Append(',');
         }
 
         sb.Length--;            // drop trailing comma
@@ -557,7 +582,9 @@ public static class CsvBatchParser
             ctMaxC = 38f,
             TemperatureDebuff = 0f,
             conditionDrainRate = 0.15f,
-            conditionRecoveryRate = 0.10f
+            conditionRecoveryRate = 0.10f,
+            tempMultiplier = 1.0f,
+            initialCondition = 1.0f
         };
     }
 

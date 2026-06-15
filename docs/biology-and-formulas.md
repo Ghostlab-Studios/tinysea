@@ -51,6 +51,8 @@ These fields are copied from `SpeciesData` at load, field by field (EcosystemSim
 | `CTminC` | Celsius | -5.0 (SimSpecies.cs:69) | 0.0 (SpeciesDatabase.cs:107) | Critical thermal minimum; performance is 0 at or below |
 | `CTmaxC` | Celsius | 40.0 (SimSpecies.cs:70) | 40.0 (SpeciesDatabase.cs:109) | Critical thermal maximum; performance is 0 at or above |
 | `TemperatureDebuff` | Celsius | 0 (SimSpecies.cs:71) | 0.0 (SpeciesDatabase.cs:56) | Per-species offset added to the experienced temperature |
+| `TempMultiplier` | dimensionless | 1.0 (SimSpecies.cs:72) | 1.0 (SpeciesDatabase.cs:58) | Per-species scale on the deviation from the run base temperature, applied in Step 1 before the thermal curve (Section 2, Step 1). 1.0 = no change (bit-identical), below 1 dampens the swing (thermal inertia), above 1 amplifies it |
+| `InitialCondition` | dimensionless [0,1] | 1.0 (SimSpecies.cs:82) | 1.0 (SpeciesDatabase.cs:69) | Day-0 Condition seed, copied into `Condition` at scenario start (EcosystemSimulator.cs:384-385). 1.0 = fully charged. Range 0..1 |
 
 ### 1.2 Per-species runtime values (recomputed each day)
 
@@ -62,7 +64,7 @@ These fields are copied from `SpeciesData` at load, field by field (EcosystemSim
 | `RawFinalPerformance` | [0,1] | `RawThermalPerformance * FedRate`; the condition drain target (SimSpecies.cs:77) |
 | `FinalPerformance` | [0,1] | `ThermalPerformance * FedRate`; logging/CSV only, no later step reads it (SimSpecies.cs:78) |
 | `CurrentHuntingSuccess` | [0,1] | This day's hunting success; 1.0 for Tier 1 (SimSpecies.cs:79) |
-| `Condition` | [0,1] | Per-species health; starts at 1.0, persists across days (SimSpecies.cs:80) |
+| `Condition` | [0,1] | Per-species health; seeded at scenario start from `InitialCondition` (default 1.0), then persists across days (SimSpecies.cs:80-82, EcosystemSimulator.cs:384-385) |
 
 `FullName` is the identity key for all per-species dictionaries and CSV columns. It is `Name` when `VariantLabel` is empty, otherwise `"{Name}_{VariantLabel}"` (SimSpecies.cs:89).
 
@@ -99,13 +101,14 @@ The remaining steps iterate the `Species` list in list order.
 For each species:
 
 ```
-RawThermalPerformance = CalculatePerformance(temperature)   // SimSpecies, [0,1], no Pmax
+dampedTemp            = temperature + (temperature - BaseTemperatureC) * (TempMultiplier - 1)
+RawThermalPerformance = CalculatePerformance(dampedTemp)     // SimSpecies, [0,1], no Pmax
 ThermalPerformance    = RawThermalPerformance * Pmax         // [0,1]
 FedRate               = 1                                     // reset; set per tier in Step 2
 CurrentHuntingSuccess = 1                                     // reset; set per predator in Step 2
 ```
 
-Pmax is applied here, outside `CalculatePerformance`, not inside it (EcosystemSimulator.cs:594). `CalculatePerformance` returns the raw curve and the lethal fade only.
+`dampedTemp` applies the per-species temperature multiplier before the thermal curve (EcosystemSimulator.cs:607). `TempMultiplier` (default 1.0, SimSpecies.cs:72) scales the experienced deviation from the run base temperature `BaseTemperatureC`. The multiplier rewrites the deviation as `(temperature - BaseTemperatureC) * TempMultiplier`: at 1.0 it is bit-identical to passing `temperature` straight through (the added term is 0), below 1 it dampens the swing toward the base (thermal inertia), above 1 it amplifies it. `BaseTemperatureC` is the run base temperature, set once per run from `TempCalc.BaseTemperature` before the day loop (SimulationRunner.cs:421), default 20 (EcosystemSimulator.cs:245). The per-species `TemperatureDebuff` (Section 3.1) is still added separately inside `CalculatePerformance`, so the two offsets compose: `CalculatePerformance` receives `dampedTemp` and then internally adds `TemperatureDebuff`. Pmax is applied here, outside `CalculatePerformance`, not inside it (EcosystemSimulator.cs:609). `CalculatePerformance` returns the raw curve and the lethal fade only.
 
 ### Step 2: Feeding and predation (`ProcessFeedingWithAccumulator`, EcosystemSimulator.cs:728)
 
@@ -414,7 +417,7 @@ The `share = p.Population / availablePrey` division is floating-point (both are 
 
 ## 6. Condition state update (`UpdateCondition`, EcosystemSimulator.cs:952)
 
-Condition is per-species health in `[0, 1]`, starting at 1.0 and persisting across days (SimSpecies.cs:80). Each day it moves a fraction of the way toward the day's target with one explicit Euler-style step. Skipped when `Population < MIN_ALIVE_POP` (EcosystemSimulator.cs:954).
+Condition is per-species health in `[0, 1]`, seeded at scenario start from `InitialCondition` (default 1.0, Section 1.1) and persisting across days (SimSpecies.cs:80-82, EcosystemSimulator.cs:384-385). Each day it moves a fraction of the way toward the day's target with one explicit Euler-style step. Skipped when `Population < MIN_ALIVE_POP` (EcosystemSimulator.cs:954).
 
 Target and rate selection (EcosystemSimulator.cs:956-964):
 
@@ -427,34 +430,38 @@ recoveryRate = ConditionRecoveryRate >= 0 ? ConditionRecoveryRate : global Condi
 
 A negative per-species rate means inherit the global rate (EcosystemSimulator.cs:962-964). Globals default to 0.15 drain and 0.10 recovery (Section 1.3).
 
-Drain branch, when `Condition > target` (EcosystemSimulator.cs:966-976):
+Drain branch, when `Condition > target` (EcosystemSimulator.cs:1018-1029):
 
 ```
 severity       = (1 - target)^2                              // 0 at target=1, 1 at target=0
 effectiveDrain = (drainRate * (1 + severity)) / pmaxSafe     // up to 2x near lethal; divided by Pmax
 Condition     -= (Condition - target) * effectiveDrain
+Condition      = max(target, Condition)                       // overshoot guard: cannot cross below target this step
 ```
 
-The grouping is `(drainRate * (1 + severity)) / pmaxSafe`: the rate is multiplied by `(1 + severity)` first, then the product is divided by `pmaxSafe` last (EcosystemSimulator.cs:974). In code `severity` is computed as `severity = 1 - target; severity *= severity;`, which equals `(1 - target)^2`.
+The grouping is `(drainRate * (1 + severity)) / pmaxSafe`: the rate is multiplied by `(1 + severity)` first, then the product is divided by `pmaxSafe` last (EcosystemSimulator.cs:1026). In code `severity` is computed as `severity = 1 - target; severity *= severity;`, which equals `(1 - target)^2`.
 
-Recovery branch, when `Condition <= target` (EcosystemSimulator.cs:977-987):
+Recovery branch, when `Condition <= target` (EcosystemSimulator.cs:1030-1041):
 
 ```
 boost             = target^2                                       // 0 at target=0, 1 at target=1
 effectiveRecovery = (recoveryRate * (1 + boost)) * pmaxSafe        // up to 2x at optimum; multiplied by Pmax
 Condition        += (target - Condition) * effectiveRecovery
+Condition         = min(target, Condition)                         // overshoot guard: cannot cross above target this step
 ```
 
-The grouping is `(recoveryRate * (1 + boost)) * pmaxSafe`: the rate is multiplied by `(1 + boost)` first, then by `pmaxSafe` last (EcosystemSimulator.cs:985). `boost` is computed as `boost = target; boost *= boost;`, which equals `target^2`.
+The grouping is `(recoveryRate * (1 + boost)) * pmaxSafe`: the rate is multiplied by `(1 + boost)` first, then by `pmaxSafe` last (EcosystemSimulator.cs:1038). `boost` is computed as `boost = target; boost *= boost;`, which equals `target^2`.
 
-Clamp (EcosystemSimulator.cs:989):
+Overshoot guard (EcosystemSimulator.cs:1028, 1040): each branch clamps `Condition` against the target immediately after the Euler move and before the final `[0, 1]` clamp below. The drain branch applies `Condition = max(target, Condition)` and the recovery branch applies `Condition = min(target, Condition)`, so a single step can never cross the target. The drain and recovery rates are not hard-capped at 1.0; setting either above 1.0 (up to about 3.0) previously let the per-step move overshoot the target and oscillate around it. With the guard, high rates make Condition snap exactly to its instantaneous target each day, a memoryless organism, which is what the no-memory experiments need. At the default rates (drain 0.15, recovery 0.10) the per-step move never reaches the target, so the guard never fires and existing results are byte-identical.
+
+Clamp (EcosystemSimulator.cs:1043):
 
 ```
 Condition = clamp(Condition, 0, 1)
 ```
 
 Properties of the update:
-- It is a single explicit Euler step toward `target` with a per-day effective rate. The step does not overshoot when the effective rate is in `[0, 1]`, but an effective rate above 1 can overshoot before the clamp at EcosystemSimulator.cs:989 restores the `[0, 1]` range. The two branches respond to Pmax in opposite directions. In the drain branch `effectiveDrain = (drainRate * (1 + severity)) / pmaxSafe` divides by Pmax, so a small Pmax amplifies the effective drain and its overshoot, while a large Pmax shrinks it. In the recovery branch `effectiveRecovery = (recoveryRate * (1 + boost)) * pmaxSafe` multiplies by Pmax, so a large Pmax amplifies the effective recovery and its overshoot, while a small Pmax shrinks it. So drain overshoot is amplified by a large rate and/or small Pmax (EcosystemSimulator.cs:974), and recovery overshoot is amplified by a large rate and/or large Pmax (EcosystemSimulator.cs:985).
+- It is a single explicit Euler step toward `target` with a per-day effective rate, followed by the per-branch overshoot guard. When the effective rate is in `[0, 1]` the move undershoots the target and the guard never fires. When the effective rate exceeds 1 the bare move would cross the target, but the guard (`max(target, Condition)` on drain, `min(target, Condition)` on recovery, EcosystemSimulator.cs:1028, 1040) snaps `Condition` exactly to the target instead, so it never overshoots or oscillates. The two branches still respond to Pmax in opposite directions. In the drain branch `effectiveDrain = (drainRate * (1 + severity)) / pmaxSafe` divides by Pmax, so a small Pmax amplifies the effective drain, while a large Pmax shrinks it. In the recovery branch `effectiveRecovery = (recoveryRate * (1 + boost)) * pmaxSafe` multiplies by Pmax, so a large Pmax amplifies the effective recovery, while a small Pmax shrinks it. Either amplification only moves Condition closer to the target faster; with the guard the practical effect of a large effective rate is that Condition reaches the target in one step (memoryless), not that it overshoots (EcosystemSimulator.cs:1026, 1038).
 - Drain accelerates up to 2x as `target` approaches 0 (lethal cold or heat, or starvation); recovery accelerates up to 2x as `target` approaches 1 (EcosystemSimulator.cs:968-984).
 - Pmax scales the rates only, never the target (EcosystemSimulator.cs:956). Specialists with high Pmax drain slower and recover faster; generalists with low Pmax do the opposite. Keeping Pmax out of the target preserves Condition's species-agnostic `[0, 1]` scale, so `ReproThreshold` and `DeathThreshold` need no per-species retuning.
 - Default drain 0.15 is asymmetrically faster than default recovery 0.10. Because Tier 1 `target = RawThermalPerformance * FedRate` now varies with food density, Tier 1 Condition no longer plateaus at 1.0 even at perfect temperature when the resource pool is depleted (EcosystemSimulator.cs:947-950).

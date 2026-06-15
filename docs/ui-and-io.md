@@ -111,6 +111,7 @@ Kelvin internally, but nothing on this input panel is in Kelvin.
 | `VariabilityMagnitude` | `VariabilityMagnitude` | float | °C | none |
 | `WarmingBias` | `WarmingBias` | float | °C | none |
 | `Autocorrelated` (toggle) | `Autocorrelated` | bool | n/a | n/a |
+| `AutocorrelationCoefficient` | `AutocorrelationCoefficient` | float | dimensionless (phi) | `[0, 1]` |
 | `DailyVariationRange` | `DailyVariationRange` | float | °C | none |
 | `RandomnessGrowthRate` | `RandomnessGrowthRate` | float | °C per year | none |
 | `TemperatureBoundsMin` | `TemperatureBoundsMin` | float | °C | none |
@@ -133,10 +134,24 @@ threshold at suboptimal temperature, recovery `0.10` is roughly 10 good days to
 fully recover (`SimulationConfig.cs:63-74`). Their inspector `[Range]` is
 `[0.01, 1.0]` with defaults `0.15` and `0.10`.
 
+`AutocorrelationCoefficient` is the AR(1) coefficient (phi) for daily temperature
+variation. It sits next to the `Autocorrelated` toggle in the daily-variation block
+(`SimulationInputUI.cs:28-29`) and writes `config.AutocorrelationCoefficient` only when its
+reference is non null (`SimulationInputUI.cs:355`). Unlike the other float fields, it is
+range-checked on Run: it goes through `TryReadFloat(..., 0f, 1f)`, so a value outside
+`[0, 1]` fails validation and blocks the run (`SimulationInputUI.cs:322`). The input is
+disabled (`interactable = false`, greyed) while the `Autocorrelated` toggle is off, because
+the coefficient only matters when autocorrelation is on. The enabled state is synced on load
+(`PopulateUIFromConfig` sets `interactable` from the toggle, `SimulationInputUI.cs:264-265`)
+and on every toggle change (`OnAutocorrelatedToggled`, `SimulationInputUI.cs:202-205`). Its
+config default is 0.7 (the legacy `0.7*yesterday + 0.3*new` blend); see
+`configuration-reference.md` and `temperature-model.md`.
+
 The two integer ranges are passed to `TryReadInt` at
 `SimulationInputUI.cs:298-299`. `182500` is 500 years of 365-day scenarios.
-`100` caps scenario count per run. The float fields have no numeric range check on
-this panel. The only validation that runs before the simulation starts is
+`100` caps scenario count per run. The other float fields (every one except
+`AutocorrelationCoefficient`, whose `[0, 1]` check is noted above) have no numeric range
+check on this panel. The only validation that runs before the simulation starts is
 `SimulationConfig.IsValid` inside `SimulationController.StartSimulation`
 (`SimulationController.cs:90-94`). `IsValid` (`SimulationConfig.cs:146-195`) checks
 exactly four conditions and returns the first failure as an error string:
@@ -382,10 +397,12 @@ The editor exposes these controls (`EditSpeciesUI.cs:31-64`):
 | Gameplay | `tempDeathThresholdField` | `deathThreshold` | float, `[0, 1]` |
 | Gameplay | `tempDeathRateField` | `deathRate` | float, `[0, 1]` |
 | Gameplay | `tempDebuff` | `TemperatureDebuff` | float, no range |
+| Gameplay | `tempMultiplierField` ("Temperature Multiplier") | `tempMultiplier` | float, `>= 0` |
 | Gameplay | `naturalDeathVarianceField` | `naturalDeathVariance` | float, `>= 0` |
 | Gameplay | `naturalDeathRateField` | `naturalDeathRate` | float, `>= 0` |
 | Condition | `conditionDrainRateField` | `conditionDrainRate` | blank means inherit |
 | Condition | `conditionRecoveryRateField` | `conditionRecoveryRate` | blank means inherit |
+| Condition | `initialConditionField` ("Initial Condition / Health") | `initialCondition` | float, `[0, 1]` |
 | Foraging (all tiers) | `resourceFindingEfficiencyField` | `huntingEfficiency` | float, `[0, 1]` |
 | Foraging (all tiers) | `resourceFindingVarianceField` | `huntingVariance` | float, `>= 0` |
 
@@ -410,6 +427,19 @@ range because any real offset is valid; typical values are small, within a few
 degrees of zero. The inline comment at `SpeciesDatabase.cs:56` calls it a
 "performance debuff", but the actual runtime effect is the additive Celsius offset
 shown above.
+
+`tempMultiplierField` ("Temperature Multiplier", validated `>= 0`) is a single-value
+field editing `SpeciesData.tempMultiplier` (`EditSpeciesUI.cs:436-437` populate,
+`:611,654` validate and write). At run time it scales the species' experienced
+deviation from the run base temperature before the thermal curve (`dampedTemp = temp +
+(temp - BaseTemperatureC) * (tempMultiplier - 1)`, `EcosystemSimulator.cs:607`): `1`
+is no change (bit-identical), below 1 dampens the swing, above 1 amplifies. Default
+`1.0` (`SpeciesDatabase.cs:58`). `initialConditionField` ("Initial Condition /
+Health", validated `[0, 1]`) edits `SpeciesData.initialCondition`
+(`EditSpeciesUI.cs:438-439` populate, `:612,655` validate and write), the Day-0 seed
+for the species' `Condition` health reserve copied in at scenario start. Default
+`1.0` (fully charged, `SpeciesDatabase.cs:69`). Both display to two decimals
+(`F2`). See `configuration-reference.md` for the full field semantics.
 
 The foraging section applies to all tiers. It has two inputs,
 `resourceFindingEfficiencyField` and `resourceFindingVarianceField`, shown for every

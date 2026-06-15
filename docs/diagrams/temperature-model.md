@@ -17,7 +17,7 @@ flowchart TD
 
     TREND --> INTER["+ InterannualVariation(day)  (cs:148-170)<br/>if UseInterannualVariation false: 0<br/>else year = day/365 (int); drawn once per year, cached in _yearVariations<br/>coldPart = rng.NextDouble() * -VariabilityMagnitude<br/>warmPart = rng.NextDouble() * VariabilityMagnitude * WarmingBias<br/>biasMean = VariabilityMagnitude*(WarmingBias-1)/4   // no RNG<br/>value = (coldPart + warmPart)/2 - biasMean   // zero-mean; float precision"]
 
-    INTER --> DAILY["+ DailyVariation(day)  (cs:175-196)<br/>year = day/365 (int); currentRandomness = BaseRandomness + RandomnessGrowthRate*year<br/>newRandom = (rng.NextDouble()*2 - 1) * currentRandomness<br/>if UseAutocorrelation: variation = prev*0.7 + newRandom*0.3<br/>else: variation = newRandom<br/>_previousDayVariation = variation  (persisted for next day)"]
+    INTER --> DAILY["+ DailyVariation(day)  (cs:175-196)<br/>year = day/365 (int); currentRandomness = BaseRandomness + RandomnessGrowthRate*year<br/>newRandom = (rng.NextDouble()*2 - 1) * currentRandomness<br/>if UseAutocorrelation: variation = prev*AutocorrelationCoefficient + newRandom*(1 - AutocorrelationCoefficient)  // AR(1), default coeff 0.7 = legacy 0.7/0.3; 0 = white noise<br/>else: variation = newRandom<br/>_previousDayVariation = variation  (persisted for next day)"]
 
     DAILY --> SUM["T(day) = sum of the five components above"]
 

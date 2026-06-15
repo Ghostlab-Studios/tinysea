@@ -158,6 +158,7 @@ Missing optional columns fall back to a default; they never cause a missing-colu
 |--------|------|---------|-------------------------|---------|
 | `condition_drain_rate` | float | `0.15` | `ConditionDrainRate` | Run-global condition drain rate. Per-species columns may override per species. |
 | `condition_recovery_rate` | float | `0.10` | `ConditionRecoveryRate` | Run-global condition recovery rate. Per-species columns may override per species. |
+| `autocorrelation_coefficient` | float | `0.7` | `AutocorrelationCoefficient` | AR(1) coefficient (phi) for daily temperature variation. Valid 0..1 (section 8.3). Used only when `autocorrelated` is on: `variation = previousDay * coeff + newRandom * (1 - coeff)` (`TemperatureCalculator.cs:188`). Replaces the previously hardcoded 0.7/0.3 blend; the default 0.7 reproduces it exactly. 0 is white noise; as the coefficient approaches 1 the daily amplitude shrinks toward zero. Copied onto `runner.TempCalc.AutocorrelationCoefficient` (section 6.2) and emitted in the per-scenario CSV config header as `#config:autocorrelation_coefficient`. |
 | `temperature_timeseries_file` | string | `""` | `TemperatureTimeseriesFile` | Optional path to a `Day,Temperature_C` CSV. Empty means use the parametric model. See section 6.4. |
 | `use_carrying_cap` | (ignored) | n/a | n/a | Deprecated as of v11.1. If the column is present, the parser emits one `Debug.LogWarning` per row and ignores the value; carrying capacity is always on. New files should omit it. (`CsvBatchParser.cs:30-40`, `:195-203`) |
 
@@ -198,8 +199,8 @@ and the table below has 19 rows, one per array entry in source order. They popul
 
 ### 3.6 Optional per-species columns
 
-These 6 per-species columns are optional. Their defaults are variant-aware for the three thermal
-columns and fixed for the rest (`CsvBatchParser.cs:54-59`, `:267-277`).
+These 8 per-species columns are optional. Their defaults are variant-aware for the three thermal
+columns and fixed for the rest (`CsvBatchParser.cs:56-61`, `:267-284`).
 
 | Suffix (after `spN_`) | Type | Default | `BulkSpeciesConfig` field | Meaning |
 |-----------------------|------|---------|---------------------------|---------|
@@ -209,6 +210,8 @@ columns and fixed for the rest (`CsvBatchParser.cs:54-59`, `:267-277`).
 | `temp_offset` | float | `0` | `TempOffset` | Temperature debuff added before the thermal curve (`TemperatureDebuff`). |
 | `condition_drain_rate` | float | `-1` | `ConditionDrainRate` | Per-species condition drain rate. `-1` means inherit the row-global rate. |
 | `condition_recovery_rate` | float | `-1` | `ConditionRecoveryRate` | Per-species condition recovery rate. `-1` means inherit the row-global rate. |
+| `temp_multiplier` | float | `1.0` | `TempMultiplier` | Per-species multiplier on the experienced deviation from the run base temperature (`tempMultiplier`). Valid `>= 0` (section 8.3). `1` is no change, below 1 dampens the swing, above 1 amplifies. See `configuration-reference.md` for the Step 1 damping formula. |
+| `initial_condition` | float | `1.0` | `InitialCondition` | Day-0 Condition seed copied into `Condition` at scenario start (`initialCondition`). Valid 0..1 (section 8.3). `1` is fully charged. |
 
 The variant-aware defaults are resolved at parse time. `ParseSpecies` calls
 `SpeciesData.ResolveVariantEnum(species.Variant)` to map the row's `variant` string to a
@@ -248,6 +251,17 @@ These defaults only apply when the corresponding optional column is absent or bl
 column is present with a value, that value wins. A blank optional cell also falls back to default
 (`CsvBatchParser.cs:391-402`).
 
+Backward compatibility and validation for optional columns. For every optional column (the
+per-species `pmax`, `ctmin`, `ctmax`, `temp_offset`, `condition_drain_rate`,
+`condition_recovery_rate`, `temp_multiplier`, `initial_condition`, and the global
+`condition_drain_rate`, `condition_recovery_rate`, `autocorrelation_coefficient`), a missing
+column or a blank cell falls back to the default, so older CSVs written before these columns
+existed still parse unchanged (backward compatible). A value that is present but unparseable is
+flagged as an error and the entire bulk run is rejected (`GetFloatOptional`,
+`CsvBatchParser.cs:409-425`); previously a bad optional value fell through to the default
+silently. Out-of-range values are rejected separately in the validation pass (section 8.3).
+Required columns are unchanged: they are still rejected when missing (section 8.2).
+
 ### 3.7 Unknown columns
 
 Any header column that is neither required nor optional, and not a recognized `spN_` optional, is
@@ -266,8 +280,10 @@ locale-independent (`CsvBatchParser.cs:354-418`):
 - `GetInt`: empty cell adds error "'<col>' cannot be empty"; non-integer adds
   "'<col>' value '<v>' is not a valid integer"; both return 0 (`CsvBatchParser.cs:361-374`).
 - `GetFloat`: same pattern with "is not a valid number" (`CsvBatchParser.cs:376-389`).
-- `GetFloatOptional`: missing/short/blank returns the supplied default; unparseable returns the
-  default with no error (`CsvBatchParser.cs:391-402`).
+- `GetFloatOptional`: missing/short/blank returns the supplied default; unparseable adds
+  "'<col>' value '<v>' is not a valid number" and returns the default
+  (`CsvBatchParser.cs:409-425`). The error means the bulk run is rejected. (This is a V1 change:
+  a bad optional value used to fall through to the default silently.)
 - `GetBool`: accepts `true`/`1`/`yes` and `false`/`0`/`no`, case-insensitive; an empty cell adds
   "'<col>' cannot be empty" and returns false; any other value adds
   "is not a valid boolean (use true/false, 1/0, or yes/no)" and returns false
@@ -345,7 +361,8 @@ asset. `ConvertSpecies` (`BulkSimulationController.cs:723-764`) maps `BulkSpecie
 - Biology fields copied 1:1: `count`, `eatingAmount`, `reproductionMultiplier`,
   `deathThreshold`, `deathRate`, `reproThreshold`, `naturalDeathRate`, `naturalDeathVariance`,
   `huntingEfficiency`, `huntingVariance`, `arrhenBreadth`, `arrhenLower`, `arrhenUpper`, `pmax`,
-  `ctMinC`, `ctMaxC`, `TemperatureDebuff`, `conditionDrainRate`, `conditionRecoveryRate`. For
+  `ctMinC`, `ctMaxC`, `TemperatureDebuff`, `tempMultiplier`, `conditionDrainRate`,
+  `conditionRecoveryRate`, `initialCondition` (`BulkSimulationController.cs:785,788`). For
   `pmax`/`ctMinC`/`ctMaxC` the variant-aware default substitution already happened in the parser
   (section 3.6), so these fields hold resolved values and `ConvertSpecies` copies them verbatim.
 - Celsius to Kelvin conversion on three temperatures (`BulkSimulationController.cs:751,755,756`):
@@ -370,7 +387,9 @@ constructs a fresh `SimulationRunner(seed)` and applies the row's parameters
 - Temperature model fields copied from the batch onto `runner.TempCalc`: `BaseTemperature`,
   `SeasonalAmplitude`, `ClimateTrendPerYear`, `VariabilityMagnitude`, `WarmingBias`,
   `BaseRandomness` (from `DailyVarRange`), `RandomnessGrowthRate`, `UseAutocorrelation`,
-  `UseInterannualVariation`, `MinTemp`, `MaxTemp` (`SimulationController.cs:295-305`).
+  `UseInterannualVariation`, `MinTemp`, `MaxTemp` (`SimulationController.cs:295-305`), and
+  `AutocorrelationCoefficient` (from `batch.AutocorrelationCoefficient`,
+  `SimulationController.cs:311`).
 - `runner.RunSpecies = tempSpecies` (the in-memory species list for this batch).
 - `runner.Ecosystem.CarryingCapacityPerTier = batch.CarryingCapT1`.
 - `runner.Ecosystem.ConditionDrainRate = batch.ConditionDrainRate`,
@@ -494,6 +513,7 @@ Batch-level (`ValidateBatch`):
 | `1 <= num_scenarios <= 100` | "Row N: num_scenarios must be between 1 and 100." |
 | `temp_max > temp_min` | "Row N: temp_max (x) must be greater than temp_min (y)." |
 | `carrying_cap_t1 > 0` | "Row N: carrying_cap_t1 must be positive (carrying capacity is always on)." |
+| `0 <= autocorrelation_coefficient <= 1` | "Row N: autocorrelation_coefficient must be between 0 and 1." |
 | at least one usable species | "Row N: at least one species is required — all sp_name columns are blank." |
 | unique `batch_name` | "Row N: Duplicate batch_name 'X'." |
 
@@ -529,6 +549,8 @@ only when no earlier slot was skipped.
 | `0 <= hunt_eff <= 1` | "Row N: spK_hunt_eff must be between 0 and 1." |
 | `hunt_var >= 0` | "Row N: spK_hunt_var must be non-negative." |
 | `upper_bound_c > lower_bound_c` | "Row N: spK_upper_bound_c (x) must be greater than spK_lower_bound_c (y)." |
+| `temp_multiplier >= 0` | "Row N: spK_temp_multiplier must be non-negative (1 = no change, <1 dampens the signal)." |
+| `0 <= initial_condition <= 1` | "Row N: spK_initial_condition must be between 0 and 1." |
 
 Row numbers in messages are `rowNum = rowIdx + 1` (`CsvBatchParser.cs:168`), where `rowIdx` indexes
 the line array produced by the split. Because the split uses `StringSplitOptions.RemoveEmptyEntries`
@@ -1136,14 +1158,22 @@ from the same column-name arrays used by `TryParse`, so the template can never d
 with the parser (`CsvBatchParser.cs:436-522`). The deprecated `use_carrying_cap` column is
 omitted (`CsvBatchParser.cs:456-460`).
 
+The template header includes the three V1 optional columns with their defaults: the global
+`autocorrelation_coefficient` (default `0.7`, emitted from `OPTIONAL_GLOBAL_COLUMNS`), and the
+per-species `sp{N}_temp_multiplier` and `sp{N}_initial_condition` (both default `1`, emitted from
+`OPTIONAL_SPECIES_COLUMNS`, `CsvBatchParser.cs:477-491`). Older templates predating these columns
+still re-upload fine because all three are optional (section 3.6).
+
 The species rows mirror the live `RunSpeciesList` asset loaded from
 `Resources.Load<RunSpeciesList>("RunSpeciesList")`, plus one fully custom example species appended
-to demonstrate adding your own (`CsvBatchParser.cs:441-448`, `:530-562`). Every templated species
+to demonstrate adding your own (`CsvBatchParser.cs:464-471`, `:555-562`). Every templated species
 is Tier 0, consistent with the Tier-1-only validation. The global data row is hard-coded to the
 canonical defaults
-(`default_batch,365,5,20,5,0,0,0,5,0,true,false,0,40,5000,0.15,0.1,,`,
-`CsvBatchParser.cs:481`), deliberately not read from the in-session config so the template always
-reflects shipped defaults.
+(`default_batch,365,5,20,5,0,0,0,5,0,true,false,0,40,5000,0.15,0.1,0.7,,`,
+`CsvBatchParser.cs:504`), deliberately not read from the in-session config so the template always
+reflects shipped defaults. The `0.7` is the `autocorrelation_coefficient` value; the trailing empty
+field is `temperature_timeseries_file`. Each per-species block ends with the `temp_multiplier` and
+`initial_condition` values, written `1:1` from the source species (`CsvBatchParser.cs:540-541`).
 
 Because `ConvertSpecies` converts Celsius to Kelvin on the three temperature columns, the template
 writer inverts it (Kelvin minus 273.15) when emitting `opt_temp_c`, `lower_bound_c`, and

@@ -164,6 +164,7 @@ Peak and lethal-limit parameters (SimSpecies.cs:68-71):
 | `CTminC` | -5.0 (field); SpeciesData asset default 0.0 | Critical thermal minimum in Celsius. At or below, performance is 0. The field initializer is -5.0 (SimSpecies.cs:69), but every config-built species is overwritten from `SpeciesData.ctMinC` at load (EcosystemSimulator.cs:374), whose asset default is 0.0 (SpeciesDatabase.cs:107), so the config value wins and the -5.0 only applies to a bare `SimSpecies` never run through config |
 | `CTmaxC` | 40.0 (field and asset agree) | Critical thermal maximum in Celsius. At or above, performance is 0. Field initializer 40.0 (SimSpecies.cs:70); load copies `SpeciesData.ctMaxC`, asset default also 40.0 (SpeciesDatabase.cs:109; EcosystemSimulator.cs:375) |
 | `TemperatureDebuff` | 0 | Per-species offset in degrees Celsius, added to the experienced temperature. It is applied as the first line of `CalculatePerformance`, `temperatureCelsius += TemperatureDebuff` (SimSpecies.cs:97), so it shifts the input before the CTmin/CTmax lethal fade and before the Celsius-to-Kelvin conversion at SimSpecies.cs:116. A positive value makes the species behave as if the water were warmer (SimSpecies.cs:71) |
+| `TempMultiplier` | 1.0 (field); SpeciesData asset default 1.0 | Per-species multiplier on the experienced deviation from the run base temperature. Applied in Step 1 before `CalculatePerformance`: `dampedTemp = temperature + (temperature - BaseTemperatureC) * (TempMultiplier - 1)` (EcosystemSimulator.cs:607), where `BaseTemperatureC` is the ecosystem's base-temp property (EcosystemSimulator.cs:245). `CalculatePerformance` then runs on `dampedTemp`, so `TempMultiplier` damps or amplifies the swing before `TemperatureDebuff` is added inside the curve. 1.0 is no change (bit-identical), below 1 dampens (thermal inertia), above 1 amplifies. Field initializer 1.0 (SimSpecies.cs:72); load copies `SpeciesData.tempMultiplier`, asset default also 1.0 (SpeciesDatabase.cs:58; EcosystemSimulator.cs:381) |
 
 Constants on the type (SimSpecies.cs:56-57), with where each is used:
 
@@ -207,7 +208,8 @@ values are dimensionless in [0,1].
 | `RawFinalPerformance` | 0 (no initializer) | Step 3 (EcosystemSimulator.cs:608) | `RawThermalPerformance * FedRate`. The condition drain target. Uses the raw (non-`Pmax`) thermal value on purpose, see the note below the table |
 | `FinalPerformance` | 0 (no initializer) | Step 5 (EcosystemSimulator.cs:628) | `ThermalPerformance * FedRate`. Logging/CSV only, never read by a later step. Uses the `Pmax`-scaled `ThermalPerformance`, see the note below the table |
 | `CurrentHuntingSuccess` | 1 in practice on a biology day (no field initializer, so the bare C# default is 0, SimSpecies.cs:79) | Step 1 reset to 1 (cs:596); Step 2 sets the predator value (cs:811) | This step's hunting success. Tier 2 species get a real value in Step 2; Tier 1 species are reset to 1 in Step 1 and never overwritten, so they stay at 1 on any day biology runs |
-| `Condition` | 1.0 (field initializer `Condition = 1.0f`, SimSpecies.cs:80) | Step 4 (EcosystemSimulator.cs:952-992) | Persistent health [0,1]. Not reset each step; see the paragraph below |
+| `Condition` | 1.0 (field initializer `Condition = 1.0f`, SimSpecies.cs:80) | Step 4 (EcosystemSimulator.cs:952-992) | Persistent health [0,1]. Not reset each step; see the paragraph below. Seeded at scenario start from `InitialCondition` (below), not from the field initializer, when built from config |
+| `InitialCondition` | 1.0 (field `InitialCondition = 1.0f`, SimSpecies.cs:82); SpeciesData asset default 1.0 | Set at load, read at scenario start | Day-0 seed for `Condition`. At load the simulator copies `SpeciesData.initialCondition` into both `InitialCondition` and `Condition` (EcosystemSimulator.cs:384-385), so `Condition` starts at this value rather than the hardcoded 1.0. Asset default 1.0 (SpeciesDatabase.cs:69). 1.0 is fully charged; a lower value starts the organism nearer a midpoint. Not a per-step scratch value; listed here because it sets the initial `Condition` |
 
 Meaning of the Default column. For `RawThermalPerformance`, `ThermalPerformance`,
 `RawFinalPerformance`, and `FinalPerformance` the listed default is only the C# field
@@ -257,9 +259,11 @@ condition target, so Condition keeps the same [0,1] meaning across species and t
 `Pmax`-scaled `FinalPerformance` into the condition update. `FinalPerformance` exists only
 for CSV and logs (EcosystemSimulator.cs:619-630).
 
-`Condition` is the one runtime field that is not fully recomputed each step. It is
-initialized to 1.0 (SimSpecies.cs:80, set again at load EcosystemSimulator.cs:379) and then
-moved incrementally toward `RawFinalPerformance` each step. Per step it either drains (when
+`Condition` is the one runtime field that is not fully recomputed each step. The field
+initializer is 1.0 (SimSpecies.cs:80), but for a config-built species the load seeds it from
+the per-species `InitialCondition` (`Condition = data.initialCondition`,
+EcosystemSimulator.cs:385; asset default 1.0, so the seeded start is 1.0 unless overridden). It
+is then moved incrementally toward `RawFinalPerformance` each step. Per step it either drains (when
 `Condition > RawFinalPerformance`) or recovers (otherwise); both moves are a fraction of the
 gap to the target, the fraction scaled by a quadratic severity term and by `Pmax`
 (EcosystemSimulator.cs:966-989). The per-species `ConditionDrainRate`/`ConditionRecoveryRate`
@@ -479,6 +483,8 @@ fields. The field-name mapping a reimplementation must follow:
 | `CTminC` | `ctMinC` (default 0.0) | SpeciesDatabase.cs:107 |
 | `CTmaxC` | `ctMaxC` (default 40.0) | SpeciesDatabase.cs:109 |
 | `TemperatureDebuff` | `TemperatureDebuff` (asset default 0.0) | SpeciesDatabase.cs:56; copied at EcosystemSimulator.cs:376 |
+| `TempMultiplier` | `tempMultiplier` (asset default 1.0) | SpeciesDatabase.cs:58; copied at EcosystemSimulator.cs:381 |
+| `InitialCondition` (and `Condition`) | `initialCondition` (asset default 1.0) | SpeciesDatabase.cs:69; copied at EcosystemSimulator.cs:384-385 into both `InitialCondition` and the starting `Condition` |
 
 Note on conflicting field versus asset defaults. Several `SimSpecies` fields carry a C# field
 initializer that differs from the `SpeciesData` asset default of the same parameter. The load
@@ -1083,14 +1089,21 @@ and therefore runs at 0.15 drain / 0.10 recovery.
 ### Step 1, thermal performance
 
 For every species, the simulator resets the per-step scratch fields and recomputes thermal
-performance (EcosystemSimulator.cs:593-596):
+performance (EcosystemSimulator.cs:607-611):
 
 ```text
-RawThermalPerformance = CalculatePerformance(temperatureCelsius)   // section 3.5, no Pmax
+dampedTemp            = temperature + (temperature - BaseTemperatureC) * (TempMultiplier - 1)  // per-species damping, EcosystemSimulator.cs:607
+RawThermalPerformance = CalculatePerformance(dampedTemp)            // section 3.5, no Pmax
 ThermalPerformance    = RawThermalPerformance * Pmax
 FedRate               = 1                                           // reset; Step 2 overwrites
 CurrentHuntingSuccess = 1                                           // reset; Step 2 overwrites for Tier 2
 ```
+
+`BaseTemperatureC` is the ecosystem base-temp property (EcosystemSimulator.cs:245). `TempMultiplier`
+(section 3.2) scales each species' experienced deviation from the run base temperature before the
+curve: at 1.0 `dampedTemp == temperature` (bit-identical), below 1 dampens the swing (thermal
+inertia), above 1 amplifies. The per-species `TemperatureDebuff` is still added inside
+`CalculatePerformance` (section 3.5, Step A), after this damping.
 
 ### Step 2, feeding and predation
 

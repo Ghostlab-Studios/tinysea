@@ -4,7 +4,7 @@ This document is the authoritative spine of the TinySea headless ecosystem simul
 
 The following topics are specified inline in this document, not in any sibling file:
 
-- The temperature model: Section 8 (the parametric model, its eleven parameters with defaults, the RNG consumption order, and the timeseries override path).
+- The temperature model: Section 8 (the parametric model, its twelve parameters with defaults, the RNG consumption order, and the timeseries override path).
 - The default species set and all per species thermal curve values: Section 6.1 and Section 6.2.
 - The configuration defaults: Section 9.
 - The exact per species CSV column set and its order: Section 7.1.
@@ -86,7 +86,7 @@ Per scenario seeding: `scenarioSeed = RandomSeed < 0 ? -1 : RandomSeed + i`, whe
 
 When `RandomSeed < 0` the expression yields the constant `-1` for every scenario, not `RandomSeed + i`. The value `-1` is a sentinel, not a literal seed. Each `SimulationRunner` passes it to `TemperatureCalculator` and `EcosystemSimulator`, whose constructors both do `_rng = seed < 0 ? new System.Random() : new System.Random(seed)` (TemperatureCalculator.cs:45; EcosystemSimulator.cs:302). The parameterless `System.Random()` seeds from the system clock, so a negative base seed makes every scenario non reproducible. Because the clock based default seed has tick resolution, two scenarios constructed within the same clock tick can receive the same system time seed and collide. Distinct seeds across scenarios are therefore likely but not guaranteed in the negative seed case.
 
-Standard mode applies every config parameter onto a fresh `SimulationRunner` before each scenario (SimulationController.cs:349-374): timing (`TotalDays`, `BiologyStep`), the eleven temperature parameters (the eleven public fields of `TemperatureCalculator` enumerated in Section 8.2), the species list, `CarryingCapacityPerTier`, the two condition rates, and `Tier2Enabled`. The exact field by field copy is `BaseTemperature`, `SeasonalAmplitude`, `ClimateTrend` to `ClimateTrendPerYear`, `VariabilityMagnitude`, `WarmingBias`, `DailyVariationRange` to `BaseRandomness`, `RandomnessGrowthRate`, `Autocorrelated` to `UseAutocorrelation`, `InterannualVariation` to `UseInterannualVariation`, `TemperatureBoundsMin` to `MinTemp`, and `TemperatureBoundsMax` to `MaxTemp` (SimulationController.cs:353-363). After all scenarios finish, `AggregateResults.CalculateAggregates` computes cross scenario statistics (SimulationController.cs:263) and the run produces `aggregate.csv`.
+Standard mode applies every config parameter onto a fresh `SimulationRunner` before each scenario (SimulationController.cs:349-374): timing (`TotalDays`, `BiologyStep`), the twelve temperature parameters (the twelve public fields of `TemperatureCalculator` enumerated in Section 8.2), the species list, `CarryingCapacityPerTier`, the two condition rates, and `Tier2Enabled`. The exact field by field copy is `BaseTemperature`, `SeasonalAmplitude`, `ClimateTrend` to `ClimateTrendPerYear`, `VariabilityMagnitude`, `WarmingBias`, `DailyVariationRange` to `BaseRandomness`, `RandomnessGrowthRate`, `Autocorrelated` to `UseAutocorrelation`, `AutocorrelationCoefficient`, `InterannualVariation` to `UseInterannualVariation`, `TemperatureBoundsMin` to `MinTemp`, and `TemperatureBoundsMax` to `MaxTemp` (SimulationController.cs:353-370). After all scenarios finish, `AggregateResults.CalculateAggregates` computes cross scenario statistics (SimulationController.cs:263) and the run produces `aggregate.csv`.
 
 In Editor and standalone builds, scenarios within a run execute in parallel via `Task.Run`, chunked by `ProcessorCount - 1` (SimulationController.cs:190-258). In WebGL non editor they run sequentially because WASM is single threaded (SimulationController.cs:170-188). The seed per scenario is identical in both paths, so results do not depend on the threading mode.
 
@@ -126,9 +126,10 @@ Before any step runs:
 
 For each species:
 
-- `RawThermalPerformance = CalculatePerformance(temperature)` (SimSpecies.cs:95-133). The full formula is given below. `Pmax` is not applied inside it.
-- `ThermalPerformance = RawThermalPerformance * Pmax` (EcosystemSimulator.cs:594). `Pmax` is the peak thermal height, the species specific ceiling.
-- `FedRate = 1` and `CurrentHuntingSuccess = 1` are initialized (EcosystemSimulator.cs:595-596).
+- `dampedTemp = temperature + (temperature - BaseTemperatureC) * (TempMultiplier - 1)` (EcosystemSimulator.cs:607). The per-species `TempMultiplier` (default 1.0, SimSpecies.cs:72) scales the experienced deviation from the run base temperature `BaseTemperatureC` before the thermal curve sees it. At 1.0 the added term is 0 and `dampedTemp == temperature` (bit-identical), below 1 it dampens the deviation (thermal inertia), above 1 it amplifies it. `BaseTemperatureC` is the run base temperature, set once per run from `TempCalc.BaseTemperature` before the day loop (SimulationRunner.cs:421), default 20 (EcosystemSimulator.cs:245).
+- `RawThermalPerformance = CalculatePerformance(dampedTemp)` (SimSpecies.cs:95-133). The full formula is given below. The per-species `TemperatureDebuff` is still added inside `CalculatePerformance`, so it composes with the multiplier. `Pmax` is not applied inside it.
+- `ThermalPerformance = RawThermalPerformance * Pmax` (EcosystemSimulator.cs:609). `Pmax` is the peak thermal height, the species specific ceiling.
+- `FedRate = 1` and `CurrentHuntingSuccess = 1` are initialized (EcosystemSimulator.cs:610-611).
 
 `Pmax` is applied here, not inside `CalculatePerformance` (SimSpecies.cs:131-132). `RawThermalPerformance` is the lethal kill test in Step 6 and the condition target factor in Step 3. `ThermalPerformance` is used for predator demand (legacy Tier 2) and for logging.
 
@@ -136,7 +137,7 @@ For each species:
 
 | Symbol | Field / constant | Units | Default | Meaning |
 |--------|------------------|-------|---------|---------|
-| `temperatureCelsius` | method argument | °C | n/a | The day temperature passed in by Step 1. |
+| `temperatureCelsius` | method argument | °C | n/a | The day temperature passed in by Step 1. Step 1 passes `dampedTemp` (the day temperature after the per-species `TempMultiplier` scales its deviation from `BaseTemperatureC`), not the raw day temperature. |
 | `TemperatureDebuff` | `SimSpecies.TemperatureDebuff` (SimSpecies.cs:71) | °C | `0f` | Per species offset added to the input temperature. Set from `SpeciesData.TemperatureDebuff` at load (EcosystemSimulator.cs:376). Sign convention: effective temperature is `temperatureCelsius + TemperatureDebuff`, so a positive value raises the experienced temperature and a negative value lowers it. |
 | `CTminC` | `SimSpecies.CTminC` (SimSpecies.cs:69) | °C | `-5.0f` | Critical thermal minimum. At or below it performance is 0. |
 | `CTmaxC` | `SimSpecies.CTmaxC` (SimSpecies.cs:70) | °C | `40.0f` | Critical thermal maximum. At or above it performance is 0. |
@@ -203,22 +204,24 @@ For each species: `RawFinalPerformance = RawThermalPerformance * FedRate`. This 
 
 `UpdateCondition` moves each live species' `Condition` toward `target = RawFinalPerformance` asymmetrically (EcosystemSimulator.cs:952-992). It is skipped for dead species, guarded by `if (sp.Population < MIN_ALIVE_POP) return` (EcosystemSimulator.cs:954). The "distance from optimal" that drives the quadratic acceleration is the distance of the target from 1.0, not a temperature distance: the target itself is the environmental performance `RawThermalPerformance * FedRate`, and a target of 1.0 is the optimum. `Condition` is then nudged a fraction of the gap `(Condition - target)` or `(target - Condition)` each step.
 
-Let `target = RawFinalPerformance`, `pmaxSafe = max(Pmax, 1e-4)`, and the effective rates `drainRate`/`recoveryRate` (per species when set to a non negative value, otherwise the global rates, EcosystemSimulator.cs:963-964). The update is (EcosystemSimulator.cs:966-989):
+Let `target = RawFinalPerformance`, `pmaxSafe = max(Pmax, 1e-4)`, and the effective rates `drainRate`/`recoveryRate` (per species when set to a non negative value, otherwise the global rates, EcosystemSimulator.cs:1015-1016). The update is (EcosystemSimulator.cs:1018-1043):
 
 ```
 if Condition > target:                                  // draining
     severity        = (1 - target)^2                    // 0 at target=1, 1 at target=0
     effectiveDrain  = drainRate * (1 + severity) / pmaxSafe
     Condition       = Condition - (Condition - target) * effectiveDrain
+    Condition       = max(target, Condition)            // overshoot guard, cannot cross below target
 else:                                                    // recovering
     boost           = target^2                           // 0 at target=0, 1 at target=1
     effectiveRecovery = recoveryRate * (1 + boost) * pmaxSafe
     Condition       = Condition + (target - Condition) * effectiveRecovery
+    Condition       = min(target, Condition)            // overshoot guard, cannot cross above target
 
 Condition = clamp(Condition, 0, 1)
 ```
 
-The quadratic factor `(1 + severity)` ranges from 1 at the optimum to 2 at a lethal target, so drain accelerates as the target worsens; `(1 + boost)` ranges from 1 at a lethal target to 2 at the optimum, so recovery accelerates as the target improves. `Pmax` scales the rate, applied after the quadratic factor and as a divisor for drain and a multiplier for recovery (EcosystemSimulator.cs:974, 985); it does not enter the target, so Condition keeps its species agnostic `[0, 1]` meaning and `ReproThreshold`/`DeathThreshold` need no per species tuning (EcosystemSimulator.cs:943-946). `BiologyStep` does not multiply the drain or recovery rates in Step 4. Unlike Steps 7, 8, and 9, the formulas above contain no `BiologyStep` term (EcosystemSimulator.cs:966-989); Condition advances one logical step per biology day regardless of how many calendar days that biology day represents. `Condition` is clamped to `[0, 1]` and persists across days. Default global rates: `ConditionDrainRate = 0.15`, `ConditionRecoveryRate = 0.10` (EcosystemSimulator.cs:240-241).
+The quadratic factor `(1 + severity)` ranges from 1 at the optimum to 2 at a lethal target, so drain accelerates as the target worsens; `(1 + boost)` ranges from 1 at a lethal target to 2 at the optimum, so recovery accelerates as the target improves. `Pmax` scales the rate, applied after the quadratic factor and as a divisor for drain and a multiplier for recovery (EcosystemSimulator.cs:1026, 1038); it does not enter the target, so Condition keeps its species agnostic `[0, 1]` meaning and `ReproThreshold`/`DeathThreshold` need no per species tuning. Each branch applies an overshoot guard immediately after its Euler move and before the final `[0, 1]` clamp: drain runs `Condition = max(target, Condition)` (EcosystemSimulator.cs:1028) and recovery runs `Condition = min(target, Condition)` (EcosystemSimulator.cs:1040), so a single step can never cross the target. The drain and recovery rates are not hard-capped at 1.0; an effective rate above 1 (reachable when a configured rate is set above 1.0, up to about 3.0) would otherwise overshoot and oscillate, but the guard makes Condition snap exactly to its instantaneous target each day, a memoryless organism for the no-memory experiments. At the default rates the per-step move never reaches the target, so the guard never fires and existing results are byte-identical. `BiologyStep` does not multiply the drain or recovery rates in Step 4. Unlike Steps 7, 8, and 9, the formulas above contain no `BiologyStep` term (EcosystemSimulator.cs:1018-1043); Condition advances one logical step per biology day regardless of how many calendar days that biology day represents. `Condition` is clamped to `[0, 1]` and persists across days. Default global rates: `ConditionDrainRate = 0.15`, `ConditionRecoveryRate = 0.10` (EcosystemSimulator.cs:240-241).
 
 ### 3.5 Step 5: Final performance (EcosystemSimulator.cs:619-630)
 
@@ -333,7 +336,7 @@ Population is capped at `100 * CarryingCapacityPerTier` before rounding (Ecosyst
 
 The explicitly clamped quantities are `RawThermalPerformance` (clamped inside `CalculatePerformance`, SimSpecies.cs:132), `FedRate` (Tier 1 at EcosystemSimulator.cs:792, Tier 2 at 857), `Condition` (EcosystemSimulator.cs:989), and `reproScale` (EcosystemSimulator.cs:1191). `RawFinalPerformance = RawThermalPerformance * FedRate` is bounded by `[0, 1]` because both factors are, even though it has no clamp of its own.
 
-`ThermalPerformance` and `FinalPerformance` are not clamped. `ThermalPerformance = RawThermalPerformance * Pmax` (EcosystemSimulator.cs:594) and `FinalPerformance = ThermalPerformance * FedRate` (EcosystemSimulator.cs:628) have no explicit clamp. They stay within `[0, 1]` only by the convention that `Pmax` is configured in `(0, 1]` (`Pmax` default 1.0, SimSpecies.cs:68). No code enforces `Pmax <= 1`, so a config with `Pmax > 1` would let both exceed 1. `Condition` starts at 1.0 and persists across days (SimSpecies.cs:80).
+`ThermalPerformance` and `FinalPerformance` are not clamped. `ThermalPerformance = RawThermalPerformance * Pmax` (EcosystemSimulator.cs:594) and `FinalPerformance = ThermalPerformance * FedRate` (EcosystemSimulator.cs:628) have no explicit clamp. They stay within `[0, 1]` only by the convention that `Pmax` is configured in `(0, 1]` (`Pmax` default 1.0, SimSpecies.cs:68). No code enforces `Pmax <= 1`, so a config with `Pmax > 1` would let both exceed 1. `Condition` is seeded at scenario start from the per-species `InitialCondition` (default 1.0, range 0..1, EcosystemSimulator.cs:384-385) and persists across days (SimSpecies.cs:80-82).
 
 ### 5.5 Determinism under the same seed
 
@@ -358,7 +361,7 @@ Because the `0` and `1` branches gate on `_tier1WasPopulated`, a Tier 2 only eco
 
 Species enter a scenario through `EcosystemSimulator.InitializeFromRunSpeciesList(RunSpeciesList)` (EcosystemSimulator.cs:317), the primary path. `SimulationRunner.Run` calls it when a `RunSpeciesList` is present, otherwise it falls back to `InitializeDefaultSpecies` (SimulationRunner.cs:403-411). A legacy `InitializeFromDatabase` path also exists (EcosystemSimulator.cs:399).
 
-During load each `SpeciesData` becomes a `SimSpecies` with `Tier = data.tier + 1` (EcosystemSimulator.cs:356), `Name` from `speciesLabel` or the `speciesName` enum, and `VariantLabel` from `variantLabel` or the `variant` enum (EcosystemSimulator.cs:351-380). Two filters apply during load:
+During load each `SpeciesData` becomes a `SimSpecies` with `Tier = data.tier + 1` (EcosystemSimulator.cs:356), `Name` from `speciesLabel` or the `speciesName` enum, and `VariantLabel` from `variantLabel` or the `variant` enum (EcosystemSimulator.cs:351-385). The load also seeds Day-0 Condition from the per-species `initialCondition` (default 1.0, range 0..1): both `InitialCondition` and the live `Condition` are set to `data.initialCondition` at construction, so a scenario can start an organism below fully charged (EcosystemSimulator.cs:384-385). The per-species `TempMultiplier` is copied here too (EcosystemSimulator.cs:381) and drives Step 1's `dampedTemp` (Section 3.1). Two filters apply during load:
 
 1. Tier 2 drop when the gate is off (EcosystemSimulator.cs:336), see Section 1.
 2. Duplicate merge: species whose name and variant labels normalize to the same match key are merged into the first seen species (EcosystemSimulator.cs:338-349). The match key is `SpeciesNameMatchKey(name) + "_" + VariantMatchKey(label)` (EcosystemSimulator.cs:343), where `name` is `speciesLabel` or the `speciesName` enum name and `label` is `variantLabel` or the `variant` enum name (EcosystemSimulator.cs:341-342). Both `SpeciesNameMatchKey` and `VariantMatchKey` normalize identically: lowercase via `char.ToLowerInvariant`, then keep only the characters `[a-z0-9]`, dropping every space, dash, underscore, and other punctuation (SpeciesDatabase.cs:216-226, 243-253). So `"Hexapod Cold"`, `"hexapod_cold"`, and `"HEXAPOD-COLD"` all collide, but `"topic3"` and `"topic4"` do not. The merge is destructive and not symmetric across parameters: only `Population` is summed onto the first seen species (`existingSp.Population += data.count`, EcosystemSimulator.cs:346); every other biology parameter (`Pmax`, the rates, the thresholds, the thermal curve fields) is taken from the first seen species and the duplicate's values are dropped. Unique keys never merge.
@@ -418,7 +421,7 @@ Per variant parameters. Each Hexapod variant shares the curve shape and shifts o
 | `CTmaxC` | `35f` | `37f` | `39f` |
 | `ArrhenBreadth` (`B`) | `5000f` | `5000f` | `5000f` |
 
-These are the values consumed by `CalculatePerformance` (Section 3.1). The remaining `SimSpecies` defaults that the factory does not override stay at their field initializer values: `ConditionDrainRate = -1f` and `ConditionRecoveryRate = -1f` (negative means inherit the simulator global rates, SimSpecies.cs:36-37), `TemperatureDebuff = 0f` (SimSpecies.cs:71), and `Condition = 1.0f` starting value (SimSpecies.cs:80).
+These are the values consumed by `CalculatePerformance` (Section 3.1). The remaining `SimSpecies` defaults that the factory does not override stay at their field initializer values: `ConditionDrainRate = -1f` and `ConditionRecoveryRate = -1f` (negative means inherit the simulator global rates, SimSpecies.cs:36-37), `TemperatureDebuff = 0f` (SimSpecies.cs:71), `TempMultiplier = 1.0f` (no temperature damping, SimSpecies.cs:72), and `Condition = 1.0f` / `InitialCondition = 1.0f` starting value (SimSpecies.cs:81-82). The default-species factory builds `SimSpecies` directly, so it keeps these field initializers; the `RunSpeciesList` and bulk-CSV load path instead seeds `Condition` from `data.initialCondition` (Section 6).
 
 #### 6.2.2 Tier 2 Sheplik (`CreateSheplik`, SimSpecies.cs:207-258), legacy and secondary
 
@@ -537,18 +540,18 @@ year = day / 365                                                  // integer div
 currentRandomness = BaseRandomness + RandomnessGrowthRate * year  // degrees Celsius
 newRandom = (rng.NextDouble() * 2 - 1) * currentRandomness        // uniform on [-currentRandomness, +currentRandomness]
 if UseAutocorrelation:
-    variation = previousDayVariation * 0.7 + newRandom * 0.3       // AR(1)-style smoothing, 0.7/0.3 fixed
+    variation = previousDayVariation * AutocorrelationCoefficient + newRandom * (1 - AutocorrelationCoefficient)   // AR(1)
 else:
     variation = newRandom
 previousDayVariation = variation                                  // carried to the next day
 DailyVariation(day) = variation
 ```
 
-`BaseRandomness` is the base daily noise half range in degrees Celsius. `RandomnessGrowthRate` widens it by that many degrees per elapsed year (integer year). When `UseAutocorrelation` is true the day blends 70 percent of yesterday's variation with 30 percent of the new draw, which produces smoother day to day transitions; the 0.7 and 0.3 weights are fixed in code. `previousDayVariation` is state that persists across days within a scenario and resets to 0 on `Reset` (TemperatureCalculator.cs:55). Daily variation consumes exactly one `rng.NextDouble()` value every day, whether or not autocorrelation is on.
+`BaseRandomness` is the base daily noise half range in degrees Celsius. `RandomnessGrowthRate` widens it by that many degrees per elapsed year (integer year). When `UseAutocorrelation` is true the day blends `AutocorrelationCoefficient` of yesterday's variation with `1 - AutocorrelationCoefficient` of the new draw (TemperatureCalculator.cs:188). `AutocorrelationCoefficient` is the AR(1) coefficient, default 0.7 (TemperatureCalculator.cs:27), which reproduces the previously hard coded 0.7/0.3 blend bit-identically. Coefficient 0 is pure white noise (independent days); as the coefficient approaches 1 the marginal daily amplitude shrinks toward zero (AR(1) with innovation weight `1 - coeff`, stationary variance proportional to `(1 - coeff) / (1 + coeff)`), a red noise dampening. The valid range is 0..1, enforced by the bulk parser (CsvBatchParser.cs:308-309) and a `[Range(0,1)]` attribute on the config field. `previousDayVariation` is state that persists across days within a scenario and resets to 0 on `Reset` (TemperatureCalculator.cs:55). Daily variation consumes exactly one `rng.NextDouble()` value every day, whether or not autocorrelation is on.
 
-### 8.2 The eleven parameters and their defaults
+### 8.2 The twelve parameters and their defaults
 
-The model exposes eleven public fields. The defaults below are the C# field initializers in `TemperatureCalculator` (TemperatureCalculator.cs:18-28). `SimulationController` overwrites every one of them from the `SimulationConfig` before each scenario (Section 2.2 and SimulationController.cs:353-363), so the effective values in a real run come from the config (Section 9), not from these initializers. The two are listed side by side because the config field names differ from the calculator field names.
+The model exposes twelve public fields. The defaults below are the C# field initializers in `TemperatureCalculator` (TemperatureCalculator.cs:18-29). `SimulationController` overwrites every one of them from the `SimulationConfig` before each scenario (Section 2.2 and SimulationController.cs:353-370), so the effective values in a real run come from the config (Section 9), not from these initializers. The two are listed side by side because the config field names differ from the calculator field names.
 
 | `TemperatureCalculator` field | Type | Calculator default | `SimulationConfig` source field | Config default (Section 9) | Units / meaning |
 |-------------------------------|------|--------------------|---------------------------------|----------------------------|-----------------|
@@ -560,7 +563,8 @@ The model exposes eleven public fields. The defaults below are the C# field init
 | `BaseRandomness` | float | `5f` | `DailyVariationRange` | `5f` | Daily noise half range, degrees Celsius. |
 | `RandomnessGrowthRate` | float | `0.5f` | `RandomnessGrowthRate` | `0.5f` | Daily noise growth per year, degrees Celsius. |
 | `UseInterannualVariation` | bool | `true` | `InterannualVariation` | `true` | Enable the per year offset. |
-| `UseAutocorrelation` | bool | `true` | `Autocorrelated` | `true` | Smooth daily noise with the 0.7/0.3 blend. |
+| `UseAutocorrelation` | bool | `true` | `Autocorrelated` | `true` | Smooth daily noise with the AR(1) blend. |
+| `AutocorrelationCoefficient` | float | `0.7f` | `AutocorrelationCoefficient` | `0.7f` | AR(1) coefficient on the daily noise when autocorrelation is on; 0 = white noise. Range 0..1. |
 | `MinTemp` | float | `-5f` | `TemperatureBoundsMin` | `-5f` | Hard floor of the final clamp, degrees Celsius. |
 | `MaxTemp` | float | `40f` | `TemperatureBoundsMax` | `50f` | Hard ceiling of the final clamp, degrees Celsius. |
 
@@ -611,6 +615,7 @@ Both are documented below because the gap closed here is "the defaults are not g
 | `VariabilityMagnitude` | float | `2f` (cs:95) | `0` (asset:25) | Interannual range (Section 8). Asset sets it to 0. |
 | `WarmingBias` | float | `1.5f` (cs:98) | `0` (asset:26) | Warm year shape skew (Section 8). |
 | `Autocorrelated` | bool | `true` (cs:102) | `1` / true (asset:27) | Smooth daily noise (Section 8). |
+| `AutocorrelationCoefficient` | float | `0.7f` (cs:106) | not serialized, deserializes to `0.7f` | AR(1) coefficient on the daily noise (Section 8); copied to `TemperatureCalculator.AutocorrelationCoefficient`. `[Range(0,1)]`. The shipping asset predates this field, so it carries no serialized value and Unity falls back to the C# initializer 0.7. |
 | `DailyVariationRange` | float | `5f` (cs:105) | `5` (asset:28) | Daily noise half range; copied to `BaseRandomness`. |
 | `RandomnessGrowthRate` | float | `0.5f` (cs:108) | `0` (asset:29) | Daily noise growth per year (Section 8). |
 | `TemperatureBoundsMin` | float | `-5f` (cs:112) | `0` (asset:30) | Clamp floor; copied to `MinTemp`. |

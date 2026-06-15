@@ -53,7 +53,9 @@ public class SpeciesData
     public float reproductionMultiplier;    // Birth rate multiplier
     public float deathThreshold = 0.3f;     // FinalPerf below this triggers thermal death
     public float deathRate;                 // Fraction dying when thermal death triggers
-    public float TemperatureDebuff = 0.0f;  // Additional performance debuff from temperature applied after thermal curve 
+    public float TemperatureDebuff = 0.0f;  // Additional performance debuff from temperature applied after thermal curve
+    [Tooltip("Per-species multiplier on the deviation from base temperature. <1 dampens the experienced swing (thermal inertia). 1 = no change.")]
+    public float tempMultiplier = 1.0f;
     public float reproThreshold = 0.25f;
 
     [Header("Condition Timescale (per-species τ, Batch 2)")]
@@ -62,8 +64,11 @@ public class SpeciesData
     // = inherit the simulator-global rate), so legacy CSV batches stay backward compatible.
     public float conditionDrainRate = 0.15f;
     public float conditionRecoveryRate = 0.10f;
-    
-    
+    [Tooltip("Day-0 starting condition [0-1]. 1 = fully charged (default). Lower starts the organism nearer a midpoint.")]
+    [Range(0f, 1f)]
+    public float initialCondition = 1.0f;
+
+
     [Header("Natural Mortality")]
 
 

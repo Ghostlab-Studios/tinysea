@@ -417,6 +417,9 @@ public class SimulationRunner
 
         SimLog($"=== Starting Simulation: {TotalDays} days, BiologyStep={BiologyStep} ===");
 
+        // Batch 4: anchor for the per-species temperature multiplier (base temp is constant per run).
+        Ecosystem.BaseTemperatureC = TempCalc.BaseTemperature;
+
         for (int dayIndex = 0; dayIndex < TotalDays; dayIndex++)
         {
             // Group 5: cooperative per-day pause/stop. Spin while paused without consuming
@@ -765,6 +768,7 @@ public class SimulationRunner
         sb.AppendLine($"#config:daily_variation_range,{TempCalc.BaseRandomness}");
         sb.AppendLine($"#config:randomness_growth_rate,{TempCalc.RandomnessGrowthRate}");
         sb.AppendLine($"#config:autocorrelated,{TempCalc.UseAutocorrelation.ToString().ToLower()}");
+        sb.AppendLine($"#config:autocorrelation_coefficient,{TempCalc.AutocorrelationCoefficient}");
         sb.AppendLine($"#config:temperature_bounds_min,{TempCalc.MinTemp}");
         sb.AppendLine($"#config:temperature_bounds_max,{TempCalc.MaxTemp}");
         sb.AppendLine($"#config:carrying_capacity_tier1,{Ecosystem.CarryingCapacityPerTier}");

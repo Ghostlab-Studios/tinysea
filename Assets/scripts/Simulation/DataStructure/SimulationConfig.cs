@@ -101,6 +101,10 @@ public class SimulationConfig : ScriptableObject
     [Tooltip("Enable autocorrelated (smooth) daily variation")]
     public bool Autocorrelated = true;
 
+    [Tooltip("AR(1) autocorrelation coefficient for daily variation (0 = white noise, 0.7 = default smoothing, near 1 = strong memory)")]
+    [Range(0f, 1f)]
+    public float AutocorrelationCoefficient = 0.7f;
+
     [Tooltip("Base daily random variation range")]
     public float DailyVariationRange = 5f;
 

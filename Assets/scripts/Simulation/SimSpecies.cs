@@ -69,6 +69,7 @@ public class SimSpecies
     public float CTminC = -5.0f;       // Critical thermal minimum (Celsius) — below this, performance = 0
     public float CTmaxC = 40.0f;       // Critical thermal maximum (Celsius) — above this, performance = 0
     public float TemperatureDebuff = 0f;  // Per-species temperature offset (shifts experienced temp)
+    public float TempMultiplier = 1.0f;   // Per-species multiplier on deviation from base temp (<1 dampens swings; 1 = no change)
 
     // ==================== RUNTIME VALUES (calculated each step) ====================
     public float RawThermalPerformance;     // Arrhenius + CTmin/CTmax fade, WITHOUT Pmax
@@ -78,6 +79,7 @@ public class SimSpecies
     public float FinalPerformance;          // ThermalPerf × FedRate — computed for logging/CSV output only (not a biology input as of v8)
     public float CurrentHuntingSuccess;     // This step's hunting success (for tracking)
     public float Condition = 1.0f;          // Health/energy reserves [0-1], starts at 1.0
+    public float InitialCondition = 1.0f;   // Day-0 Condition seed (copied into Condition at scenario start)
 
     /// <summary>
     /// Full name for display (e.g., "Hexapod_Cold", "Coral_M2").

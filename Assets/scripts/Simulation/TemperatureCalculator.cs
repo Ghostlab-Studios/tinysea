@@ -24,6 +24,7 @@ public class TemperatureCalculator
     public float RandomnessGrowthRate = 0.5f;     // Daily randomness increases per year
     public bool UseInterannualVariation = true;    // Year-to-year variation on/off
     public bool UseAutocorrelation = true;        // Smooth weather transitions
+    public float AutocorrelationCoefficient = 0.7f; // AR(1) phi when UseAutocorrelation is on (0 = white noise)
     public float MinTemp = -5f;                   // Hard floor
     public float MaxTemp = 40f;                   // Hard ceiling
 
@@ -183,8 +184,8 @@ public class TemperatureCalculator
         float variation;
         if (UseAutocorrelation)
         {
-            // 70% yesterday + 30% new = smooth transitions
-            variation = _previousDayVariation * 0.7f + newRandom * 0.3f;
+            // AR(1): coeff*yesterday + (1-coeff)*new. Default coeff 0.7 reproduces the legacy 0.7/0.3 blend.
+            variation = _previousDayVariation * AutocorrelationCoefficient + newRandom * (1f - AutocorrelationCoefficient);
         }
         else
         {

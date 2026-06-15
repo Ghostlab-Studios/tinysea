@@ -240,6 +240,10 @@ public class EcosystemSimulator
     public float ConditionDrainRate { get; set; } = 0.15f;
     public float ConditionRecoveryRate { get; set; } = 0.10f;
 
+    // Batch 4: annual base temperature (°C), set from TemperatureCalculator before the run.
+    // Anchor for the per-species temperature multiplier (dampening of deviation from base).
+    public float BaseTemperatureC { get; set; } = 20f;
+
     // Tier-1-only build: Tier-2 (predator) gate defaults OFF. When false, Tier-2 species are
     // excluded at load and Tier-2 CSV columns are suppressed. Engine code stays intact.
     public bool Tier2Enabled { get; set; } = false;
@@ -374,9 +378,11 @@ public class EcosystemSimulator
                 CTminC = data.ctMinC,
                 CTmaxC = data.ctMaxC,
                 TemperatureDebuff = data.TemperatureDebuff,
+                TempMultiplier = data.tempMultiplier,
                 ConditionDrainRate = data.conditionDrainRate,
                 ConditionRecoveryRate = data.conditionRecoveryRate,
-                Condition = 1.0f
+                InitialCondition = data.initialCondition,
+                Condition = data.initialCondition
             };
 
             Species.Add(simSpecies);
@@ -437,9 +443,11 @@ public class EcosystemSimulator
                 CTminC = data.ctMinC,
                 CTmaxC = data.ctMaxC,
                 TemperatureDebuff = data.TemperatureDebuff,
+                TempMultiplier = data.tempMultiplier,
                 ConditionDrainRate = data.conditionDrainRate,
                 ConditionRecoveryRate = data.conditionRecoveryRate,
-                Condition = 1.0f
+                InitialCondition = data.initialCondition,
+                Condition = data.initialCondition
             };
 
             Species.Add(simSpecies);
@@ -596,7 +604,8 @@ public class EcosystemSimulator
         SimLog("--- Step 1: Thermal Performance ---");
         foreach (var sp in Species)
         {
-            sp.RawThermalPerformance = sp.CalculatePerformance(temperature);
+            float dampedTemp = temperature + (temperature - BaseTemperatureC) * (sp.TempMultiplier - 1f);
+            sp.RawThermalPerformance = sp.CalculatePerformance(dampedTemp);
             sp.ThermalPerformance = sp.RawThermalPerformance * sp.Pmax;
             sp.FedRate = 1f;
             sp.CurrentHuntingSuccess = 1f;
@@ -1016,6 +1025,7 @@ public class EcosystemSimulator
             severity *= severity;
             float effectiveDrain = drainRate * (1f + severity) / pmaxSafe;
             sp.Condition -= (sp.Condition - target) * effectiveDrain;
+            sp.Condition = Math.Max(target, sp.Condition);  // overshoot guard: snap to target, no oscillation when rate > 1
         }
         else
         {
@@ -1027,6 +1037,7 @@ public class EcosystemSimulator
             boost *= boost;
             float effectiveRecovery = recoveryRate * (1f + boost) * pmaxSafe;
             sp.Condition += (target - sp.Condition) * effectiveRecovery;
+            sp.Condition = Math.Min(target, sp.Condition);  // overshoot guard: snap to target, no oscillation when rate > 1
         }
 
         sp.Condition = Math.Max(0f, Math.Min(1f, sp.Condition));

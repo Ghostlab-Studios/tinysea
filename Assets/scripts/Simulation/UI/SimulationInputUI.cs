@@ -26,6 +26,7 @@ public class SimulationInputUI : MonoBehaviour
 
     [Header("=== TEMPERATURE: DAILY VARIATION ===")]
     public Toggle Autocorrelated;
+    public TMP_InputField AutocorrelationCoefficient;
     public TMP_InputField DailyVariationRange;
     public TMP_InputField RandomnessGrowthRate;
 
@@ -82,6 +83,7 @@ public class SimulationInputUI : MonoBehaviour
         public float VariabilityMagnitude;
         public float WarmingBias;
         public bool Autocorrelated;
+        public float AutocorrelationCoefficient;
         public float DailyVariationRange;
         public float RandomnessGrowthRate;
         public float TemperatureBoundsMin;
@@ -105,6 +107,7 @@ public class SimulationInputUI : MonoBehaviour
                 VariabilityMagnitude = config.VariabilityMagnitude,
                 WarmingBias = config.WarmingBias,
                 Autocorrelated = config.Autocorrelated,
+                AutocorrelationCoefficient = config.AutocorrelationCoefficient,
                 DailyVariationRange = config.DailyVariationRange,
                 RandomnessGrowthRate = config.RandomnessGrowthRate,
                 TemperatureBoundsMin = config.TemperatureBoundsMin,
@@ -128,6 +131,7 @@ public class SimulationInputUI : MonoBehaviour
             config.VariabilityMagnitude = VariabilityMagnitude;
             config.WarmingBias = WarmingBias;
             config.Autocorrelated = Autocorrelated;
+            config.AutocorrelationCoefficient = AutocorrelationCoefficient;
             config.DailyVariationRange = DailyVariationRange;
             config.RandomnessGrowthRate = RandomnessGrowthRate;
             config.TemperatureBoundsMin = TemperatureBoundsMin;
@@ -160,6 +164,13 @@ public class SimulationInputUI : MonoBehaviour
             ResetButton.onClick.AddListener(OnResetClicked);
         }
 
+        // Batch 4: enable the autocorrelation-coefficient input only while autocorrelation is on.
+        if (Autocorrelated != null)
+        {
+            Autocorrelated.onValueChanged.RemoveListener(OnAutocorrelatedToggled);
+            Autocorrelated.onValueChanged.AddListener(OnAutocorrelatedToggled);
+        }
+
         // Store defaults if not already stored
         if (!defaultsStored)
         {
@@ -181,6 +192,16 @@ public class SimulationInputUI : MonoBehaviour
         {
             ResetButton.onClick.RemoveListener(OnResetClicked);
         }
+
+        if (Autocorrelated != null)
+            Autocorrelated.onValueChanged.RemoveListener(OnAutocorrelatedToggled);
+    }
+
+    // Batch 4: the autocorrelation coefficient only matters when autocorrelation is on,
+    // so its input box is interactable only while the toggle is checked.
+    private void OnAutocorrelatedToggled(bool on)
+    {
+        if (AutocorrelationCoefficient != null) AutocorrelationCoefficient.interactable = on;
     }
 
     /// <summary>
@@ -239,6 +260,9 @@ public class SimulationInputUI : MonoBehaviour
         SetFloat(WarmingBias, config.WarmingBias);
 
         SetToggleNoNotify(Autocorrelated, config.Autocorrelated);
+        SetFloat(AutocorrelationCoefficient, config.AutocorrelationCoefficient);
+        if (AutocorrelationCoefficient != null && Autocorrelated != null)
+            AutocorrelationCoefficient.interactable = Autocorrelated.isOn;
 
         SetFloat(DailyVariationRange, config.DailyVariationRange);
         SetFloat(RandomnessGrowthRate, config.RandomnessGrowthRate);
@@ -275,6 +299,7 @@ public class SimulationInputUI : MonoBehaviour
         float carryingCapacity = 0f;
         float condDrain = 0f;
         float condRecovery = 0f;
+        float autocorrCoeff = 0f;
         int daysPerScenario = 0;
         int numberOfScenarios = 0;
 
@@ -294,6 +319,7 @@ public class SimulationInputUI : MonoBehaviour
 
         allValid &= TryReadFloat(ConditionDrainRate, out condDrain);
         allValid &= TryReadFloat(ConditionRecoveryRate, out condRecovery);
+        allValid &= TryReadFloat(AutocorrelationCoefficient, out autocorrCoeff, 0f, 1f);
 
         allValid &= TryReadInt(DaysPerScenarioInput, out daysPerScenario, minValue: 1, maxValue: 182500);
         allValid &= TryReadInt(NumberOfScenariosInput, out numberOfScenarios, minValue: 1, maxValue: 100);
@@ -326,6 +352,7 @@ public class SimulationInputUI : MonoBehaviour
         // Only overwrite condition fields if their UI fields are assigned
         if (ConditionDrainRate != null) config.ConditionDrainRate = condDrain;
         if (ConditionRecoveryRate != null) config.ConditionRecoveryRate = condRecovery;
+        if (AutocorrelationCoefficient != null) config.AutocorrelationCoefficient = autocorrCoeff;
 
         config.DaysPerScenario = daysPerScenario;
         config.NumberOfScenarios = numberOfScenarios;
@@ -354,7 +381,7 @@ public class SimulationInputUI : MonoBehaviour
         field.text = value.ToString(CultureInfo.InvariantCulture);
     }
 
-    private bool TryReadFloat(TMP_InputField field, out float value)
+    private bool TryReadFloat(TMP_InputField field, out float value, float min = float.MinValue, float max = float.MaxValue)
     {
         value = 0f;
 
@@ -374,7 +401,7 @@ public class SimulationInputUI : MonoBehaviour
             NumberStyles.Float,
             CultureInfo.InvariantCulture,
             out value
-        );
+        ) && value >= min && value <= max;
 
         SetFieldColor(field, ok ? ValidColor : InvalidColor);
         return ok;

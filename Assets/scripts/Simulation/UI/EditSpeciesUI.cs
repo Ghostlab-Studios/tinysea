@@ -51,6 +51,10 @@ public class EditSpeciesUI : MonoBehaviour
     [SerializeField] private TMP_InputField conditionDrainRateField;
     [SerializeField] private TMP_InputField conditionRecoveryRateField;
 
+    [Header("UI Fields - Batch 4 (per-species temp multiplier + Day-0 condition)")]
+    [SerializeField] private TMP_InputField tempMultiplierField;
+    [SerializeField] private TMP_InputField initialConditionField;
+
     [Header("UI Fields - Foraging (efficiency + variance, all tiers)")]
     // These two inputs are used for every tier (Tier 1 forages for resources, Tier 2/3 hunt the
     // tier below). The on-screen labels are plain scene text, set manually and identical for all
@@ -428,6 +432,12 @@ public class EditSpeciesUI : MonoBehaviour
             conditionRecoveryRateField.text = currentEditingData.conditionRecoveryRate < 0f
                 ? "" : currentEditingData.conditionRecoveryRate.ToString("F3", CultureInfo.InvariantCulture);
 
+        // Batch 4: plain floats (always shown), defaults 1.0
+        if (tempMultiplierField != null)
+            tempMultiplierField.text = currentEditingData.tempMultiplier.ToString("F2", CultureInfo.InvariantCulture);
+        if (initialConditionField != null)
+            initialConditionField.text = currentEditingData.initialCondition.ToString("F2", CultureInfo.InvariantCulture);
+
         if (reproThresholdField != null)
             reproThresholdField.text = currentEditingData.reproThreshold.ToString("F2", CultureInfo.InvariantCulture);
 
@@ -597,6 +607,10 @@ public class EditSpeciesUI : MonoBehaviour
         allValid &= TryReadFloat(resourceFindingEfficiencyField, out huntingEfficiency, min: 0f, max: 1f);
         allValid &= TryReadFloat(resourceFindingVarianceField, out huntingVariance, min: 0f);
 
+        // Batch 4: per-species temperature multiplier (>=0) and Day-0 condition seed [0..1].
+        allValid &= TryReadFloat(tempMultiplierField, out float tempMult, min: 0f);
+        allValid &= TryReadFloat(initialConditionField, out float initCond, min: 0f, max: 1f);
+
         // If any validation failed, stop here and don't save
         if (!allValid)
         {
@@ -634,6 +648,11 @@ public class EditSpeciesUI : MonoBehaviour
         // Group 3: per-species condition drain/recovery — blank/empty (or invalid) => -1 (inherit global)
         currentEditingData.conditionDrainRate = ParseRateOrInherit(conditionDrainRateField);
         currentEditingData.conditionRecoveryRate = ParseRateOrInherit(conditionRecoveryRateField);
+
+        // Batch 4: only overwrite when the field is actually wired up, so an un-hooked
+        // field can never silently set the multiplier/condition to 0.
+        if (tempMultiplierField != null) currentEditingData.tempMultiplier = tempMult;
+        if (initialConditionField != null) currentEditingData.initialCondition = initCond;
 
         // Save foraging fields (all tiers).
         currentEditingData.huntingEfficiency = huntingEfficiency;
